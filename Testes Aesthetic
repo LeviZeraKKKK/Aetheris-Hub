@@ -64,7 +64,7 @@ local _G_FovThickness = 1
 local _G_FovTransparency = 0.7
 local _G_ColorFov = Color3.fromRGB(138, 43, 226)
 
--- Proteção segura para a biblioteca Drawing (Evita crash se nil)
+-- Proteção segura para a biblioteca Drawing
 local fovCircleDrawing = nil
 pcall(function()
 	if Drawing and typeof(Drawing.new) == "function" then
@@ -1508,6 +1508,7 @@ RunService.RenderStepped:Connect(function()
 			hum.WalkSpeed = _G_WalkSpeedValue 
 		end
 		
+		-- Correção definitiva do JumpPower
 		if _G_JumpPowerEnabled then 
 			hum.UseJumpPower = true
 			hum.JumpPower = _G_JumpPowerValue 
