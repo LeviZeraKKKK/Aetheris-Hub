@@ -23,10 +23,48 @@ screenGui.DisplayOrder = 999999
 screenGui.Parent = playerGui
 
 -----------------------------------------------------------------
--- SISTEMA DE CORES DINÂMICAS & TEMA
+-- SISTEMA DE CORES DINÂMICAS & TEMA GLOBAL
 -----------------------------------------------------------------
 local currentThemeColor = Color3.fromRGB(138, 43, 226)
 local panelTransparencyValue = 0.2
+
+-- Tabelas para rastrear elementos dinâmicos e atualizá-los em tempo real
+local themeToggles = {}
+local themeSections = {}
+local themeTexts = {}
+local tabIndicators = {}
+
+local function updateGlobalTheme(newColor)
+	currentThemeColor = newColor
+	
+	-- Atualiza todos os toggles ativos instantaneamente
+	for _, data in pairs(themeToggles) do
+		if data.isToggled and data.circle and data.button and data.led then
+			TweenService:Create(data.circle, TweenInfo.new(0.18), {Position = UDim2.new(1, -14, 0.5, -6)}):Play()
+			TweenService:Create(data.button, TweenInfo.new(0.18), {BackgroundColor3 = newColor}):Play()
+			TweenService:Create(data.led, TweenInfo.new(0.18), {BackgroundColor3 = newColor}):Play()
+		end
+	end
+
+	-- Atualiza as bordas das seções
+	for _, secStroke in pairs(themeSections) do
+		secStroke.Color = newColor
+	end
+
+	-- Atualiza os textos e ícones temáticos
+	for _, obj in pairs(themeTexts) do
+		if obj:IsA("TextLabel") or obj:IsA("TextButton") then
+			obj.TextColor3 = newColor
+		elseif obj:IsA("UIStroke") then
+			obj.Color = newColor
+		end
+	end
+
+	-- Atualiza os indicadores das abas ativas
+	for _, ind in pairs(tabIndicators) do
+		ind.BackgroundColor3 = newColor
+	end
+end
 
 -----------------------------------------------------------------
 -- DETECÇÃO DE PLATAFORMA & TAMANHO DINÂMICO
@@ -64,7 +102,6 @@ local _G_FovThickness = 1
 local _G_FovTransparency = 0.7
 local _G_ColorFov = Color3.fromRGB(138, 43, 226)
 
--- Proteção segura para a biblioteca Drawing
 local fovCircleDrawing = nil
 pcall(function()
 	if Drawing and typeof(Drawing.new) == "function" then
@@ -110,6 +147,7 @@ loadStroke.Color = currentThemeColor
 loadStroke.Transparency = 0.3
 loadStroke.Thickness = 1.8
 loadStroke.Parent = loadWrapper
+table.insert(themeTexts, loadStroke)
 
 local sciFiRing = Instance.new("Frame")
 sciFiRing.Size = UDim2.new(0, 54, 0, 54)
@@ -122,6 +160,7 @@ ringStroke.Color = currentThemeColor
 ringStroke.Transparency = 0.5
 ringStroke.Thickness = 1.5
 ringStroke.Parent = sciFiRing
+table.insert(themeTexts, ringStroke)
 
 local ringCorner = Instance.new("UICorner")
 ringCorner.CornerRadius = UDim.new(1, 0)
@@ -137,6 +176,7 @@ loadIcon.TextColor3 = currentThemeColor
 loadIcon.TextSize = 20
 loadIcon.TextTransparency = 1
 loadIcon.Parent = loadWrapper
+table.insert(themeTexts, loadIcon)
 
 local iconCorner = Instance.new("UICorner")
 iconCorner.CornerRadius = UDim.new(0, 10)
@@ -147,6 +187,7 @@ iconStroke.Color = currentThemeColor
 iconStroke.Transparency = 0.4
 iconStroke.Thickness = 1
 iconStroke.Parent = loadIcon
+table.insert(themeTexts, iconStroke)
 
 local loadTitle = Instance.new("TextLabel")
 loadTitle.Size = UDim2.new(1, 0, 0, 20)
@@ -180,6 +221,7 @@ percentLabel.TextColor3 = currentThemeColor
 percentLabel.TextSize = 11
 percentLabel.TextTransparency = 1
 percentLabel.Parent = loadWrapper
+table.insert(themeTexts, percentLabel)
 
 local loadBarBg = Instance.new("Frame")
 loadBarBg.Size = UDim2.new(0, 280, 0, 6)
@@ -197,6 +239,7 @@ loadBarFill.Size = UDim2.new(0, 0, 1, 0)
 loadBarFill.BackgroundColor3 = currentThemeColor
 loadBarFill.BorderSizePixel = 0
 loadBarFill.Parent = loadBarBg
+table.insert(themeTexts, loadBarFill) -- preenche cor
 
 local loadBarFillCorner = Instance.new("UICorner")
 loadBarFillCorner.CornerRadius = UDim.new(1, 0)
@@ -279,6 +322,7 @@ function showMainPanel()
 	panelStroke.Transparency = 0.25
 	panelStroke.Thickness = 1.6
 	panelStroke.Parent = mainPanel
+	table.insert(themeTexts, panelStroke)
 
 	local glassGradient = Instance.new("UIGradient")
 	glassGradient.Rotation = 45
@@ -299,6 +343,7 @@ function showMainPanel()
 	floatingBtn.TextSize = 24
 	floatingBtn.Visible = false
 	floatingBtn.Parent = screenGui
+	table.insert(themeTexts, floatingBtn)
 
 	local floatCorner = Instance.new("UICorner")
 	floatCorner.CornerRadius = UDim.new(0, 8)
@@ -308,6 +353,7 @@ function showMainPanel()
 	floatStroke.Color = currentThemeColor
 	floatStroke.Thickness = 1.3
 	floatStroke.Parent = floatingBtn
+	table.insert(themeTexts, floatStroke)
 
 	local floatDragging, floatDragStart, floatStartPos
 	floatingBtn.InputBegan:Connect(function(input)
@@ -366,6 +412,7 @@ function showMainPanel()
 	resizeHandle.TextColor3 = currentThemeColor
 	resizeHandle.TextSize = 10
 	resizeHandle.Parent = mainPanel
+	table.insert(themeTexts, resizeHandle)
 
 	local resizing, resizeStart, startSize
 	resizeHandle.InputBegan:Connect(function(input)
@@ -410,6 +457,7 @@ function showMainPanel()
 	subTitleLabel.TextSize = 9
 	subTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 	subTitleLabel.Parent = mainPanel
+	table.insert(themeTexts, subTitleLabel)
 
 	local controlsContainer = Instance.new("Frame")
 	controlsContainer.Size = UDim2.new(0, 70, 0, 26)
@@ -524,7 +572,6 @@ function showMainPanel()
 	}
 
 	local activePage = nil
-	local tabIndicators = {}
 
 	for i, tabInfo in ipairs(tabs) do
 		local tabButton = Instance.new("TextButton")
@@ -550,12 +597,11 @@ function showMainPanel()
 		indicator.BackgroundColor3 = currentThemeColor
 		indicator.BorderSizePixel = 0
 		indicator.Parent = tabButton
+		table.insert(tabIndicators, indicator)
 
 		local indCorner = Instance.new("UICorner")
 		indCorner.CornerRadius = UDim.new(1, 0)
 		indCorner.Parent = indicator
-
-		tabIndicators[tabButton] = indicator
 		
 		local page = createPage(tabInfo.Name)
 
@@ -574,13 +620,11 @@ function showMainPanel()
 			page.Position = UDim2.new(1, 0, 0, 4)
 			TweenService:Create(page, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0, 4, 0, 4)}):Play()
 
-			for btn, ind in pairs(tabIndicators) do
+			for _, ind in pairs(tabIndicators) do
 				TweenService:Create(ind, TweenInfo.new(0.15), {Size = UDim2.new(0, 2, 0, 0)}):Play()
-				TweenService:Create(btn, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(180, 180, 180)}):Play()
 			end
 
 			TweenService:Create(indicator, TweenInfo.new(0.15), {Size = UDim2.new(0, 2, 0, 16)}):Play()
-			TweenService:Create(tabButton, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 
 			activePage = page
 		end)
@@ -606,10 +650,11 @@ function showMainPanel()
 		sCorner.Parent = section
 
 		local sStroke = Instance.new("UIStroke")
-		sStroke.Color = Color3.fromRGB(45, 45, 60)
-		sStroke.Transparency = 0.4
-		sStroke.Thickness = 1
+		sStroke.Color = currentThemeColor
+		sStroke.Transparency = 0.3
+		sStroke.Thickness = 1.2
 		sStroke.Parent = section
+		table.insert(themeSections, sStroke)
 
 		local iconLabel = Instance.new("TextLabel")
 		iconLabel.Size = UDim2.new(0, 20, 0, 20)
@@ -620,6 +665,7 @@ function showMainPanel()
 		iconLabel.TextColor3 = currentThemeColor
 		iconLabel.TextSize = 10
 		iconLabel.Parent = section
+		table.insert(themeTexts, iconLabel)
 
 		local sTitle = Instance.new("TextLabel")
 		sTitle.Size = UDim2.new(1, -36, 0, 20)
@@ -715,7 +761,6 @@ function showMainPanel()
 		local whiteGradientFrame = Instance.new("Frame")
 		whiteGradientFrame.Size = UDim2.new(1, 0, 1, 0)
 		whiteGradientFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		whiteGradientFrame.BackgroundTransparency = 0
 		whiteGradientFrame.BorderSizePixel = 0
 		whiteGradientFrame.ZIndex = 52
 		whiteGradientFrame.Parent = canvas
@@ -735,7 +780,6 @@ function showMainPanel()
 		local blackGradientFrame = Instance.new("Frame")
 		blackGradientFrame.Size = UDim2.new(1, 0, 1, 0)
 		blackGradientFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-		blackGradientFrame.BackgroundTransparency = 0
 		blackGradientFrame.BorderSizePixel = 0
 		blackGradientFrame.ZIndex = 53
 		blackGradientFrame.Parent = canvas
@@ -777,7 +821,7 @@ function showMainPanel()
 		hCorner.Parent = hueBar
 
 		local uifig = Instance.new("UIGradient")
-		uifig.Rotation = 90
+		uifig.Rotation = 270 -- Corrigido para inverter o sentido correto da barra Hue
 		uifig.Color = ColorSequence.new({
 			ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
 			ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 255, 0)),
@@ -819,7 +863,7 @@ function showMainPanel()
 			if draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 				local y = math.clamp((input.Position.Y - hueBar.AbsolutePosition.Y) / hueBar.AbsoluteSize.Y, 0, 1)
 				huePicker.Position = UDim2.new(0, 0, y, -1)
-				currentH = 1 - y
+				currentH = y -- Corrigido para corresponder exatamente à posição correta da escala
 				updateColor()
 			end
 		end)
@@ -899,6 +943,10 @@ function showMainPanel()
 		cCorner.CornerRadius = UDim.new(1, 0)
 		cCorner.Parent = circle
 
+		-- Registro para mudança de tema dinâmica
+		local toggleStateRef = {isToggled = false, circle = circle, button = toggleBtn, led = ledIndicator}
+		table.insert(themeToggles, toggleStateRef)
+
 		local colorBtn = Instance.new("TextButton")
 		colorBtn.Size = UDim2.new(0, 18, 0, 14)
 		colorBtn.Position = UDim2.new(1, -58, 0.5, -7)
@@ -942,7 +990,6 @@ function showMainPanel()
 		local whiteGradientFrame = Instance.new("Frame")
 		whiteGradientFrame.Size = UDim2.new(1, 0, 1, 0)
 		whiteGradientFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		whiteGradientFrame.BackgroundTransparency = 0
 		whiteGradientFrame.BorderSizePixel = 0
 		whiteGradientFrame.ZIndex = 52
 		whiteGradientFrame.Parent = canvas
@@ -962,7 +1009,6 @@ function showMainPanel()
 		local blackGradientFrame = Instance.new("Frame")
 		blackGradientFrame.Size = UDim2.new(1, 0, 1, 0)
 		blackGradientFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-		blackGradientFrame.BackgroundTransparency = 0
 		blackGradientFrame.BorderSizePixel = 0
 		blackGradientFrame.ZIndex = 53
 		blackGradientFrame.Parent = canvas
@@ -1004,7 +1050,7 @@ function showMainPanel()
 		hCorner.Parent = hueBar
 
 		local uifig = Instance.new("UIGradient")
-		uifig.Rotation = 90
+		uifig.Rotation = 270
 		uifig.Color = ColorSequence.new({
 			ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
 			ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 255, 0)),
@@ -1046,7 +1092,7 @@ function showMainPanel()
 			if draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 				local y = math.clamp((input.Position.Y - hueBar.AbsolutePosition.Y) / hueBar.AbsoluteSize.Y, 0, 1)
 				huePicker.Position = UDim2.new(0, 0, y, -1)
-				currentH = 1 - y
+				currentH = y
 				updateColor()
 			end
 		end)
@@ -1069,18 +1115,17 @@ function showMainPanel()
 			end
 		end)
 
-		local toggled = false
 		toggleBtn.MouseButton1Click:Connect(function()
-			toggled = not toggled
-			local targetPos = toggled and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
-			local targetColor = toggled and currentThemeColor or Color3.fromRGB(50, 50, 70)
-			local targetLedColor = toggled and currentThemeColor or Color3.fromRGB(80, 80, 100)
+			toggleStateRef.isToggled = not toggleStateRef.isToggled
+			local targetPos = toggleStateRef.isToggled and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
+			local targetColor = toggleStateRef.isToggled and currentThemeColor or Color3.fromRGB(50, 50, 70)
+			local targetLedColor = toggleStateRef.isToggled and currentThemeColor or Color3.fromRGB(80, 80, 100)
 			
 			TweenService:Create(circle, TweenInfo.new(0.18), {Position = targetPos}):Play()
 			TweenService:Create(toggleBtn, TweenInfo.new(0.18), {BackgroundColor3 = targetColor}):Play()
 			TweenService:Create(ledIndicator, TweenInfo.new(0.18), {BackgroundColor3 = targetLedColor}):Play()
 			
-			toggleCallback(toggled)
+			toggleCallback(toggleStateRef.isToggled)
 		end)
 	end
 
@@ -1137,18 +1182,21 @@ function showMainPanel()
 		cCorner.CornerRadius = UDim.new(1, 0)
 		cCorner.Parent = circle
 
-		local toggled = false
+		-- Registro para mudança de tema dinâmica
+		local toggleStateRef = {isToggled = false, circle = circle, button = toggleBtn, led = ledIndicator}
+		table.insert(themeToggles, toggleStateRef)
+
 		toggleBtn.MouseButton1Click:Connect(function()
-			toggled = not toggled
-			local targetPos = toggled and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
-			local targetColor = toggled and currentThemeColor or Color3.fromRGB(50, 50, 70)
-			local targetLedColor = toggled and currentThemeColor or Color3.fromRGB(80, 80, 100)
+			toggleStateRef.isToggled = not toggleStateRef.isToggled
+			local targetPos = toggleStateRef.isToggled and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
+			local targetColor = toggleStateRef.isToggled and currentThemeColor or Color3.fromRGB(50, 50, 70)
+			local targetLedColor = toggleStateRef.isToggled and currentThemeColor or Color3.fromRGB(80, 80, 100)
 			
 			TweenService:Create(circle, TweenInfo.new(0.18), {Position = targetPos}):Play()
 			TweenService:Create(toggleBtn, TweenInfo.new(0.18), {BackgroundColor3 = targetColor}):Play()
 			TweenService:Create(ledIndicator, TweenInfo.new(0.18), {BackgroundColor3 = targetLedColor}):Play()
 			
-			callback(toggled)
+			callback(toggleStateRef.isToggled)
 		end)
 	end
 
@@ -1190,6 +1238,7 @@ function showMainPanel()
 		fill.BackgroundColor3 = currentThemeColor
 		fill.BorderSizePixel = 0
 		fill.Parent = bar
+		table.insert(themeTexts, fill)
 
 		local fCorner = Instance.new("UICorner")
 		fCorner.CornerRadius = UDim.new(1, 0)
@@ -1411,14 +1460,7 @@ function showMainPanel()
 	local secConfig = createSection(configPage, "Tema do Hub", "⚙️")
 	
 	addColorPicker(secConfig, "Cor Principal do Hub", currentThemeColor, function(color)
-		currentThemeColor = color
-		panelStroke.Color = color
-		floatStroke.Color = color
-		floatingBtn.TextColor3 = color
-		subTitleLabel.TextColor3 = color
-		loadIcon.TextColor3 = color
-		resizeHandle.TextColor3 = color
-		for _, ind in pairs(tabIndicators) do ind.BackgroundColor3 = color end
+		updateGlobalTheme(color)
 	end)
 
 	addSlider(secConfig, "Transparência do Painel", 0, 80, 20, function(val)
@@ -1508,7 +1550,6 @@ RunService.RenderStepped:Connect(function()
 			hum.WalkSpeed = _G_WalkSpeedValue 
 		end
 		
-		-- Correção definitiva do JumpPower
 		if _G_JumpPowerEnabled then 
 			hum.UseJumpPower = true
 			hum.JumpPower = _G_JumpPowerValue 
@@ -1547,7 +1588,6 @@ RunService.RenderStepped:Connect(function()
 		end
 	end
 
-	-- Lógica segura de customização do Círculo de FOV
 	if _G_FovVisible and fovCircleDrawing then
 		pcall(function()
 			fovCircleDrawing.Visible = true
