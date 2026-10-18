@@ -28,7 +28,6 @@ screenGui.Parent = playerGui
 local currentThemeColor = Color3.fromRGB(138, 43, 226)
 local panelTransparencyValue = 0.2
 
--- Tabelas para rastrear elementos dinâmicos e atualizá-los em tempo real
 local themeToggles = {}
 local themeSections = {}
 local themeTexts = {}
@@ -37,7 +36,6 @@ local tabIndicators = {}
 local function updateGlobalTheme(newColor)
 	currentThemeColor = newColor
 	
-	-- Atualiza todos os toggles ativos instantaneamente
 	for _, data in pairs(themeToggles) do
 		if data.isToggled and data.circle and data.button and data.led then
 			TweenService:Create(data.circle, TweenInfo.new(0.18), {Position = UDim2.new(1, -14, 0.5, -6)}):Play()
@@ -46,12 +44,10 @@ local function updateGlobalTheme(newColor)
 		end
 	end
 
-	-- Atualiza as bordas das seções
 	for _, secStroke in pairs(themeSections) do
 		secStroke.Color = newColor
 	end
 
-	-- Atualiza os textos e ícones temáticos
 	for _, obj in pairs(themeTexts) do
 		if obj:IsA("TextLabel") or obj:IsA("TextButton") then
 			obj.TextColor3 = newColor
@@ -60,7 +56,6 @@ local function updateGlobalTheme(newColor)
 		end
 	end
 
-	-- Atualiza os indicadores das abas ativas
 	for _, ind in pairs(tabIndicators) do
 		ind.BackgroundColor3 = newColor
 	end
@@ -239,7 +234,7 @@ loadBarFill.Size = UDim2.new(0, 0, 1, 0)
 loadBarFill.BackgroundColor3 = currentThemeColor
 loadBarFill.BorderSizePixel = 0
 loadBarFill.Parent = loadBarBg
-table.insert(themeTexts, loadBarFill) -- preenche cor
+table.insert(themeTexts, loadBarFill)
 
 local loadBarFillCorner = Instance.new("UICorner")
 loadBarFillCorner.CornerRadius = UDim.new(1, 0)
@@ -404,13 +399,15 @@ function showMainPanel()
 		end
 	end)
 
+	-- Redimensionar com 2 listras (≡)
 	local resizeHandle = Instance.new("TextButton")
-	resizeHandle.Size = UDim2.new(0, 14, 0, 14)
-	resizeHandle.Position = UDim2.new(1, -14, 1, -14)
+	resizeHandle.Size = UDim2.new(0, 16, 0, 16)
+	resizeHandle.Position = UDim2.new(1, -16, 1, -16)
 	resizeHandle.BackgroundTransparency = 1
-	resizeHandle.Text = "◢"
+	resizeHandle.Font = Enum.Font.GothamBold
+	resizeHandle.Text = "≡"
 	resizeHandle.TextColor3 = currentThemeColor
-	resizeHandle.TextSize = 10
+	resizeHandle.TextSize = 12
 	resizeHandle.Parent = mainPanel
 	table.insert(themeTexts, resizeHandle)
 
@@ -821,7 +818,7 @@ function showMainPanel()
 		hCorner.Parent = hueBar
 
 		local uifig = Instance.new("UIGradient")
-		uifig.Rotation = 270 -- Corrigido para inverter o sentido correto da barra Hue
+		uifig.Rotation = 90 -- Corrigido para alinhar perfeitamente com a barra real
 		uifig.Color = ColorSequence.new({
 			ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
 			ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 255, 0)),
@@ -863,7 +860,7 @@ function showMainPanel()
 			if draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 				local y = math.clamp((input.Position.Y - hueBar.AbsolutePosition.Y) / hueBar.AbsoluteSize.Y, 0, 1)
 				huePicker.Position = UDim2.new(0, 0, y, -1)
-				currentH = y -- Corrigido para corresponder exatamente à posição correta da escala
+				currentH = 1 - y -- Invertido corretamente para que o topo seja vermelho e corresponda exatamente à ponta do gradiente
 				updateColor()
 			end
 		end)
@@ -943,7 +940,6 @@ function showMainPanel()
 		cCorner.CornerRadius = UDim.new(1, 0)
 		cCorner.Parent = circle
 
-		-- Registro para mudança de tema dinâmica
 		local toggleStateRef = {isToggled = false, circle = circle, button = toggleBtn, led = ledIndicator}
 		table.insert(themeToggles, toggleStateRef)
 
@@ -1050,7 +1046,7 @@ function showMainPanel()
 		hCorner.Parent = hueBar
 
 		local uifig = Instance.new("UIGradient")
-		uifig.Rotation = 270
+		uifig.Rotation = 90
 		uifig.Color = ColorSequence.new({
 			ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
 			ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 255, 0)),
@@ -1092,7 +1088,7 @@ function showMainPanel()
 			if draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 				local y = math.clamp((input.Position.Y - hueBar.AbsolutePosition.Y) / hueBar.AbsoluteSize.Y, 0, 1)
 				huePicker.Position = UDim2.new(0, 0, y, -1)
-				currentH = y
+				currentH = 1 - y
 				updateColor()
 			end
 		end)
@@ -1182,7 +1178,6 @@ function showMainPanel()
 		cCorner.CornerRadius = UDim.new(1, 0)
 		cCorner.Parent = circle
 
-		-- Registro para mudança de tema dinâmica
 		local toggleStateRef = {isToggled = false, circle = circle, button = toggleBtn, led = ledIndicator}
 		table.insert(themeToggles, toggleStateRef)
 
@@ -1478,6 +1473,23 @@ end
 -- RENDER LOOP (LÓGICA DOS ESPs, FOV E LOCK-ON COM FILTROS)
 -----------------------------------------------------------------
 local espDrawings = {}
+
+-- Limpeza imediata do ESP caso o jogador saia do servidor (Evita bug de ficar travado na tela)
+Players.PlayerRemoving:Connect(function(leavingPlayer)
+	if espDrawings[leavingPlayer] then
+		pcall(function()
+			for _, drawingObj in pairs(espDrawings[leavingPlayer]) do
+				if typeof(drawingObj) == "table" and drawingObj.Remove then
+					drawingObj:Remove()
+				end
+			end
+		end)
+		espDrawings[leavingPlayer] = nil
+	end
+	if lockOnTarget == leavingPlayer then
+		lockOnTarget = nil
+	end
+end)
 
 local function getAdvancedTarget()
 	local bestTarget = nil
