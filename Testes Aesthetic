@@ -31,6 +31,7 @@ local panelTransparencyValue = 0.2
 local themeToggles = {}
 local themeSections = {}
 local themeTexts = {}
+local themeSliders = {}
 local tabIndicators = {}
 
 local function updateGlobalTheme(newColor)
@@ -54,6 +55,10 @@ local function updateGlobalTheme(newColor)
 		elseif obj:IsA("UIStroke") then
 			obj.Color = newColor
 		end
+	end
+
+	for _, fill in pairs(themeSliders) do
+		fill.BackgroundColor3 = newColor
 	end
 
 	for _, ind in pairs(tabIndicators) do
@@ -234,7 +239,7 @@ loadBarFill.Size = UDim2.new(0, 0, 1, 0)
 loadBarFill.BackgroundColor3 = currentThemeColor
 loadBarFill.BorderSizePixel = 0
 loadBarFill.Parent = loadBarBg
-table.insert(themeTexts, loadBarFill)
+table.insert(themeSliders, loadBarFill)
 
 local loadBarFillCorner = Instance.new("UICorner")
 loadBarFillCorner.CornerRadius = UDim.new(1, 0)
@@ -399,7 +404,6 @@ function showMainPanel()
 		end
 	end)
 
-	-- Redimensionar com 2 listras (≡)
 	local resizeHandle = Instance.new("TextButton")
 	resizeHandle.Size = UDim2.new(0, 16, 0, 16)
 	resizeHandle.Position = UDim2.new(1, -16, 1, -16)
@@ -818,7 +822,7 @@ function showMainPanel()
 		hCorner.Parent = hueBar
 
 		local uifig = Instance.new("UIGradient")
-		uifig.Rotation = 90 -- Corrigido para alinhar perfeitamente com a barra real
+		uifig.Rotation = 90
 		uifig.Color = ColorSequence.new({
 			ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
 			ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 255, 0)),
@@ -860,7 +864,7 @@ function showMainPanel()
 			if draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 				local y = math.clamp((input.Position.Y - hueBar.AbsolutePosition.Y) / hueBar.AbsoluteSize.Y, 0, 1)
 				huePicker.Position = UDim2.new(0, 0, y, -1)
-				currentH = 1 - y -- Invertido corretamente para que o topo seja vermelho e corresponda exatamente à ponta do gradiente
+				currentH = 1 - y
 				updateColor()
 			end
 		end)
@@ -1233,7 +1237,7 @@ function showMainPanel()
 		fill.BackgroundColor3 = currentThemeColor
 		fill.BorderSizePixel = 0
 		fill.Parent = bar
-		table.insert(themeTexts, fill)
+		table.insert(themeSliders, fill)
 
 		local fCorner = Instance.new("UICorner")
 		fCorner.CornerRadius = UDim.new(1, 0)
@@ -1474,7 +1478,6 @@ end
 -----------------------------------------------------------------
 local espDrawings = {}
 
--- Limpeza imediata do ESP caso o jogador saia do servidor (Evita bug de ficar travado na tela)
 Players.PlayerRemoving:Connect(function(leavingPlayer)
 	if espDrawings[leavingPlayer] then
 		pcall(function()
