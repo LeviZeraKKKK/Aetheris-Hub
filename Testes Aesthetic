@@ -864,7 +864,7 @@ function showMainPanel()
 			if draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 				local y = math.clamp((input.Position.Y - hueBar.AbsolutePosition.Y) / hueBar.AbsoluteSize.Y, 0, 1)
 				huePicker.Position = UDim2.new(0, 0, y, -1)
-				currentH = 1 - y
+				currentH = y
 				updateColor()
 			end
 		end)
@@ -1074,7 +1074,7 @@ function showMainPanel()
 			local color = Color3.fromHSV(currentH, currentS, currentV)
 			canvas.BackgroundColor3 = Color3.fromHSV(currentH, 1, 1)
 			colorBtn.BackgroundColor3 = color
-			colorCallback(color)
+			callback(color)
 		end
 
 		colorBtn.MouseButton1Click:Connect(function()
@@ -1092,7 +1092,7 @@ function showMainPanel()
 			if draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 				local y = math.clamp((input.Position.Y - hueBar.AbsolutePosition.Y) / hueBar.AbsoluteSize.Y, 0, 1)
 				huePicker.Position = UDim2.new(0, 0, y, -1)
-				currentH = 1 - y
+				currentH = y
 				updateColor()
 			end
 		end)
@@ -1443,18 +1443,316 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- OUTRAS ABAS
+	-- ABA FARMING (AUTOMAÇÃO + CHEST COLLECTOR)
 	-----------------------------------------------------------------
 	local farmingPage = pages["Farming"]
 	local secFarm = createSection(farmingPage, "Automação", "⚡")
 	addToggle(secFarm, "Auto Farm Level", function(state) end)
 	addToggle(secFarm, "Fast Attack", function(state) end)
 
+	-- Lógica integrada do Chest Collector na aba de Automação
+	local chestFolder = workspace:WaitForChild("ChestModels")
+	local mapFolder = workspace:WaitForChild("Map")
+
+	local chestActive = false
+	local chestSpeed = 50
+	local WATER_SAFE_Y = 15
+	local ISLAND_HEIGHT = 15
+	local ISLAND_ARRIVAL_DISTANCE = 20
+
+	local chestTarget = nil
+	local chestTargetType = nil
+	local visitedChests = {}
+	local visitedIslands = {}
+	local originalCollision = {}
+
+	local moveConnection, noclipConnection, sitConnection, healthConnection
+	local lastHealth = nil
+	local lastDamageTime = 0
+
+	local function getCharacterParts()
+		local character = player.Character
+		if not character then return end
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		local root = character:FindFirstChild("HumanoidRootPart")
+		if humanoid and root and humanoid.Health > 0 then
+			return character, humanoid, root
+		end
+	end
+
+	local function setNoclip(enabled)
+		if noclipConnection then
+			noclipConnection:Disconnect()
+			noclipConnection = nil
+		end
+
+		if enabled then
+			table.clear(originalCollision)
+			local character = player.Character
+			if not character then return end
+
+			for _, part in ipairs(character:GetDescendants()) do
+				if part:IsA("BasePart") then
+					originalCollision[part] = part.CanCollide
+					part.CanCollide = false
+				end
+			end
+
+			noclipConnection = RunService.Stepped:Connect(function()
+				if not chestActive then return end
+				local currentCharacter = player.Character
+				if not currentCharacter then return end
+
+				for _, part in ipairs(currentCharacter:GetDescendants()) do
+					if part:IsA("BasePart") then
+						if originalCollision[part] == nil then
+							originalCollision[part] = part.CanCollide
+						end
+						part.CanCollide = false
+					end
+				end
+			end)
+		else
+			for part, originalValue in pairs(originalCollision) do
+				if part and part.Parent then
+					part.CanCollide = originalValue
+				end
+			end
+			table.clear(originalCollision)
+		end
+	end
+
+	local function jumpIfSeated()
+		local _, humanoid = getCharacterParts()
+		if not humanoid or not chestActive then return end
+		if humanoid.Sit or humanoid:GetState() == Enum.HumanoidStateType.Seated then
+			humanoid.Sit = false
+			humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+		end
+	end
+
+	local function getPosition(object)
+		if not object or not object.Parent then return nil end
+		if object:IsA("Model") then
+			return object:GetPivot().Position
+		elseif object:IsA("BasePart") then
+			return object.Position
+		end
+		return nil
+	end
+
+	local function getChestCandidates()
+		local candidates = {}
+		for _, object in ipairs(chestFolder:GetDescendants()) do
+			if object:IsA("Model") or object:IsA("BasePart") then
+				local ancestor = object.Parent
+				local nested = false
+				while ancestor and ancestor ~= chestFolder do
+					if ancestor:IsA("Model") or ancestor:IsA("BasePart") then
+						nested = true
+						break
+					end
+					ancestor = ancestor.Parent
+				end
+				if not nested and getPosition(object) then
+					table.insert(candidates, object)
+				end
+			end
+		end
+		return candidates
+	end
+
+	local function getIslandCandidates()
+		local candidates = {}
+		for _, object in ipairs(mapFolder:GetDescendants()) do
+			if object:IsA("Model") then
+				local ancestor = object.Parent
+				local nestedModel = false
+				while ancestor and ancestor ~= mapFolder do
+					if ancestor:IsA("Model") then
+						nestedModel = true
+						break
+					end
+					ancestor = ancestor.Parent
+				end
+				if not nestedModel and getPosition(object) then
+					table.insert(candidates, object)
+				end
+			end
+		end
+		return candidates
+	end
+
+	local function findNearest(candidates, root, visited)
+		local nearest, nearestDistance = nil, math.huge
+		for _, object in ipairs(candidates) do
+			if object.Parent and not visited[object] then
+				local position = getPosition(object)
+				if position then
+					local distance = (position - root.Position).Magnitude
+					if distance < nearestDistance then
+						nearestDistance = distance
+						nearest = object
+					end
+				end
+			end
+		end
+		return nearest
+	end
+
+	local function stopChestCollector()
+		chestActive = false
+		chestTarget = nil
+		chestTargetType = nil
+
+		if moveConnection then moveConnection:Disconnect(); moveConnection = nil end
+		if sitConnection then sitConnection:Disconnect(); sitConnection = nil end
+		if healthConnection then healthConnection:Disconnect(); healthConnection = nil end
+
+		setNoclip(false)
+
+		local _, humanoid, root = getCharacterParts()
+		if humanoid then
+			humanoid:Move(Vector3.zero)
+			humanoid.AutoRotate = true
+		end
+		if root then
+			root.AssemblyLinearVelocity = Vector3.zero
+		end
+
+		table.clear(visitedChests)
+		table.clear(visitedIslands)
+	end
+
+	local function startChestCollector()
+		local _, humanoid, root = getCharacterParts()
+		if not humanoid or not root then return end
+
+		chestActive = true
+		chestTarget = nil
+		chestTargetType = nil
+		lastHealth = humanoid.Health
+		lastDamageTime = 0
+
+		table.clear(visitedChests)
+		table.clear(visitedIslands)
+		setNoclip(true)
+
+		if healthConnection then healthConnection:Disconnect() end
+		healthConnection = humanoid.HealthChanged:Connect(function(newHealth)
+			if lastHealth and newHealth < lastHealth then
+				lastDamageTime = os.clock()
+			end
+			lastHealth = newHealth
+		end)
+
+		sitConnection = RunService.Heartbeat:Connect(function()
+			if chestActive then jumpIfSeated() end
+		end)
+
+		moveConnection = RunService.Heartbeat:Connect(function()
+			if not chestActive then return end
+
+			local _, hum, hrp = getCharacterParts()
+			if not hum or not hrp then
+				stopChestCollector()
+				return
+			end
+
+			local nearestChest = findNearest(getChestCandidates(), hrp, visitedChests)
+			if nearestChest then
+				chestTarget = nearestChest
+				chestTargetType = "Chest"
+			elseif not chestTarget or chestTargetType ~= "Island" or not chestTarget.Parent or visitedIslands[chestTarget] then
+				chestTarget = findNearest(getIslandCandidates(), hrp, visitedIslands)
+				chestTargetType = chestTarget and "Island" or nil
+			end
+
+			if not chestTarget then
+				hrp.AssemblyLinearVelocity = Vector3.zero
+				hum:Move(Vector3.zero)
+				return
+			end
+
+			local position = getPosition(chestTarget)
+			if not position then
+				chestTarget = nil
+				chestTargetType = nil
+				return
+			end
+
+			local destination
+			if chestTargetType == "Chest" then
+				destination = position + Vector3.new(0, 2, 0)
+			else
+				local safeY = math.max(position.Y + ISLAND_HEIGHT, WATER_SAFE_Y, hrp.Position.Y)
+				destination = Vector3.new(position.X, safeY, position.Z)
+			end
+
+			local offset = destination - hrp.Position
+			local distance = offset.Magnitude
+
+			if chestTargetType == "Chest" and distance < 4 then
+				visitedChests[chestTarget] = true
+				chestTarget = nil
+				chestTargetType = nil
+				hrp.AssemblyLinearVelocity = Vector3.zero
+				return
+			end
+
+			if chestTargetType == "Island" then
+				local horizontalOffset = Vector3.new(position.X - hrp.Position.X, 0, position.Z - hrp.Position.Z)
+				local recentlyDamaged = (os.clock() - lastDamageTime < 1)
+
+				if horizontalOffset.Magnitude < ISLAND_ARRIVAL_DISTANCE or recentlyDamaged then
+					visitedIslands[chestTarget] = true
+					chestTarget = nil
+					chestTargetType = nil
+					hrp.AssemblyLinearVelocity = Vector3.zero
+					return
+				end
+			end
+
+			if chestTargetType == "Island" and hrp.Position.Y < WATER_SAFE_Y then
+				hrp.AssemblyLinearVelocity = Vector3.new(
+					offset.Unit.X * chestSpeed,
+					math.max(chestSpeed * 0.5, 10),
+					offset.Unit.Z * chestSpeed
+				)
+			elseif distance > 0.1 then
+				local direction = offset.Unit
+				hrp.AssemblyLinearVelocity = direction * chestSpeed
+				hum:Move(direction, false)
+			else
+				hrp.AssemblyLinearVelocity = Vector3.zero
+				hum:Move(Vector3.zero)
+			end
+		end)
+	end
+
+	addToggle(secFarm, "Auto Collect Chest", function(state)
+		if state then
+			startChestCollector()
+		else
+			stopChestCollector()
+		end
+	end)
+
+	addSlider(secFarm, "Velocidade do Chest Collector", 5, 500, 50, function(val)
+		chestSpeed = val
+	end)
+
+	-----------------------------------------------------------------
+	-- ABA FRUTA
+	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
 	local secFruta = createSection(frutaPage, "Frutas", "🍎")
 	addToggle(secFruta, "Auto Buy Fruit", function(state) end)
 	addToggle(secFruta, "Auto Store Fruit", function(state) end)
 
+	-----------------------------------------------------------------
+	-- ABA CONFIG
+	-----------------------------------------------------------------
 	local configPage = pages["Config"]
 	local secConfig = createSection(configPage, "Tema do Hub", "⚙️")
 	
