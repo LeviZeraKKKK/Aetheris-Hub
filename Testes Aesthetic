@@ -32,6 +32,7 @@ local themeToggles = {}
 local themeSections = {}
 local themeTexts = {}
 local themeSliders = {}
+local themeParticles = {}
 local tabIndicators = {}
 
 local function updateGlobalTheme(newColor)
@@ -63,6 +64,12 @@ local function updateGlobalTheme(newColor)
 
 	for _, ind in pairs(tabIndicators) do
 		ind.BackgroundColor3 = newColor
+	end
+
+	for _, part in pairs(themeParticles) do
+		if part and part.Parent then
+			part.BackgroundColor3 = newColor
+		end
 	end
 end
 
@@ -127,38 +134,38 @@ local _G_ColorDistance = Color3.fromRGB(200, 200, 255)
 local _G_ColorHead = Color3.fromRGB(255, 100, 100)
 
 -----------------------------------------------------------------
--- TELA DE CARREGAMENTO ULTRA PROFISSIONAL
+-- TELA DE CARREGAMENTO ULTRA PROFISSIONAL APRIMORADA
 -----------------------------------------------------------------
 local loadWrapper = Instance.new("Frame")
-loadWrapper.Size = UDim2.new(0, 360, 0, 180)
-loadWrapper.Position = UDim2.new(0.5, -180, 0.5, -90)
-loadWrapper.BackgroundColor3 = Color3.fromRGB(14, 14, 22)
-loadWrapper.BackgroundTransparency = 0.25
+loadWrapper.Size = UDim2.new(0, 380, 0, 190)
+loadWrapper.Position = UDim2.new(0.5, -190, 0.5, -95)
+loadWrapper.BackgroundColor3 = Color3.fromRGB(10, 10, 16)
+loadWrapper.BackgroundTransparency = 0.2
 loadWrapper.BorderSizePixel = 0
 loadWrapper.ClipsDescendants = true
 loadWrapper.Parent = screenGui
 
 local loadCorner = Instance.new("UICorner")
-loadCorner.CornerRadius = UDim.new(0, 14)
+loadCorner.CornerRadius = UDim.new(0, 16)
 loadCorner.Parent = loadWrapper
 
 local loadStroke = Instance.new("UIStroke")
 loadStroke.Color = currentThemeColor
-loadStroke.Transparency = 0.3
-loadStroke.Thickness = 1.8
+loadStroke.Transparency = 0.2
+loadStroke.Thickness = 2
 loadStroke.Parent = loadWrapper
 table.insert(themeTexts, loadStroke)
 
 local sciFiRing = Instance.new("Frame")
-sciFiRing.Size = UDim2.new(0, 54, 0, 54)
-sciFiRing.Position = UDim2.new(0.5, -27, 0, 18)
+sciFiRing.Size = UDim2.new(0, 60, 0, 60)
+sciFiRing.Position = UDim2.new(0.5, -30, 0, 18)
 sciFiRing.BackgroundTransparency = 1
 sciFiRing.Parent = loadWrapper
 
 local ringStroke = Instance.new("UIStroke")
 ringStroke.Color = currentThemeColor
-ringStroke.Transparency = 0.5
-ringStroke.Thickness = 1.5
+ringStroke.Transparency = 0.4
+ringStroke.Thickness = 1.8
 ringStroke.Parent = sciFiRing
 table.insert(themeTexts, ringStroke)
 
@@ -167,66 +174,59 @@ ringCorner.CornerRadius = UDim.new(1, 0)
 ringCorner.Parent = sciFiRing
 
 local loadIcon = Instance.new("TextLabel")
-loadIcon.Size = UDim2.new(0, 42, 0, 42)
-loadIcon.Position = UDim2.new(0.5, -21, 0, 24)
-loadIcon.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+loadIcon.Size = UDim2.new(0, 46, 0, 46)
+loadIcon.Position = UDim2.new(0.5, -23, 0, 25)
+loadIcon.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
 loadIcon.Font = Enum.Font.GothamBold
 loadIcon.Text = "⚡"
 loadIcon.TextColor3 = currentThemeColor
-loadIcon.TextSize = 20
+loadIcon.TextSize = 22
 loadIcon.TextTransparency = 1
 loadIcon.Parent = loadWrapper
 table.insert(themeTexts, loadIcon)
 
 local iconCorner = Instance.new("UICorner")
-iconCorner.CornerRadius = UDim.new(0, 10)
+iconCorner.CornerRadius = UDim.new(0, 12)
 iconCorner.Parent = loadIcon
-
-local iconStroke = Instance.new("UIStroke")
-iconStroke.Color = currentThemeColor
-iconStroke.Transparency = 0.4
-iconStroke.Thickness = 1
-iconStroke.Parent = loadIcon
-table.insert(themeTexts, iconStroke)
 
 local loadTitle = Instance.new("TextLabel")
 loadTitle.Size = UDim2.new(1, 0, 0, 20)
-loadTitle.Position = UDim2.new(0, 0, 0, 78)
+loadTitle.Position = UDim2.new(0, 0, 0, 84)
 loadTitle.BackgroundTransparency = 1
 loadTitle.Font = Enum.Font.GothamBold
-loadTitle.Text = "AETHERIS HUB"
+loadTitle.Text = "AETHERIS HUB V2"
 loadTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-loadTitle.TextSize = 15
+loadTitle.TextSize = 16
 loadTitle.TextTransparency = 1
 loadTitle.Parent = loadWrapper
 
 local loadStatus = Instance.new("TextLabel")
 loadStatus.Size = UDim2.new(1, 0, 0, 14)
-loadStatus.Position = UDim2.new(0, 0, 0, 98)
+loadStatus.Position = UDim2.new(0, 0, 0, 106)
 loadStatus.BackgroundTransparency = 1
 loadStatus.Font = Enum.Font.GothamMedium
-loadStatus.Text = "Iniciando protocolos de segurança..."
-loadStatus.TextColor3 = Color3.fromRGB(160, 160, 180)
+loadStatus.Text = "Sincronizando sistemas quânticos..."
+loadStatus.TextColor3 = Color3.fromRGB(170, 170, 200)
 loadStatus.TextSize = 10
 loadStatus.TextTransparency = 1
 loadStatus.Parent = loadWrapper
 
 local percentLabel = Instance.new("TextLabel")
 percentLabel.Size = UDim2.new(1, 0, 0, 14)
-percentLabel.Position = UDim2.new(0, 0, 0, 122)
+percentLabel.Position = UDim2.new(0, 0, 0, 132)
 percentLabel.BackgroundTransparency = 1
 percentLabel.Font = Enum.Font.GothamBold
 percentLabel.Text = "0%"
 percentLabel.TextColor3 = currentThemeColor
-percentLabel.TextSize = 11
+percentLabel.TextSize = 12
 percentLabel.TextTransparency = 1
 percentLabel.Parent = loadWrapper
 table.insert(themeTexts, percentLabel)
 
 local loadBarBg = Instance.new("Frame")
-loadBarBg.Size = UDim2.new(0, 280, 0, 6)
-loadBarBg.Position = UDim2.new(0.5, -140, 0, 146)
-loadBarBg.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+loadBarBg.Size = UDim2.new(0, 300, 0, 6)
+loadBarBg.Position = UDim2.new(0.5, -150, 0, 156)
+loadBarBg.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
 loadBarBg.BorderSizePixel = 0
 loadBarBg.Parent = loadWrapper
 
@@ -262,12 +262,13 @@ end)
 task.spawn(function()
 	local steps = {
 		{progress = 0.25, text = "Carregando módulos do Blox Fruits..."},
-		{progress = 0.55, text = "Injetando sistemas ESP e Player..."},
-		{progress = 0.85, text = "Sincronizando ambiente e texturas..."},
+		{progress = 0.55, text = "Injetando ESP, AimLock e Auto Collect..."},
+		{progress = 0.85, text = "Otimizando partículas e shaders..."},
 		{progress = 1.00, text = "Inicialização concluída com sucesso!"}
 	}
 	
 	local currentTweenTime = 0.35
+ flan = true
 	for _, step in ipairs(steps) do
 		loadStatus.Text = step.text
 		TweenService:Create(loadBarFill, TweenInfo.new(currentTweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
@@ -314,7 +315,7 @@ function showMainPanel()
 	mainPanel.Parent = screenGui
 
 	local panelCorner = Instance.new("UICorner")
-	panelCorner.CornerRadius = UDim.new(0, 10)
+	panelCorner.CornerRadius = UDim.new(0, 12)
 	panelCorner.Parent = mainPanel
 
 	local panelStroke = Instance.new("UIStroke")
@@ -331,6 +332,52 @@ function showMainPanel()
 		NumberSequenceKeypoint.new(1, 0.4)
 	})
 	glassGradient.Parent = mainPanel
+
+	-----------------------------------------------------------------
+	-- SISTEMA DE PARTÍCULAS ANIMADAS DE FUNDO
+	-----------------------------------------------------------------
+	local particleContainer = Instance.new("Folder")
+	particleContainer.Name = "ThemeParticles"
+	particleContainer.Parent = mainPanel
+
+	for i = 1, 12 do
+		task.spawn(function()
+			local p = Instance.new("Frame")
+			p.Size = UDim2.new(0, math.random(3, 5), 0, math.random(3, 5))
+			p.Position = UDim2.new(math.random(), 0, math.random(), 0)
+			p.BackgroundColor3 = currentThemeColor
+			p.BackgroundTransparency = 0.4
+			p.BorderSizePixel = 0
+			p.Parent = particleContainer
+			table.insert(themeParticles, p)
+
+			local corner = Instance.new("UICorner")
+			corner.CornerRadius = UDim.new(1, 0)
+			corner.Parent = p
+
+			while mainPanel and mainPanel.Parent do
+				local targetX = math.random()
+				local targetY = math.random()
+				local tInfo = TweenInfo.new(math.random(6, 12), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+				TweenService:Create(p, tInfo, {
+					Position = UDim2.new(targetX, 0, targetY, 0),
+					BackgroundTransparency = math.random(2, 8) / 10
+				}):Play()
+				task.wait(math.random(6, 12))
+			end
+		end)
+	end
+
+	-----------------------------------------------------------------
+	-- BLOQUEIO GLOBAL DE INTERAÇÃO (INTERACTION BLOCKER)
+	-----------------------------------------------------------------
+	local interactionBlocker = Instance.new("TextButton")
+	interactionBlocker.Size = UDim2.new(1, 0, 1, 0)
+	interactionBlocker.BackgroundTransparency = 1
+	interactionBlocker.Text = ""
+	interactionBlocker.Visible = false
+	interactionBlocker.ZIndex = 9999
+	interactionBlocker.Parent = mainPanel
 
 	local floatingBtn = Instance.new("TextButton")
 	floatingBtn.Size = UDim2.new(0, 0, 0, 0)
@@ -388,8 +435,12 @@ function showMainPanel()
 			dragging = true
 			dragStart = input.Position
 			startPos = mainPanel.Position
+			interactionBlocker.Visible = true
 			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then dragging = false end
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+					interactionBlocker.Visible = false
+				end
 			end)
 		end
 	end)
@@ -404,16 +455,53 @@ function showMainPanel()
 		end
 	end)
 
+	-----------------------------------------------------------------
+	-- SÍMBOLOS DE REDIMENSIONAR (2 TRAÇOS OP À BORDA - SUPERIOR MAIOR, INFERIOR MENOR)
+	-----------------------------------------------------------------
+	local function createResizeSymbol(parent, pos)
+		local symbolFrame = Instance.new("Frame")
+		symbolFrame.Size = UDim2.new(0, 14, 0, 14)
+		symbolFrame.Position = pos
+		symbolFrame.BackgroundTransparency = 1
+		symbolFrame.Parent = parent
+
+		-- Traço Superior (Maior)
+		local line1 = Instance.new("Frame")
+		line1.Size = UDim2.new(0, 10, 0, 2)
+		line1.Position = UDim2.new(0, 2, 0, 3)
+		line1.BackgroundColor3 = currentThemeColor
+		line1.BorderSizePixel = 0
+		line1.Parent = symbolFrame
+		table.insert(themeTexts, line1)
+
+		local c1 = Instance.new("UICorner")
+		c1.CornerRadius = UDim.new(1, 0)
+		c1.Parent = line1
+
+		-- Traço Inferior (Menor)
+		local line2 = Instance.new("Frame")
+		line2.Size = UDim2.new(0, 6, 0, 2)
+		line2.Position = UDim2.new(0, 6, 0, 8)
+		line2.BackgroundColor3 = currentThemeColor
+		line2.BorderSizePixel = 0
+		line2.Parent = symbolFrame
+		table.insert(themeTexts, line2)
+
+		local c2 = Instance.new("UICorner")
+		c2.CornerRadius = UDim.new(1, 0)
+		c2.Parent = line2
+
+		return symbolFrame
+	end
+
+	-- Alça de Redimensionar Canto Inferior Direito
 	local resizeHandle = Instance.new("TextButton")
-	resizeHandle.Size = UDim2.new(0, 16, 0, 16)
-	resizeHandle.Position = UDim2.new(1, -16, 1, -16)
+	resizeHandle.Size = UDim2.new(0, 20, 0, 20)
+	resizeHandle.Position = UDim2.new(1, -20, 1, -20)
 	resizeHandle.BackgroundTransparency = 1
-	resizeHandle.Font = Enum.Font.GothamBold
-	resizeHandle.Text = "≡"
-	resizeHandle.TextColor3 = currentThemeColor
-	resizeHandle.TextSize = 12
+	resizeHandle.Text = ""
 	resizeHandle.Parent = mainPanel
-	table.insert(themeTexts, resizeHandle)
+	createResizeSymbol(resizeHandle, UDim2.new(0, 3, 0, 3))
 
 	local resizing, resizeStart, startSize
 	resizeHandle.InputBegan:Connect(function(input)
@@ -421,8 +509,12 @@ function showMainPanel()
 			resizing = true
 			resizeStart = input.Position
 			startSize = mainPanel.AbsoluteSize
+			interactionBlocker.Visible = true
 			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then resizing = false end
+				if input.UserInputState == Enum.UserInputState.End then
+					resizing = false
+					interactionBlocker.Visible = false
+				end
 			end)
 		end
 	end)
@@ -432,6 +524,49 @@ function showMainPanel()
 			local delta = input.Position - resizeStart
 			local newWidth = math.clamp(startSize.X + delta.X, 360, 800)
 			local newHeight = math.clamp(startSize.Y + delta.Y, 220, 550)
+			mainPanel.Size = UDim2.new(0, newWidth, 0, newHeight)
+			currentPanelSize = mainPanel.Size
+		end
+	end)
+
+	-----------------------------------------------------------------
+	-- BARRINHA INFERIOR DE REDIMENSIONAR (TRANSPARENTE COM COR DO TEMA)
+	-----------------------------------------------------------------
+	local bottomResizeBar = Instance.new("TextButton")
+	bottomResizeBar.Size = UDim2.new(1, -30, 0, 6)
+	bottomResizeBar.Position = UDim2.new(0, 10, 1, -8)
+	bottomResizeBar.BackgroundColor3 = currentThemeColor
+	bottomResizeBar.BackgroundTransparency = 0.5
+	bottomResizeBar.BorderSizePixel = 0
+	bottomResizeBar.Text = ""
+	bottomResizeBar.Parent = mainPanel
+	table.insert(themeSliders, bottomResizeBar)
+
+	local brCorner = Instance.new("UICorner")
+	brCorner.CornerRadius = UDim.new(1, 0)
+	brCorner.Parent = bottomResizeBar
+
+	local bottomResizing, bottomResizeStart, bottomStartSize
+	bottomResizeBar.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			bottomResizing = true
+			bottomResizeStart = input.Position
+			bottomStartSize = mainPanel.AbsoluteSize
+			interactionBlocker.Visible = true
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					bottomResizing = false
+					interactionBlocker.Visible = false
+				end
+			end)
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if bottomResizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local delta = input.Position - bottomResizeStart
+			local newWidth = math.clamp(bottomStartSize.X + delta.X, 360, 800)
+			local newHeight = math.clamp(bottomStartSize.Y + delta.Y, 220, 550)
 			mainPanel.Size = UDim2.new(0, newWidth, 0, newHeight)
 			currentPanelSize = mainPanel.Size
 		end
@@ -512,7 +647,7 @@ function showMainPanel()
 	end)
 
 	local sidebar = Instance.new("ScrollingFrame")
-	sidebar.Size = UDim2.new(0, 110, 1, -50)
+	sidebar.Size = UDim2.new(0, 110, 1, -58)
 	sidebar.Position = UDim2.new(0, 8, 0, 42)
 	sidebar.BackgroundTransparency = 1
 	sidebar.BorderSizePixel = 0
@@ -526,7 +661,7 @@ function showMainPanel()
 	sidebarLayout.Parent = sidebar
 
 	local contentContainer = Instance.new("Frame")
-	contentContainer.Size = UDim2.new(1, -128, 1, -50)
+	contentContainer.Size = UDim2.new(1, -128, 1, -58)
 	contentContainer.Position = UDim2.new(0, 122, 0, 42)
 	contentContainer.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
 	contentContainer.BackgroundTransparency = 0.45
@@ -573,6 +708,7 @@ function showMainPanel()
 	}
 
 	local activePage = nil
+	local tabButtonsList = {}
 
 	for i, tabInfo in ipairs(tabs) do
 		local tabButton = Instance.new("TextButton")
@@ -605,6 +741,7 @@ function showMainPanel()
 		indCorner.Parent = indicator
 		
 		local page = createPage(tabInfo.Name)
+		table.insert(tabButtonsList, {Button = tabButton, Indicator = indicator, Page = page})
 
 		tabButton.MouseButton1Click:Connect(function()
 			if activePage == page then return end
@@ -621,11 +758,13 @@ function showMainPanel()
 			page.Position = UDim2.new(1, 0, 0, 4)
 			TweenService:Create(page, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0, 4, 0, 4)}):Play()
 
-			for _, ind in pairs(tabIndicators) do
-				TweenService:Create(ind, TweenInfo.new(0.15), {Size = UDim2.new(0, 2, 0, 0)}):Play()
+			for _, tData in ipairs(tabButtonsList) do
+				TweenService:Create(tData.Indicator, TweenInfo.new(0.15), {Size = UDim2.new(0, 2, 0, 0)}):Play()
+				TweenService:Create(tData.Button, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(180, 180, 180)}):Play()
 			end
 
 			TweenService:Create(indicator, TweenInfo.new(0.15), {Size = UDim2.new(0, 2, 0, 16)}):Play()
+			TweenService:Create(tabButton, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 
 			activePage = page
 		end)
@@ -1074,7 +1213,7 @@ function showMainPanel()
 			local color = Color3.fromHSV(currentH, currentS, currentV)
 			canvas.BackgroundColor3 = Color3.fromHSV(currentH, 1, 1)
 			colorBtn.BackgroundColor3 = color
-			callback(color)
+			colorCallback(color)
 		end
 
 		colorBtn.MouseButton1Click:Connect(function()
@@ -1450,7 +1589,7 @@ function showMainPanel()
 	addToggle(secFarm, "Auto Farm Level", function(state) end)
 	addToggle(secFarm, "Fast Attack", function(state) end)
 
-	-- Lógica integrada do Chest Collector na aba de Automação
+	-- Chest Collector Integrado
 	local chestFolder = workspace:WaitForChild("ChestModels")
 	local mapFolder = workspace:WaitForChild("Map")
 
