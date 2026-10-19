@@ -55,6 +55,8 @@ local function updateGlobalTheme(newColor)
 			obj.TextColor3 = newColor
 		elseif obj:IsA("UIStroke") then
 			obj.Color = newColor
+		elseif obj:IsA("Frame") then
+			obj.BackgroundColor3 = newColor
 		end
 	end
 
@@ -310,7 +312,7 @@ function showMainPanel()
 	mainPanel.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
 	mainPanel.BackgroundTransparency = panelTransparencyValue
 	mainPanel.BorderSizePixel = 0
-	mainPanel.ClipsDescendants = true
+	mainPanel.ClipsDescendants = false -- Alterado para false para garantir que a barra externa e alças fiquem totalmente visíveis e clicáveis
 	mainPanel.Parent = screenGui
 
 	local panelCorner = Instance.new("UICorner")
@@ -333,15 +335,16 @@ function showMainPanel()
 	glassGradient.Parent = mainPanel
 
 	-----------------------------------------------------------------
-	-- BARRINHA EXTERNA SUPERIOR PARA ARRASTAR O PAINEL
+	-- BARRINHA EXTERNA SUPERIOR PARA ARRASTAR O PAINEL (FORA DO PAINEL, MENOR)
 	-----------------------------------------------------------------
 	local dragBar = Instance.new("TextButton")
-	dragBar.Size = UDim2.new(0, 100, 0, 5)
-	dragBar.Position = UDim2.new(0.5, -50, 0, -9)
+	dragBar.Size = UDim2.new(0, 80, 0, 4)
+	dragBar.Position = UDim2.new(0.5, -40, 0, -8)
 	dragBar.BackgroundColor3 = currentThemeColor
-	dragBar.BackgroundTransparency = 0.3
+	dragBar.BackgroundTransparency = 0.2
 	dragBar.BorderSizePixel = 0
 	dragBar.Text = ""
+	dragBar.ZIndex = 50
 	dragBar.Parent = mainPanel
 	table.insert(themeSliders, dragBar)
 
@@ -520,6 +523,7 @@ function showMainPanel()
 	resizeHandle.Position = UDim2.new(1, -20, 1, -20)
 	resizeHandle.BackgroundTransparency = 1
 	resizeHandle.Text = ""
+	resizeHandle.ZIndex = 50
 	resizeHandle.Parent = mainPanel
 	createResizeSymbol(resizeHandle, UDim2.new(0, 3, 0, 3))
 
@@ -554,11 +558,12 @@ function showMainPanel()
 	-----------------------------------------------------------------
 	local bottomResizeBar = Instance.new("TextButton")
 	bottomResizeBar.Size = UDim2.new(1, -30, 0, 6)
-	bottomResizeBar.Position = UDim2.new(0, 10, 1, -8)
+	bottomResizeBar.Position = UDim2.new(0, 15, 1, -8)
 	bottomResizeBar.BackgroundColor3 = currentThemeColor
 	bottomResizeBar.BackgroundTransparency = 0.5
 	bottomResizeBar.BorderSizePixel = 0
 	bottomResizeBar.Text = ""
+	bottomResizeBar.ZIndex = 50
 	bottomResizeBar.Parent = mainPanel
 	table.insert(themeSliders, bottomResizeBar)
 
