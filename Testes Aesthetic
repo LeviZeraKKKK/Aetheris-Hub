@@ -268,7 +268,6 @@ task.spawn(function()
 	}
 	
 	local currentTweenTime = 0.35
- flan = true
 	for _, step in ipairs(steps) do
 		loadStatus.Text = step.text
 		TweenService:Create(loadBarFill, TweenInfo.new(currentTweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
@@ -332,6 +331,23 @@ function showMainPanel()
 		NumberSequenceKeypoint.new(1, 0.4)
 	})
 	glassGradient.Parent = mainPanel
+
+	-----------------------------------------------------------------
+	-- BARRINHA EXTERNA SUPERIOR PARA ARRASTAR O PAINEL
+	-----------------------------------------------------------------
+	local dragBar = Instance.new("TextButton")
+	dragBar.Size = UDim2.new(0, 100, 0, 5)
+	dragBar.Position = UDim2.new(0.5, -50, 0, -9)
+	dragBar.BackgroundColor3 = currentThemeColor
+	dragBar.BackgroundTransparency = 0.3
+	dragBar.BorderSizePixel = 0
+	dragBar.Text = ""
+	dragBar.Parent = mainPanel
+	table.insert(themeSliders, dragBar)
+
+	local dbCorner = Instance.new("UICorner")
+	dbCorner.CornerRadius = UDim.new(1, 0)
+	dbCorner.Parent = dragBar
 
 	-----------------------------------------------------------------
 	-- SISTEMA DE PARTÍCULAS ANIMADAS DE FUNDO
@@ -424,13 +440,9 @@ function showMainPanel()
 		end
 	end)
 
-	local topBar = Instance.new("Frame")
-	topBar.Size = UDim2.new(1, -80, 0, 40)
-	topBar.BackgroundTransparency = 1
-	topBar.Parent = mainPanel
-
+	-- Lógica para arrastar o painel pela barra superior externa (dragBar) ou pela topBar interna
 	local dragging, dragStart, startPos
-	topBar.InputBegan:Connect(function(input)
+	local function startDragging(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			dragging = true
 			dragStart = input.Position
@@ -443,7 +455,15 @@ function showMainPanel()
 				end
 			end)
 		end
-	end)
+	end
+
+	dragBar.InputBegan:Connect(startDragging)
+
+	local topBar = Instance.new("Frame")
+	topBar.Size = UDim2.new(1, -80, 0, 40)
+	topBar.BackgroundTransparency = 1
+	topBar.Parent = mainPanel
+	topBar.InputBegan:Connect(startDragging)
 
 	UserInputService.InputChanged:Connect(function(input)
 		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
@@ -456,7 +476,7 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- SÍMBOLOS DE REDIMENSIONAR (2 TRAÇOS OP À BORDA - SUPERIOR MAIOR, INFERIOR MENOR)
+	-- SÍMBOLOS DE REDIMENSIONAR (2 TRAÇOS COM A COR DO TEMA)
 	-----------------------------------------------------------------
 	local function createResizeSymbol(parent, pos)
 		local symbolFrame = Instance.new("Frame")
