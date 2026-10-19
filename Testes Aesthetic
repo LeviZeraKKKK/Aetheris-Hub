@@ -312,7 +312,7 @@ function showMainPanel()
 	mainPanel.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
 	mainPanel.BackgroundTransparency = panelTransparencyValue
 	mainPanel.BorderSizePixel = 0
-	mainPanel.ClipsDescendants = false -- Alterado para false para garantir que a barra externa e alças fiquem totalmente visíveis e clicáveis
+	mainPanel.ClipsDescendants = false
 	mainPanel.Parent = screenGui
 
 	local panelCorner = Instance.new("UICorner")
@@ -335,11 +335,11 @@ function showMainPanel()
 	glassGradient.Parent = mainPanel
 
 	-----------------------------------------------------------------
-	-- BARRINHA EXTERNA SUPERIOR PARA ARRASTAR O PAINEL (FORA DO PAINEL, MENOR)
+	-- BARRINHA EXTERNA INFERIOR PARA ARRASTAR O PAINEL
 	-----------------------------------------------------------------
 	local dragBar = Instance.new("TextButton")
 	dragBar.Size = UDim2.new(0, 80, 0, 4)
-	dragBar.Position = UDim2.new(0.5, -40, 0, -8)
+	dragBar.Position = UDim2.new(0.5, -40, 1, 5)
 	dragBar.BackgroundColor3 = currentThemeColor
 	dragBar.BackgroundTransparency = 0.2
 	dragBar.BorderSizePixel = 0
@@ -443,7 +443,7 @@ function showMainPanel()
 		end
 	end)
 
-	-- Lógica para arrastar o painel pela barra superior externa (dragBar) ou pela topBar interna
+	-- Lógica para arrastar o painel pela barra inferior externa (dragBar) ou pela topBar interna
 	local dragging, dragStart, startPos
 	local function startDragging(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -479,7 +479,7 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- SÍMBOLOS DE REDIMENSIONAR (2 TRAÇOS COM A COR DO TEMA)
+	-- SÍMBOLOS DE REDIMENSIONAR (APENAS NO CANTO INFERIOR DIREITO)
 	-----------------------------------------------------------------
 	local function createResizeSymbol(parent, pos)
 		local symbolFrame = Instance.new("Frame")
@@ -548,50 +548,6 @@ function showMainPanel()
 			local delta = input.Position - resizeStart
 			local newWidth = math.clamp(startSize.X + delta.X, 360, 800)
 			local newHeight = math.clamp(startSize.Y + delta.Y, 220, 550)
-			mainPanel.Size = UDim2.new(0, newWidth, 0, newHeight)
-			currentPanelSize = mainPanel.Size
-		end
-	end)
-
-	-----------------------------------------------------------------
-	-- BARRINHA INFERIOR DE REDIMENSIONAR (TRANSPARENTE COM COR DO TEMA)
-	-----------------------------------------------------------------
-	local bottomResizeBar = Instance.new("TextButton")
-	bottomResizeBar.Size = UDim2.new(1, -30, 0, 6)
-	bottomResizeBar.Position = UDim2.new(0, 15, 1, -8)
-	bottomResizeBar.BackgroundColor3 = currentThemeColor
-	bottomResizeBar.BackgroundTransparency = 0.5
-	bottomResizeBar.BorderSizePixel = 0
-	bottomResizeBar.Text = ""
-	bottomResizeBar.ZIndex = 50
-	bottomResizeBar.Parent = mainPanel
-	table.insert(themeSliders, bottomResizeBar)
-
-	local brCorner = Instance.new("UICorner")
-	brCorner.CornerRadius = UDim.new(1, 0)
-	brCorner.Parent = bottomResizeBar
-
-	local bottomResizing, bottomResizeStart, bottomStartSize
-	bottomResizeBar.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			bottomResizing = true
-			bottomResizeStart = input.Position
-			bottomStartSize = mainPanel.AbsoluteSize
-			interactionBlocker.Visible = true
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					bottomResizing = false
-					interactionBlocker.Visible = false
-				end
-			end)
-		end
-	end)
-
-	UserInputService.InputChanged:Connect(function(input)
-		if bottomResizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-			local delta = input.Position - bottomResizeStart
-			local newWidth = math.clamp(bottomStartSize.X + delta.X, 360, 800)
-			local newHeight = math.clamp(bottomStartSize.Y + delta.Y, 220, 550)
 			mainPanel.Size = UDim2.new(0, newWidth, 0, newHeight)
 			currentPanelSize = mainPanel.Size
 		end
