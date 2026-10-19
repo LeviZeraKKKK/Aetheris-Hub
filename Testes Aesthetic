@@ -95,7 +95,7 @@ local _G_EnergyEnabled = false
 
 local isLockOnEnabled = false
 local lockOnMode = "Nearest"
-local lockOnTarget = nil
+local selectedManualTargets = {} -- Tabela para múltiplos alvos manuais
 
 local _G_FilterDistanceEnabled = false
 local _G_FilterDistanceMax = 500
@@ -1395,7 +1395,7 @@ function showMainPanel()
 	local secFisico = createSection(playerPage, "Habilidades Físicas", "⚙️")
 	addToggle(secFisico, "Noclip (Atravessar Paredes)", function(state) _G_NoclipEnabled = state end)
 	addToggle(secFisico, "Infinite Jump (Pulo Infinito)", function(state) _G_InfiniteJumpEnabled = state end)
-	addToggle(secFisico, "Energia Instantânea", function(state) _G_EnergyEnabled = state end)
+	addToggle(secFisico, "Energia Infinita", function(state) _G_EnergyEnabled = state end)
 
 	-----------------------------------------------------------------
 	-- ABA VISUAL
@@ -1523,7 +1523,11 @@ function showMainPanel()
 				count = count + 1
 				local item = Instance.new("TextButton")
 				item.Size = UDim2.new(1, -6, 0, 24)
-				item.BackgroundColor3 = (lockOnTarget == p) and currentThemeColor or Color3.fromRGB(34, 34, 46)
+				
+				-- Verifica se o player está na tabela de múltiplos selecionados
+				local isSelected = selectedManualTargets[p] == true
+				item.BackgroundColor3 = isSelected and currentThemeColor or Color3.fromRGB(34, 34, 46)
+				
 				item.Font = Enum.Font.GothamMedium
 				item.Text = "  " .. p.DisplayName .. " (@" .. p.Name .. ")"
 				item.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -1538,7 +1542,13 @@ function showMainPanel()
 				item.MouseButton1Click:Connect(function()
 					lockOnMode = "Manual"
 					modeSwitchBtn.Text = lockOnMode
-					lockOnTarget = p
+					
+					-- Alterna seleção múltipla
+					if selectedManualTargets[p] then
+						selectedManualTargets[p] = nil
+					else
+						selectedManualTargets[p] = true
+					end
 					updateServerList()
 				end)
 			end
@@ -1549,7 +1559,10 @@ function showMainPanel()
 
 	refreshBtn.MouseButton1Click:Connect(updateServerList)
 	Players.PlayerAdded:Connect(updateServerList)
-	Players.PlayerRemoving:Connect(updateServerList)
+	Players.PlayerRemoving:Connect(function(leavingPlayer)
+		selectedManualTargets[leavingPlayer] = nil
+		updateServerList()
+	end)
 	updateServerList()
 
 	modeSwitchBtn.MouseButton1Click:Connect(function()
@@ -1892,7 +1905,7 @@ function showMainPanel()
 end
 
 -----------------------------------------------------------------
--- RENDER LOOP (LÓGICA DOS ESPs, FOV E LOCK-ON COM FILTROS)
+-- RENDER LOOP (LÓGICA DOS ESPs, FOV E LOCK-ON COM MÚLTIPLOS ALVOS)
 -----------------------------------------------------------------
 local espDrawings = {}
 
@@ -1907,9 +1920,7 @@ Players.PlayerRemoving:Connect(function(leavingPlayer)
 		end)
 		espDrawings[leavingPlayer] = nil
 	end
-	if lockOnTarget == leavingPlayer then
-		lockOnTarget = nil
-	end
+	selectedManualTargets[leavingPlayer] = nil
 end)
 
 local function getAdvancedTarget()
@@ -1966,6 +1977,32 @@ local function getAdvancedTarget()
 							end
 						end
 					end
+				end
+			end
+		end
+	end
+
+	return bestTarget
+end
+
+-- Função para encontrar o alvo manual mais próximo dentre os selecionados
+local function getManualTarget()
+	local bestTarget = nil
+	local shortestDist = math.huge
+	local myChar = player.Character
+
+	if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return nil end
+	local myPos = myChar.HumanoidRootPart.Position
+
+	for p, isSelected in pairs(selectedManualTargets) do
+		if isSelected and p and p.Character and p.Character:FindFirstChild("Head") then
+			local hum = p.Character:FindFirstChild("Humanoid")
+			if hum and hum.Health > 0 then
+				local headPos = p.Character.Head.Position
+				local dist = (headPos - myPos).Magnitude
+				if dist < shortestDist then
+					shortestDist = dist
+					bestTarget = p
 				end
 			end
 		end
@@ -2038,13 +2075,16 @@ RunService.RenderStepped:Connect(function()
 	end
 
 	if isLockOnEnabled then
+		local targetToLock = nil
 		if lockOnMode == "Nearest" then
-			lockOnTarget = getAdvancedTarget()
+			targetToLock = getAdvancedTarget()
+		elseif lockOnMode == "Manual" then
+			targetToLock = getManualTarget()
 		end
 
-		if lockOnTarget and lockOnTarget.Character and lockOnTarget.Character:FindFirstChild("Head") then
-			local targetHead = lockOnTarget.Character.Head
-			local hum = lockOnTarget.Character:FindFirstChild("Humanoid")
+		if targetToLock and targetToLock.Character and targetToLock.Character:FindFirstChild("Head") then
+			local targetHead = targetToLock.Character.Head
+			local hum = targetToLock.Character:FindFirstChild("Humanoid")
 			
 			if hum and hum.Health > 0 then
 				camera.CFrame = CFrame.new(camera.CFrame.Position, targetHead.Position)
