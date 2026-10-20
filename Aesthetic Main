@@ -23,10 +23,57 @@ screenGui.DisplayOrder = 999999
 screenGui.Parent = playerGui
 
 -----------------------------------------------------------------
--- SISTEMA DE CORES DINÂMICAS & TEMA
+-- SISTEMA DE CORES DINÂMICAS & TEMA GLOBAL
 -----------------------------------------------------------------
 local currentThemeColor = Color3.fromRGB(138, 43, 226)
 local panelTransparencyValue = 0.2
+
+local themeToggles = {}
+local themeSections = {}
+local themeTexts = {}
+local themeSliders = {}
+local themeParticles = {}
+local tabIndicators = {}
+
+local function updateGlobalTheme(newColor)
+	currentThemeColor = newColor
+	
+	for _, data in pairs(themeToggles) do
+		if data.isToggled and data.circle and data.button and data.led then
+			TweenService:Create(data.circle, TweenInfo.new(0.18), {Position = UDim2.new(1, -14, 0.5, -6)}):Play()
+			TweenService:Create(data.button, TweenInfo.new(0.18), {BackgroundColor3 = newColor}):Play()
+			TweenService:Create(data.led, TweenInfo.new(0.18), {BackgroundColor3 = newColor}):Play()
+		end
+	end
+
+	for _, secStroke in pairs(themeSections) do
+		secStroke.Color = newColor
+	end
+
+	for _, obj in pairs(themeTexts) do
+		if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+			obj.TextColor3 = newColor
+		elseif obj:IsA("UIStroke") then
+			obj.Color = newColor
+		elseif obj:IsA("Frame") then
+			obj.BackgroundColor3 = newColor
+		end
+	end
+
+	for _, fill in pairs(themeSliders) do
+		fill.BackgroundColor3 = newColor
+	end
+
+	for _, ind in pairs(tabIndicators) do
+		ind.BackgroundColor3 = newColor
+	end
+
+	for _, part in pairs(themeParticles) do
+		if part and part.Parent then
+			part.BackgroundColor3 = newColor
+		end
+	end
+end
 
 -----------------------------------------------------------------
 -- DETECÇÃO DE PLATAFORMA & TAMANHO DINÂMICO
@@ -42,13 +89,12 @@ local _G_WalkSpeedValue = 16
 local _G_JumpPowerEnabled = false
 local _G_JumpPowerValue = 50
 local _G_NoclipEnabled = false
-local _G_InfiniteJumpEnabled = false
 local _G_FullbrightEnabled = false
 local _G_EnergyEnabled = false
 
 local isLockOnEnabled = false
 local lockOnMode = "Nearest"
-local lockOnTarget = nil
+local selectedManualTargets = {}
 
 local _G_FilterDistanceEnabled = false
 local _G_FilterDistanceMax = 500
@@ -64,7 +110,6 @@ local _G_FovThickness = 1
 local _G_FovTransparency = 0.7
 local _G_ColorFov = Color3.fromRGB(138, 43, 226)
 
--- Proteção segura para a biblioteca Drawing (Evita crash se nil)
 local fovCircleDrawing = nil
 pcall(function()
 	if Drawing and typeof(Drawing.new) == "function" then
@@ -89,102 +134,104 @@ local _G_ColorName = Color3.fromRGB(255, 255, 255)
 local _G_ColorDistance = Color3.fromRGB(200, 200, 255)
 local _G_ColorHead = Color3.fromRGB(255, 100, 100)
 
+-- Variável da Keybind de Esconder Painel
+local hideKeybindEnabled = false
+local hideKeybindKey = Enum.KeyCode.RightControl
+
 -----------------------------------------------------------------
--- TELA DE CARREGAMENTO ULTRA PROFISSIONAL
+-- TELA DE CARREGAMENTO
 -----------------------------------------------------------------
 local loadWrapper = Instance.new("Frame")
-loadWrapper.Size = UDim2.new(0, 360, 0, 180)
-loadWrapper.Position = UDim2.new(0.5, -180, 0.5, -90)
-loadWrapper.BackgroundColor3 = Color3.fromRGB(14, 14, 22)
-loadWrapper.BackgroundTransparency = 0.25
+loadWrapper.Size = UDim2.new(0, 380, 0, 190)
+loadWrapper.Position = UDim2.new(0.5, -190, 0.5, -95)
+loadWrapper.BackgroundColor3 = Color3.fromRGB(10, 10, 16)
+loadWrapper.BackgroundTransparency = 0.2
 loadWrapper.BorderSizePixel = 0
 loadWrapper.ClipsDescendants = true
 loadWrapper.Parent = screenGui
 
 local loadCorner = Instance.new("UICorner")
-loadCorner.CornerRadius = UDim.new(0, 14)
+loadCorner.CornerRadius = UDim.new(0, 16)
 loadCorner.Parent = loadWrapper
 
 local loadStroke = Instance.new("UIStroke")
 loadStroke.Color = currentThemeColor
-loadStroke.Transparency = 0.3
-loadStroke.Thickness = 1.8
+loadStroke.Transparency = 0.2
+loadStroke.Thickness = 2
 loadStroke.Parent = loadWrapper
+table.insert(themeTexts, loadStroke)
 
 local sciFiRing = Instance.new("Frame")
-sciFiRing.Size = UDim2.new(0, 54, 0, 54)
-sciFiRing.Position = UDim2.new(0.5, -27, 0, 18)
+sciFiRing.Size = UDim2.new(0, 60, 0, 60)
+sciFiRing.Position = UDim2.new(0.5, -30, 0, 18)
 sciFiRing.BackgroundTransparency = 1
 sciFiRing.Parent = loadWrapper
 
 local ringStroke = Instance.new("UIStroke")
 ringStroke.Color = currentThemeColor
-ringStroke.Transparency = 0.5
-ringStroke.Thickness = 1.5
+ringStroke.Transparency = 0.4
+ringStroke.Thickness = 1.8
 ringStroke.Parent = sciFiRing
+table.insert(themeTexts, ringStroke)
 
 local ringCorner = Instance.new("UICorner")
 ringCorner.CornerRadius = UDim.new(1, 0)
 ringCorner.Parent = sciFiRing
 
 local loadIcon = Instance.new("TextLabel")
-loadIcon.Size = UDim2.new(0, 42, 0, 42)
-loadIcon.Position = UDim2.new(0.5, -21, 0, 24)
-loadIcon.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+loadIcon.Size = UDim2.new(0, 46, 0, 46)
+loadIcon.Position = UDim2.new(0.5, -23, 0, 25)
+loadIcon.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
 loadIcon.Font = Enum.Font.GothamBold
 loadIcon.Text = "⚡"
 loadIcon.TextColor3 = currentThemeColor
-loadIcon.TextSize = 20
+loadIcon.TextSize = 22
 loadIcon.TextTransparency = 1
 loadIcon.Parent = loadWrapper
+table.insert(themeTexts, loadIcon)
 
 local iconCorner = Instance.new("UICorner")
-iconCorner.CornerRadius = UDim.new(0, 10)
+iconCorner.CornerRadius = UDim.new(0, 12)
 iconCorner.Parent = loadIcon
-
-local iconStroke = Instance.new("UIStroke")
-iconStroke.Color = currentThemeColor
-iconStroke.Transparency = 0.4
-iconStroke.Thickness = 1
-iconStroke.Parent = loadIcon
 
 local loadTitle = Instance.new("TextLabel")
 loadTitle.Size = UDim2.new(1, 0, 0, 20)
-loadTitle.Position = UDim2.new(0, 0, 0, 78)
+loadTitle.Position = UDim2.new(0, 0, 0, 84)
 loadTitle.BackgroundTransparency = 1
 loadTitle.Font = Enum.Font.GothamBold
-loadTitle.Text = "AETHERIS HUB"
+loadTitle.Text = "AETHERIS HUB V2"
 loadTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-loadTitle.TextSize = 15
+loadTitle.TextSize = 16
 loadTitle.TextTransparency = 1
 loadTitle.Parent = loadWrapper
 
 local loadStatus = Instance.new("TextLabel")
 loadStatus.Size = UDim2.new(1, 0, 0, 14)
-loadStatus.Position = UDim2.new(0, 0, 0, 98)
+loadStatus.Position = UDim2.new(0, 0, 0, 106)
 loadStatus.BackgroundTransparency = 1
 loadStatus.Font = Enum.Font.GothamMedium
-loadStatus.Text = "Iniciando protocolos de segurança..."
-loadStatus.TextColor3 = Color3.fromRGB(160, 160, 180)
+loadStatus.Text = "Sincronizando sistemas quânticos..."
+loadStatus.TextColor3 = Color3.fromRGB(170, 170, 200)
 loadStatus.TextSize = 10
 loadStatus.TextTransparency = 1
 loadStatus.Parent = loadWrapper
 
 local percentLabel = Instance.new("TextLabel")
 percentLabel.Size = UDim2.new(1, 0, 0, 14)
-percentLabel.Position = UDim2.new(0, 0, 0, 122)
+percentLabel.Position = UDim2.new(0, 0, 0, 132)
 percentLabel.BackgroundTransparency = 1
 percentLabel.Font = Enum.Font.GothamBold
 percentLabel.Text = "0%"
 percentLabel.TextColor3 = currentThemeColor
-percentLabel.TextSize = 11
+percentLabel.TextSize = 12
 percentLabel.TextTransparency = 1
 percentLabel.Parent = loadWrapper
+table.insert(themeTexts, percentLabel)
 
 local loadBarBg = Instance.new("Frame")
-loadBarBg.Size = UDim2.new(0, 280, 0, 6)
-loadBarBg.Position = UDim2.new(0.5, -140, 0, 146)
-loadBarBg.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+loadBarBg.Size = UDim2.new(0, 300, 0, 6)
+loadBarBg.Position = UDim2.new(0.5, -150, 0, 156)
+loadBarBg.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
 loadBarBg.BorderSizePixel = 0
 loadBarBg.Parent = loadWrapper
 
@@ -197,6 +244,7 @@ loadBarFill.Size = UDim2.new(0, 0, 1, 0)
 loadBarFill.BackgroundColor3 = currentThemeColor
 loadBarFill.BorderSizePixel = 0
 loadBarFill.Parent = loadBarBg
+table.insert(themeSliders, loadBarFill)
 
 local loadBarFillCorner = Instance.new("UICorner")
 loadBarFillCorner.CornerRadius = UDim.new(1, 0)
@@ -219,8 +267,8 @@ end)
 task.spawn(function()
 	local steps = {
 		{progress = 0.25, text = "Carregando módulos do Blox Fruits..."},
-		{progress = 0.55, text = "Injetando sistemas ESP e Player..."},
-		{progress = 0.85, text = "Sincronizando ambiente e texturas..."},
+		{progress = 0.55, text = "Injetando ESP, AimLock e Auto Collect..."},
+		{progress = 0.85, text = "Otimizando partículas e shaders..."},
 		{progress = 1.00, text = "Inicialização concluída com sucesso!"}
 	}
 	
@@ -267,11 +315,11 @@ function showMainPanel()
 	mainPanel.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
 	mainPanel.BackgroundTransparency = panelTransparencyValue
 	mainPanel.BorderSizePixel = 0
-	mainPanel.ClipsDescendants = true
+	mainPanel.ClipsDescendants = false
 	mainPanel.Parent = screenGui
 
 	local panelCorner = Instance.new("UICorner")
-	panelCorner.CornerRadius = UDim.new(0, 10)
+	panelCorner.CornerRadius = UDim.new(0, 12)
 	panelCorner.Parent = mainPanel
 
 	local panelStroke = Instance.new("UIStroke")
@@ -279,6 +327,7 @@ function showMainPanel()
 	panelStroke.Transparency = 0.25
 	panelStroke.Thickness = 1.6
 	panelStroke.Parent = mainPanel
+	table.insert(themeTexts, panelStroke)
 
 	local glassGradient = Instance.new("UIGradient")
 	glassGradient.Rotation = 45
@@ -287,6 +336,70 @@ function showMainPanel()
 		NumberSequenceKeypoint.new(1, 0.4)
 	})
 	glassGradient.Parent = mainPanel
+
+	-----------------------------------------------------------------
+	-- BARRINHA EXTERNA INFERIOR PARA ARRASTAR O PAINEL
+	-----------------------------------------------------------------
+	local dragBar = Instance.new("TextButton")
+	dragBar.Size = UDim2.new(0, 80, 0, 4)
+	dragBar.Position = UDim2.new(0.5, -40, 1, 5)
+	dragBar.BackgroundColor3 = currentThemeColor
+	dragBar.BackgroundTransparency = 0.2
+	dragBar.BorderSizePixel = 0
+	dragBar.Text = ""
+	dragBar.ZIndex = 50
+	dragBar.Parent = mainPanel
+	table.insert(themeSliders, dragBar)
+
+	local dbCorner = Instance.new("UICorner")
+	dbCorner.CornerRadius = UDim.new(1, 0)
+	dbCorner.Parent = dragBar
+
+	-----------------------------------------------------------------
+	-- SISTEMA DE PARTÍCULAS ANIMADAS DE FUNDO
+	-----------------------------------------------------------------
+	local particleContainer = Instance.new("Folder")
+	particleContainer.Name = "ThemeParticles"
+	particleContainer.Parent = mainPanel
+
+	for i = 1, 12 do
+		task.spawn(function()
+			local p = Instance.new("Frame")
+			p.Size = UDim2.new(0, math.random(3, 5), 0, math.random(3, 5))
+			p.Position = UDim2.new(math.random(), 0, math.random(), 0)
+			p.BackgroundColor3 = currentThemeColor
+			p.BackgroundTransparency = 0.4
+			p.BorderSizePixel = 0
+			p.Parent = particleContainer
+			table.insert(themeParticles, p)
+
+			local corner = Instance.new("UICorner")
+			corner.CornerRadius = UDim.new(1, 0)
+			corner.Parent = p
+
+			while mainPanel and mainPanel.Parent do
+				local targetX = math.random()
+				local targetY = math.random()
+				local tInfo = TweenInfo.new(math.random(6, 12), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+				TweenService:Create(p, tInfo, {
+					Position = UDim2.new(targetX, 0, targetY, 0),
+					BackgroundTransparency = math.random(2, 8) / 10
+				}):Play()
+				task.wait(math.random(6, 12))
+			end
+		end)
+	end
+
+	-----------------------------------------------------------------
+	-- BLOQUEIO GLOBAL DE INTERAÇÃO (INTERACTION BLOCKER)
+	-----------------------------------------------------------------
+	local interactionBlocker = Instance.new("TextButton")
+	interactionBlocker.Size = UDim2.new(1, 0, 1, 0)
+	interactionBlocker.BackgroundTransparency = 1
+	interactionBlocker.Text = ""
+	interactionBlocker.Visible = false
+	interactionBlocker.ZIndex = 9999
+	interactionBlocker.Parent = mainPanel
 
 	local floatingBtn = Instance.new("TextButton")
 	floatingBtn.Size = UDim2.new(0, 0, 0, 0)
@@ -299,6 +412,7 @@ function showMainPanel()
 	floatingBtn.TextSize = 24
 	floatingBtn.Visible = false
 	floatingBtn.Parent = screenGui
+	table.insert(themeTexts, floatingBtn)
 
 	local floatCorner = Instance.new("UICorner")
 	floatCorner.CornerRadius = UDim.new(0, 8)
@@ -308,6 +422,7 @@ function showMainPanel()
 	floatStroke.Color = currentThemeColor
 	floatStroke.Thickness = 1.3
 	floatStroke.Parent = floatingBtn
+	table.insert(themeTexts, floatStroke)
 
 	local floatDragging, floatDragStart, floatStartPos
 	floatingBtn.InputBegan:Connect(function(input)
@@ -331,22 +446,30 @@ function showMainPanel()
 		end
 	end)
 
-	local topBar = Instance.new("Frame")
-	topBar.Size = UDim2.new(1, -80, 0, 40)
-	topBar.BackgroundTransparency = 1
-	topBar.Parent = mainPanel
-
+	-- Lógica para arrastar o painel
 	local dragging, dragStart, startPos
-	topBar.InputBegan:Connect(function(input)
+	local function startDragging(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			dragging = true
 			dragStart = input.Position
 			startPos = mainPanel.Position
+			interactionBlocker.Visible = true
 			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then dragging = false end
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+					interactionBlocker.Visible = false
+				end
 			end)
 		end
-	end)
+	end
+
+	dragBar.InputBegan:Connect(startDragging)
+
+	local topBar = Instance.new("Frame")
+	topBar.Size = UDim2.new(1, -80, 0, 40)
+	topBar.BackgroundTransparency = 1
+	topBar.Parent = mainPanel
+	topBar.InputBegan:Connect(startDragging)
 
 	UserInputService.InputChanged:Connect(function(input)
 		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
@@ -358,14 +481,51 @@ function showMainPanel()
 		end
 	end)
 
+	-----------------------------------------------------------------
+	-- SÍMBOLOS DE REDIMENSIONAR (CANTO INFERIOR DIREITO)
+	-----------------------------------------------------------------
+	local function createResizeSymbol(parent, pos)
+		local symbolFrame = Instance.new("Frame")
+		symbolFrame.Size = UDim2.new(0, 14, 0, 14)
+		symbolFrame.Position = pos
+		symbolFrame.BackgroundTransparency = 1
+		symbolFrame.Parent = parent
+
+		local line1 = Instance.new("Frame")
+		line1.Size = UDim2.new(0, 10, 0, 2)
+		line1.Position = UDim2.new(0, 2, 0, 3)
+		line1.BackgroundColor3 = currentThemeColor
+		line1.BorderSizePixel = 0
+		line1.Parent = symbolFrame
+		table.insert(themeTexts, line1)
+
+		local c1 = Instance.new("UICorner")
+		c1.CornerRadius = UDim.new(1, 0)
+		c1.Parent = line1
+
+		local line2 = Instance.new("Frame")
+		line2.Size = UDim2.new(0, 6, 0, 2)
+		line2.Position = UDim2.new(0, 6, 0, 8)
+		line2.BackgroundColor3 = currentThemeColor
+		line2.BorderSizePixel = 0
+		line2.Parent = symbolFrame
+		table.insert(themeTexts, line2)
+
+		local c2 = Instance.new("UICorner")
+		c2.CornerRadius = UDim.new(1, 0)
+		c2.Parent = line2
+
+		return symbolFrame
+	end
+
 	local resizeHandle = Instance.new("TextButton")
-	resizeHandle.Size = UDim2.new(0, 14, 0, 14)
-	resizeHandle.Position = UDim2.new(1, -14, 1, -14)
+	resizeHandle.Size = UDim2.new(0, 20, 0, 20)
+	resizeHandle.Position = UDim2.new(1, -20, 1, -20)
 	resizeHandle.BackgroundTransparency = 1
-	resizeHandle.Text = "◢"
-	resizeHandle.TextColor3 = currentThemeColor
-	resizeHandle.TextSize = 10
+	resizeHandle.Text = ""
+	resizeHandle.ZIndex = 50
 	resizeHandle.Parent = mainPanel
+	createResizeSymbol(resizeHandle, UDim2.new(0, 3, 0, 3))
 
 	local resizing, resizeStart, startSize
 	resizeHandle.InputBegan:Connect(function(input)
@@ -373,8 +533,12 @@ function showMainPanel()
 			resizing = true
 			resizeStart = input.Position
 			startSize = mainPanel.AbsoluteSize
+			interactionBlocker.Visible = true
 			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then resizing = false end
+				if input.UserInputState == Enum.UserInputState.End then
+					resizing = false
+					interactionBlocker.Visible = false
+				end
 			end)
 		end
 	end)
@@ -410,6 +574,7 @@ function showMainPanel()
 	subTitleLabel.TextSize = 9
 	subTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 	subTitleLabel.Parent = mainPanel
+	table.insert(themeTexts, subTitleLabel)
 
 	local controlsContainer = Instance.new("Frame")
 	controlsContainer.Size = UDim2.new(0, 70, 0, 26)
@@ -423,6 +588,24 @@ function showMainPanel()
 	uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	uiListLayout.Padding = UDim.new(0, 5)
 	uiListLayout.Parent = controlsContainer
+
+	local function toggleMinimizePanel()
+		if mainPanel.Visible then
+			currentPanelSize = mainPanel.Size
+			TweenService:Create(mainPanel, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+			task.wait(0.25)
+			mainPanel.Visible = false
+			floatingBtn.Visible = true
+			TweenService:Create(floatingBtn, TweenInfo.new(0.18), {Size = UDim2.new(0, 36, 0, 36)}):Play()
+		else
+			TweenService:Create(floatingBtn, TweenInfo.new(0.18), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+			task.wait(0.18)
+			floatingBtn.Visible = false
+			mainPanel.Visible = true
+			mainPanel.Size = UDim2.new(0, 0, 0, 0)
+			TweenService:Create(mainPanel, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = currentPanelSize}):Play()
+		end
+	end
 
 	local function createControlButton(text, callback)
 		local btn = Instance.new("TextButton")
@@ -444,26 +627,21 @@ function showMainPanel()
 	end
 
 	createControlButton("X", function() screenGui:Destroy() end)
+	createControlButton("-", toggleMinimizePanel)
 
-	createControlButton("-", function()
-		currentPanelSize = mainPanel.Size
-		TweenService:Create(mainPanel, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 0, 0, 0)}):Play()
-		task.wait(0.25)
-		mainPanel.Visible = false
-		floatingBtn.Visible = true
-		TweenService:Create(floatingBtn, TweenInfo.new(0.18), {Size = UDim2.new(0, 36, 0, 36)}):Play()
-	end)
+	floatingBtn.MouseButton1Click:Connect(toggleMinimizePanel)
 
-	floatingBtn.MouseButton1Click:Connect(function()
-		TweenService:Create(floatingBtn, TweenInfo.new(0.18), {Size = UDim2.new(0, 0, 0, 0)}):Play()
-		task.wait(0.18)
-		floatingBtn.Visible = false
-		mainPanel.Visible = true
-		TweenService:Create(mainPanel, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = currentPanelSize}):Play()
+	-- Listener de Atalho (Keybind) para esconder/mostrar painel
+	UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if not gameProcessed and hideKeybindEnabled and input.UserInputType == Enum.UserInputType.Keyboard then
+			if input.KeyCode == hideKeybindKey then
+				toggleMinimizePanel()
+			end
+		end
 	end)
 
 	local sidebar = Instance.new("ScrollingFrame")
-	sidebar.Size = UDim2.new(0, 110, 1, -50)
+	sidebar.Size = UDim2.new(0, 110, 1, -58)
 	sidebar.Position = UDim2.new(0, 8, 0, 42)
 	sidebar.BackgroundTransparency = 1
 	sidebar.BorderSizePixel = 0
@@ -477,7 +655,7 @@ function showMainPanel()
 	sidebarLayout.Parent = sidebar
 
 	local contentContainer = Instance.new("Frame")
-	contentContainer.Size = UDim2.new(1, -128, 1, -50)
+	contentContainer.Size = UDim2.new(1, -128, 1, -58)
 	contentContainer.Position = UDim2.new(0, 122, 0, 42)
 	contentContainer.BackgroundColor3 = Color3.fromRGB(22, 22, 30)
 	contentContainer.BackgroundTransparency = 0.45
@@ -524,7 +702,7 @@ function showMainPanel()
 	}
 
 	local activePage = nil
-	local tabIndicators = {}
+	local tabButtonsList = {}
 
 	for i, tabInfo in ipairs(tabs) do
 		local tabButton = Instance.new("TextButton")
@@ -550,14 +728,14 @@ function showMainPanel()
 		indicator.BackgroundColor3 = currentThemeColor
 		indicator.BorderSizePixel = 0
 		indicator.Parent = tabButton
+		table.insert(tabIndicators, indicator)
 
 		local indCorner = Instance.new("UICorner")
 		indCorner.CornerRadius = UDim.new(1, 0)
 		indCorner.Parent = indicator
-
-		tabIndicators[tabButton] = indicator
 		
 		local page = createPage(tabInfo.Name)
+		table.insert(tabButtonsList, {Button = tabButton, Indicator = indicator, Page = page})
 
 		tabButton.MouseButton1Click:Connect(function()
 			if activePage == page then return end
@@ -574,9 +752,9 @@ function showMainPanel()
 			page.Position = UDim2.new(1, 0, 0, 4)
 			TweenService:Create(page, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0, 4, 0, 4)}):Play()
 
-			for btn, ind in pairs(tabIndicators) do
-				TweenService:Create(ind, TweenInfo.new(0.15), {Size = UDim2.new(0, 2, 0, 0)}):Play()
-				TweenService:Create(btn, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(180, 180, 180)}):Play()
+			for _, tData in ipairs(tabButtonsList) do
+				TweenService:Create(tData.Indicator, TweenInfo.new(0.15), {Size = UDim2.new(0, 2, 0, 0)}):Play()
+				TweenService:Create(tData.Button, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(180, 180, 180)}):Play()
 			end
 
 			TweenService:Create(indicator, TweenInfo.new(0.15), {Size = UDim2.new(0, 2, 0, 16)}):Play()
@@ -606,10 +784,11 @@ function showMainPanel()
 		sCorner.Parent = section
 
 		local sStroke = Instance.new("UIStroke")
-		sStroke.Color = Color3.fromRGB(45, 45, 60)
-		sStroke.Transparency = 0.4
-		sStroke.Thickness = 1
+		sStroke.Color = currentThemeColor
+		sStroke.Transparency = 0.3
+		sStroke.Thickness = 1.2
 		sStroke.Parent = section
+		table.insert(themeSections, sStroke)
 
 		local iconLabel = Instance.new("TextLabel")
 		iconLabel.Size = UDim2.new(0, 20, 0, 20)
@@ -620,6 +799,7 @@ function showMainPanel()
 		iconLabel.TextColor3 = currentThemeColor
 		iconLabel.TextSize = 10
 		iconLabel.Parent = section
+		table.insert(themeTexts, iconLabel)
 
 		local sTitle = Instance.new("TextLabel")
 		sTitle.Size = UDim2.new(1, -36, 0, 20)
@@ -715,7 +895,6 @@ function showMainPanel()
 		local whiteGradientFrame = Instance.new("Frame")
 		whiteGradientFrame.Size = UDim2.new(1, 0, 1, 0)
 		whiteGradientFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		whiteGradientFrame.BackgroundTransparency = 0
 		whiteGradientFrame.BorderSizePixel = 0
 		whiteGradientFrame.ZIndex = 52
 		whiteGradientFrame.Parent = canvas
@@ -735,7 +914,6 @@ function showMainPanel()
 		local blackGradientFrame = Instance.new("Frame")
 		blackGradientFrame.Size = UDim2.new(1, 0, 1, 0)
 		blackGradientFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-		blackGradientFrame.BackgroundTransparency = 0
 		blackGradientFrame.BorderSizePixel = 0
 		blackGradientFrame.ZIndex = 53
 		blackGradientFrame.Parent = canvas
@@ -819,7 +997,7 @@ function showMainPanel()
 			if draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 				local y = math.clamp((input.Position.Y - hueBar.AbsolutePosition.Y) / hueBar.AbsoluteSize.Y, 0, 1)
 				huePicker.Position = UDim2.new(0, 0, y, -1)
-				currentH = 1 - y
+				currentH = y
 				updateColor()
 			end
 		end)
@@ -899,6 +1077,9 @@ function showMainPanel()
 		cCorner.CornerRadius = UDim.new(1, 0)
 		cCorner.Parent = circle
 
+		local toggleStateRef = {isToggled = false, circle = circle, button = toggleBtn, led = ledIndicator}
+		table.insert(themeToggles, toggleStateRef)
+
 		local colorBtn = Instance.new("TextButton")
 		colorBtn.Size = UDim2.new(0, 18, 0, 14)
 		colorBtn.Position = UDim2.new(1, -58, 0.5, -7)
@@ -942,7 +1123,6 @@ function showMainPanel()
 		local whiteGradientFrame = Instance.new("Frame")
 		whiteGradientFrame.Size = UDim2.new(1, 0, 1, 0)
 		whiteGradientFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		whiteGradientFrame.BackgroundTransparency = 0
 		whiteGradientFrame.BorderSizePixel = 0
 		whiteGradientFrame.ZIndex = 52
 		whiteGradientFrame.Parent = canvas
@@ -962,7 +1142,6 @@ function showMainPanel()
 		local blackGradientFrame = Instance.new("Frame")
 		blackGradientFrame.Size = UDim2.new(1, 0, 1, 0)
 		blackGradientFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-		blackGradientFrame.BackgroundTransparency = 0
 		blackGradientFrame.BorderSizePixel = 0
 		blackGradientFrame.ZIndex = 53
 		blackGradientFrame.Parent = canvas
@@ -1046,7 +1225,7 @@ function showMainPanel()
 			if draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 				local y = math.clamp((input.Position.Y - hueBar.AbsolutePosition.Y) / hueBar.AbsoluteSize.Y, 0, 1)
 				huePicker.Position = UDim2.new(0, 0, y, -1)
-				currentH = 1 - y
+				currentH = y
 				updateColor()
 			end
 		end)
@@ -1069,18 +1248,17 @@ function showMainPanel()
 			end
 		end)
 
-		local toggled = false
 		toggleBtn.MouseButton1Click:Connect(function()
-			toggled = not toggled
-			local targetPos = toggled and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
-			local targetColor = toggled and currentThemeColor or Color3.fromRGB(50, 50, 70)
-			local targetLedColor = toggled and currentThemeColor or Color3.fromRGB(80, 80, 100)
+			toggleStateRef.isToggled = not toggleStateRef.isToggled
+			local targetPos = toggleStateRef.isToggled and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
+			local targetColor = toggleStateRef.isToggled and currentThemeColor or Color3.fromRGB(50, 50, 70)
+			local targetLedColor = toggleStateRef.isToggled and currentThemeColor or Color3.fromRGB(80, 80, 100)
 			
 			TweenService:Create(circle, TweenInfo.new(0.18), {Position = targetPos}):Play()
 			TweenService:Create(toggleBtn, TweenInfo.new(0.18), {BackgroundColor3 = targetColor}):Play()
 			TweenService:Create(ledIndicator, TweenInfo.new(0.18), {BackgroundColor3 = targetLedColor}):Play()
 			
-			toggleCallback(toggled)
+			toggleCallback(toggleStateRef.isToggled)
 		end)
 	end
 
@@ -1137,18 +1315,20 @@ function showMainPanel()
 		cCorner.CornerRadius = UDim.new(1, 0)
 		cCorner.Parent = circle
 
-		local toggled = false
+		local toggleStateRef = {isToggled = false, circle = circle, button = toggleBtn, led = ledIndicator}
+		table.insert(themeToggles, toggleStateRef)
+
 		toggleBtn.MouseButton1Click:Connect(function()
-			toggled = not toggled
-			local targetPos = toggled and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
-			local targetColor = toggled and currentThemeColor or Color3.fromRGB(50, 50, 70)
-			local targetLedColor = toggled and currentThemeColor or Color3.fromRGB(80, 80, 100)
+			toggleStateRef.isToggled = not toggleStateRef.isToggled
+			local targetPos = toggleStateRef.isToggled and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
+			local targetColor = toggleStateRef.isToggled and currentThemeColor or Color3.fromRGB(50, 50, 70)
+			local targetLedColor = toggleStateRef.isToggled and currentThemeColor or Color3.fromRGB(80, 80, 100)
 			
 			TweenService:Create(circle, TweenInfo.new(0.18), {Position = targetPos}):Play()
 			TweenService:Create(toggleBtn, TweenInfo.new(0.18), {BackgroundColor3 = targetColor}):Play()
 			TweenService:Create(ledIndicator, TweenInfo.new(0.18), {BackgroundColor3 = targetLedColor}):Play()
 			
-			callback(toggled)
+			callback(toggleStateRef.isToggled)
 		end)
 	end
 
@@ -1190,6 +1370,7 @@ function showMainPanel()
 		fill.BackgroundColor3 = currentThemeColor
 		fill.BorderSizePixel = 0
 		fill.Parent = bar
+		table.insert(themeSliders, fill)
 
 		local fCorner = Instance.new("UICorner")
 		fCorner.CornerRadius = UDim.new(1, 0)
@@ -1226,8 +1407,7 @@ function showMainPanel()
 
 	local secFisico = createSection(playerPage, "Habilidades Físicas", "⚙️")
 	addToggle(secFisico, "Noclip (Atravessar Paredes)", function(state) _G_NoclipEnabled = state end)
-	addToggle(secFisico, "Infinite Jump (Pulo Infinito)", function(state) _G_InfiniteJumpEnabled = state end)
-	addToggle(secFisico, "Energia Instantânea", function(state) _G_EnergyEnabled = state end)
+	addToggle(secFisico, "Energia Infinita", function(state) _G_EnergyEnabled = state end)
 
 	-----------------------------------------------------------------
 	-- ABA VISUAL
@@ -1355,7 +1535,10 @@ function showMainPanel()
 				count = count + 1
 				local item = Instance.new("TextButton")
 				item.Size = UDim2.new(1, -6, 0, 24)
-				item.BackgroundColor3 = (lockOnTarget == p) and currentThemeColor or Color3.fromRGB(34, 34, 46)
+				
+				local isSelected = selectedManualTargets[p] == true
+				item.BackgroundColor3 = isSelected and currentThemeColor or Color3.fromRGB(34, 34, 46)
+				
 				item.Font = Enum.Font.GothamMedium
 				item.Text = "  " .. p.DisplayName .. " (@" .. p.Name .. ")"
 				item.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -1370,7 +1553,12 @@ function showMainPanel()
 				item.MouseButton1Click:Connect(function()
 					lockOnMode = "Manual"
 					modeSwitchBtn.Text = lockOnMode
-					lockOnTarget = p
+					
+					if selectedManualTargets[p] then
+						selectedManualTargets[p] = nil
+					else
+						selectedManualTargets[p] = true
+					end
 					updateServerList()
 				end)
 			end
@@ -1381,7 +1569,10 @@ function showMainPanel()
 
 	refreshBtn.MouseButton1Click:Connect(updateServerList)
 	Players.PlayerAdded:Connect(updateServerList)
-	Players.PlayerRemoving:Connect(updateServerList)
+	Players.PlayerRemoving:Connect(function(leavingPlayer)
+		selectedManualTargets[leavingPlayer] = nil
+		updateServerList()
+	end)
 	updateServerList()
 
 	modeSwitchBtn.MouseButton1Click:Connect(function()
@@ -1395,30 +1586,308 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- OUTRAS ABAS
+	-- ABA FARMING (CHEST COLLECTOR GLOBAL OMNI-DIRECTIONAL NOCLIP)
 	-----------------------------------------------------------------
 	local farmingPage = pages["Farming"]
 	local secFarm = createSection(farmingPage, "Automação", "⚡")
-	addToggle(secFarm, "Auto Farm Level", function(state) end)
-	addToggle(secFarm, "Fast Attack", function(state) end)
 
+	local chestFolder = workspace:WaitForChild("ChestModels")
+	local mapFolder = workspace:WaitForChild("Map")
+
+	local chestActive = false
+	local chestSpeed = 50
+	local WATER_SAFE_Y = 15
+	local ISLAND_HEIGHT = 15
+	local ISLAND_ARRIVAL_DISTANCE = 20
+
+	local chestTarget = nil
+	local chestTargetType = nil
+	local visitedChests = {}
+	local visitedIslands = {}
+	local originalCollision = {}
+
+	local moveConnection, noclipConnection, sitConnection, healthConnection
+	local lastHealth = nil
+	local lastDamageTime = 0
+
+	local function getCharacterParts()
+		local character = player.Character
+		if not character then return end
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		local root = character:FindFirstChild("HumanoidRootPart")
+		if humanoid and root and humanoid.Health > 0 then
+			return character, humanoid, root
+		end
+	end
+
+	-- NOCLIP DE TODOS OS LADOS (GLOBAL E ABSOLUTO)
+	local function setOmniNoclip(enabled)
+		if noclipConnection then
+			noclipConnection:Disconnect()
+			noclipConnection = nil
+		end
+
+		if enabled then
+			table.clear(originalCollision)
+			noclipConnection = RunService.Stepped:Connect(function()
+				if not chestActive then return end
+				local currentCharacter = player.Character
+				if not currentCharacter then return end
+
+				for _, part in ipairs(currentCharacter:GetDescendants()) do
+					if part:IsA("BasePart") then
+						if originalCollision[part] == nil then
+							originalCollision[part] = part.CanCollide
+						end
+						part.CanCollide = false
+						part.AssemblyLinearVelocity = part.AssemblyLinearVelocity
+					end
+				end
+			end)
+		else
+			for part, originalValue in pairs(originalCollision) do
+				if part and part.Parent then
+					part.CanCollide = originalValue
+				end
+			end
+			table.clear(originalCollision)
+		end
+	end
+
+	local function jumpIfSeated()
+		local _, humanoid = getCharacterParts()
+		if not humanoid or not chestActive then return end
+		if humanoid.Sit or humanoid:GetState() == Enum.HumanoidStateType.Seated then
+			humanoid.Sit = false
+			humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+		end
+	end
+
+	local function getPosition(object)
+		if not object or not object.Parent then return nil end
+		if object:IsA("Model") then
+			return object:GetPivot().Position
+		elseif object:IsA("BasePart") then
+			return object.Position
+		end
+		return nil
+	end
+
+	local function getChestCandidates()
+		local candidates = {}
+		for _, object in ipairs(chestFolder:GetDescendants()) do
+			if object:IsA("Model") or object:IsA("BasePart") then
+				local ancestor = object.Parent
+				local nested = false
+				while ancestor and ancestor ~= chestFolder do
+					if ancestor:IsA("Model") or ancestor:IsA("BasePart") then
+						nested = true
+						break
+					end
+					ancestor = ancestor.Parent
+				end
+				if not nested and getPosition(object) then
+					table.insert(candidates, object)
+				end
+			end
+		end
+		return candidates
+	end
+
+	local function getIslandCandidates()
+		local candidates = {}
+		for _, object in ipairs(mapFolder:GetDescendants()) do
+			if object:IsA("Model") then
+				local ancestor = object.Parent
+				local nestedModel = false
+				while ancestor and ancestor ~= mapFolder do
+					if ancestor:IsA("Model") then
+						nestedModel = true
+						break
+					end
+					ancestor = ancestor.Parent
+				end
+				if not nestedModel and getPosition(object) then
+					table.insert(candidates, object)
+				end
+			end
+		end
+		return candidates
+	end
+
+	local function findNearest(candidates, root, visited)
+		local nearest, nearestDistance = nil, math.huge
+		for _, object in ipairs(candidates) do
+			if object.Parent and not visited[object] then
+				local position = getPosition(object)
+				if position then
+					local distance = (position - root.Position).Magnitude
+					if distance < nearestDistance then
+						nearestDistance = distance
+						nearest = object
+					end
+				end
+			end
+		end
+		return nearest
+	end
+
+	local function stopChestCollector()
+		chestActive = false
+		chestTarget = nil
+		chestTargetType = nil
+
+		if moveConnection then moveConnection:Disconnect(); moveConnection = nil end
+		if sitConnection then sitConnection:Disconnect(); sitConnection = nil end
+		if healthConnection then healthConnection:Disconnect(); healthConnection = nil end
+
+		setOmniNoclip(false)
+
+		local _, humanoid, root = getCharacterParts()
+		if humanoid then
+			humanoid:Move(Vector3.zero)
+			humanoid.AutoRotate = true
+		end
+		if root then
+			root.AssemblyLinearVelocity = Vector3.zero
+		end
+
+		table.clear(visitedChests)
+		table.clear(visitedIslands)
+	end
+
+	local function startChestCollector()
+		local _, humanoid, root = getCharacterParts()
+		if not humanoid or not root then return end
+
+		chestActive = true
+		chestTarget = nil
+		chestTargetType = nil
+		lastHealth = humanoid.Health
+		lastDamageTime = 0
+
+		table.clear(visitedChests)
+		table.clear(visitedIslands)
+		setOmniNoclip(true)
+
+		if healthConnection then healthConnection:Disconnect() end
+		healthConnection = humanoid.HealthChanged:Connect(function(newHealth)
+			if lastHealth and newHealth < lastHealth then
+				lastDamageTime = os.clock()
+			end
+			lastHealth = newHealth
+		end)
+
+		sitConnection = RunService.Heartbeat:Connect(function()
+			if chestActive then jumpIfSeated() end
+		end)
+
+		moveConnection = RunService.Heartbeat:Connect(function()
+			if not chestActive then return end
+
+			local _, hum, hrp = getCharacterParts()
+			if not hum or not hrp then
+				stopChestCollector()
+				return
+			end
+
+			local nearestChest = findNearest(getChestCandidates(), hrp, visitedChests)
+			if nearestChest then
+				chestTarget = nearestChest
+				chestTargetType = "Chest"
+			elseif not chestTarget or chestTargetType ~= "Island" or not chestTarget.Parent or visitedIslands[chestTarget] then
+				chestTarget = findNearest(getIslandCandidates(), hrp, visitedIslands)
+				chestTargetType = chestTarget and "Island" or nil
+			end
+
+			if not chestTarget then
+				hrp.AssemblyLinearVelocity = Vector3.zero
+				hum:Move(Vector3.zero)
+				return
+			end
+
+			local position = getPosition(chestTarget)
+			if not position then
+				chestTarget = nil
+				chestTargetType = nil
+				return
+			end
+
+			local destination
+			if chestTargetType == "Chest" then
+				destination = position + Vector3.new(0, 2, 0)
+			else
+				local safeY = math.max(position.Y + ISLAND_HEIGHT, WATER_SAFE_Y, hrp.Position.Y)
+				destination = Vector3.new(position.X, safeY, position.Z)
+			end
+
+			local offset = destination - hrp.Position
+			local distance = offset.Magnitude
+
+			if chestTargetType == "Chest" and distance < 4 then
+				visitedChests[chestTarget] = true
+				chestTarget = nil
+				chestTargetType = nil
+				hrp.AssemblyLinearVelocity = Vector3.zero
+				return
+			end
+
+			if chestTargetType == "Island" then
+				local horizontalOffset = Vector3.new(position.X - hrp.Position.X, 0, position.Z - hrp.Position.Z)
+				local recentlyDamaged = (os.clock() - lastDamageTime < 1)
+
+				if horizontalOffset.Magnitude < ISLAND_ARRIVAL_DISTANCE or recentlyDamaged then
+					visitedIslands[chestTarget] = true
+					chestTarget = nil
+					chestTargetType = nil
+					hrp.AssemblyLinearVelocity = Vector3.zero
+					return
+				end
+			end
+
+			if chestTargetType == "Island" and hrp.Position.Y < WATER_SAFE_Y then
+				hrp.AssemblyLinearVelocity = Vector3.new(
+					offset.Unit.X * chestSpeed,
+					math.max(chestSpeed * 0.5, 10),
+					offset.Unit.Z * chestSpeed
+				)
+			elseif distance > 0.1 then
+				local direction = offset.Unit
+				hrp.AssemblyLinearVelocity = direction * chestSpeed
+				hum:Move(direction, false)
+			else
+				hrp.AssemblyLinearVelocity = Vector3.zero
+				hum:Move(Vector3.zero)
+			end
+		end)
+	end
+
+	addToggle(secFarm, "Auto Collect Chest", function(state)
+		if state then
+			startChestCollector()
+		else
+			stopChestCollector()
+		end
+	end)
+
+	addSlider(secFarm, "Velocidade do Chest Collector", 5, 500, 50, function(val)
+		chestSpeed = val
+	end)
+
+	-----------------------------------------------------------------
+	-- ABA FRUTA (Vazia conforme solicitado)
+	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
 	local secFruta = createSection(frutaPage, "Frutas", "🍎")
-	addToggle(secFruta, "Auto Buy Fruit", function(state) end)
-	addToggle(secFruta, "Auto Store Fruit", function(state) end)
 
+	-----------------------------------------------------------------
+	-- ABA CONFIG (COM KEYBIND EM TEXTBOX)
+	-----------------------------------------------------------------
 	local configPage = pages["Config"]
 	local secConfig = createSection(configPage, "Tema do Hub", "⚙️")
 	
 	addColorPicker(secConfig, "Cor Principal do Hub", currentThemeColor, function(color)
-		currentThemeColor = color
-		panelStroke.Color = color
-		floatStroke.Color = color
-		floatingBtn.TextColor3 = color
-		subTitleLabel.TextColor3 = color
-		loadIcon.TextColor3 = color
-		resizeHandle.TextColor3 = color
-		for _, ind in pairs(tabIndicators) do ind.BackgroundColor3 = color end
+		updateGlobalTheme(color)
 	end)
 
 	addSlider(secConfig, "Transparência do Painel", 0, 80, 20, function(val)
@@ -1427,15 +1896,130 @@ function showMainPanel()
 		floatingBtn.BackgroundTransparency = panelTransparencyValue
 	end)
 
+	local secKeybind = createSection(configPage, "Atalhos (PC)", "⌨️")
+	
+	local kbFrame = Instance.new("Frame")
+	kbFrame.Size = UDim2.new(1, 0, 0, 32)
+	kbFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+	kbFrame.BackgroundTransparency = 0.5
+	kbFrame.Parent = secKeybind
+
+	local kbCorner = Instance.new("UICorner")
+	kbCorner.CornerRadius = UDim.new(0, 5)
+	kbCorner.Parent = kbFrame
+
+	local kbLed = Instance.new("Frame")
+	kbLed.Size = UDim2.new(0, 6, 0, 6)
+	kbLed.Position = UDim2.new(0, 8, 0.5, -3)
+	kbLed.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
+	kbLed.Parent = kbFrame
+
+	local kbLedCorner = Instance.new("UICorner")
+	kbLedCorner.CornerRadius = UDim.new(1, 0)
+	kbLedCorner.Parent = kbLed
+
+	local kbLabel = Instance.new("TextLabel")
+	kbLabel.Size = UDim2.new(1, -110, 1, 0)
+	kbLabel.Position = UDim2.new(0, 20, 0, 0)
+	kbLabel.BackgroundTransparency = 1
+	kbLabel.Font = Enum.Font.GothamMedium
+	kbLabel.Text = "Keybind Esconder Painel (PC)"
+	kbLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+	kbLabel.TextSize = 10
+	kbLabel.TextXAlignment = Enum.TextXAlignment.Left
+	kbLabel.Parent = kbFrame
+
+	local kbToggleBtn = Instance.new("TextButton")
+	kbToggleBtn.Size = UDim2.new(0, 28, 0, 16)
+	kbToggleBtn.Position = UDim2.new(1, -104, 0.5, -8)
+	kbToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+	kbToggleBtn.Text = ""
+	kbToggleBtn.Parent = kbFrame
+
+	local ktCorner = Instance.new("UICorner")
+	ktCorner.CornerRadius = UDim.new(1, 0)
+	ktCorner.Parent = kbToggleBtn
+
+	local kbCircle = Instance.new("Frame")
+	kbCircle.Size = UDim2.new(0, 12, 0, 12)
+	kbCircle.Position = UDim2.new(0, 2, 0.5, -6)
+	kbCircle.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+	kbCircle.Parent = kbToggleBtn
+
+	local kcCorner = Instance.new("UICorner")
+	kcCorner.CornerRadius = UDim.new(1, 0)
+	kcCorner.Parent = kbCircle
+
+	local keybindStateRef = {isToggled = false, circle = kbCircle, button = kbToggleBtn, led = kbLed}
+	table.insert(themeToggles, keybindStateRef)
+
+	-- TextBox interativa para seleção de tecla por texto
+	local keyBox = Instance.new("TextBox")
+	keyBox.Size = UDim2.new(0, 64, 0, 20)
+	keyBox.Position = UDim2.new(1, -68, 0.5, -10)
+	keyBox.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
+	keyBox.Font = Enum.Font.GothamBold
+	keyBox.Text = hideKeybindKey.Name
+	keyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+	keyBox.TextSize = 10
+	keyBox.ClearTextOnFocus = true
+	keyBox.Parent = kbFrame
+	table.insert(themeTexts, keyBox)
+
+	local kBoxCorner = Instance.new("UICorner")
+	kBoxCorner.CornerRadius = UDim.new(0, 4)
+	kBoxCorner.Parent = keyBox
+
+	keyBox.Focused:Connect(function()
+		keyBox.Text = ""
+	end)
+
+	keyBox.FocusLost:Connect(function(enterPressed)
+		local typedText = string.upper(keyBox.Text)
+		local foundKey = Enum.KeyCode[typedText]
+		if foundKey then
+			hideKeybindKey = foundKey
+			keyBox.Text = hideKeybindKey.Name
+		else
+			keyBox.Text = hideKeybindKey.Name
+		end
+	end)
+
+	kbToggleBtn.MouseButton1Click:Connect(function()
+		keybindStateRef.isToggled = not keybindStateRef.isToggled
+		hideKeybindEnabled = keybindStateRef.isToggled
+		local targetPos = keybindStateRef.isToggled and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
+		local targetColor = keybindStateRef.isToggled and currentThemeColor or Color3.fromRGB(50, 50, 70)
+		local targetLedColor = keybindStateRef.isToggled and currentThemeColor or Color3.fromRGB(80, 80, 100)
+		
+		TweenService:Create(kbCircle, TweenInfo.new(0.18), {Position = targetPos}):Play()
+		TweenService:Create(kbToggleBtn, TweenInfo.new(0.18), {BackgroundColor3 = targetColor}):Play()
+		TweenService:Create(kbLed, TweenInfo.new(0.18), {BackgroundColor3 = targetLedColor}):Play()
+	end)
+
 	TweenService:Create(mainPanel, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
 		Size = currentPanelSize
 	}):Play()
 end
 
 -----------------------------------------------------------------
--- RENDER LOOP (LÓGICA DOS ESPs, FOV E LOCK-ON COM FILTROS)
+-- RENDER LOOP (ESP, FOV, LOCK-ON E MOVIMENTOS)
 -----------------------------------------------------------------
 local espDrawings = {}
+
+Players.PlayerRemoving:Connect(function(leavingPlayer)
+	if espDrawings[leavingPlayer] then
+		pcall(function()
+			for _, drawingObj in pairs(espDrawings[leavingPlayer]) do
+				if typeof(drawingObj) == "table" and drawingObj.Remove then
+					drawingObj:Remove()
+				end
+			end
+		end)
+		espDrawings[leavingPlayer] = nil
+	end
+	selectedManualTargets[leavingPlayer] = nil
+end)
 
 local function getAdvancedTarget()
 	local bestTarget = nil
@@ -1499,6 +2083,31 @@ local function getAdvancedTarget()
 	return bestTarget
 end
 
+local function getManualTarget()
+	local bestTarget = nil
+	local shortestDist = math.huge
+	local myChar = player.Character
+
+	if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return nil end
+	local myPos = myChar.HumanoidRootPart.Position
+
+	for p, isSelected in pairs(selectedManualTargets) do
+		if isSelected and p and p.Character and p.Character:FindFirstChild("Head") then
+			local hum = p.Character:FindFirstChild("Humanoid")
+			if hum and hum.Health > 0 then
+				local headPos = p.Character.Head.Position
+				local dist = (headPos - myPos).Magnitude
+				if dist < shortestDist then
+					shortestDist = dist
+					bestTarget = p
+				end
+			end
+		end
+	end
+
+	return bestTarget
+end
+
 RunService.RenderStepped:Connect(function()
 	local char = player.Character
 	if char and char:FindFirstChild("Humanoid") then
@@ -1546,7 +2155,6 @@ RunService.RenderStepped:Connect(function()
 		end
 	end
 
-	-- Lógica segura de customização do Círculo de FOV
 	if _G_FovVisible and fovCircleDrawing then
 		pcall(function()
 			fovCircleDrawing.Visible = true
@@ -1564,13 +2172,16 @@ RunService.RenderStepped:Connect(function()
 	end
 
 	if isLockOnEnabled then
+		local targetToLock = nil
 		if lockOnMode == "Nearest" then
-			lockOnTarget = getAdvancedTarget()
+			targetToLock = getAdvancedTarget()
+		elseif lockOnMode == "Manual" then
+			targetToLock = getManualTarget()
 		end
 
-		if lockOnTarget and lockOnTarget.Character and lockOnTarget.Character:FindFirstChild("Head") then
-			local targetHead = lockOnTarget.Character.Head
-			local hum = lockOnTarget.Character:FindFirstChild("Humanoid")
+		if targetToLock and targetToLock.Character and targetToLock.Character:FindFirstChild("Head") then
+			local targetHead = targetToLock.Character.Head
+			local hum = targetToLock.Character:FindFirstChild("Humanoid")
 			
 			if hum and hum.Health > 0 then
 				camera.CFrame = CFrame.new(camera.CFrame.Position, targetHead.Position)
