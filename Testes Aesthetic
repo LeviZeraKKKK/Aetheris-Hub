@@ -89,13 +89,12 @@ local _G_WalkSpeedValue = 16
 local _G_JumpPowerEnabled = false
 local _G_JumpPowerValue = 50
 local _G_NoclipEnabled = false
-local _G_InfiniteJumpEnabled = false
 local _G_FullbrightEnabled = false
 local _G_EnergyEnabled = false
 
 local isLockOnEnabled = false
 local lockOnMode = "Nearest"
-local selectedManualTargets = {} -- Tabela para múltiplos alvos manuais
+local selectedManualTargets = {}
 
 local _G_FilterDistanceEnabled = false
 local _G_FilterDistanceMax = 500
@@ -135,8 +134,12 @@ local _G_ColorName = Color3.fromRGB(255, 255, 255)
 local _G_ColorDistance = Color3.fromRGB(200, 200, 255)
 local _G_ColorHead = Color3.fromRGB(255, 100, 100)
 
+-- Variável da Keybind de Esconder Painel
+local hideKeybindEnabled = false
+local hideKeybindKey = Enum.KeyCode.RightControl
+
 -----------------------------------------------------------------
--- TELA DE CARREGAMENTO ULTRA PROFISSIONAL APRIMORADA
+-- TELA DE CARREGAMENTO
 -----------------------------------------------------------------
 local loadWrapper = Instance.new("Frame")
 loadWrapper.Size = UDim2.new(0, 380, 0, 190)
@@ -443,7 +446,7 @@ function showMainPanel()
 		end
 	end)
 
-	-- Lógica para arrastar o painel pela barra inferior externa (dragBar) ou pela topBar interna
+	-- Lógica para arrastar o painel
 	local dragging, dragStart, startPos
 	local function startDragging(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -479,7 +482,7 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- SÍMBOLOS DE REDIMENSIONAR (APENAS NO CANTO INFERIOR DIREITO)
+	-- SÍMBOLOS DE REDIMENSIONAR (CANTO INFERIOR DIREITO)
 	-----------------------------------------------------------------
 	local function createResizeSymbol(parent, pos)
 		local symbolFrame = Instance.new("Frame")
@@ -488,7 +491,6 @@ function showMainPanel()
 		symbolFrame.BackgroundTransparency = 1
 		symbolFrame.Parent = parent
 
-		-- Traço Superior (Maior)
 		local line1 = Instance.new("Frame")
 		line1.Size = UDim2.new(0, 10, 0, 2)
 		line1.Position = UDim2.new(0, 2, 0, 3)
@@ -501,7 +503,6 @@ function showMainPanel()
 		c1.CornerRadius = UDim.new(1, 0)
 		c1.Parent = line1
 
-		-- Traço Inferior (Menor)
 		local line2 = Instance.new("Frame")
 		line2.Size = UDim2.new(0, 6, 0, 2)
 		line2.Position = UDim2.new(0, 6, 0, 8)
@@ -517,7 +518,6 @@ function showMainPanel()
 		return symbolFrame
 	end
 
-	-- Alça de Redimensionar Canto Inferior Direito
 	local resizeHandle = Instance.new("TextButton")
 	resizeHandle.Size = UDim2.new(0, 20, 0, 20)
 	resizeHandle.Position = UDim2.new(1, -20, 1, -20)
@@ -589,6 +589,24 @@ function showMainPanel()
 	uiListLayout.Padding = UDim.new(0, 5)
 	uiListLayout.Parent = controlsContainer
 
+	local function toggleMinimizePanel()
+		if mainPanel.Visible then
+			currentPanelSize = mainPanel.Size
+			TweenService:Create(mainPanel, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+			task.wait(0.25)
+			mainPanel.Visible = false
+			floatingBtn.Visible = true
+			TweenService:Create(floatingBtn, TweenInfo.new(0.18), {Size = UDim2.new(0, 36, 0, 36)}):Play()
+		else
+			TweenService:Create(floatingBtn, TweenInfo.new(0.18), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+			task.wait(0.18)
+			floatingBtn.Visible = false
+			mainPanel.Visible = true
+			mainPanel.Size = UDim2.new(0, 0, 0, 0)
+			TweenService:Create(mainPanel, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = currentPanelSize}):Play()
+		end
+	end
+
 	local function createControlButton(text, callback)
 		local btn = Instance.new("TextButton")
 		btn.Size = UDim2.new(0, 20, 0, 20)
@@ -609,22 +627,17 @@ function showMainPanel()
 	end
 
 	createControlButton("X", function() screenGui:Destroy() end)
+	createControlButton("-", toggleMinimizePanel)
 
-	createControlButton("-", function()
-		currentPanelSize = mainPanel.Size
-		TweenService:Create(mainPanel, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 0, 0, 0)}):Play()
-		task.wait(0.25)
-		mainPanel.Visible = false
-		floatingBtn.Visible = true
-		TweenService:Create(floatingBtn, TweenInfo.new(0.18), {Size = UDim2.new(0, 36, 0, 36)}):Play()
-	end)
+	floatingBtn.MouseButton1Click:Connect(toggleMinimizePanel)
 
-	floatingBtn.MouseButton1Click:Connect(function()
-		TweenService:Create(floatingBtn, TweenInfo.new(0.18), {Size = UDim2.new(0, 0, 0, 0)}):Play()
-		task.wait(0.18)
-		floatingBtn.Visible = false
-		mainPanel.Visible = true
-		TweenService:Create(mainPanel, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = currentPanelSize}):Play()
+	-- Listener de Atalho (Keybind) para esconder/mostrar painel
+	UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if not gameProcessed and hideKeybindEnabled and input.UserInputType == Enum.UserInputType.Keyboard then
+			if input.KeyCode == hideKeybindKey then
+				toggleMinimizePanel()
+			end
+		end
 	end)
 
 	local sidebar = Instance.new("ScrollingFrame")
@@ -1394,7 +1407,6 @@ function showMainPanel()
 
 	local secFisico = createSection(playerPage, "Habilidades Físicas", "⚙️")
 	addToggle(secFisico, "Noclip (Atravessar Paredes)", function(state) _G_NoclipEnabled = state end)
-	addToggle(secFisico, "Infinite Jump (Pulo Infinito)", function(state) _G_InfiniteJumpEnabled = state end)
 	addToggle(secFisico, "Energia Infinita", function(state) _G_EnergyEnabled = state end)
 
 	-----------------------------------------------------------------
@@ -1524,7 +1536,6 @@ function showMainPanel()
 				local item = Instance.new("TextButton")
 				item.Size = UDim2.new(1, -6, 0, 24)
 				
-				-- Verifica se o player está na tabela de múltiplos selecionados
 				local isSelected = selectedManualTargets[p] == true
 				item.BackgroundColor3 = isSelected and currentThemeColor or Color3.fromRGB(34, 34, 46)
 				
@@ -1543,7 +1554,6 @@ function showMainPanel()
 					lockOnMode = "Manual"
 					modeSwitchBtn.Text = lockOnMode
 					
-					-- Alterna seleção múltipla
 					if selectedManualTargets[p] then
 						selectedManualTargets[p] = nil
 					else
@@ -1576,14 +1586,11 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- ABA FARMING (AUTOMAÇÃO + CHEST COLLECTOR)
+	-- ABA FARMING (CHEST COLLECTOR GLOBAL OMNI-DIRECTIONAL NOCLIP)
 	-----------------------------------------------------------------
 	local farmingPage = pages["Farming"]
 	local secFarm = createSection(farmingPage, "Automação", "⚡")
-	addToggle(secFarm, "Auto Farm Level", function(state) end)
-	addToggle(secFarm, "Fast Attack", function(state) end)
 
-	-- Chest Collector Integrado
 	local chestFolder = workspace:WaitForChild("ChestModels")
 	local mapFolder = workspace:WaitForChild("Map")
 
@@ -1613,7 +1620,8 @@ function showMainPanel()
 		end
 	end
 
-	local function setNoclip(enabled)
+	-- NOCLIP DE TODOS OS LADOS (GLOBAL E ABSOLUTO)
+	local function setOmniNoclip(enabled)
 		if noclipConnection then
 			noclipConnection:Disconnect()
 			noclipConnection = nil
@@ -1621,16 +1629,6 @@ function showMainPanel()
 
 		if enabled then
 			table.clear(originalCollision)
-			local character = player.Character
-			if not character then return end
-
-			for _, part in ipairs(character:GetDescendants()) do
-				if part:IsA("BasePart") then
-					originalCollision[part] = part.CanCollide
-					part.CanCollide = false
-				end
-			end
-
 			noclipConnection = RunService.Stepped:Connect(function()
 				if not chestActive then return end
 				local currentCharacter = player.Character
@@ -1642,6 +1640,7 @@ function showMainPanel()
 							originalCollision[part] = part.CanCollide
 						end
 						part.CanCollide = false
+						part.AssemblyLinearVelocity = part.AssemblyLinearVelocity -- Previne travamentos físicos
 					end
 				end
 			end)
@@ -1742,7 +1741,7 @@ function showMainPanel()
 		if sitConnection then sitConnection:Disconnect(); sitConnection = nil end
 		if healthConnection then healthConnection:Disconnect(); healthConnection = nil end
 
-		setNoclip(false)
+		setOmniNoclip(false)
 
 		local _, humanoid, root = getCharacterParts()
 		if humanoid then
@@ -1769,7 +1768,7 @@ function showMainPanel()
 
 		table.clear(visitedChests)
 		table.clear(visitedIslands)
-		setNoclip(true)
+		setOmniNoclip(true)
 
 		if healthConnection then healthConnection:Disconnect() end
 		healthConnection = humanoid.HealthChanged:Connect(function(newHealth)
@@ -1876,15 +1875,13 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- ABA FRUTA
+	-- ABA FRUTA (Vazia conforme solicitado)
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
 	local secFruta = createSection(frutaPage, "Frutas", "🍎")
-	addToggle(secFruta, "Auto Buy Fruit", function(state) end)
-	addToggle(secFruta, "Auto Store Fruit", function(state) end)
 
 	-----------------------------------------------------------------
-	-- ABA CONFIG
+	-- ABA CONFIG (COM KEYBIND EXATA)
 	-----------------------------------------------------------------
 	local configPage = pages["Config"]
 	local secConfig = createSection(configPage, "Tema do Hub", "⚙️")
@@ -1899,13 +1896,111 @@ function showMainPanel()
 		floatingBtn.BackgroundTransparency = panelTransparencyValue
 	end)
 
+	-- Adicionando a Keybind de Esconder Painel solicitada
+	local secKeybind = createSection(configPage, "Atalhos (PC)", "⌨️")
+	
+	local kbFrame = Instance.new("Frame")
+	kbFrame.Size = UDim2.new(1, 0, 0, 32)
+	kbFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+	kbFrame.BackgroundTransparency = 0.5
+	kbFrame.Parent = secKeybind
+
+	local kbCorner = Instance.new("UICorner")
+	kbCorner.CornerRadius = UDim.new(0, 5)
+	kbCorner.Parent = kbFrame
+
+	local kbLed = Instance.new("Frame")
+	kbLed.Size = UDim2.new(0, 6, 0, 6)
+	kbLed.Position = UDim2.new(0, 8, 0.5, -3)
+	kbLed.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
+	kbLed.Parent = kbFrame
+
+	local kbLedCorner = Instance.new("UICorner")
+	kbLedCorner.CornerRadius = UDim.new(1, 0)
+	kbLedCorner.Parent = kbLed
+
+	local kbLabel = Instance.new("TextLabel")
+	kbLabel.Size = UDim2.new(1, -110, 1, 0)
+	kbLabel.Position = UDim2.new(0, 20, 0, 0)
+	kbLabel.BackgroundTransparency = 1
+	kbLabel.Font = Enum.Font.GothamMedium
+	kbLabel.Text = "Keybind Esconder Painel (PC)"
+	kbLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+	kbLabel.TextSize = 10
+	kbLabel.TextXAlignment = Enum.TextXAlignment.Left
+	kbLabel.Parent = kbFrame
+
+	local kbToggleBtn = Instance.new("TextButton")
+	kbToggleBtn.Size = UDim2.new(0, 28, 0, 16)
+	kbToggleBtn.Position = UDim2.new(1, -104, 0.5, -8)
+	kbToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+	kbToggleBtn.Text = ""
+	kbToggleBtn.Parent = kbFrame
+
+	local ktCorner = Instance.new("UICorner")
+	ktCorner.CornerRadius = UDim.new(1, 0)
+	ktCorner.Parent = kbToggleBtn
+
+	local kbCircle = Instance.new("Frame")
+	kbCircle.Size = UDim2.new(0, 12, 0, 12)
+	kbCircle.Position = UDim2.new(0, 2, 0.5, -6)
+	kbCircle.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+	kbCircle.Parent = kbToggleBtn
+
+	local kcCorner = Instance.new("UICorner")
+	kcCorner.CornerRadius = UDim.new(1, 0)
+	kcCorner.Parent = kbCircle
+
+	local keybindStateRef = {isToggled = false, circle = kbCircle, button = kbToggleBtn, led = kbLed}
+	table.insert(themeToggles, keybindStateRef)
+
+	local keyBtn = Instance.new("TextButton")
+	keyBtn.Size = UDim2.new(0, 64, 0, 20)
+	keyBtn.Position = UDim2.new(1, -68, 0.5, -10)
+	keyBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
+	keyBtn.Font = Enum.Font.GothamBold
+	keyBtn.Text = hideKeybindKey.Name
+	keyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	keyBtn.TextSize = 10
+	keyBtn.Parent = kbFrame
+
+	local kBtnCorner = Instance.new("UICorner")
+	kBtnCorner.CornerRadius = UDim.new(0, 4)
+	kBtnCorner.Parent = keyBtn
+
+	local bindingKey = false
+	keyBtn.MouseButton1Click:Connect(function()
+		bindingKey = true
+		keyBtn.Text = "..."
+	end)
+
+	UserInputService.InputBegan:Connect(function(input)
+		if bindingKey and input.UserInputType == Enum.UserInputType.Keyboard then
+			hideKeybindKey = input.KeyCode
+			keyBtn.Text = hideKeybindKey.Name
+			bindingKey = false
+		end
+	end)
+
+	kbToggleBtn.MouseButton1Click:Connect(function()
+		keybindStateRef.isToggled = not keybindStateRef.isToggled
+		hideKeybindEnabled = keybindStateRef.isToggled
+		local targetPos = keybindStateRef.isToggled and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
+		local targetColor = keybindStateRef.isToggled and currentThemeColor or Color3.fromRGB(50, 50, 70)
+		local targetLedColor = keybindStateRef.isToggled and currentThemeColor or Color3.fromRGB(80, 80, 100)
+		
+		TweenService:Create(kbCircle, TweenInfo.new(0.18), {Position = targetPos}):Play()
+		TweenService:Create(kbToggleBtn, TweenInfo.new(0.18), {BackgroundColor3 = targetColor}):Play()
+		TweenService:Create(kbLed, TweenInfo.new(0.18), {BackgroundColor3 = targetLedColor}):Play()
+	end)
+
 	TweenService:Create(mainPanel, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
 		Size = currentPanelSize
 	}):Play()
 end
 
 -----------------------------------------------------------------
--- RENDER LOOP (LÓGICA DOS ESPs, FOV E LOCK-ON COM MÚLTIPLOS ALVOS)
+-- RENDER LOOP (ESP, FOV, LOCK-ON E MOVIMENTOS)
 -----------------------------------------------------------------
 local espDrawings = {}
 
@@ -1985,7 +2080,6 @@ local function getAdvancedTarget()
 	return bestTarget
 end
 
--- Função para encontrar o alvo manual mais próximo dentre os selecionados
 local function getManualTarget()
 	local bestTarget = nil
 	local shortestDist = math.huge
