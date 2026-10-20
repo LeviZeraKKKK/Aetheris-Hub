@@ -120,6 +120,7 @@ end)
 local _G_EspMaster = false
 local _G_EspBox = false
 local _G_EspLine = false
+local _G_TracerOrigin = "Bottom" -- Opções: "Top", "Center", "Bottom"
 local _G_EspChams = false
 local _G_EspHealth = false
 local _G_EspName = false
@@ -1410,7 +1411,7 @@ function showMainPanel()
 	addToggle(secFisico, "Energia Infinita", function(state) _G_EnergyEnabled = state end)
 
 	-----------------------------------------------------------------
-	-- ABA VISUAL
+	-- ABA VISUAL (COM SELETOR DE ORIGEM DE TRACER EM BOTÃO RETANGULAR)
 	-----------------------------------------------------------------
 	local visualPage = pages["Visual"]
 	local secEspPlayers = createSection(visualPage, "ESP Players", "👁️")
@@ -1418,6 +1419,56 @@ function showMainPanel()
 
 	addEspToggleWithColor(secEspPlayers, "Box ESP", _G_ColorBox, function(c) _G_ColorBox = c end, function(s) _G_EspBox = s end)
 	addEspToggleWithColor(secEspPlayers, "Tracers / Line ESP", _G_ColorLine, function(c) _G_ColorLine = c end, function(s) _G_EspLine = s end)
+
+	-- Botão Retangular com Bordas Redondas para Mudar a Posição da Tracer
+	local tracerPosFrame = Instance.new("Frame")
+	tracerPosFrame.Size = UDim2.new(1, 0, 0, 32)
+	tracerPosFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+	tracerPosFrame.BackgroundTransparency = 0.5
+	tracerPosFrame.Parent = secEspPlayers
+
+	local tpCorner = Instance.new("UICorner")
+	tpCorner.CornerRadius = UDim.new(0, 5)
+	tpCorner.Parent = tracerPosFrame
+
+	local tpLabel = Instance.new("TextLabel")
+	tpLabel.Size = UDim2.new(1, -110, 1, 0)
+	tpLabel.Position = UDim2.new(0, 10, 0, 0)
+	tpLabel.BackgroundTransparency = 1
+	tpLabel.Font = Enum.Font.GothamMedium
+	tpLabel.Text = "Origem da Tracer"
+	tpLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+	tpLabel.TextSize = 11
+	tpLabel.TextXAlignment = Enum.TextXAlignment.Left
+	tpLabel.Parent = tracerPosFrame
+
+	local tracerPosBtn = Instance.new("TextButton")
+	tracerPosBtn.Size = UDim2.new(0, 96, 0, 22)
+	tracerPosBtn.Position = UDim2.new(1, -102, 0.5, -11)
+	tracerPosBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+	tracerPosBtn.Font = Enum.Font.GothamBold
+	tracerPosBtn.Text = "Bottom"
+	tracerPosBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	tracerPosBtn.TextSize = 10
+	tracerPosBtn.Parent = tracerPosFrame
+
+	local tpBtnCorner = Instance.new("UICorner")
+	tpBtnCorner.CornerRadius = UDim.new(0, 6)
+	tpBtnCorner.Parent = tracerPosBtn
+
+	tracerPosBtn.MouseButton1Click:Connect(function()
+		if _G_TracerOrigin == "Bottom" then
+			_G_TracerOrigin = "Center"
+			tracerPosBtn.Text = "Center"
+		elseif _G_TracerOrigin == "Center" then
+			_G_TracerOrigin = "Top"
+			tracerPosBtn.Text = "Top"
+		else
+			_G_TracerOrigin = "Bottom"
+			tracerPosBtn.Text = "Bottom"
+		end
+	end)
+
 	addEspToggleWithColor(secEspPlayers, "Chams (Highlight)", _G_ColorChams, function(c) _G_ColorChams = c end, function(s) _G_EspChams = s end)
 	addEspToggleWithColor(secEspPlayers, "Health Bar", _G_ColorHealth, function(c) _G_ColorHealth = c end, function(s) _G_EspHealth = s end)
 	addEspToggleWithColor(secEspPlayers, "Name ESP", _G_ColorName, function(c) _G_ColorName = c end, function(s) _G_EspName = s end)
@@ -1874,13 +1925,18 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- ABA FRUTA (AUTO COLETAR & FRUIT ESP OTIMIZADO)
+	-- ABA FRUTA (COM AUTO COLETAR E ESP CUSTOMIZÁVEL)
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
 	local secFrutaAction = createSection(frutaPage, "Automação", "⚡")
 	local secFrutaEsp = createSection(frutaPage, "Fruit ESP", "👁️")
 
-	-- Configurações e Lógica do Auto Coletar Frutas
+	-- Cores customizáveis para o ESP de Frutas
+	local _G_FruitColorName = Color3.fromRGB(170, 90, 255)
+	local _G_FruitColorChams = Color3.fromRGB(170, 90, 255)
+	local _G_FruitColorDistance = Color3.fromRGB(200, 200, 255)
+
+	-- Lógica Auto Coletar Frutas
 	local fruitCache = {}
 	local handled = setmetatable({}, {__mode = "k"})
 	local fruitActive = false
@@ -2002,11 +2058,10 @@ function showMainPanel()
 		end
 	end)
 
-	-- Fruit ESP Lógica e Controles
+	-- Fruit ESP Otimizado com cores ajustáveis
 	local CONFIG_ESP = {
 		MaxDistance  = 2000,
 		CullDistance = 3000,
-		Color        = Color3.fromRGB(170, 90, 255),
 		TickInterval = 1 / 20,
 	}
 
@@ -2069,7 +2124,7 @@ function showMainPanel()
 		local highlight = Instance.new("Highlight")
 		highlight.Name = "FruitESPHighlight"
 		highlight.Adornee = tool
-		highlight.FillColor = CONFIG_ESP.Color
+		highlight.FillColor = _G_FruitColorChams
 		highlight.OutlineColor = Color3.new(1, 1, 1)
 		highlight.FillTransparency = 0.55
 		highlight.OutlineTransparency = 0
@@ -2089,7 +2144,7 @@ function showMainPanel()
 		text.Name = "Label"
 		text.Size = UDim2.fromScale(1, 1)
 		text.BackgroundTransparency = 1
-		text.TextColor3 = Color3.new(1, 1, 1)
+		text.TextColor3 = _G_FruitColorName
 		text.TextStrokeTransparency = 0.2
 		text.Font = Enum.Font.GothamBold
 		text.TextSize = 12
@@ -2206,6 +2261,9 @@ function showMainPanel()
 			if data.highlight.Enabled ~= wantHL then
 				data.highlight.Enabled = wantHL
 			end
+			if wantHL then
+				data.highlight.FillColor = _G_FruitColorChams
+			end
 
 			local wantBB = (nameV or distV) and inRange
 			if data.billboard.Enabled ~= wantBB then
@@ -2220,6 +2278,7 @@ function showMainPanel()
 
 				if data.lastText ~= newText then
 					data.label.Text = newText
+					data.label.TextColor3 = _G_FruitColorName
 					data.lastText = newText
 				end
 			end
@@ -2236,17 +2295,9 @@ function showMainPanel()
 		end
 	end)
 
-	addToggle(secFrutaEsp, "ESP Nome", function(state)
-		espEnabledOptions.Name = state
-	end)
-
-	addToggle(secFrutaEsp, "ESP Chams", function(state)
-		espEnabledOptions.Chams = state
-	end)
-
-	addToggle(secFrutaEsp, "ESP Distance", function(state)
-		espEnabledOptions.Distance = state
-	end)
+	addEspToggleWithColor(secFrutaEsp, "ESP Nome", _G_FruitColorName, function(c) _G_FruitColorName = c end, function(s) espEnabledOptions.Name = s end)
+	addEspToggleWithColor(secFrutaEsp, "ESP Chams", _G_FruitColorChams, function(c) _G_FruitColorChams = c end, function(s) espEnabledOptions.Chams = s end)
+	addEspToggleWithColor(secFrutaEsp, "ESP Distance", _G_FruitColorDistance, function(c) _G_FruitColorDistance = c end, function(s) espEnabledOptions.Distance = s end)
 
 	-----------------------------------------------------------------
 	-- ABA CONFIG (COM KEYBIND EM TEXTBOX)
@@ -2597,7 +2648,16 @@ RunService.RenderStepped:Connect(function()
 					end
 
 					if _G_EspLine and onScreen then
-						cache.Line.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
+						local originY = camera.ViewportSize.Y
+						if _G_TracerOrigin == "Top" then
+							originY = 0
+						elseif _G_TracerOrigin == "Center" then
+							originY = camera.ViewportSize.Y / 2
+						else
+							originY = camera.ViewportSize.Y
+						end
+
+						cache.Line.From = Vector2.new(camera.ViewportSize.X / 2, originY)
 						cache.Line.To = Vector2.new(pos.X, pos.Y)
 						cache.Line.Color = _G_ColorLine
 						cache.Line.Thickness = 1
