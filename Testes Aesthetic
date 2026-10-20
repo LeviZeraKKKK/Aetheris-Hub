@@ -1874,12 +1874,13 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- ABA FRUTA (COM O TOGGLE "Auto Coletar Frutas")
+	-- ABA FRUTA (AUTO COLETAR & FRUIT ESP OTIMIZADO)
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
-	local secFruta = createSection(frutaPage, "Frutas", "🍎")
+	local secFrutaAction = createSection(frutaPage, "Automação", "⚡")
+	local secFrutaEsp = createSection(frutaPage, "Fruit ESP", "👁️")
 
-	-- Lógica de Detecção e Teletransporte da Fruta (Baseada no seu script v3)
+	-- Configurações e Lógica do Auto Coletar Frutas
 	local fruitCache = {}
 	local handled = setmetatable({}, {__mode = "k"})
 	local fruitActive = false
@@ -1993,12 +1994,258 @@ function showMainPanel()
 		table.clear(handled)
 	end
 
-	addToggle(secFruta, "Auto Coletar Frutas", function(state)
+	addToggle(secFrutaAction, "Auto Coletar Frutas", function(state)
 		if state then
 			startFruitTeleport()
 		else
 			stopFruitTeleport()
 		end
+	end)
+
+	-- Fruit ESP Lógica e Controles
+	local CONFIG_ESP = {
+		MaxDistance  = 2000,
+		CullDistance = 3000,
+		Color        = Color3.fromRGB(170, 90, 255),
+		TickInterval = 1 / 20,
+	}
+
+	local espEnabledOptions = {
+		Name     = true,
+		Chams    = true,
+		Distance = true,
+	}
+
+	local fruitEspMasterEnabled = true
+	local espObjects = {}
+	local fruitEspList = {}
+	local cachedRoot = nil
+
+	local function refreshCharacterESP(char)
+		if not char then return end
+		cachedRoot = char:FindFirstChild("HumanoidRootPart")
+	end
+
+	refreshCharacterESP(player.Character)
+	player.CharacterAdded:Connect(function(char)
+		char:WaitForChild("HumanoidRootPart")
+		refreshCharacterESP(char)
+	end)
+
+	local function insidePlayerCharacterESP(tool)
+		local ancestor = tool.Parent
+		while ancestor and ancestor ~= workspace do
+			if ancestor:IsA("Model") and ancestor:FindFirstChildOfClass("Humanoid") then
+				return true
+			end
+			ancestor = ancestor.Parent
+		end
+		return false
+	end
+
+	local function removeESP(tool)
+		local data = espObjects[tool]
+		if not data then return end
+
+		if data.highlight then data.highlight:Destroy() end
+		if data.billboard then data.billboard:Destroy() end
+
+		espObjects[tool] = nil
+
+		for i = #fruitEspList, 1, -1 do
+			if fruitEspList[i] == tool then
+				table.remove(fruitEspList, i)
+				break
+			end
+		end
+	end
+
+	local function createESP(tool)
+		if espObjects[tool] then return end
+
+		local handle = tool:FindFirstChild("Handle")
+		if not handle or not handle:IsA("BasePart") then return end
+
+		local highlight = Instance.new("Highlight")
+		highlight.Name = "FruitESPHighlight"
+		highlight.Adornee = tool
+		highlight.FillColor = CONFIG_ESP.Color
+		highlight.OutlineColor = Color3.new(1, 1, 1)
+		highlight.FillTransparency = 0.55
+		highlight.OutlineTransparency = 0
+		highlight.Enabled = false
+		highlight.Parent = screenGui
+
+		local billboard = Instance.new("BillboardGui")
+		billboard.Name = "FruitESPLabel"
+		billboard.Adornee = handle
+		billboard.Size = UDim2.fromOffset(180, 38)
+		billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+		billboard.AlwaysOnTop = true
+		billboard.Enabled = false
+		billboard.Parent = screenGui
+
+		local text = Instance.new("TextLabel")
+		text.Name = "Label"
+		text.Size = UDim2.fromScale(1, 1)
+		text.BackgroundTransparency = 1
+		text.TextColor3 = Color3.new(1, 1, 1)
+		text.TextStrokeTransparency = 0.2
+		text.Font = Enum.Font.GothamBold
+		text.TextSize = 12
+		text.TextWrapped = true
+		text.Parent = billboard
+
+		espObjects[tool] = {
+			highlight  = highlight,
+			billboard  = billboard,
+			label      = text,
+			handle     = handle,
+			lastText   = "",
+			lastParent = tool.Parent,
+			isInside   = false,
+		}
+
+		table.insert(fruitEspList, tool)
+	end
+
+	workspace.DescendantAdded:Connect(function(obj)
+		if obj:IsA("Tool") and isFruit(obj) then
+			if obj:FindFirstChild("Handle") then
+				createESP(obj)
+			end
+		elseif obj.Name == "Handle" and obj.Parent and obj.Parent:IsA("Tool") and isFruit(obj.Parent) then
+			createESP(obj.Parent)
+		end
+	end)
+
+	workspace.DescendantRemoving:Connect(function(obj)
+		if obj:IsA("Tool") and isFruit(obj) and espObjects[obj] then
+			removeESP(obj)
+		end
+	end)
+
+	task.spawn(function()
+		local queue = { workspace }
+		local idx = 1
+		while idx <= #queue do
+			local current = queue[idx]
+			idx += 1
+			for _, child in ipairs(current:GetChildren()) do
+				if isFruit(child) then
+					if child:FindFirstChild("Handle") then
+						createESP(child)
+					end
+				elseif child:IsA("Model") or child:IsA("Folder") then
+					table.insert(queue, child)
+				end
+			end
+			if idx % 30 == 0 then task.wait() end
+		end
+	end)
+
+	local accumulatorEsp = 0
+	RunService.RenderStepped:Connect(function(dt)
+		if not fruitEspMasterEnabled then return end
+		accumulatorEsp += dt
+		if accumulatorEsp < CONFIG_ESP.TickInterval then return end
+		accumulatorEsp = 0
+
+		local root = cachedRoot
+		if not root or not root.Parent then return end
+
+		local rootPos    = root.Position
+		local maxDistSq  = CONFIG_ESP.MaxDistance  * CONFIG_ESP.MaxDistance
+		local cullDistSq = CONFIG_ESP.CullDistance * CONFIG_ESP.CullDistance
+
+		local nameV   = espEnabledOptions.Name
+		local distV   = espEnabledOptions.Distance
+		local chamsV  = espEnabledOptions.Chams
+
+		for i = #fruitEspList, 1, -1 do
+			local tool = fruitEspList[i]
+			local data = espObjects[tool]
+
+			if not data or not tool.Parent then
+				if data then removeESP(tool) end
+				continue
+			end
+
+			local handle = data.handle
+			if not handle or not handle.Parent then
+				removeESP(tool)
+				continue
+			end
+
+			if tool.Parent ~= data.lastParent then
+				data.lastParent = tool.Parent
+				data.isInside = insidePlayerCharacterESP(tool)
+			end
+
+			if data.isInside then
+				if data.highlight.Enabled then data.highlight.Enabled = false end
+				if data.billboard.Enabled then data.billboard.Enabled = false end
+				continue
+			end
+
+			local pos = handle.Position
+			local dx = pos.X - rootPos.X
+			local dy = pos.Y - rootPos.Y
+			local dz = pos.Z - rootPos.Z
+			local distSq = dx*dx + dy*dy + dz*dz
+
+			if distSq > cullDistSq then
+				if data.highlight.Enabled then data.highlight.Enabled = false end
+				if data.billboard.Enabled then data.billboard.Enabled = false end
+				continue
+			end
+
+			local inRange = distSq <= maxDistSq
+
+			local wantHL = chamsV and inRange
+			if data.highlight.Enabled ~= wantHL then
+				data.highlight.Enabled = wantHL
+			end
+
+			local wantBB = (nameV or distV) and inRange
+			if data.billboard.Enabled ~= wantBB then
+				data.billboard.Enabled = wantBB
+			end
+
+			if wantBB then
+				local distance = math.sqrt(distSq)
+				local nTxt = nameV and tool.Name or ""
+				local dTxt = distV and string.format("%.0f studs", distance) or ""
+				local newText = nTxt .. ((nTxt ~= "" and dTxt ~= "") and "\n" or "") .. dTxt
+
+				if data.lastText ~= newText then
+					data.label.Text = newText
+					data.lastText = newText
+				end
+			end
+		end
+	end)
+
+	addToggle(secFrutaEsp, "Ativar Fruit ESP", function(state)
+		fruitEspMasterEnabled = state
+		if not state then
+			for _, data in pairs(espObjects) do
+				if data.highlight.Enabled then data.highlight.Enabled = false end
+				if data.billboard.Enabled then data.billboard.Enabled = false end
+			end
+		end
+	end)
+
+	addToggle(secFrutaEsp, "ESP Nome", function(state)
+		espEnabledOptions.Name = state
+	end)
+
+	addToggle(secFrutaEsp, "ESP Chams", function(state)
+		espEnabledOptions.Chams = state
+	end)
+
+	addToggle(secFrutaEsp, "ESP Distance", function(state)
+		espEnabledOptions.Distance = state
 	end)
 
 	-----------------------------------------------------------------
