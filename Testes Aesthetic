@@ -127,11 +127,11 @@ local _G_EspName = false
 local _G_EspDistance = false
 local _G_EspHead = false
 
--- Estados do Enemy ESP (NPC)
+-- Estados do Enemy ESP (NPC) - CORRIGIDO (Iniciando como false)
 local _G_EnemyEspMaster = false
-local _G_EnemyEspName = true
-local _G_EnemyEspChams = true
-local _G_EnemyEspDistance = true
+local _G_EnemyEspName = false
+local _G_EnemyEspChams = false
+local _G_EnemyEspDistance = false
 
 local _G_ColorBox = Color3.fromRGB(255, 255, 255)
 local _G_ColorLine = Color3.fromRGB(138, 43, 226)
@@ -1215,7 +1215,7 @@ function showMainPanel()
 			local color = Color3.fromHSV(currentH, currentS, currentV)
 			canvas.BackgroundColor3 = Color3.fromHSV(currentH, 1, 1)
 			colorBtn.BackgroundColor3 = color
-			colorCallback(color)
+			callback(color)
 		end
 
 		colorBtn.MouseButton1Click:Connect(function()
@@ -2431,7 +2431,7 @@ function showMainPanel()
 end
 
 -----------------------------------------------------------------
--- SISTEMA DE ESP DE INIMIGOS (NPC)
+-- SISTEMA DE ESP DE INIMIGOS (NPC) - CORRIGIDO
 -----------------------------------------------------------------
 local enemyObjects = {}
 local ENEMIES = workspace:WaitForChild("Enemies", 5)
@@ -2878,7 +2878,7 @@ RunService.RenderStepped:Connect(function()
 		end
 	end
 
-	-- Render Loop para Enemy ESP (NPC)
+	-- Render Loop para Enemy ESP (NPC) - CORRIGIDO
 	if _G_EnemyEspMaster then
 		local myRoot = char and char:FindFirstChild("HumanoidRootPart")
 		if myRoot then
@@ -2887,10 +2887,13 @@ RunService.RenderStepped:Connect(function()
 				local humanoid = enemy:FindFirstChildOfClass("Humanoid")
 				if enemy.Parent and root and humanoid and humanoid.Health > 0 then
 					local dist = (root.Position - myRoot.Position).Magnitude
+					
+					-- Respeita individualmente cada toggle do ESP Inimigos
 					data.highlight.Enabled = _G_EnemyEspChams
 					data.nameLabel.Visible = _G_EnemyEspName
 					data.distanceLabel.Visible = _G_EnemyEspDistance
 					data.billboard.Enabled = (_G_EnemyEspName or _G_EnemyEspDistance)
+					
 					data.nameLabel.Text = enemy.Name
 					data.distanceLabel.Text = string.format("%.0f studs", dist)
 				else
