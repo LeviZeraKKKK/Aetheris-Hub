@@ -120,12 +120,18 @@ end)
 local _G_EspMaster = false
 local _G_EspBox = false
 local _G_EspLine = false
-local _G_TracerOrigin = "Bottom" -- Opções: "Top", "Center", "Bottom"
+local _G_TracerOrigin = "Bottom"
 local _G_EspChams = false
 local _G_EspHealth = false
 local _G_EspName = false
 local _G_EspDistance = false
 local _G_EspHead = false
+
+-- Estados do Enemy ESP (NPC)
+local _G_EnemyEspMaster = false
+local _G_EnemyEspName = true
+local _G_EnemyEspChams = true
+local _G_EnemyEspDistance = true
 
 local _G_ColorBox = Color3.fromRGB(255, 255, 255)
 local _G_ColorLine = Color3.fromRGB(138, 43, 226)
@@ -134,6 +140,7 @@ local _G_ColorHealth = Color3.fromRGB(0, 255, 128)
 local _G_ColorName = Color3.fromRGB(255, 255, 255)
 local _G_ColorDistance = Color3.fromRGB(200, 200, 255)
 local _G_ColorHead = Color3.fromRGB(255, 100, 100)
+local _G_ColorEnemy = Color3.fromRGB(255, 65, 75)
 
 -- Variável da Keybind de Esconder Painel
 local hideKeybindEnabled = false
@@ -1411,7 +1418,7 @@ function showMainPanel()
 	addToggle(secFisico, "Energia Infinita", function(state) _G_EnergyEnabled = state end)
 
 	-----------------------------------------------------------------
-	-- ABA VISUAL (COM SELETOR DE ORIGEM DE TRACER EM BOTÃO RETANGULAR)
+	-- ABA VISUAL (ESP PLAYERS & ESP INIMIGOS / NPC)
 	-----------------------------------------------------------------
 	local visualPage = pages["Visual"]
 	local secEspPlayers = createSection(visualPage, "ESP Players", "👁️")
@@ -1420,7 +1427,6 @@ function showMainPanel()
 	addEspToggleWithColor(secEspPlayers, "Box ESP", _G_ColorBox, function(c) _G_ColorBox = c end, function(s) _G_EspBox = s end)
 	addEspToggleWithColor(secEspPlayers, "Tracers / Line ESP", _G_ColorLine, function(c) _G_ColorLine = c end, function(s) _G_EspLine = s end)
 
-	-- Botão Retangular com Bordas Redondas para Mudar a Posição da Tracer
 	local tracerPosFrame = Instance.new("Frame")
 	tracerPosFrame.Size = UDim2.new(1, 0, 0, 32)
 	tracerPosFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
@@ -1474,6 +1480,13 @@ function showMainPanel()
 	addEspToggleWithColor(secEspPlayers, "Name ESP", _G_ColorName, function(c) _G_ColorName = c end, function(s) _G_EspName = s end)
 	addEspToggleWithColor(secEspPlayers, "Distance ESP", _G_ColorDistance, function(c) _G_ColorDistance = c end, function(s) _G_EspDistance = s end)
 	addEspToggleWithColor(secEspPlayers, "Head Dot ESP", _G_ColorHead, function(c) _G_ColorHead = c end, function(s) _G_EspHead = s end)
+
+	-- Seção de Inimigos (NPC) na aba Visual
+	local secEspEnemies = createSection(visualPage, "ESP Inimigos (NPC)", "👾")
+	addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state end)
+	addToggle(secEspEnemies, "ESP Nome", function(state) _G_EnemyEspName = state end)
+	addToggle(secEspEnemies, "ESP Chams", function(state) _G_EnemyEspChams = state end)
+	addToggle(secEspEnemies, "ESP Distância", function(state) _G_EnemyEspDistance = state end)
 
 	local secWorld = createSection(visualPage, "Visual do Mapa", "🌐")
 	addToggle(secWorld, "Fullbright (Remover Escuridão)", function(state)
@@ -1925,18 +1938,16 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- ABA FRUTA (COM AUTO COLETAR E ESP CUSTOMIZÁVEL)
+	-- ABA FRUTA (AUTO COLETAR & FRUIT ESP OTIMIZADO)
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
 	local secFrutaAction = createSection(frutaPage, "Automação", "⚡")
 	local secFrutaEsp = createSection(frutaPage, "Fruit ESP", "👁️")
 
-	-- Cores customizáveis para o ESP de Frutas
 	local _G_FruitColorName = Color3.fromRGB(170, 90, 255)
 	local _G_FruitColorChams = Color3.fromRGB(170, 90, 255)
 	local _G_FruitColorDistance = Color3.fromRGB(200, 200, 255)
 
-	-- Lógica Auto Coletar Frutas
 	local fruitCache = {}
 	local handled = setmetatable({}, {__mode = "k"})
 	local fruitActive = false
@@ -2058,7 +2069,6 @@ function showMainPanel()
 		end
 	end)
 
-	-- Fruit ESP Otimizado com cores ajustáveis
 	local CONFIG_ESP = {
 		MaxDistance  = 2000,
 		CullDistance = 3000,
@@ -2421,6 +2431,114 @@ function showMainPanel()
 end
 
 -----------------------------------------------------------------
+-- SISTEMA DE ESP DE INIMIGOS (NPC)
+-----------------------------------------------------------------
+local enemyObjects = {}
+local ENEMIES = workspace:WaitForChild("Enemies", 5)
+
+local function getEnemyRoot(model)
+	if not model:IsA("Model") then return nil end
+	local root = model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart or model:FindFirstChild("Head")
+	if root and root:IsA("BasePart") then return root end
+	return nil
+end
+
+local function makeEnemyText(parent, name, size, position, fontSize)
+	local label = Instance.new("TextLabel")
+	label.Name = name
+	label.Size = size
+	label.Position = position
+	label.BackgroundTransparency = 1
+	label.TextColor3 = Color3.new(1, 1, 1)
+	label.TextStrokeColor3 = Color3.new(0, 0, 0)
+	label.TextStrokeTransparency = 0.25
+	label.Font = Enum.Font.GothamBold
+	label.TextSize = fontSize
+	label.TextWrapped = false
+	label.TextTruncate = Enum.TextTruncate.AtEnd
+	label.Parent = parent
+	return label
+end
+
+local function createEnemyESP(enemy)
+	if enemyObjects[enemy] then return end
+	local root = getEnemyRoot(enemy)
+	if not root then return end
+
+	local highlight = Instance.new("Highlight")
+	highlight.Name = "EnemyHighlight"
+	highlight.Adornee = enemy
+	highlight.FillColor = _G_ColorEnemy
+	highlight.OutlineColor = Color3.new(1, 1, 1)
+	highlight.FillTransparency = 0.82
+	highlight.OutlineTransparency = 0
+	highlight.Enabled = false
+	highlight.Parent = screenGui
+
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "EnemyInfo"
+	billboard.Adornee = root
+	billboard.Size = UDim2.fromOffset(170, 36)
+	billboard.StudsOffsetWorldSpace = Vector3.new(0, 3.5, 0)
+	billboard.AlwaysOnTop = true
+	billboard.LightInfluence = 0
+	billboard.Enabled = false
+	billboard.Parent = screenGui
+
+	local nameLabel = makeEnemyText(billboard, "EnemyName", UDim2.new(1, 0, 0, 16), UDim2.fromOffset(0, 0), 12)
+	nameLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+	local distanceLabel = makeEnemyText(billboard, "EnemyDistance", UDim2.new(1, 0, 0, 15), UDim2.fromOffset(0, 18), 10)
+	distanceLabel.TextColor3 = Color3.fromRGB(225, 225, 225)
+	distanceLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+	enemyObjects[enemy] = {
+		highlight = highlight,
+		billboard = billboard,
+		nameLabel = nameLabel,
+		distanceLabel = distanceLabel,
+	}
+end
+
+local function removeEnemyESP(enemy)
+	local data = enemyObjects[enemy]
+	if not data then return end
+	if data.highlight then data.highlight:Destroy() end
+	if data.billboard then data.billboard:Destroy() end
+	enemyObjects[enemy] = nil
+end
+
+task.spawn(function()
+	if not ENEMIES then return end
+	while true do
+		task.wait(1)
+		if _G_EnemyEspMaster then
+			local found = {}
+			for _, obj in ipairs(ENEMIES:GetDescendants()) do
+				if obj:IsA("Model") then
+					local hum = obj:FindFirstChildOfClass("Humanoid")
+					if hum and getEnemyRoot(obj) then
+						found[obj] = true
+						if not enemyObjects[obj] then
+							createEnemyESP(obj)
+						end
+					end
+				end
+			end
+			for enemy in pairs(enemyObjects) do
+				if not found[enemy] or not enemy.Parent then
+					removeEnemyESP(enemy)
+				end
+			end
+		else
+			for enemy in pairs(enemyObjects) do
+				removeEnemyESP(enemy)
+			end
+		end
+	end
+end)
+
+-----------------------------------------------------------------
 -- RENDER LOOP (ESP, FOV, LOCK-ON E MOVIMENTOS)
 -----------------------------------------------------------------
 local espDrawings = {}
@@ -2757,6 +2875,34 @@ RunService.RenderStepped:Connect(function()
 				local hl = tChar and tChar:FindFirstChild("AetherisHighlight")
 				if hl then hl.Enabled = false end
 			end
+		end
+	end
+
+	-- Render Loop para Enemy ESP (NPC)
+	if _G_EnemyEspMaster then
+		local myRoot = char and char:FindFirstChild("HumanoidRootPart")
+		if myRoot then
+			for enemy, data in pairs(enemyObjects) do
+				local root = getEnemyRoot(enemy)
+				local humanoid = enemy:FindFirstChildOfClass("Humanoid")
+				if enemy.Parent and root and humanoid and humanoid.Health > 0 then
+					local dist = (root.Position - myRoot.Position).Magnitude
+					data.highlight.Enabled = _G_EnemyEspChams
+					data.nameLabel.Visible = _G_EnemyEspName
+					data.distanceLabel.Visible = _G_EnemyEspDistance
+					data.billboard.Enabled = (_G_EnemyEspName or _G_EnemyEspDistance)
+					data.nameLabel.Text = enemy.Name
+					data.distanceLabel.Text = string.format("%.0f studs", dist)
+				else
+					data.highlight.Enabled = false
+					data.billboard.Enabled = false
+				end
+			end
+		end
+	else
+		for _, data in pairs(enemyObjects) do
+			if data.highlight then data.highlight.Enabled = false end
+			if data.billboard then data.billboard.Enabled = false end
 		end
 	end
 end)
