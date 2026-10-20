@@ -1620,7 +1620,6 @@ function showMainPanel()
 		end
 	end
 
-	-- NOCLIP DE TODOS OS LADOS (GLOBAL E ABSOLUTO)
 	local function setOmniNoclip(enabled)
 		if noclipConnection then
 			noclipConnection:Disconnect()
@@ -1875,10 +1874,132 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- ABA FRUTA (Vazia conforme solicitado)
+	-- ABA FRUTA (COM O TOGGLE "Auto Coletar Frutas")
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
 	local secFruta = createSection(frutaPage, "Frutas", "🍎")
+
+	-- Lógica de Detecção e Teletransporte da Fruta (Baseada no seu script v3)
+	local fruitCache = {}
+	local handled = setmetatable({}, {__mode = "k"})
+	local fruitActive = false
+	local fruitConn = nil
+
+	local function isFruit(obj)
+		return obj:IsA("Tool") and string.find(obj.Name:lower(), "fruit", 1, true) ~= nil
+	end
+
+	local function rebuildFruitCache()
+		table.clear(fruitCache)
+		local stack = { workspace }
+		local idx = 1
+		while idx <= #stack do
+			local current = stack[idx]
+			idx += 1
+			for _, child in ipairs(current:GetChildren()) do
+				if isFruit(child) then
+					table.insert(fruitCache, child)
+				elseif child:IsA("Model") or child:IsA("Folder") then
+					table.insert(stack, child)
+				end
+			end
+		end
+	end
+
+	task.spawn(rebuildFruitCache)
+
+	workspace.DescendantAdded:Connect(function(obj)
+		if isFruit(obj) then
+			table.insert(fruitCache, obj)
+		end
+	end)
+
+	workspace.DescendantRemoving:Connect(function(obj)
+		if obj:IsA("Tool") then
+			for i = #fruitCache, 1, -1 do
+				if fruitCache[i] == obj then
+					table.remove(fruitCache, i)
+					return
+				end
+			end
+		end
+	end)
+
+	local function isInsideCharacter(tool)
+		local parent = tool.Parent
+		if not parent or parent == workspace then return false end
+		local cur = parent
+		while cur and cur ~= workspace do
+			if cur:IsA("Model") and cur:FindFirstChildOfClass("Humanoid") then
+				return true
+			end
+			cur = cur.Parent
+		end
+		return false
+	end
+
+	local lastFruitIdx = 1
+	local function pickFruit()
+		local now = tick()
+		local count = #fruitCache
+		if count == 0 then return nil, nil end
+
+		for offset = 0, count - 1 do
+			local i = ((lastFruitIdx - 1 + offset) % count) + 1
+			local fruit = fruitCache[i]
+
+			if fruit and fruit.Parent and not isInsideCharacter(fruit) then
+				local lastHandle = handled[fruit]
+				if not lastHandle or (now - lastHandle) >= 3 then
+					local handle = fruit:FindFirstChild("Handle")
+					if handle and handle:IsA("BasePart") then
+						lastFruitIdx = i
+						return fruit, handle
+					end
+				end
+			end
+		end
+		return nil, nil
+	end
+
+	local function startFruitTeleport()
+		fruitActive = true
+		table.clear(handled)
+
+		fruitConn = RunService.Heartbeat:Connect(function()
+			if not fruitActive then return end
+			local char = player.Character
+			local hrp = char and char:FindFirstChild("HumanoidRootPart")
+			local hum = char and char:FindFirstChildOfClass("Humanoid")
+
+			if not hrp or not hum or hum.Health <= 0 then return end
+
+			local fruit, handle = pickFruit()
+			if fruit and handle then
+				pcall(function()
+					handle.CFrame = hrp.CFrame
+				end)
+				handled[fruit] = tick()
+			end
+		end)
+	end
+
+	local function stopFruitTeleport()
+		fruitActive = false
+		if fruitConn then
+			fruitConn:Disconnect()
+			fruitConn = nil
+		end
+		table.clear(handled)
+	end
+
+	addToggle(secFruta, "Auto Coletar Frutas", function(state)
+		if state then
+			startFruitTeleport()
+		else
+			stopFruitTeleport()
+		end
+	end)
 
 	-----------------------------------------------------------------
 	-- ABA CONFIG (COM KEYBIND EM TEXTBOX)
@@ -1953,7 +2074,6 @@ function showMainPanel()
 	local keybindStateRef = {isToggled = false, circle = kbCircle, button = kbToggleBtn, led = kbLed}
 	table.insert(themeToggles, keybindStateRef)
 
-	-- TextBox interativa para seleção de tecla por texto
 	local keyBox = Instance.new("TextBox")
 	keyBox.Size = UDim2.new(0, 64, 0, 20)
 	keyBox.Position = UDim2.new(1, -68, 0.5, -10)
