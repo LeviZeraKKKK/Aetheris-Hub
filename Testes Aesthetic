@@ -39,7 +39,7 @@ local themeParticles = {}
 local tabIndicators = {}
 local allTextLabels = {}
 local resizeSymbolsLines = {}
-local headerSubtitles = {} -- Armazena o subtítulo do header para atualizar com o tema
+local headerSubtitles = {}
 
 local function updateGlobalTheme(newColor)
 	currentThemeColor = newColor
@@ -64,7 +64,6 @@ local function updateGlobalTheme(newColor)
 		line.BackgroundColor3 = newColor
 	end
 
-	-- Atualiza a cor do subtítulo do header dinamicamente com o tema escolhido
 	for _, subLabel in pairs(headerSubtitles) do
 		subLabel.TextColor3 = newColor
 	end
@@ -589,7 +588,7 @@ function showMainPanel()
 		end
 	end)
 
-	-- TÍTULO PRINCIPAL (Fixo sempre em Branco)
+	-- TÍTULO PRINCIPAL
 	local titleLabel = Instance.new("TextLabel")
 	titleLabel.Size = UDim2.new(0, 180, 0, 18)
 	titleLabel.Position = UDim2.new(0, 10, 0, 6)
@@ -601,7 +600,7 @@ function showMainPanel()
 	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 	titleLabel.Parent = mainPanel
 
-	-- SUBTÍTULO DO HEADER (Agora muda de cor dinamicamente com o tema)
+	-- SUBTÍTULO DO HEADER
 	local subTitleLabel = Instance.new("TextLabel")
 	subTitleLabel.Size = UDim2.new(0, 180, 0, 12)
 	subTitleLabel.Position = UDim2.new(0, 10, 0, 22)
@@ -1026,12 +1025,28 @@ function showMainPanel()
 			modal.Visible = not modal.Visible
 		end)
 
+		local function setScrollingEnabled(state)
+			if activePage then
+				activePage.ScrollingEnabled = state
+			end
+		end
+
 		local draggingHue = false
 		hueBar.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingHue = true end
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				draggingHue = true
+				setScrollingEnabled(false) -- Trava o scroll da página ao mexer na cor
+				interactionBlocker.Visible = true -- Trava o arraste do painel
+			end
 		end)
 		UserInputService.InputEnded:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingHue = false end
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				if draggingHue then
+					draggingHue = false
+					setScrollingEnabled(true)
+					interactionBlocker.Visible = false
+				end
+			end
 		end)
 		UserInputService.InputChanged:Connect(function(input)
 			if draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
@@ -1044,10 +1059,20 @@ function showMainPanel()
 
 		local draggingCanvas = false
 		canvas.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingCanvas = true end
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				draggingCanvas = true
+				setScrollingEnabled(false) -- Trava o scroll da página ao mexer na cor
+				interactionBlocker.Visible = true -- Trava o arraste do painel
+			end
 		end)
 		UserInputService.InputEnded:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingCanvas = false end
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				if draggingCanvas then
+					draggingCanvas = false
+					setScrollingEnabled(true)
+					interactionBlocker.Visible = false
+				end
+			end
 		end)
 		UserInputService.InputChanged:Connect(function(input)
 			if draggingCanvas and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
@@ -1255,12 +1280,28 @@ function showMainPanel()
 			modal.Visible = not modal.Visible
 		end)
 
+		local function setScrollingEnabled(state)
+			if activePage then
+				activePage.ScrollingEnabled = state
+			end
+		end
+
 		local draggingHue = false
 		hueBar.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingHue = true end
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				draggingHue = true
+				setScrollingEnabled(false)
+				interactionBlocker.Visible = true
+			end
 		end)
 		UserInputService.InputEnded:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingHue = false end
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				if draggingHue then
+					draggingHue = false
+					setScrollingEnabled(true)
+					interactionBlocker.Visible = false
+				end
+			end
 		end)
 		UserInputService.InputChanged:Connect(function(input)
 			if draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
@@ -1273,10 +1314,20 @@ function showMainPanel()
 
 		local draggingCanvas = false
 		canvas.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingCanvas = true end
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				draggingCanvas = true
+				setScrollingEnabled(false)
+				interactionBlocker.Visible = true
+			end
 		end)
 		UserInputService.InputEnded:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingCanvas = false end
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				if draggingCanvas then
+					draggingCanvas = false
+					setScrollingEnabled(true)
+					interactionBlocker.Visible = false
+				end
+			end
 		end)
 		UserInputService.InputChanged:Connect(function(input)
 			if draggingCanvas and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
@@ -1896,12 +1947,28 @@ function showMainPanel()
 		tracerModal.Visible = not tracerModal.Visible
 	end)
 
+	local function setScrollingEnabled(state)
+		if activePage then
+			activePage.ScrollingEnabled = state
+		end
+	end
+
 	local dTracerHue = false
 	tHueBar.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dTracerHue = true end
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dTracerHue = true
+			setScrollingEnabled(false)
+			interactionBlocker.Visible = true
+		end
 	end)
 	UserInputService.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dTracerHue = false end
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			if dTracerHue then
+				dTracerHue = false
+				setScrollingEnabled(true)
+				interactionBlocker.Visible = false
+			end
+		end
 	end)
 	UserInputService.InputChanged:Connect(function(input)
 		if dTracerHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
@@ -1914,10 +1981,20 @@ function showMainPanel()
 
 	local dTracerCanvas = false
 	tracerCanvas.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dTracerCanvas = true end
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dTracerCanvas = true
+			setScrollingEnabled(false)
+			interactionBlocker.Visible = true
+		end
 	end)
 	UserInputService.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dTracerCanvas = false end
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			if dTracerCanvas then
+				dTracerCanvas = false
+				setScrollingEnabled(true)
+				interactionBlocker.Visible = false
+			end
+		end
 	end)
 	UserInputService.InputChanged:Connect(function(input)
 		if dTracerCanvas and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
