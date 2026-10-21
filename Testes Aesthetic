@@ -40,6 +40,7 @@ local tabIndicators = {}
 local allTextLabels = {}
 local resizeSymbolsLines = {}
 local headerSubtitles = {}
+local floatingButtonElements = {} -- Armazena elementos visuais do botão flutuante para atualizar cor
 
 local function updateGlobalTheme(newColor)
 	currentThemeColor = newColor
@@ -66,6 +67,16 @@ local function updateGlobalTheme(newColor)
 
 	for _, subLabel in pairs(headerSubtitles) do
 		subLabel.TextColor3 = newColor
+	end
+
+	for _, floatElem in pairs(floatingButtonElements) do
+		if floatElem:IsA("UIStroke") then
+			floatElem.Color = newColor
+		elseif floatElem:IsA("TextLabel") or floatElem:IsA("TextButton") then
+			floatElem.TextColor3 = newColor
+		elseif floatElem:IsA("Frame") then
+			floatElem.BackgroundColor3 = newColor
+		end
 	end
 
 	for _, ind in pairs(tabIndicators) do
@@ -404,13 +415,13 @@ function showMainPanel()
 	particleContainer.Name = "ThemeParticles"
 	particleContainer.Parent = mainPanel
 
-	for i = 1, 12 do
+	for i = 1, 15 do
 		task.spawn(function()
 			local p = Instance.new("Frame")
-			p.Size = UDim2.new(0, math.random(3, 5), 0, math.random(3, 5))
+			p.Size = UDim2.new(0, math.random(3, 6), 0, math.random(3, 6))
 			p.Position = UDim2.new(math.random(), 0, math.random(), 0)
 			p.BackgroundColor3 = currentThemeColor
-			p.BackgroundTransparency = 0.4
+			p.BackgroundTransparency = 0.3
 			p.BorderSizePixel = 0
 			p.Parent = particleContainer
 			table.insert(themeParticles, p)
@@ -422,12 +433,12 @@ function showMainPanel()
 			while mainPanel and mainPanel.Parent do
 				local targetX = math.random()
 				local targetY = math.random()
-				local tInfo = TweenInfo.new(math.random(6, 12), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+				local tInfo = TweenInfo.new(math.random(5, 10), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
 				TweenService:Create(p, tInfo, {
 					Position = UDim2.new(targetX, 0, targetY, 0),
-					BackgroundTransparency = math.random(2, 8) / 10
+					BackgroundTransparency = math.random(2, 9) / 10
 				}):Play()
-				task.wait(math.random(6, 12))
+				task.wait(math.random(5, 10))
 			end
 		end)
 	end
@@ -440,28 +451,29 @@ function showMainPanel()
 	interactionBlocker.ZIndex = 9999
 	interactionBlocker.Parent = mainPanel
 
+	-- BOTÃO FLUTUANTE COM A LETRA "A" & BORDA DINÂMICA
 	local floatingBtn = Instance.new("TextButton")
 	floatingBtn.Size = UDim2.new(0, 0, 0, 0)
-	floatingBtn.Position = UDim2.new(0, 15, 0.5, -18)
+	floatingBtn.Position = UDim2.new(0, 15, 0.5, -20)
 	floatingBtn.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
 	floatingBtn.BackgroundTransparency = panelTransparencyValue
-	floatingBtn.Font = currentGlobalFont
-	floatingBtn.Text = "•"
+	floatingBtn.Font = Enum.Font.GothamBold
+	floatingBtn.Text = "A"
 	floatingBtn.TextColor3 = currentThemeColor
-	floatingBtn.TextSize = 24
+	floatingBtn.TextSize = 20
 	floatingBtn.Visible = false
 	floatingBtn.Parent = screenGui
-	table.insert(themeTexts, floatingBtn)
+	table.insert(floatingButtonElements, floatingBtn)
 
 	local floatCorner = Instance.new("UICorner")
-	floatCorner.CornerRadius = UDim.new(0, 8)
+	floatCorner.CornerRadius = UDim.new(0, 10)
 	floatCorner.Parent = floatingBtn
 
 	local floatStroke = Instance.new("UIStroke")
 	floatStroke.Color = currentThemeColor
-	floatStroke.Thickness = 1.3
+	floatStroke.Thickness = 2
 	floatStroke.Parent = floatingBtn
-	table.insert(themeSections, floatStroke)
+	table.insert(floatingButtonElements, floatStroke)
 
 	local floatDragging, floatDragStart, floatStartPos
 	floatingBtn.InputBegan:Connect(function(input)
@@ -633,7 +645,7 @@ function showMainPanel()
 			task.wait(0.25)
 			mainPanel.Visible = false
 			floatingBtn.Visible = true
-			TweenService:Create(floatingBtn, TweenInfo.new(0.18), {Size = UDim2.new(0, 36, 0, 36)}):Play()
+			TweenService:Create(floatingBtn, TweenInfo.new(0.18), {Size = UDim2.new(0, 40, 0, 40)}):Play()
 		else
 			TweenService:Create(floatingBtn, TweenInfo.new(0.18), {Size = UDim2.new(0, 0, 0, 0)}):Play()
 			task.wait(0.18)
@@ -1035,8 +1047,8 @@ function showMainPanel()
 		hueBar.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 				draggingHue = true
-				setScrollingEnabled(false) -- Trava o scroll da página ao mexer na cor
-				interactionBlocker.Visible = true -- Trava o arraste do painel
+				setScrollingEnabled(false)
+				interactionBlocker.Visible = true
 			end
 		end)
 		UserInputService.InputEnded:Connect(function(input)
@@ -1061,8 +1073,8 @@ function showMainPanel()
 		canvas.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 				draggingCanvas = true
-				setScrollingEnabled(false) -- Trava o scroll da página ao mexer na cor
-				interactionBlocker.Visible = true -- Trava o arraste do painel
+				setScrollingEnabled(false)
+				interactionBlocker.Visible = true
 			end
 		end)
 		UserInputService.InputEnded:Connect(function(input)
