@@ -15,7 +15,7 @@ if playerGui:FindFirstChild("AetherisHub") then
 	playerGui.AetherisHub:Destroy()
 end
 
--- ScreenGui Principal
+-- ScreenGui Principal (Garantindo DisplayOrder máximo)
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AetherisHub"
 screenGui.ResetOnSpawn = false
@@ -375,6 +375,7 @@ function showMainPanel()
 	mainPanel.BackgroundTransparency = panelTransparencyValue
 	mainPanel.BorderSizePixel = 0
 	mainPanel.ClipsDescendants = false
+	mainPanel.ZIndex = 10
 	mainPanel.Parent = screenGui
 
 	local panelCorner = Instance.new("UICorner")
@@ -415,15 +416,16 @@ function showMainPanel()
 	particleContainer.Name = "ThemeParticles"
 	particleContainer.Parent = mainPanel
 
-	-- Partículas aprimoradas e mais visíveis
-	for i = 1, 22 do
+	-- Partículas otimizadas e brilhantes
+	for i = 1, 24 do
 		task.spawn(function()
 			local p = Instance.new("Frame")
-			p.Size = UDim2.new(0, math.random(4, 8), 0, math.random(4, 8))
+			p.Size = UDim2.new(0, math.random(4, 9), 0, math.random(4, 9))
 			p.Position = UDim2.new(math.random(), 0, math.random(), 0)
 			p.BackgroundColor3 = currentThemeColor
-			p.BackgroundTransparency = 0.2
+			p.BackgroundTransparency = 0.15
 			p.BorderSizePixel = 0
+			p.ZIndex = 12
 			p.Parent = particleContainer
 			table.insert(themeParticles, p)
 
@@ -434,12 +436,12 @@ function showMainPanel()
 			while mainPanel and mainPanel.Parent do
 				local targetX = math.random()
 				local targetY = math.random()
-				local tInfo = TweenInfo.new(math.random(4, 8), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+				local tInfo = TweenInfo.new(math.random(3, 7), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
 				TweenService:Create(p, tInfo, {
 					Position = UDim2.new(targetX, 0, targetY, 0),
-					BackgroundTransparency = math.random(2, 8) / 10
+					BackgroundTransparency = math.random(1, 7) / 10
 				}):Play()
-				task.wait(math.random(4, 8))
+				task.wait(math.random(3, 7))
 			end
 		end)
 	end
@@ -452,27 +454,28 @@ function showMainPanel()
 	interactionBlocker.ZIndex = 9999
 	interactionBlocker.Parent = mainPanel
 
-	-- BOTÃO FLUTUANTE CUSTOMIZADO (LETRA "A" PERFEITA)
+	-- BOTÃO FLUTUANTE PERFEITO ("A" ESTILIZADO COM BORA & ZINDEX MÁXIMO)
 	local floatingBtn = Instance.new("TextButton")
 	floatingBtn.Size = UDim2.new(0, 0, 0, 0)
 	floatingBtn.Position = UDim2.new(0, 20, 0.5, -24)
-	floatingBtn.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
-	floatingBtn.BackgroundTransparency = 0.15
+	floatingBtn.BackgroundColor3 = Color3.fromRGB(14, 14, 20)
+	floatingBtn.BackgroundTransparency = 0.1
 	floatingBtn.Font = Enum.Font.GothamBold
 	floatingBtn.Text = "A"
 	floatingBtn.TextColor3 = currentThemeColor
-	floatingBtn.TextSize = 28
+	floatingBtn.TextSize = 30
 	floatingBtn.Visible = false
+	floatingBtn.ZIndex = 99999
 	floatingBtn.Parent = screenGui
 	table.insert(floatingButtonElements, floatingBtn)
 
 	local floatCorner = Instance.new("UICorner")
-	floatCorner.CornerRadius = UDim.new(0, 12)
+	floatCorner.CornerRadius = UDim.new(0, 14)
 	floatCorner.Parent = floatingBtn
 
 	local floatStroke = Instance.new("UIStroke")
 	floatStroke.Color = currentThemeColor
-	floatStroke.Thickness = 2.5
+	floatStroke.Thickness = 3
 	floatStroke.Parent = floatingBtn
 	table.insert(floatingButtonElements, floatStroke)
 
@@ -644,7 +647,7 @@ function showMainPanel()
 			task.wait(0.25)
 			mainPanel.Visible = false
 			floatingBtn.Visible = true
-			TweenService:Create(floatingBtn, TweenInfo.new(0.18), {Size = UDim2.new(0, 48, 0, 48)}):Play()
+			TweenService:Create(floatingBtn, TweenInfo.new(0.18), {Size = UDim2.new(0, 50, 0, 50)}):Play()
 		else
 			TweenService:Create(floatingBtn, TweenInfo.new(0.18), {Size = UDim2.new(0, 0, 0, 0)}):Play()
 			task.wait(0.18)
@@ -2850,7 +2853,6 @@ function showMainPanel()
 	addSlider(secConfig, "Transparência do Painel", 0, 80, 20, function(val)
 		panelTransparencyValue = val / 100
 		mainPanel.BackgroundTransparency = panelTransparencyValue
-		floatingBtn.BackgroundTransparency = panelTransparencyValue
 	end)
 
 	local secTextConfig = createSection(configPage, "Customização de Textos", "🔤")
