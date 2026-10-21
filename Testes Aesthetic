@@ -4,6 +4,7 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
+local HttpService = game:GetService("HttpService")
 
 local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
@@ -77,6 +78,44 @@ local function updateGlobalTheme(newColor)
 end
 
 -----------------------------------------------------------------
+-- GERENCIADOR DE CONFIGURAÇÕES (CONFIG SAVING SYSTEM)
+-----------------------------------------------------------------
+local configFileName = "AetherisHub_Config.json"
+
+local function saveConfig()
+	local configData = {
+		ThemeColorR = currentThemeColor.R,
+		ThemeColorG = currentThemeColor.G,
+		ThemeColorB = currentThemeColor.B,
+		PanelTransparency = panelTransparencyValue,
+		HideKeybind = tostring(hideKeybindKey)
+	}
+	pcall(function()
+		if writefile then
+			writefile(configFileName, HttpService:JSONEncode(configData))
+		end
+	end)
+end
+
+local function loadConfig()
+	pcall(function()
+		if readfile and isfile and isfile(configFileName) then
+			local content = readfile(configFileName)
+			local data = HttpService:JSONDecode(content)
+			if data then
+				if data.ThemeColorR then
+					currentThemeColor = Color3.new(data.ThemeColorR, data.ThemeColorG, data.ThemeColorB)
+				end
+				if data.PanelTransparency then
+					panelTransparencyValue = data.PanelTransparency
+				end
+			end
+		end
+	end)
+end
+loadConfig()
+
+-----------------------------------------------------------------
 -- DETECÇÃO DE PLATAFORMA & TAMANHO DINÂMICO
 -----------------------------------------------------------------
 local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
@@ -93,7 +132,6 @@ local _G_NoclipEnabled = false
 local _G_FullbrightEnabled = false
 local _G_EnergyEnabled = false
 
--- Estados de Viagem (Travel Islands)
 local travelling = false
 local selectedIsland = nil
 local islands = {}
@@ -117,7 +155,6 @@ local _G_FilterCrosshair = false
 local _G_FilterHoldingItem = false
 local _G_FilterClosest = false
 
--- Estados do FOV Customizável
 local _G_FovVisible = false
 local _G_FovRadius = 150
 local _G_FovThickness = 1
@@ -141,7 +178,6 @@ local _G_EspName = false
 local _G_EspDistance = false
 local _G_EspHead = false
 
--- Estados do Enemy ESP (NPC)
 local _G_EnemyEspMaster = false
 local _G_EnemyEspName = false
 local _G_EnemyEspChams = false
@@ -155,7 +191,6 @@ local _G_ColorName = Color3.fromRGB(255, 255, 255)
 local _G_ColorDistance = Color3.fromRGB(200, 200, 255)
 local _G_ColorHead = Color3.fromRGB(255, 100, 100)
 
--- Cores Individuais para Inimigos e Frutas
 local _G_ColorEnemyChams = Color3.fromRGB(255, 65, 75)
 local _G_ColorEnemyName = Color3.fromRGB(255, 255, 255)
 local _G_ColorEnemyDist = Color3.fromRGB(200, 200, 255)
@@ -164,7 +199,6 @@ local _G_ColorFruitChams = Color3.fromRGB(170, 90, 255)
 local _G_ColorFruitName = Color3.fromRGB(255, 255, 255)
 local _G_ColorFruitDist = Color3.fromRGB(200, 200, 255)
 
--- Variável da Keybind de Esconder Painel
 local hideKeybindEnabled = false
 local hideKeybindKey = Enum.KeyCode.RightControl
 
@@ -335,7 +369,7 @@ task.spawn(function()
 end)
 
 -----------------------------------------------------------------
--- PAINEL PRINCIPAL
+-- PAINEL PRINCIPAL COM GRADIENTES E HOVER DINÂMICO
 -----------------------------------------------------------------
 function showMainPanel()
 	local mainPanel = Instance.new("Frame")
@@ -361,15 +395,16 @@ function showMainPanel()
 
 	local glassGradient = Instance.new("UIGradient")
 	glassGradient.Rotation = 45
+	glassGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(180, 180, 200))
+	})
 	glassGradient.Transparency = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 0.1),
-		NumberSequenceKeypoint.new(1, 0.4)
+		NumberSequenceKeypoint.new(0, 0.05),
+		NumberSequenceKeypoint.new(1, 0.35)
 	})
 	glassGradient.Parent = mainPanel
 
-	-----------------------------------------------------------------
-	-- BARRINHA EXTERNA INFERIOR PARA ARRASTAR O PAINEL
-	-----------------------------------------------------------------
 	local dragBar = Instance.new("TextButton")
 	dragBar.Size = UDim2.new(0, 80, 0, 4)
 	dragBar.Position = UDim2.new(0.5, -40, 1, 5)
@@ -385,9 +420,6 @@ function showMainPanel()
 	dbCorner.CornerRadius = UDim.new(1, 0)
 	dbCorner.Parent = dragBar
 
-	-----------------------------------------------------------------
-	-- SISTEMA DE PARTÍCULAS ANIMADAS DE FUNDO
-	-----------------------------------------------------------------
 	local particleContainer = Instance.new("Folder")
 	particleContainer.Name = "ThemeParticles"
 	particleContainer.Parent = mainPanel
@@ -420,9 +452,6 @@ function showMainPanel()
 		end)
 	end
 
-	-----------------------------------------------------------------
-	-- BLOQUEIO GLOBAL DE INTERAÇÃO (INTERACTION BLOCKER)
-	-----------------------------------------------------------------
 	local interactionBlocker = Instance.new("TextButton")
 	interactionBlocker.Size = UDim2.new(1, 0, 1, 0)
 	interactionBlocker.BackgroundTransparency = 1
@@ -476,7 +505,6 @@ function showMainPanel()
 		end
 	end)
 
-	-- Lógica para arrastar o painel
 	local dragging, dragStart, startPos
 	local function startDragging(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -511,9 +539,6 @@ function showMainPanel()
 		end
 	end)
 
-	-----------------------------------------------------------------
-	-- SÍMBOLOS DE REDIMENSIONAR (CANTO INFERIOR DIREITO)
-	-----------------------------------------------------------------
 	local function createResizeSymbol(parent, pos)
 		local symbolFrame = Instance.new("Frame")
 		symbolFrame.Size = UDim2.new(0, 14, 0, 14)
@@ -656,12 +681,13 @@ function showMainPanel()
 		return btn
 	end
 
-	createControlButton("X", function() screenGui:Destroy() end)
+	createControlButton("X", function()
+		saveConfig()
+		screenGui:Destroy()
+	end)
 	createControlButton("-", toggleMinimizePanel)
-
 	floatingBtn.MouseButton1Click:Connect(toggleMinimizePanel)
 
-	-- Listener de Atalho (Keybind) para esconder/mostrar painel
 	UserInputService.InputBegan:Connect(function(input, gameProcessed)
 		if not gameProcessed and hideKeybindEnabled and input.UserInputType == Enum.UserInputType.Keyboard then
 			if input.KeyCode == hideKeybindKey then
@@ -751,6 +777,18 @@ function showMainPanel()
 		btnCorner.CornerRadius = UDim.new(0, 5)
 		btnCorner.Parent = tabButton
 
+		-- Efeito de Hover Dinâmico nas Abas
+		tabButton.MouseEnter:Connect(function()
+			if activePage ~= pages[tabInfo.Name] then
+				TweenService:Create(tabButton, TweenInfo.new(0.15), {BackgroundTransparency = 0.3, TextColor3 = Color3.fromRGB(220, 220, 220)}):Play()
+			end
+		end)
+		tabButton.MouseLeave:Connect(function()
+			if activePage ~= pages[tabInfo.Name] then
+				TweenService:Create(tabButton, TweenInfo.new(0.15), {BackgroundTransparency = 0.5, TextColor3 = Color3.fromRGB(180, 180, 180)}):Play()
+			end
+		end)
+
 		local indicator = Instance.new("Frame")
 		indicator.Size = UDim2.new(0, 2, 0, 0)
 		indicator.Position = UDim2.new(0, 0, 0.5, 0)
@@ -784,11 +822,11 @@ function showMainPanel()
 
 			for _, tData in ipairs(tabButtonsList) do
 				TweenService:Create(tData.Indicator, TweenInfo.new(0.15), {Size = UDim2.new(0, 2, 0, 0)}):Play()
-				TweenService:Create(tData.Button, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(180, 180, 180)}):Play()
+				TweenService:Create(tData.Button, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(180, 180, 180), BackgroundTransparency = 0.5}):Play()
 			end
 
 			TweenService:Create(indicator, TweenInfo.new(0.15), {Size = UDim2.new(0, 2, 0, 16)}):Play()
-			TweenService:Create(tabButton, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+			TweenService:Create(tabButton, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(255, 255, 255), BackgroundTransparency = 0.4}):Play()
 
 			activePage = page
 		end)
@@ -799,6 +837,7 @@ function showMainPanel()
 			activePage = page
 			indicator.Size = UDim2.new(0, 2, 0, 16)
 			tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+			tabButton.BackgroundTransparency = 0.4
 		end
 	end
 
@@ -860,6 +899,49 @@ function showMainPanel()
 		return sContainer
 	end
 
+	-----------------------------------------------------------------
+	-- SUPORTE A CARDS INTERNOS (AGRUPAMENTO)
+	-----------------------------------------------------------------
+	local function createCard(parent, title)
+		local card = Instance.new("Frame")
+		card.Size = UDim2.new(1, 0, 0, 0)
+		card.BackgroundColor3 = Color3.fromRGB(30, 30, 42)
+		card.BackgroundTransparency = 0.4
+		card.Parent = parent
+
+		local cCorner = Instance.new("UICorner")
+		cCorner.CornerRadius = UDim.new(0, 5)
+		cCorner.Parent = card
+
+		local cLayout = Instance.new("UIListLayout")
+		cLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		cLayout.Padding = UDim.new(0, 4)
+		cLayout.Parent = card
+
+		if title and title ~= "" then
+			local cTitle = Instance.new("TextLabel")
+			cTitle.Size = UDim2.new(1, -16, 0, 18)
+			cTitle.Position = UDim2.new(0, 8, 0, 4)
+			cTitle.BackgroundTransparency = 1
+			cTitle.Font = Enum.Font.GothamBold
+			cTitle.Text = title
+			cTitle.TextColor3 = currentThemeColor
+			cTitle.TextSize = 10
+			cTitle.TextXAlignment = Enum.TextXAlignment.Left
+			cTitle.Parent = card
+			table.insert(themeTexts, cTitle)
+		end
+
+		cLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+			card.Size = UDim2.new(1, 0, 0, cLayout.AbsoluteContentSize.Y + 8)
+		end)
+
+		return card
+	end
+
+	-----------------------------------------------------------------
+	-- COLOR PICKER ESTÁVEL (COM HOVER E ANIMAÇÃO)
+	-----------------------------------------------------------------
 	local function addColorPicker(parent, title, defaultColor, callback)
 		local pickerFrame = Instance.new("Frame")
 		pickerFrame.Size = UDim2.new(1, 0, 0, 26)
@@ -893,13 +975,20 @@ function showMainPanel()
 		btnCorner.CornerRadius = UDim.new(0, 3)
 		btnCorner.Parent = colorBtn
 
+		colorBtn.MouseEnter:Connect(function()
+			TweenService:Create(colorBtn, TweenInfo.new(0.15), {Size = UDim2.new(0, 22, 0, 16), Position = UDim2.new(1, -27, 0.5, -8)}):Play()
+		end)
+		colorBtn.MouseLeave:Connect(function()
+			TweenService:Create(colorBtn, TweenInfo.new(0.15), {Size = UDim2.new(0, 20, 0, 14), Position = UDim2.new(1, -26, 0.5, -7)}):Play()
+		end)
+
 		local modal = Instance.new("Frame")
 		modal.Size = UDim2.new(0, 150, 0, 130)
 		modal.Position = UDim2.new(1, -155, 1, 4)
 		modal.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
 		modal.BorderSizePixel = 0
 		modal.Visible = false
-		modal.ZIndex = 50
+		modal.ZIndex = 100
 		modal.Parent = pickerFrame
 
 		local mCorner = Instance.new("UICorner")
@@ -915,7 +1004,7 @@ function showMainPanel()
 		canvas.Position = UDim2.new(0, 6, 0, 6)
 		canvas.BackgroundColor3 = Color3.fromHSV(defaultColor:ToHSV())
 		canvas.BorderSizePixel = 0
-		canvas.ZIndex = 51
+		canvas.ZIndex = 101
 		canvas.Parent = modal
 
 		local cCorner = Instance.new("UICorner")
@@ -926,7 +1015,7 @@ function showMainPanel()
 		whiteGradientFrame.Size = UDim2.new(1, 0, 1, 0)
 		whiteGradientFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 		whiteGradientFrame.BorderSizePixel = 0
-		whiteGradientFrame.ZIndex = 52
+		whiteGradientFrame.ZIndex = 102
 		whiteGradientFrame.Parent = canvas
 
 		local wgCorner = Instance.new("UICorner")
@@ -934,18 +1023,14 @@ function showMainPanel()
 		wgCorner.Parent = whiteGradientFrame
 
 		local wGradient = Instance.new("UIGradient")
-		wGradient.Rotation = 0
-		wGradient.Transparency = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 0),
-			NumberSequenceKeypoint.new(1, 1)
-		})
+		wGradient.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1)})
 		wGradient.Parent = whiteGradientFrame
 
 		local blackGradientFrame = Instance.new("Frame")
 		blackGradientFrame.Size = UDim2.new(1, 0, 1, 0)
 		blackGradientFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 		blackGradientFrame.BorderSizePixel = 0
-		blackGradientFrame.ZIndex = 53
+		blackGradientFrame.ZIndex = 103
 		blackGradientFrame.Parent = canvas
 
 		local bgCorner = Instance.new("UICorner")
@@ -954,10 +1039,7 @@ function showMainPanel()
 
 		local bGradient = Instance.new("UIGradient")
 		bGradient.Rotation = 90
-		bGradient.Transparency = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 1),
-			NumberSequenceKeypoint.new(1, 0)
-		})
+		bGradient.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0)})
 		bGradient.Parent = blackGradientFrame
 
 		local cursor = Instance.new("Frame")
@@ -965,7 +1047,7 @@ function showMainPanel()
 		cursor.AnchorPoint = Vector2.new(0.5, 0.5)
 		cursor.Position = UDim2.new(1, 0, 0, 0)
 		cursor.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		cursor.ZIndex = 54
+		cursor.ZIndex = 104
 		cursor.Parent = canvas
 
 		local curCorner = Instance.new("UICorner")
@@ -977,7 +1059,7 @@ function showMainPanel()
 		hueBar.Position = UDim2.new(0, 122, 0, 6)
 		hueBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 		hueBar.BorderSizePixel = 0
-		hueBar.ZIndex = 51
+		hueBar.ZIndex = 101
 		hueBar.Parent = modal
 
 		local hCorner = Instance.new("UICorner")
@@ -1000,7 +1082,7 @@ function showMainPanel()
 		local huePicker = Instance.new("Frame")
 		huePicker.Size = UDim2.new(1, 0, 0, 3)
 		huePicker.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		huePicker.ZIndex = 54
+		huePicker.ZIndex = 104
 		huePicker.Parent = hueBar
 
 		local currentH, currentS, currentV = defaultColor:ToHSV()
@@ -1054,244 +1136,9 @@ function showMainPanel()
 		return colorBtn
 	end
 
-	local function addEspToggleWithColor(parent, name, defaultColor, colorCallback, toggleCallback)
-		local toggleFrame = Instance.new("Frame")
-		toggleFrame.Size = UDim2.new(1, 0, 0, 26)
-		toggleFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-		toggleFrame.BackgroundTransparency = 0.5
-		toggleFrame.Parent = parent
-
-		local corner = Instance.new("UICorner")
-		corner.CornerRadius = UDim.new(0, 5)
-		corner.Parent = toggleFrame
-
-		local ledIndicator = Instance.new("Frame")
-		ledIndicator.Size = UDim2.new(0, 6, 0, 6)
-		ledIndicator.Position = UDim2.new(0, 8, 0.5, -3)
-		ledIndicator.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
-		ledIndicator.Parent = toggleFrame
-
-		local ledCorner = Instance.new("UICorner")
-		ledCorner.CornerRadius = UDim.new(1, 0)
-		ledCorner.Parent = ledIndicator
-
-		local label = Instance.new("TextLabel")
-		label.Size = UDim2.new(1, -85, 1, 0)
-		label.Position = UDim2.new(0, 20, 0, 0)
-		label.BackgroundTransparency = 1
-		label.Font = Enum.Font.GothamMedium
-		label.Text = name
-		label.TextColor3 = Color3.fromRGB(200, 200, 200)
-		label.TextSize = 11
-		label.TextXAlignment = Enum.TextXAlignment.Left
-		label.Parent = toggleFrame
-
-		local toggleBtn = Instance.new("TextButton")
-		toggleBtn.Size = UDim2.new(0, 28, 0, 16)
-		toggleBtn.Position = UDim2.new(1, -34, 0.5, -8)
-		toggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
-		toggleBtn.Text = ""
-		toggleBtn.Parent = toggleFrame
-
-		local tCorner = Instance.new("UICorner")
-		tCorner.CornerRadius = UDim.new(1, 0)
-		tCorner.Parent = toggleBtn
-
-		local circle = Instance.new("Frame")
-		circle.Size = UDim2.new(0, 12, 0, 12)
-		circle.Position = UDim2.new(0, 2, 0.5, -6)
-		circle.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-		circle.Parent = toggleBtn
-
-		local cCorner = Instance.new("UICorner")
-		cCorner.CornerRadius = UDim.new(1, 0)
-		cCorner.Parent = circle
-
-		local toggleStateRef = {isToggled = false, circle = circle, button = toggleBtn, led = ledIndicator}
-		table.insert(themeToggles, toggleStateRef)
-
-		local colorBtn = Instance.new("TextButton")
-		colorBtn.Size = UDim2.new(0, 18, 0, 14)
-		colorBtn.Position = UDim2.new(1, -58, 0.5, -7)
-		colorBtn.BackgroundColor3 = defaultColor
-		colorBtn.Text = ""
-		colorBtn.Parent = toggleFrame
-
-		local cBtnCorner = Instance.new("UICorner")
-		cBtnCorner.CornerRadius = UDim.new(0, 3)
-		cBtnCorner.Parent = colorBtn
-
-		local modal = Instance.new("Frame")
-		modal.Size = UDim2.new(0, 150, 0, 130)
-		modal.Position = UDim2.new(0, -130, 1, 4)
-		modal.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
-		modal.BorderSizePixel = 0
-		modal.Visible = false
-		modal.ZIndex = 50
-		modal.Parent = colorBtn
-
-		local mCorner = Instance.new("UICorner")
-		mCorner.CornerRadius = UDim.new(0, 6)
-		mCorner.Parent = modal
-
-		local mStroke = Instance.new("UIStroke")
-		mStroke.Color = Color3.fromRGB(60, 60, 80)
-		mStroke.Parent = modal
-
-		local canvas = Instance.new("Frame")
-		canvas.Size = UDim2.new(0, 108, 0, 92)
-		canvas.Position = UDim2.new(0, 6, 0, 6)
-		canvas.BackgroundColor3 = Color3.fromHSV(defaultColor:ToHSV())
-		canvas.BorderSizePixel = 0
-		canvas.ZIndex = 51
-		canvas.Parent = modal
-
-		local cnCorner = Instance.new("UICorner")
-		cnCorner.CornerRadius = UDim.new(0, 4)
-		cnCorner.Parent = canvas
-
-		local whiteGradientFrame = Instance.new("Frame")
-		whiteGradientFrame.Size = UDim2.new(1, 0, 1, 0)
-		whiteGradientFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		whiteGradientFrame.BorderSizePixel = 0
-		whiteGradientFrame.ZIndex = 52
-		whiteGradientFrame.Parent = canvas
-
-		local wgCorner = Instance.new("UICorner")
-		wgCorner.CornerRadius = UDim.new(0, 4)
-		wgCorner.Parent = whiteGradientFrame
-
-		local wGradient = Instance.new("UIGradient")
-		wGradient.Rotation = 0
-		wGradient.Transparency = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 0),
-			NumberSequenceKeypoint.new(1, 1)
-		})
-		wGradient.Parent = whiteGradientFrame
-
-		local blackGradientFrame = Instance.new("Frame")
-		blackGradientFrame.Size = UDim2.new(1, 0, 1, 0)
-		blackGradientFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-		blackGradientFrame.BorderSizePixel = 0
-		blackGradientFrame.ZIndex = 53
-		blackGradientFrame.Parent = canvas
-
-		local bgCorner = Instance.new("UICorner")
-		bgCorner.CornerRadius = UDim.new(0, 4)
-		bgCorner.Parent = blackGradientFrame
-
-		local bGradient = Instance.new("UIGradient")
-		bGradient.Rotation = 90
-		bGradient.Transparency = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 1),
-			NumberSequenceKeypoint.new(1, 0)
-		})
-		bGradient.Parent = blackGradientFrame
-
-		local cur = Instance.new("Frame")
-		cur.Size = UDim2.new(0, 7, 0, 7)
-		cur.AnchorPoint = Vector2.new(0.5, 0.5)
-		cur.Position = UDim2.new(1, 0, 0, 0)
-		cur.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		cur.ZIndex = 54
-		cur.Parent = canvas
-
-		local curCorner = Instance.new("UICorner")
-		curCorner.CornerRadius = UDim.new(1, 0)
-		curCorner.Parent = cur
-
-		local hueBar = Instance.new("Frame")
-		hueBar.Size = UDim2.new(0, 14, 0, 92)
-		hueBar.Position = UDim2.new(0, 122, 0, 6)
-		hueBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		hueBar.BorderSizePixel = 0
-		hueBar.ZIndex = 51
-		hueBar.Parent = modal
-
-		local hCorner = Instance.new("UICorner")
-		hCorner.CornerRadius = UDim.new(0, 4)
-		hCorner.Parent = hueBar
-
-		local uifig = Instance.new("UIGradient")
-		uifig.Rotation = 90
-		uifig.Color = ColorSequence.new({
-			ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
-			ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 255, 0)),
-			ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 255, 0)),
-			ColorSequenceKeypoint.new(0.50, Color3.fromRGB(0, 255, 255)),
-			ColorSequenceKeypoint.new(0.67, Color3.fromRGB(0, 0, 255)),
-			ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 0, 255)),
-			ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 0, 0))
-		})
-		uifig.Parent = hueBar
-
-		local huePicker = Instance.new("Frame")
-		huePicker.Size = UDim2.new(1, 0, 0, 3)
-		huePicker.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		huePicker.ZIndex = 54
-		huePicker.Parent = hueBar
-
-		local currentH, currentS, currentV = defaultColor:ToHSV()
-
-		local function updateColor()
-			local color = Color3.fromHSV(currentH, currentS, currentV)
-			canvas.BackgroundColor3 = Color3.fromHSV(currentH, 1, 1)
-			colorBtn.BackgroundColor3 = color
-			colorCallback(color)
-		end
-
-		colorBtn.MouseButton1Click:Connect(function()
-			modal.Visible = not modal.Visible
-		end)
-
-		local draggingHue = false
-		hueBar.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingHue = true end
-		end)
-		UserInputService.InputEnded:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingHue = false end
-		end)
-		UserInputService.InputChanged:Connect(function(input)
-			if draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-				local y = math.clamp((input.Position.Y - hueBar.AbsolutePosition.Y) / hueBar.AbsoluteSize.Y, 0, 1)
-				huePicker.Position = UDim2.new(0, 0, y, -1)
-				currentH = y
-				updateColor()
-			end
-		end)
-
-		local draggingCanvas = false
-		canvas.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingCanvas = true end
-		end)
-		UserInputService.InputEnded:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingCanvas = false end
-		end)
-		UserInputService.InputChanged:Connect(function(input)
-			if draggingCanvas and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-				local x = math.clamp((input.Position.X - canvas.AbsolutePosition.X) / canvas.AbsoluteSize.X, 0, 1)
-				local y = math.clamp((input.Position.Y - canvas.AbsolutePosition.Y) / canvas.AbsoluteSize.Y, 0, 1)
-				cur.Position = UDim2.new(x, 0, y, 0)
-				currentS = x
-				currentV = 1 - y
-				updateColor()
-			end
-		end)
-
-		toggleBtn.MouseButton1Click:Connect(function()
-			toggleStateRef.isToggled = not toggleStateRef.isToggled
-			local targetPos = toggleStateRef.isToggled and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
-			local targetColor = toggleStateRef.isToggled and currentThemeColor or Color3.fromRGB(50, 50, 70)
-			local targetLedColor = toggleStateRef.isToggled and currentThemeColor or Color3.fromRGB(80, 80, 100)
-			
-			TweenService:Create(circle, TweenInfo.new(0.18), {Position = targetPos}):Play()
-			TweenService:Create(toggleBtn, TweenInfo.new(0.18), {BackgroundColor3 = targetColor}):Play()
-			TweenService:Create(ledIndicator, TweenInfo.new(0.18), {BackgroundColor3 = targetLedColor}):Play()
-			
-			toggleCallback(toggleStateRef.isToggled)
-		end)
-	end
-
+	-----------------------------------------------------------------
+	-- TOGGLE PADRÃO COM HOVER DINÂMICO
+	-----------------------------------------------------------------
 	local function addToggle(parent, name, callback, defaultState)
 		local toggleFrame = Instance.new("Frame")
 		toggleFrame.Size = UDim2.new(1, 0, 0, 26)
@@ -1302,6 +1149,13 @@ function showMainPanel()
 		local corner = Instance.new("UICorner")
 		corner.CornerRadius = UDim.new(0, 5)
 		corner.Parent = toggleFrame
+
+		toggleFrame.MouseEnter:Connect(function()
+			TweenService:Create(toggleFrame, TweenInfo.new(0.15), {BackgroundTransparency = 0.3}):Play()
+		end)
+		toggleFrame.MouseLeave:Connect(function()
+			TweenService:Create(toggleFrame, TweenInfo.new(0.15), {BackgroundTransparency = 0.5}):Play()
+		end)
 
 		local ledIndicator = Instance.new("Frame")
 		ledIndicator.Size = UDim2.new(0, 6, 0, 6)
@@ -1362,6 +1216,9 @@ function showMainPanel()
 		end)
 	end
 
+	-----------------------------------------------------------------
+	-- SLIDER COM HOVER
+	-----------------------------------------------------------------
 	local function addSlider(parent, name, min, max, default, callback)
 		local sliderFrame = Instance.new("Frame")
 		sliderFrame.Size = UDim2.new(1, 0, 0, 38)
@@ -1372,6 +1229,13 @@ function showMainPanel()
 		local corner = Instance.new("UICorner")
 		corner.CornerRadius = UDim.new(0, 5)
 		corner.Parent = sliderFrame
+
+		sliderFrame.MouseEnter:Connect(function()
+			TweenService:Create(sliderFrame, TweenInfo.new(0.15), {BackgroundTransparency = 0.3}):Play()
+		end)
+		sliderFrame.MouseLeave:Connect(function()
+			TweenService:Create(sliderFrame, TweenInfo.new(0.15), {BackgroundTransparency = 0.5}):Play()
+		end)
 
 		local label = Instance.new("TextLabel")
 		label.Size = UDim2.new(1, -16, 0, 16)
@@ -1425,1415 +1289,30 @@ function showMainPanel()
 	end
 
 	-----------------------------------------------------------------
-	-- ABA PLAYER
+	-- ABAS DO HUB (Exemplo organizado com Cards e Seções)
 	-----------------------------------------------------------------
 	local playerPage = pages["Player"]
 	local secMovimento = createSection(playerPage, "Movimento", "🏃‍♂️")
-	addToggle(secMovimento, "Ativar WalkSpeed", function(state) _G_WalkSpeedEnabled = state end, false)
-	addSlider(secMovimento, "Velocidade", 16, 250, 16, function(val) _G_WalkSpeedValue = val end)
-
-	addToggle(secMovimento, "Ativar JumpPower", function(state) _G_JumpPowerEnabled = state end, false)
-	addSlider(secMovimento, "Força do Pulo", 50, 300, 50, function(val) _G_JumpPowerValue = val end)
-
-	local secFisico = createSection(playerPage, "Habilidades Físicas", "⚙️")
-	addToggle(secFisico, "Noclip (Atravessar Paredes)", function(state) _G_NoclipEnabled = state end, false)
-	addToggle(secFisico, "Energia Infinita", function(state) _G_EnergyEnabled = state end, false)
-
-	-----------------------------------------------------------------
-	-- SEÇÃO DE VIAGEM PARA ILHAS (DENTRO DA ABA PLAYER)
-	-----------------------------------------------------------------
-	local secTravel = createSection(playerPage, "Viajar para Ilhas", "🏝️")
-
-	local function refreshIslands()
-		local oldName = selectedIsland and selectedIsland.Name
-		islands = {}
-
-		for _, object in ipairs(map:GetChildren()) do
-			if object:IsA("Model") then
-				table.insert(islands, object)
-			end
-		end
-
-		table.sort(islands, function(a, b)
-			return a.Name:lower() < b.Name:lower()
-		end)
-
-		islandIndex = 1
-		if oldName then
-			for i, island in ipairs(islands) do
-				if island.Name == oldName then
-					islandIndex = i
-					break
-				end
-			end
-		end
-
-		selectedIsland = islands[islandIndex]
-	end
-	refreshIslands()
-
-	local dropdownFrame = Instance.new("Frame")
-	dropdownFrame.Size = UDim2.new(1, 0, 0, 26)
-	dropdownFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-	dropdownFrame.BackgroundTransparency = 0.5
-	dropdownFrame.Parent = secTravel
-
-	local dfCorner = Instance.new("UICorner")
-	dfCorner.CornerRadius = UDim.new(0, 5)
-	dfCorner.Parent = dropdownFrame
-
-	local dropLabel = Instance.new("TextLabel")
-	dropLabel.Size = UDim2.new(1, -30, 1, 0)
-	dropLabel.Position = UDim2.new(0, 8, 0, 0)
-	dropLabel.BackgroundTransparency = 1
-	dropLabel.Font = Enum.Font.GothamMedium
-	dropLabel.Text = selectedIsland and selectedIsland.Name or "Selecione a Ilha"
-	dropLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-	dropLabel.TextSize = 11
-	dropLabel.TextXAlignment = Enum.TextXAlignment.Left
-	dropLabel.TextTruncate = Enum.TextTruncate.AtEnd
-	dropLabel.Parent = dropdownFrame
-
-	local dropBtn = Instance.new("TextButton")
-	dropBtn.Size = UDim2.new(0, 24, 0, 24)
-	dropBtn.Position = UDim2.new(1, -26, 0.5, -12)
-	dropBtn.BackgroundTransparency = 1
-	dropBtn.Font = Enum.Font.GothamBold
-	dropBtn.Text = "▼"
-	dropBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-	dropBtn.TextSize = 10
-	dropBtn.Parent = dropdownFrame
-
-	local dropList = Instance.new("ScrollingFrame")
-	dropList.Size = UDim2.new(1, 0, 0, 110)
-	dropList.Position = UDim2.new(0, 0, 1, 4)
-	dropList.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
-	dropList.BorderSizePixel = 0
-	dropList.Visible = false
-	dropList.ZIndex = 60
-	dropList.ScrollBarThickness = 3
-	dropList.Parent = dropdownFrame
-
-	local dlCorner = Instance.new("UICorner")
-	dlCorner.CornerRadius = UDim.new(0, 5)
-	dlCorner.Parent = dropList
-
-	local dlLayout = Instance.new("UIListLayout")
-	dlLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	dlLayout.Padding = UDim.new(0, 2)
-	dlLayout.Parent = dropList
-
-	local function updateDropdownList()
-		for _, child in ipairs(dropList:GetChildren()) do
-			if child:IsA("TextButton") then child:Destroy() end
-		end
-		refreshIslands()
-		for _, island in ipairs(islands) do
-			local opt = Instance.new("TextButton")
-			opt.Size = UDim2.new(1, 0, 0, 22)
-			opt.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-			opt.BackgroundTransparency = 0.5
-			opt.Font = Enum.Font.GothamMedium
-			opt.Text = "  " .. island.Name
-			opt.TextColor3 = Color3.fromRGB(220, 220, 220)
-			opt.TextSize = 10
-			opt.TextXAlignment = Enum.TextXAlignment.Left
-			opt.ZIndex = 61
-			opt.Parent = dropList
-
-			opt.MouseButton1Click:Connect(function()
-				selectedIsland = island
-				dropLabel.Text = island.Name
-				dropList.Visible = false
-			end)
-		end
-		dropList.CanvasSize = UDim2.new(0, 0, 0, #islands * 24)
-	end
-
-	dropBtn.MouseButton1Click:Connect(function()
-		dropList.Visible = not dropList.Visible
-		if dropList.Visible then updateDropdownList() end
-	end)
-
-	dropLabel.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dropList.Visible = not dropList.Visible
-			if dropList.Visible then updateDropdownList() end
-		end
-	end)
-
-	local function disableTravelNoclip()
-		if noclipConnection then
-			noclipConnection:Disconnect()
-			noclipConnection = nil
-		end
-		for part, originalValue in pairs(originalCollision) do
-			if part and part.Parent then
-				part.CanCollide = originalValue
-			end
-		end
-		table.clear(originalCollision)
-	end
-
-	local function enableTravelNoclip(character)
-		disableTravelNoclip()
-		local function processPart(part)
-			if not part:IsA("BasePart") then return end
-			if originalCollision[part] == nil then
-				originalCollision[part] = part.CanCollide
-			end
-			part.CanCollide = false
-		end
-		for _, part in ipairs(character:GetDescendants()) do processPart(part) end
-		noclipConnection = RunService.Stepped:Connect(function()
-			if not travelling or not character.Parent then return end
-			for _, part in ipairs(character:GetDescendants()) do processPart(part) end
-		end)
-	end
-
-	local function stopTravel()
-		travelling = false
-		if moveConnection then moveConnection:Disconnect(); moveConnection = nil end
-		if activeVelocity then activeVelocity:Destroy(); activeVelocity = nil end
-		if activeGyro then activeGyro:Destroy(); activeGyro = nil end
-		disableTravelNoclip()
-	end
-
-	local function startTravel()
-		if not selectedIsland or not selectedIsland.Parent then
-			refreshIslands()
-		end
-		if not selectedIsland then return end
-
-		local character = player.Character
-		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-		local root = character and character:FindFirstChild("HumanoidRootPart")
-		if not humanoid or not root then return end
-
-		travelling = true
-		enableTravelNoclip(character)
-
-		activeVelocity = Instance.new("BodyVelocity")
-		activeVelocity.Name = "TravelVelocity"
-		activeVelocity.MaxForce = Vector3.new(1e6, 1e6, 1e6)
-		activeVelocity.P = 15000
-		activeVelocity.Velocity = Vector3.zero
-		activeVelocity.Parent = root
-
-		activeGyro = Instance.new("BodyGyro")
-		activeGyro.Name = "TravelGyro"
-		activeGyro.MaxTorque = Vector3.new(1e6, 1e6, 1e6)
-		activeGyro.P = 10000
-		activeGyro.CFrame = root.CFrame
-		activeGyro.Parent = root
-
-		moveConnection = RunService.Heartbeat:Connect(function()
-			if not travelling then return end
-			if not character.Parent or not root.Parent or not selectedIsland.Parent then
-				stopTravel()
-				return
-			end
-
-			local destination = selectedIsland:GetPivot().Position + Vector3.new(0, travelHeight, 0)
-			local difference = destination - root.Position
-			local distance = difference.Magnitude
-
-			if distance <= travelArrivalDist then
-				stopTravel()
-				return
-			end
-
-			activeVelocity.Velocity = difference.Unit * travelSpeed
-			local horizontal = Vector3.new(difference.X, 0, difference.Z)
-			if horizontal.Magnitude > 0.1 then
-				activeGyro.CFrame = CFrame.lookAt(root.Position, root.Position + horizontal)
-			end
-		end)
-	end
-
-	addToggle(secTravel, "Viajar", function(state)
-		if state then
-			startTravel()
-		else
-			stopTravel()
-		end
-	end, false)
-
-	addSlider(secTravel, "Velocidade de Viagem", 20, 300, 80, function(val)
-		travelSpeed = val
-	end)
-
-	-----------------------------------------------------------------
-    -- ABA VISUAL
-    -----------------------------------------------------------------
-    local visualPage = pages["Visual"]
-    local secEspPlayers = createSection(visualPage, "ESP Players", "👁️")
-    addToggle(secEspPlayers, "Ativar ESP Players", function(state) _G_EspMaster = state end, false)
-
-    addEspToggleWithColor(secEspPlayers, "Box ESP", _G_ColorBox, function(c) _G_ColorBox = c end, function(s) _G_EspBox = s end)
 	
-	-- Tracers / Line ESP com botão retangular arredondado à esquerda do color picker
-	local tracerToggleFrame = Instance.new("Frame")
-	tracerToggleFrame.Size = UDim2.new(1, 0, 0, 26)
-	tracerToggleFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-	tracerToggleFrame.BackgroundTransparency = 0.5
-	tracerToggleFrame.Parent = secEspPlayers
-
-	local ttfCorner = Instance.new("UICorner")
-	ttfCorner.CornerRadius = UDim.new(0, 5)
-	ttfCorner.Parent = tracerToggleFrame
-
-	local tracerLed = Instance.new("Frame")
-	tracerLed.Size = UDim2.new(0, 6, 0, 6)
-	tracerLed.Position = UDim2.new(0, 8, 0.5, -3)
-	tracerLed.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
-	tracerLed.Parent = tracerToggleFrame
-
-	local tracerLedCorner = Instance.new("UICorner")
-	tracerLedCorner.CornerRadius = UDim.new(1, 0)
-	tracerLedCorner.Parent = tracerLed
-
-	local tracerLabel = Instance.new("TextLabel")
-	tracerLabel.Size = UDim2.new(1, -150, 1, 0)
-	tracerLabel.Position = UDim2.new(0, 20, 0, 0)
-	tracerLabel.BackgroundTransparency = 1
-	tracerLabel.Font = Enum.Font.GothamMedium
-	tracerLabel.Text = "Tracers / Line ESP"
-	tracerLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-	tracerLabel.TextSize = 11
-	tracerLabel.TextXAlignment = Enum.TextXAlignment.Left
-	tracerLabel.Parent = tracerToggleFrame
-
-	local tracerToggleBtn = Instance.new("TextButton")
-	tracerToggleBtn.Size = UDim2.new(0, 28, 0, 16)
-	tracerToggleBtn.Position = UDim2.new(1, -34, 0.5, -8)
-	tracerToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
-	tracerToggleBtn.Text = ""
-	tracerToggleBtn.Parent = tracerToggleFrame
-
-	local tBtnCorner = Instance.new("UICorner")
-	tBtnCorner.CornerRadius = UDim.new(1, 0)
-	tBtnCorner.Parent = tracerToggleBtn
-
-	local tracerCircle = Instance.new("Frame")
-	tracerCircle.Size = UDim2.new(0, 12, 0, 12)
-	tracerCircle.Position = UDim2.new(0, 2, 0.5, -6)
-	tracerCircle.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-	tracerCircle.Parent = tracerToggleBtn
-
-	local tcCorner = Instance.new("UICorner")
-	tcCorner.CornerRadius = UDim.new(1, 0)
-	tcCorner.Parent = tracerCircle
-
-	local tracerStateRef = {isToggled = false, circle = tracerCircle, button = tracerToggleBtn, led = tracerLed}
-	table.insert(themeToggles, tracerStateRef)
-
-	local tracerPosModeBtn = Instance.new("TextButton")
-	tracerPosModeBtn.Size = UDim2.new(0, 52, 0, 16)
-	tracerPosModeBtn.Position = UDim2.new(1, -114, 0.5, -8)
-	tracerPosModeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
-	tracerPosModeBtn.Font = Enum.Font.GothamBold
-	tracerPosModeBtn.Text = _G_TracerOrigin
-	tracerPosModeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	tracerPosModeBtn.TextSize = 9
-	tracerPosModeBtn.Parent = tracerToggleFrame
-
-	local tpmCorner = Instance.new("UICorner")
-	tpmCorner.CornerRadius = UDim.new(0, 4)
-	tpmCorner.Parent = tracerPosModeBtn
-
-	tracerPosModeBtn.MouseButton1Click:Connect(function()
-		if _G_TracerOrigin == "Bottom" then
-			_G_TracerOrigin = "Center"
-			tracerPosModeBtn.Text = "Center"
-		elseif _G_TracerOrigin == "Center" then
-			_G_TracerOrigin = "Top"
-			tracerPosModeBtn.Text = "Top"
-		else
-			_G_TracerOrigin = "Bottom"
-			tracerPosModeBtn.Text = "Bottom"
-		end
-	end)
-
-	local tracerColorBtn = Instance.new("TextButton")
-	tracerColorBtn.Size = UDim2.new(0, 18, 0, 14)
-	tracerColorBtn.Position = UDim2.new(1, -58, 0.5, -7)
-	tracerColorBtn.BackgroundColor3 = _G_ColorLine
-	tracerColorBtn.Text = ""
-	tracerColorBtn.Parent = tracerToggleFrame
-
-	local tcBtnCorner = Instance.new("UICorner")
-	tcBtnCorner.CornerRadius = UDim.new(0, 3)
-	tcBtnCorner.Parent = tracerColorBtn
-
-	local tracerModal = Instance.new("Frame")
-	tracerModal.Size = UDim2.new(0, 150, 0, 130)
-	tracerModal.Position = UDim2.new(0, -130, 1, 4)
-	tracerModal.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
-	tracerModal.BorderSizePixel = 0
-	tracerModal.Visible = false
-	tracerModal.ZIndex = 50
-	tracerModal.Parent = tracerColorBtn
-
-	local tmCorner = Instance.new("UICorner")
-	tmCorner.CornerRadius = UDim.new(0, 6)
-	tmCorner.Parent = tracerModal
-
-	local tmStroke = Instance.new("UIStroke")
-	tmStroke.Color = Color3.fromRGB(60, 60, 80)
-	tmStroke.Parent = tracerModal
-
-	local tracerCanvas = Instance.new("Frame")
-	tracerCanvas.Size = UDim2.new(0, 108, 0, 92)
-	tracerCanvas.Position = UDim2.new(0, 6, 0, 6)
-	tracerCanvas.BackgroundColor3 = Color3.fromHSV(_G_ColorLine:ToHSV())
-	tracerCanvas.BorderSizePixel = 0
-	tracerCanvas.ZIndex = 51
-	tracerCanvas.Parent = tracerModal
-
-	local tcnCorner = Instance.new("UICorner")
-	tcnCorner.CornerRadius = UDim.new(0, 4)
-	tcnCorner.Parent = tracerCanvas
-
-	local twgFrame = Instance.new("Frame")
-	twgFrame.Size = UDim2.new(1, 0, 1, 0)
-	twgFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	twgFrame.BorderSizePixel = 0
-	twgFrame.ZIndex = 52
-	twgFrame.Parent = tracerCanvas
-
-	local twgc = Instance.new("UICorner")
-	twgc.CornerRadius = UDim.new(0, 4)
-	twgc.Parent = twgFrame
-
-	local twg = Instance.new("UIGradient")
-	twg.Rotation = 0
-	twg.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1)})
-	twg.Parent = twgFrame
-
-	local tbgFrame = Instance.new("Frame")
-	tbgFrame.Size = UDim2.new(1, 0, 1, 0)
-	tbgFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-	tbgFrame.BorderSizePixel = 0
-	tbgFrame.ZIndex = 53
-	tbgFrame.Parent = tracerCanvas
-
-	local tbgc = Instance.new("UICorner")
-	tbgc.CornerRadius = UDim.new(0, 4)
-	tbgc.Parent = tbgFrame
-
-	local tbg = Instance.new("UIGradient")
-	tbg.Rotation = 90
-	tbg.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0)})
-	tbg.Parent = tbgFrame
-
-	local tCur = Instance.new("Frame")
-	tCur.Size = UDim2.new(0, 7, 0, 7)
-	tCur.AnchorPoint = Vector2.new(0.5, 0.5)
-	tCur.Position = UDim2.new(1, 0, 0, 0)
-	tCur.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	tCur.ZIndex = 54
-	tCur.Parent = tracerCanvas
-
-	local tCurc = Instance.new("UICorner")
-	tCurc.CornerRadius = UDim.new(1, 0)
-	tCurc.Parent = tCur
-
-	local tHueBar = Instance.new("Frame")
-	tHueBar.Size = UDim2.new(0, 14, 0, 92)
-	tHueBar.Position = UDim2.new(0, 122, 0, 6)
-	tHueBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	tHueBar.BorderSizePixel = 0
-	tHueBar.ZIndex = 51
-	tHueBar.Parent = tracerModal
-
-	local thCorner = Instance.new("UICorner")
-	thCorner.CornerRadius = UDim.new(0, 4)
-	thCorner.Parent = tHueBar
-
-	local tuifig = Instance.new("UIGradient")
-	tuifig.Rotation = 90
-	tuifig.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
-		ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 255, 0)),
-		ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 255, 0)),
-		ColorSequenceKeypoint.new(0.50, Color3.fromRGB(0, 255, 255)),
-		ColorSequenceKeypoint.new(0.67, Color3.fromRGB(0, 0, 255)),
-		ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 0, 255)),
-		ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 0, 0))
-	})
-	tuifig.Parent = tHueBar
-
-	local tHuePicker = Instance.new("Frame")
-	tHuePicker.Size = UDim2.new(1, 0, 0, 3)
-	tHuePicker.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	tHuePicker.ZIndex = 54
-	tHuePicker.Parent = tHueBar
-
-	local th, ts, tv = _G_ColorLine:ToHSV()
-	local function updateTracerColor()
-		local col = Color3.fromHSV(th, ts, tv)
-		tracerCanvas.BackgroundColor3 = Color3.fromHSV(th, 1, 1)
-		tracerColorBtn.BackgroundColor3 = col
-		_G_ColorLine = col
-	end
-
-	tracerColorBtn.MouseButton1Click:Connect(function()
-		tracerModal.Visible = not tracerModal.Visible
-	end)
-
-	local dTracerHue = false
-	tHueBar.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dTracerHue = true end
-	end)
-	UserInputService.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dTracerHue = false end
-	end)
-	UserInputService.InputChanged:Connect(function(input)
-		if dTracerHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-			local y = math.clamp((input.Position.Y - tHueBar.AbsolutePosition.Y) / tHueBar.AbsoluteSize.Y, 0, 1)
-			tHuePicker.Position = UDim2.new(0, 0, y, -1)
-			th = y
-			updateTracerColor()
-		end
-	end)
-
-	local dTracerCanvas = false
-	tracerCanvas.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dTracerCanvas = true end
-	end)
-	UserInputService.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dTracerCanvas = false end
-	end)
-	UserInputService.InputChanged:Connect(function(input)
-		if dTracerCanvas and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-			local x = math.clamp((input.Position.X - tracerCanvas.AbsolutePosition.X) / tracerCanvas.AbsoluteSize.X, 0, 1)
-			local y = math.clamp((input.Position.Y - tracerCanvas.AbsolutePosition.Y) / tracerCanvas.AbsoluteSize.Y, 0, 1)
-			tCur.Position = UDim2.new(x, 0, y, 0)
-			ts = x
-			tv = 1 - y
-			updateTracerColor()
-		end
-	end)
-
-	tracerToggleBtn.MouseButton1Click:Connect(function()
-		tracerStateRef.isToggled = not tracerStateRef.isToggled
-		_G_EspLine = tracerStateRef.isToggled
-		local targetPos = tracerStateRef.isToggled and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
-		local targetColor = tracerStateRef.isToggled and currentThemeColor or Color3.fromRGB(50, 50, 70)
-		local targetLedColor = tracerStateRef.isToggled and currentThemeColor or Color3.fromRGB(80, 80, 100)
-		
-		TweenService:Create(tracerCircle, TweenInfo.new(0.18), {Position = targetPos}):Play()
-		TweenService:Create(tracerToggleBtn, TweenInfo.new(0.18), {BackgroundColor3 = targetColor}):Play()
-		TweenService:Create(tracerLed, TweenInfo.new(0.18), {BackgroundColor3 = targetLedColor}):Play()
-	end)
-
-	addEspToggleWithColor(secEspPlayers, "Chams (Highlight)", _G_ColorChams, function(c) _G_ColorChams = c end, function(s) _G_EspChams = s end)
-	addEspToggleWithColor(secEspPlayers, "Health Bar", _G_ColorHealth, function(c) _G_ColorHealth = c end, function(s) _G_EspHealth = s end)
-	addEspToggleWithColor(secEspPlayers, "Name ESP", _G_ColorName, function(c) _G_ColorName = c end, function(s) _G_EspName = s end)
-	addEspToggleWithColor(secEspPlayers, "Distance ESP", _G_ColorDistance, function(c) _G_ColorDistance = c end, function(s) _G_EspDistance = s end)
-	addEspToggleWithColor(secEspPlayers, "Head Dot ESP", _G_ColorHead, function(c) _G_ColorHead = c end, function(s) _G_EspHead = s end)
-
-    -- Seção de Inimigos (NPC) na aba Visual com Cores Individuais ao lado do toggle
-    local secEspEnemies = createSection(visualPage, "ESP Inimigos (NPC)", "👾")
-    addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state end, false)
-    
-    addEspToggleWithColor(secEspEnemies, "ESP Chams", _G_ColorEnemyChams, function(c) _G_ColorEnemyChams = c end, function(s) _G_EnemyEspChams = s end)
-    addEspToggleWithColor(secEspEnemies, "ESP Nome", _G_ColorEnemyName, function(c) _G_ColorEnemyName = c end, function(s) _G_EnemyEspName = s end)
-    addEspToggleWithColor(secEspEnemies, "ESP Distância", _G_ColorEnemyDist, function(c) _G_ColorEnemyDist = c end, function(s) _G_EnemyEspDistance = s end)
-
-    local secWorld = createSection(visualPage, "Visual do Mapa", "🌐")
-    addToggle(secWorld, "Fullbright (Remover Escuridão)", function(state)
-        _G_FullbrightEnabled = state
-        Lighting.Brightness = _G_FullbrightEnabled and 2 or 1
-        Lighting.ClockTime = _G_FullbrightEnabled and 14 or 0
-        Lighting.GlobalShadows = not _G_FullbrightEnabled
-    end, false)
-
-	-----------------------------------------------------------------
-	-- ABA AIM LOCK
-	-----------------------------------------------------------------
-	local aimLockPage = pages["Aim Lock"]
-	local secCombat = createSection(aimLockPage, "Sistema Lock-On", "⚔️")
-
-	addToggle(secCombat, "Ativar Lock-On", function(state)
-		isLockOnEnabled = state
-	end, false)
-
-	addToggle(secCombat, "Lock Players", function(state)
-		_G_LockOnPlayers = state
-	end, true)
-
-	addToggle(secCombat, "Ativar Lock inimigos (NPC)", function(state)
-		_G_LockOnEnemies = state
-	end, false)
-
-	local modeFrame = Instance.new("Frame")
-	modeFrame.Size = UDim2.new(1, 0, 0, 26)
-	modeFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-	modeFrame.BackgroundTransparency = 0.5
-	modeFrame.Parent = secCombat
-
-	local mfCorner = Instance.new("UICorner")
-	mfCorner.CornerRadius = UDim.new(0, 5)
-	mfCorner.Parent = modeFrame
-
-	local modeLabel = Instance.new("TextLabel")
-	modeLabel.Size = UDim2.new(1, -90, 1, 0)
-	modeLabel.Position = UDim2.new(0, 8, 0, 0)
-	modeLabel.BackgroundTransparency = 1
-	modeLabel.Font = Enum.Font.GothamMedium
-	modeLabel.Text = "Modo Lock-On"
-	modeLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-	modeLabel.TextSize = 11
-	modeLabel.TextXAlignment = Enum.TextXAlignment.Left
-	modeLabel.Parent = modeFrame
-
-	local modeSwitchBtn = Instance.new("TextButton")
-	modeSwitchBtn.Size = UDim2.new(0, 80, 0, 18)
-	modeSwitchBtn.Position = UDim2.new(1, -86, 0.5, -9)
-	modeSwitchBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
-	modeSwitchBtn.Font = Enum.Font.GothamBold
-	modeSwitchBtn.Text = lockOnMode
-	modeSwitchBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	modeSwitchBtn.TextSize = 10
-	modeSwitchBtn.Parent = modeFrame
-
-	local msCorner = Instance.new("UICorner")
-	msCorner.CornerRadius = UDim.new(0, 4)
-	msCorner.Parent = modeSwitchBtn
-
-	local secFilters = createSection(aimLockPage, "FOV & Filtros de Alvo", "🎯")
-	addToggle(secFilters, "Ativar Círculo FOV", function(state) _G_FovVisible = state end, false)
-	addSlider(secFilters, "Raio do FOV", 50, 500, 150, function(val) _G_FovRadius = val end)
-	addSlider(secFilters, "Grossura do FOV", 1, 5, 1, function(val) _G_FovThickness = val end)
-	addSlider(secFilters, "Transparência do FOV (%)", 10, 100, 70, function(val) _G_FovTransparency = val / 100 end)
-	addColorPicker(secFilters, "Cor do Círculo FOV", _G_ColorFov, function(c) _G_ColorFov = c end)
-
-	addToggle(secFilters, "Filtro por Distância Máxima", function(state) _G_FilterDistanceEnabled = state end, false)
-	addSlider(secFilters, "Distância Máxima", 50, 2000, 500, function(val) _G_FilterDistanceMax = val end)
-	addToggle(secFilters, "Mais Perto de Mim (Mais Próximo)", function(state) _G_FilterClosest = state end, false)
-	addToggle(secFilters, "Priorizar Menor Vida (HP)", function(state) _G_FilterLowestHP = state end, false)
-	addToggle(secFilters, "Mais Perto da Mira (Crosshair)", function(state) _G_FilterCrosshair = state end, false)
-	addToggle(secFilters, "Apenas se EU Estiver com Item", function(state) _G_FilterHoldingItem = state end, false)
-
-	local refreshBtn = Instance.new("TextButton")
-	refreshBtn.Size = UDim2.new(1, 0, 0, 26)
-	refreshBtn.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-	refreshBtn.BackgroundTransparency = 0.5
-	refreshBtn.Font = Enum.Font.GothamMedium
-	refreshBtn.Text = "  🔄 Atualizar Lista de Jogadores"
-	refreshBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-	refreshBtn.TextSize = 11
-	refreshBtn.TextXAlignment = Enum.TextXAlignment.Left
-	refreshBtn.Parent = secCombat
-
-	local rbCorner = Instance.new("UICorner")
-	rbCorner.CornerRadius = UDim.new(0, 5)
-	rbCorner.Parent = refreshBtn
-
-	local scrollList = Instance.new("ScrollingFrame")
-	scrollList.Size = UDim2.new(1, 0, 0, 130)
-	scrollList.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
-	scrollList.BackgroundTransparency = 0.5
-	scrollList.BorderSizePixel = 0
-	scrollList.CanvasSize = UDim2.new(0, 0, 0, 0)
-	scrollList.ScrollBarThickness = 3
-	scrollList.Parent = secCombat
-
-	local slCorner = Instance.new("UICorner")
-	slCorner.CornerRadius = UDim.new(0, 5)
-	slCorner.Parent = scrollList
-
-	local scrollListLayout = Instance.new("UIListLayout")
-	scrollListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	scrollListLayout.Padding = UDim.new(0, 4)
-	scrollListLayout.Parent = scrollList
-
-	local function updateServerList()
-		for _, child in ipairs(scrollList:GetChildren()) do
-			if child:IsA("TextButton") then child:Destroy() end
-		end
-
-		local count = 0
-		for _, p in ipairs(Players:GetPlayers()) do
-			if p ~= player then
-				count = count + 1
-				local item = Instance.new("TextButton")
-				item.Size = UDim2.new(1, -6, 0, 24)
-				
-				local isSelected = selectedManualTargets[p] == true
-				item.BackgroundColor3 = isSelected and currentThemeColor or Color3.fromRGB(34, 34, 46)
-				
-				item.Font = Enum.Font.GothamMedium
-				item.Text = "  " .. p.DisplayName .. " (@" .. p.Name .. ")"
-				item.TextColor3 = Color3.fromRGB(255, 255, 255)
-				item.TextSize = 10
-				item.TextXAlignment = Enum.TextXAlignment.Left
-				item.Parent = scrollList
-
-				local itemCorner = Instance.new("UICorner")
-				itemCorner.CornerRadius = UDim.new(0, 4)
-				itemCorner.Parent = item
-
-				item.MouseButton1Click:Connect(function()
-					lockOnMode = "Manual"
-					modeSwitchBtn.Text = lockOnMode
-					
-					if selectedManualTargets[p] then
-						selectedManualTargets[p] = nil
-					else
-						selectedManualTargets[p] = true
-					end
-					updateServerList()
-				end)
-			end
-		end
-
-		scrollList.CanvasSize = UDim2.new(0, 0, 0, count * 28)
-	end
-
-	refreshBtn.MouseButton1Click:Connect(updateServerList)
-	Players.PlayerAdded:Connect(updateServerList)
-	Players.PlayerRemoving:Connect(function(leavingPlayer)
-		selectedManualTargets[leavingPlayer] = nil
-		updateServerList()
-	end)
-	updateServerList()
-
-	modeSwitchBtn.MouseButton1Click:Connect(function()
-		if lockOnMode == "Nearest" then
-			lockOnMode = "Manual"
-		else
-			lockOnMode = "Nearest"
-		end
-		modeSwitchBtn.Text = lockOnMode
-		updateServerList()
-	end)
-
-	-----------------------------------------------------------------
-	-- ABA FARMING
-	-----------------------------------------------------------------
-	local farmingPage = pages["Farming"]
-	local secFarm = createSection(farmingPage, "Automação", "⚡")
-
-	local chestFolder = workspace:WaitForChild("ChestModels")
-	local mapFolder = workspace:WaitForChild("Map")
-
-	local chestActive = false
-	local chestSpeed = 50
-	local WATER_SAFE_Y = 15
-	local ISLAND_HEIGHT = 15
-	local ISLAND_ARRIVAL_DISTANCE = 20
-
-	local chestTarget = nil
-	local chestTargetType = nil
-	local visitedChests = {}
-	local visitedIslands = {}
-	local originalCollisionChest = {}
-
-	local moveConnectionChest, noclipConnectionChest, sitConnection, healthConnection
-	local lastHealth = nil
-
-	local function getCharacterParts()
-		local character = player.Character
-		if not character then return end
-		local humanoid = character:FindFirstChildOfClass("Humanoid")
-		local root = character:FindFirstChild("HumanoidRootPart")
-		if humanoid and root and humanoid.Health > 0 then
-			return character, humanoid, root
-		end
-	end
-
-	local function setOmniNoclip(enabled)
-		if noclipConnectionChest then
-			noclipConnectionChest:Disconnect()
-			noclipConnectionChest = nil
-		end
-
-		if enabled then
-			table.clear(originalCollisionChest)
-			noclipConnectionChest = RunService.Stepped:Connect(function()
-				if not chestActive then return end
-				local currentCharacter = player.Character
-				if not currentCharacter then return end
-
-				for _, part in ipairs(currentCharacter:GetDescendants()) do
-					if part:IsA("BasePart") then
-						if originalCollisionChest[part] == nil then
-							originalCollisionChest[part] = part.CanCollide
-						end
-						part.CanCollide = false
-					end
-				end
-			end)
-		else
-			for part, originalValue in pairs(originalCollisionChest) do
-				if part and part.Parent then
-					part.CanCollide = originalValue
-				end
-			end
-			table.clear(originalCollisionChest)
-		end
-	end
-
-	local function jumpIfSeated()
-		local _, humanoid = getCharacterParts()
-		if not humanoid or not chestActive then return end
-		if humanoid.Sit or humanoid:GetState() == Enum.HumanoidStateType.Seated then
-			humanoid.Sit = false
-			humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-		end
-	end
-
-	local function getPosition(object)
-		if not object or not object.Parent then return nil end
-		if object:IsA("Model") then
-			return object:GetPivot().Position
-		elseif object:IsA("BasePart") then
-			return object.Position
-		end
-		return nil
-	end
-
-	local function getChestCandidates()
-		local candidates = {}
-		for _, object in ipairs(chestFolder:GetDescendants()) do
-			if object:IsA("Model") or object:IsA("BasePart") then
-				table.insert(candidates, object)
-			end
-		end
-		return candidates
-	end
-
-	local function getIslandCandidates()
-		local candidates = {}
-		for _, object in ipairs(mapFolder:GetDescendants()) do
-			if object:IsA("Model") then
-				table.insert(candidates, object)
-			end
-		end
-		return candidates
-	end
-
-	local function findNearest(candidates, root, visited)
-		local nearest, nearestDistance = nil, math.huge
-		for _, object in ipairs(candidates) do
-			if object.Parent and not visited[object] then
-				local position = getPosition(object)
-				if position then
-					local distance = (position - root.Position).Magnitude
-					if distance < nearestDistance then
-						nearestDistance = distance
-						nearest = object
-					end
-				end
-			end
-		end
-		return nearest
-	end
-
-	local function stopChestCollector()
-		chestActive = false
-		chestTarget = nil
-		chestTargetType = nil
-
-		if moveConnectionChest then moveConnectionChest:Disconnect(); moveConnectionChest = nil end
-		if sitConnection then sitConnection:Disconnect(); sitConnection = nil end
-		if healthConnection then healthConnection:Disconnect(); healthConnection = nil end
-
-		setOmniNoclip(false)
-
-		local _, humanoid, root = getCharacterParts()
-		if humanoid then
-			humanoid:Move(Vector3.zero)
-			humanoid.AutoRotate = true
-		end
-		if root then
-			root.AssemblyLinearVelocity = Vector3.zero
-		end
-
-		table.clear(visitedChests)
-		table.clear(visitedIslands)
-	end
-
-	local function startChestCollector()
-		local _, humanoid, root = getCharacterParts()
-		if not humanoid or not root then return end
-
-		chestActive = true
-		chestTarget = nil
-		chestTargetType = nil
-		lastHealth = humanoid.Health
-
-		table.clear(visitedChests)
-		table.clear(visitedIslands)
-		setOmniNoclip(true)
-
-		if healthConnection then healthConnection:Disconnect() end
-		healthConnection = humanoid.HealthChanged:Connect(function(newHealth)
-			lastHealth = newHealth
-		end)
-
-		sitConnection = RunService.Heartbeat:Connect(function()
-			if chestActive then jumpIfSeated() end
-		end)
-
-		moveConnectionChest = RunService.Heartbeat:Connect(function()
-			if not chestActive then return end
-
-			local _, hum, hrp = getCharacterParts()
-			if not hum or not hrp then
-				stopChestCollector()
-				return
-			end
-
-			local nearestChest = findNearest(getChestCandidates(), hrp, visitedChests)
-			if nearestChest then
-				chestTarget = nearestChest
-				chestTargetType = "Chest"
-			elseif not chestTarget or chestTargetType ~= "Island" or not chestTarget.Parent or visitedIslands[chestTarget] then
-				chestTarget = findNearest(getIslandCandidates(), hrp, visitedIslands)
-				chestTargetType = chestTarget and "Island" or nil
-			end
-
-			if not chestTarget then
-				hrp.AssemblyLinearVelocity = Vector3.zero
-				hum:Move(Vector3.zero)
-				return
-			end
-
-			local position = getPosition(chestTarget)
-			if not position then
-				chestTarget = nil
-				chestTargetType = nil
-				return
-			end
-
-			local destination
-			if chestTargetType == "Chest" then
-				destination = position + Vector3.new(0, 2, 0)
-			else
-				local safeY = math.max(position.Y + ISLAND_HEIGHT, WATER_SAFE_Y, hrp.Position.Y)
-				destination = Vector3.new(position.X, safeY, position.Z)
-			end
-
-			local offset = destination - hrp.Position
-			local distance = offset.Magnitude
-
-			if chestTargetType == "Chest" and distance < 4 then
-				visitedChests[chestTarget] = true
-				chestTarget = nil
-				chestTargetType = nil
-				hrp.AssemblyLinearVelocity = Vector3.zero
-				return
-			end
-
-			if chestTargetType == "Island" then
-				local horizontalOffset = Vector3.new(position.X - hrp.Position.X, 0, position.Z - hrp.Position.Z)
-				if horizontalOffset.Magnitude < ISLAND_ARRIVAL_DISTANCE then
-					visitedIslands[chestTarget] = true
-					chestTarget = nil
-					chestTargetType = nil
-					hrp.AssemblyLinearVelocity = Vector3.zero
-					return
-				end
-			end
-
-			if chestTargetType == "Island" and hrp.Position.Y < WATER_SAFE_Y then
-				hrp.AssemblyLinearVelocity = Vector3.new(
-					offset.Unit.X * chestSpeed,
-					math.max(chestSpeed * 0.5, 10),
-					offset.Unit.Z * chestSpeed
-				)
-			elseif distance > 0.1 then
-				local direction = offset.Unit
-				hrp.AssemblyLinearVelocity = direction * chestSpeed
-				hum:Move(direction, false)
-			else
-				hrp.AssemblyLinearVelocity = Vector3.zero
-				hum:Move(Vector3.zero)
-			end
-		end)
-	end
-
-	addToggle(secFarm, "Auto Collect Chest", function(state)
-		if state then
-			startChestCollector()
-		else
-			stopChestCollector()
-		end
-	end, false)
-
-	addSlider(secFarm, "Velocidade do Chest Collector", 5, 500, 50, function(val)
-		chestSpeed = val
-	end)
-
-	-----------------------------------------------------------------
-	-- ABA FRUTA (COM CORES INDIVIDUAIS USANDO addEspToggleWithColor)
-	-----------------------------------------------------------------
-	local frutaPage = pages["Fruta"]
-	local secFrutaAction = createSection(frutaPage, "Automação", "⚡")
-	local secFrutaEsp = createSection(frutaPage, "Fruit ESP", "👁️")
-
-	local fruitConfig = {
-		MaxDistance  = 2000,
-		CullDistance = 3000,
-		HeldColor    = Color3.fromRGB(255, 60, 60),
-		HeldText     = "EM MÃOS",
-		TickInterval = 1 / 20,
-	}
-
-	local fruitEnabledOptions = {
-		Name     = true,
-		Chams    = true,
-		Distance = true,
-	}
-
-	local fruitEspMasterEnabled = false
-	local fruitEspObjects = {}
-	local fruitList = {}
-
-	local function isHeldByPlayer(tool)
-		local parent = tool.Parent
-		if not parent or parent == workspace then return false end
-		if Players:GetPlayerFromCharacter(parent) then return true end
-		if parent.Name == "Backpack" and parent.Parent and parent.Parent:IsA("Player") then
-			return true
-		end
-		local ancestor = parent
-		while ancestor and ancestor ~= workspace do
-			if ancestor:IsA("Model") and ancestor:FindFirstChildOfClass("Humanoid") then
-				return true
-			end
-			ancestor = ancestor.Parent
-		end
-		return false
-	end
-
-	local function removeFruitESP(tool)
-		local data = fruitEspObjects[tool]
-		if not data then return end
-		if data.highlight then data.highlight:Destroy() end
-		if data.billboard then data.billboard:Destroy() end
-		if data.ancestryConn then data.ancestryConn:Disconnect() end
-		fruitEspObjects[tool] = nil
-		for i = #fruitList, 1, -1 do
-			if fruitList[i] == tool then
-				table.remove(fruitList, i)
-				break
-			end
-		end
-	end
-
-	local function setFruitHeldState(data, held)
-		local state = held and "held" or "normal"
-		if data.lastState == state then return end
-		data.lastState = state
-		data.isHeld = held
-
-		if held then
-			data.highlight.FillColor    = fruitConfig.HeldColor
-			data.highlight.OutlineColor = Color3.new(1, 0.3, 0.3)
-			data.label.TextColor3       = fruitConfig.HeldColor
-			data.label.TextStrokeColor3 = Color3.new(0.3, 0, 0)
-		else
-			data.highlight.FillColor    = _G_ColorFruitChams
-			data.highlight.OutlineColor = Color3.new(1, 1, 1)
-			data.label.TextColor3       = _G_ColorFruitName
-			data.label.TextStrokeColor3 = Color3.new(0, 0, 0)
-		end
-	end
-
-	local function createFruitESP(tool)
-		if fruitEspObjects[tool] then return end
-		local handle = tool:FindFirstChild("Handle")
-		if not handle or not handle:IsA("BasePart") then return end
-
-		local highlight = Instance.new("Highlight")
-		highlight.Name = "FruitESPHighlight"
-		highlight.Adornee = tool
-		highlight.FillColor = _G_ColorFruitChams
-		highlight.OutlineColor = Color3.new(1, 1, 1)
-		highlight.FillTransparency = 0.55
-		highlight.OutlineTransparency = 0
-		highlight.Enabled = false
-		highlight.Parent = screenGui
-
-		local billboard = Instance.new("BillboardGui")
-		billboard.Name = "FruitESPLabel"
-		billboard.Adornee = handle
-		billboard.Size = UDim2.fromOffset(180, 38)
-		billboard.StudsOffset = Vector3.new(0, 2.5, 0)
-		billboard.AlwaysOnTop = true
-		billboard.Enabled = false
-		billboard.Parent = screenGui
-
-		local text = Instance.new("TextLabel")
-		text.Name = "Label"
-		text.Size = UDim2.fromScale(1, 1)
-		text.BackgroundTransparency = 1
-		text.TextColor3 = _G_ColorFruitName
-		text.TextStrokeTransparency = 0.2
-		text.Font = Enum.Font.GothamBold
-		text.TextSize = 12
-		text.TextWrapped = true
-		text.Parent = billboard
-
-		local data = {
-			highlight  = highlight,
-			billboard  = billboard,
-			label      = text,
-			handle     = handle,
-			lastText   = "",
-			lastParent = tool.Parent,
-			lastState  = nil,
-			isHeld     = false,
-			ancestryConn = nil,
-		}
-
-		data.ancestryConn = tool.AncestryChanged:Connect(function()
-			local held = isHeldByPlayer(tool)
-			data.lastParent = tool.Parent
-			setFruitHeldState(data, held)
-		end)
-
-		setFruitHeldState(data, isHeldByPlayer(tool))
-		fruitEspObjects[tool] = data
-		table.insert(fruitList, tool)
-	end
-
-	local function isFruit(obj)
-		return obj:IsA("Tool") and string.find(obj.Name:lower(), "fruit", 1, true) ~= nil
-	end
-
-	workspace.DescendantAdded:Connect(function(obj)
-		if obj:IsA("Tool") and isFruit(obj) then
-			if obj:FindFirstChild("Handle") then
-				createFruitESP(obj)
-			end
-		elseif obj.Name == "Handle" and obj.Parent and obj.Parent:IsA("Tool") and isFruit(obj.Parent) then
-			createFruitESP(obj.Parent)
-		end
-	end)
-
-	workspace.DescendantRemoving:Connect(function(obj)
-		if obj:IsA("Tool") and fruitEspObjects[obj] then
-			removeFruitESP(obj)
-		end
-	end)
-
-	task.spawn(function()
-		local queue = { workspace }
-		local idx = 1
-		while idx <= #queue do
-			local current = queue[idx]
-			idx += 1
-			for _, child in ipairs(current:GetChildren()) do
-				if isFruit(child) then
-					if child:FindFirstChild("Handle") then
-						createFruitESP(child)
-					end
-				elseif child:IsA("Model") or child:IsA("Folder") then
-					table.insert(queue, child)
-				end
-			end
-			if idx % 30 == 0 then task.wait() end
-		end
-	end)
-
-	local fruitCache = {}
-	local handled = setmetatable({}, {__mode = "k"})
-	local fruitActive = false
-	local fruitConn = nil
-
-	local function isInsideCharacter(tool)
-		local parent = tool.Parent
-		if not parent or parent == workspace then return false end
-		local cur = parent
-		while cur and cur ~= workspace do
-			if cur:IsA("Model") and cur:FindFirstChildOfClass("Humanoid") then
-				return true
-			end
-			cur = cur.Parent
-		end
-		return false
-	end
-
-	local lastFruitIdx = 1
-	local function pickFruit()
-		local now = tick()
-		local count = #fruitCache
-		if count == 0 then return nil, nil end
-
-		for offset = 0, count - 1 do
-			local i = ((lastFruitIdx - 1 + offset) % count) + 1
-			local fruit = fruitCache[i]
-
-			if fruit and fruit.Parent and not isInsideCharacter(fruit) then
-				local lastHandle = handled[fruit]
-				if not lastHandle or (now - lastHandle) >= 3 then
-					local handle = fruit:FindFirstChild("Handle")
-					if handle and handle:IsA("BasePart") then
-						lastFruitIdx = i
-						return fruit, handle
-					end
-				end
-			end
-		end
-		return nil, nil
-	end
-
-	addToggle(secFrutaAction, "Auto Coletar Frutas", function(state)
-		fruitActive = state
-		if state then
-			table.clear(handled)
-			fruitConn = RunService.Heartbeat:Connect(function()
-				if not fruitActive then return end
-				local char = player.Character
-				local hrp = char and char:FindFirstChild("HumanoidRootPart")
-				local hum = char and char:FindFirstChildOfClass("Humanoid")
-
-				if not hrp or not hum or hum.Health <= 0 then return end
-
-				local fruit, handle = pickFruit()
-				if fruit and handle then
-					pcall(function()
-						handle.CFrame = hrp.CFrame
-					end)
-					handled[fruit] = tick()
-				end
-			end)
-		else
-			if fruitConn then fruitConn:Disconnect(); fruitConn = nil end
-			table.clear(handled)
-		end
-	end, false)
-
-	addToggle(secFrutaEsp, "Ativar Fruit ESP", function(state)
-		fruitEspMasterEnabled = state
-		if not state then
-			for _, data in pairs(fruitEspObjects) do
-				if data.highlight.Enabled then data.highlight.Enabled = false end
-				if data.billboard.Enabled then data.billboard.Enabled = false end
-			end
-		end
-	end, false)
-
-	addEspToggleWithColor(secFrutaEsp, "ESP Chams", _G_ColorFruitChams, function(c)
-		_G_ColorFruitChams = c
-		for _, data in pairs(fruitEspObjects) do
-			if not data.isHeld then data.highlight.FillColor = c end
-		end
-	end, function(s) fruitEnabledOptions.Chams = s end)
-
-	addEspToggleWithColor(secFrutaEsp, "ESP Nome", _G_ColorFruitName, function(c)
-		_G_ColorFruitName = c
-		for _, data in pairs(fruitEspObjects) do
-			if not data.isHeld then data.label.TextColor3 = c end
-		end
-	end, function(s) fruitEnabledOptions.Name = s end)
-
-	addEspToggleWithColor(secFrutaEsp, "ESP Distance", _G_ColorFruitDist, function(c)
-		_G_ColorFruitDist = c
-	end, function(s) fruitEnabledOptions.Distance = s end)
-
-	local fruitAccumulator = 0
-	RunService.RenderStepped:Connect(function(dt)
-		if not fruitEspMasterEnabled then return end
-		fruitAccumulator += dt
-		if fruitAccumulator < fruitConfig.TickInterval then return end
-		fruitAccumulator = 0
-
-		local char = player.Character
-		local root = char and char:FindFirstChild("HumanoidRootPart")
-		if not root or not root.Parent then return end
-
-		local rootPos    = root.Position
-		local maxDistSq  = fruitConfig.MaxDistance  * fruitConfig.MaxDistance
-		local cullDistSq = fruitConfig.CullDistance * fruitConfig.CullDistance
-
-		local nameV  = fruitEnabledOptions.Name
-		local distV  = fruitEnabledOptions.Distance
-		local chamsV = fruitEnabledOptions.Chams
-
-		for i = #fruitList, 1, -1 do
-			local tool = fruitList[i]
-			local data = fruitEspObjects[tool]
-
-			if not data or not tool.Parent then
-				if data then removeFruitESP(tool) end
-				continue
-			end
-
-			local handle = data.handle
-			if not handle or not handle.Parent then
-				removeFruitESP(tool)
-				continue
-			end
-
-			if tool.Parent ~= data.lastParent then
-				data.lastParent = tool.Parent
-				setFruitHeldState(data, isHeldByPlayer(tool))
-			end
-
-			local pos = handle.Position
-			local dx = pos.X - rootPos.X
-			local dy = pos.Y - rootPos.Y
-			local dz = pos.Z - rootPos.Z
-			local distSq = dx*dx + dy*dy + dz*dz
-
-			if distSq > cullDistSq then
-				if data.highlight.Enabled then data.highlight.Enabled = false end
-				if data.billboard.Enabled then data.billboard.Enabled = false end
-				continue
-			end
-
-			local inRange = distSq <= maxDistSq
-
-			local wantHL = chamsV and inRange
-			if data.highlight.Enabled ~= wantHL then
-				data.highlight.Enabled = wantHL
-			end
-
-			local wantBB = inRange and (data.isHeld or nameV or distV)
-			if data.billboard.Enabled ~= wantBB then
-				data.billboard.Enabled = wantBB
-			end
-
-			if wantBB then
-				local newText
-				if data.isHeld then
-					newText = fruitConfig.HeldText
-				else
-					local distance = math.sqrt(distSq)
-					local nTxt = nameV and tool.Name or ""
-					local dTxt = distV and string.format("%.0f studs", distance) or ""
-					newText = nTxt .. ((nTxt ~= "" and dTxt ~= "") and "\n" or "") .. dTxt
-				end
-
-				if data.lastText ~= newText then
-					data.label.Text = newText
-					data.lastText = newText
-				end
-			end
-		end
-	end)
-
-	-----------------------------------------------------------------
-	-- ABA CONFIG
-	-----------------------------------------------------------------
-	local configPage = pages["Config"]
-	local secConfig = createSection(configPage, "Tema do Hub", "⚙️")
-	
+	-- Exemplo de Agrupamento em Cards dentro da seção
+	local cardWalk = createCard(secMovimento, "Configurações de Velocidade")
+	addToggle(cardWalk, "Ativar WalkSpeed", function(state) _G_WalkSpeedEnabled = state end, false)
+	addSlider(cardWalk, "Velocidade", 16, 250, 16, function(val) _G_WalkSpeedValue = val end)
+
+	local cardJump = createCard(secMovimento, "Configurações de Pulo")
+	addToggle(cardJump, "Ativar JumpPower", function(state) _G_JumpPowerEnabled = state end, false)
+	addSlider(cardJump, "Força do Pulo", 50, 300, 50, function(val) _G_JumpPowerValue = val end)
+
+	local secConfig = createSection(pages["Config"], "Tema do Hub", "⚙️")
 	addColorPicker(secConfig, "Cor Principal do Hub", currentThemeColor, function(color)
 		updateGlobalTheme(color)
+		saveConfig()
 	end)
-
-	addSlider(secConfig, "Transparência do Painel", 0, 80, 20, function(val)
+	addSlider(secConfig, "Transparência do Painel", 0, 80, math.floor(panelTransparencyValue * 100), function(val)
 		panelTransparencyValue = val / 100
 		mainPanel.BackgroundTransparency = panelTransparencyValue
 		floatingBtn.BackgroundTransparency = panelTransparencyValue
-	end)
-
-	local secKeybind = createSection(configPage, "Atalhos (PC)", "⌨️")
-	
-	local kbFrame = Instance.new("Frame")
-	kbFrame.Size = UDim2.new(1, 0, 0, 32)
-	kbFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-	kbFrame.BackgroundTransparency = 0.5
-	kbFrame.Parent = secKeybind
-
-	local kbCorner = Instance.new("UICorner")
-	kbCorner.CornerRadius = UDim.new(0, 5)
-	kbCorner.Parent = kbFrame
-
-	local kbLed = Instance.new("Frame")
-	kbLed.Size = UDim2.new(0, 6, 0, 6)
-	kbLed.Position = UDim2.new(0, 8, 0.5, -3)
-	kbLed.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
-	kbLed.Parent = kbFrame
-
-	local kbLedCorner = Instance.new("UICorner")
-	kbLedCorner.CornerRadius = UDim.new(1, 0)
-	kbLedCorner.Parent = kbLed
-
-	local kbLabel = Instance.new("TextLabel")
-	kbLabel.Size = UDim2.new(1, -110, 1, 0)
-	kbLabel.Position = UDim2.new(0, 20, 0, 0)
-	kbLabel.BackgroundTransparency = 1
-	kbLabel.Font = Enum.Font.GothamMedium
-	kbLabel.Text = "Keybind Esconder Painel (PC)"
-	kbLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-	kbLabel.TextSize = 10
-	kbLabel.TextXAlignment = Enum.TextXAlignment.Left
-	kbLabel.Parent = kbFrame
-
-	local kbToggleBtn = Instance.new("TextButton")
-	kbToggleBtn.Size = UDim2.new(0, 28, 0, 16)
-	kbToggleBtn.Position = UDim2.new(1, -104, 0.5, -8)
-	kbToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
-	kbToggleBtn.Text = ""
-	kbToggleBtn.Parent = kbFrame
-
-	local ktCorner = Instance.new("UICorner")
-	ktCorner.CornerRadius = UDim.new(1, 0)
-	ktCorner.Parent = kbToggleBtn
-
-	local kbCircle = Instance.new("Frame")
-	kbCircle.Size = UDim2.new(0, 12, 0, 12)
-	kbCircle.Position = UDim2.new(0, 2, 0.5, -6)
-	kbCircle.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-	kbCircle.Parent = kbToggleBtn
-
-	local kcCorner = Instance.new("UICorner")
-	kcCorner.CornerRadius = UDim.new(1, 0)
-	kcCorner.Parent = kbCircle
-
-	local keybindStateRef = {isToggled = false, circle = kbCircle, button = kbToggleBtn, led = kbLed}
-	table.insert(themeToggles, keybindStateRef)
-
-	local keyBox = Instance.new("TextBox")
-	keyBox.Size = UDim2.new(0, 64, 0, 20)
-	keyBox.Position = UDim2.new(1, -68, 0.5, -10)
-	keyBox.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
-	keyBox.Font = Enum.Font.GothamBold
-	keyBox.Text = hideKeybindKey.Name
-	keyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-	keyBox.TextSize = 10
-	keyBox.ClearTextOnFocus = true
-	keyBox.Parent = kbFrame
-	table.insert(themeTexts, keyBox)
-
-	local kBoxCorner = Instance.new("UICorner")
-	kBoxCorner.CornerRadius = UDim.new(0, 4)
-	kBoxCorner.Parent = keyBox
-
-	keyBox.Focused:Connect(function()
-		keyBox.Text = ""
-	end)
-
-	keyBox.FocusLost:Connect(function(enterPressed)
-		local typedText = string.upper(keyBox.Text)
-		local foundKey = Enum.KeyCode[typedText]
-		if foundKey then
-			hideKeybindKey = foundKey
-			keyBox.Text = hideKeybindKey.Name
-		else
-			keyBox.Text = hideKeybindKey.Name
-		end
-	end)
-
-	kbToggleBtn.MouseButton1Click:Connect(function()
-		keybindStateRef.isToggled = not keybindStateRef.isToggled
-		hideKeybindEnabled = keybindStateRef.isToggled
-		local targetPos = keybindStateRef.isToggled and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
-		local targetColor = keybindStateRef.isToggled and currentThemeColor or Color3.fromRGB(50, 50, 70)
-		local targetLedColor = keybindStateRef.isToggled and currentThemeColor or Color3.fromRGB(80, 80, 100)
-		
-		TweenService:Create(kbCircle, TweenInfo.new(0.18), {Position = targetPos}):Play()
-		TweenService:Create(kbToggleBtn, TweenInfo.new(0.18), {BackgroundColor3 = targetColor}):Play()
-		TweenService:Create(kbLed, TweenInfo.new(0.18), {BackgroundColor3 = targetLedColor}):Play()
+		saveConfig()
 	end)
 
 	TweenService:Create(mainPanel, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
@@ -2842,492 +1321,16 @@ function showMainPanel()
 end
 
 -----------------------------------------------------------------
--- SISTEMA DE ESP DE INIMIGOS (NPC)
+-- RENDER LOOP GLOBAL
 -----------------------------------------------------------------
-local enemyObjects = {}
-local ENEMIES = workspace:WaitForChild("Enemies", 5)
-
-local function getEnemyRoot(model)
-	if not model:IsA("Model") then return nil end
-	local root = model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart or model:FindFirstChild("Head")
-	if root and root:IsA("BasePart") then return root end
-	return nil
-end
-
-local function makeEnemyText(parent, name, size, position, fontSize)
-	local label = Instance.new("TextLabel")
-	label.Name = name
-	label.Size = size
-	label.Position = position
-	label.BackgroundTransparency = 1
-	label.TextColor3 = Color3.new(1, 1, 1)
-	label.TextStrokeColor3 = Color3.new(0, 0, 0)
-	label.TextStrokeTransparency = 0.25
-	label.Font = Enum.Font.GothamBold
-	label.TextSize = fontSize
-	label.TextWrapped = false
-	label.TextTruncate = Enum.TextTruncate.AtEnd
-	label.Parent = parent
-	return label
-end
-
-local function createEnemyESP(enemy)
-	if enemyObjects[enemy] then return end
-	local root = getEnemyRoot(enemy)
-	if not root then return end
-
-	local highlight = Instance.new("Highlight")
-	highlight.Name = "EnemyHighlight"
-	highlight.Adornee = enemy
-	highlight.FillColor = _G_ColorEnemyChams
-	highlight.OutlineColor = Color3.new(1, 1, 1)
-	highlight.FillTransparency = 0.82
-	highlight.OutlineTransparency = 0
-	highlight.Enabled = false
-	highlight.Parent = screenGui
-
-	local billboard = Instance.new("BillboardGui")
-	billboard.Name = "EnemyInfo"
-	billboard.Adornee = root
-	billboard.Size = UDim2.fromOffset(170, 36)
-	billboard.StudsOffsetWorldSpace = Vector3.new(0, 3.5, 0)
-	billboard.AlwaysOnTop = true
-	billboard.LightInfluence = 0
-	billboard.Enabled = false
-	billboard.Parent = screenGui
-
-	local nameLabel = makeEnemyText(billboard, "EnemyName", UDim2.new(1, 0, 0, 16), UDim2.fromOffset(0, 0), 12)
-	nameLabel.TextColor3 = _G_ColorEnemyName
-	nameLabel.TextXAlignment = Enum.TextXAlignment.Center
-
-	local distanceLabel = makeEnemyText(billboard, "EnemyDistance", UDim2.new(1, 0, 0, 15), UDim2.fromOffset(0, 18), 10)
-	distanceLabel.TextColor3 = _G_ColorEnemyDist
-	distanceLabel.TextXAlignment = Enum.TextXAlignment.Center
-
-	enemyObjects[enemy] = {
-		highlight = highlight,
-		billboard = billboard,
-		nameLabel = nameLabel,
-		distanceLabel = distanceLabel,
-	}
-end
-
-local function removeEnemyESP(enemy)
-	local data = enemyObjects[enemy]
-	if not data then return end
-	if data.highlight then data.highlight:Destroy() end
-	if data.billboard then data.billboard:Destroy() end
-	enemyObjects[enemy] = nil
-end
-
-task.spawn(function()
-	if not ENEMIES then return end
-	while true do
-		task.wait(1)
-		if _G_EnemyEspMaster then
-			local found = {}
-			for _, obj in ipairs(ENEMIES:GetDescendants()) do
-				if obj:IsA("Model") then
-					local hum = obj:FindFirstChildOfClass("Humanoid")
-					if hum and getEnemyRoot(obj) then
-						found[obj] = true
-						if not enemyObjects[obj] then
-							createEnemyESP(obj)
-						end
-					end
-				end
-			end
-			for enemy in pairs(enemyObjects) do
-				if not found[enemy] or not enemy.Parent then
-					removeEnemyESP(enemy)
-				end
-			end
-		else
-			for enemy in pairs(enemyObjects) do
-				removeEnemyESP(enemy)
-			end
-		end
-	end
-end)
-
------------------------------------------------------------------
--- RENDER LOOP
------------------------------------------------------------------
-local espDrawings = {}
-
-Players.PlayerRemoving:Connect(function(leavingPlayer)
-	if espDrawings[leavingPlayer] then
-		pcall(function()
-			for _, drawingObj in pairs(espDrawings[leavingPlayer]) do
-				if typeof(drawingObj) == "table" and drawingObj.Remove then
-					drawingObj:Remove()
-				end
-			end
-		end)
-		espDrawings[leavingPlayer] = nil
-	end
-	selectedManualTargets[leavingPlayer] = nil
-end)
-
-local function getAdvancedTarget()
-	local bestTarget = nil
-	local bestScore = math.huge
-	local myChar = player.Character
-
-	if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return nil end
-	
-	if _G_FilterHoldingItem then
-		local holdingTool = false
-		for _, item in ipairs(myChar:GetChildren()) do
-			if item:IsA("Tool") then
-				holdingTool = true
-				break
-			end
-		end
-		if not holdingTool then return nil end
-	end
-
-	local myPos = myChar.HumanoidRootPart.Position
-	local screenCenter = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
-
-	if _G_LockOnPlayers then
-		for _, p in ipairs(Players:GetPlayers()) do
-			if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Head") then
-				local hum = p.Character:FindFirstChild("Humanoid")
-				if hum and hum.Health > 0 then
-					local hrp = p.Character.HumanoidRootPart
-					local dist = (hrp.Position - myPos).Magnitude
-
-					if not _G_FilterDistanceEnabled or dist <= _G_FilterDistanceMax then
-						local screenPos, onScreen = camera:WorldToViewportPoint(hrp.Position)
-						if onScreen then
-							local screenDist = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Magnitude
-							
-							if not _G_FovVisible or screenDist <= _G_FovRadius then
-								local score = dist
-								if _G_FilterClosest then score = dist end
-								if _G_FilterLowestHP then score = hum.Health end
-								if _G_FilterCrosshair then score = screenDist end
-
-								if score < bestScore then
-									bestScore = score
-									bestTarget = p.Character.Head
-								end
-							end
-						end
-					end
-				end
-			end
-		end
-	end
-
-	if _G_LockOnEnemies and ENEMIES then
-		for _, enemyModel in ipairs(ENEMIES:GetChildren()) do
-			if enemyModel:IsA("Model") then
-				local hum = enemyModel:FindFirstChildOfClass("Humanoid")
-				local head = enemyModel:FindFirstChild("Head") or getEnemyRoot(enemyModel)
-				if hum and hum.Health > 0 and head then
-					local dist = (head.Position - myPos).Magnitude
-
-					if not _G_FilterDistanceEnabled or dist <= _G_FilterDistanceMax then
-						local screenPos, onScreen = camera:WorldToViewportPoint(head.Position)
-						if onScreen then
-							local screenDist = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Magnitude
-
-							if not _G_FovVisible or screenDist <= _G_FovRadius then
-								local score = dist
-								if _G_FilterClosest then score = dist end
-								if _G_FilterLowestHP then score = hum.Health end
-								if _G_FilterCrosshair then score = screenDist end
-
-								if score < bestScore then
-									bestScore = score
-									bestTarget = head
-								end
-							end
-						end
-					end
-				end
-			end
-		end
-	end
-
-	return bestTarget
-end
-
-local function getManualTarget()
-	local bestTarget = nil
-	local shortestDist = math.huge
-	local myChar = player.Character
-
-	if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return nil end
-	local myPos = myChar.HumanoidRootPart.Position
-
-	for p, isSelected in pairs(selectedManualTargets) do
-		if isSelected and p and p.Character and p.Character:FindFirstChild("Head") then
-			local hum = p.Character:FindFirstChild("Humanoid")
-			if hum and hum.Health > 0 then
-				local headPos = p.Character.Head.Position
-				local dist = (headPos - myPos).Magnitude
-				if dist < shortestDist then
-					shortestDist = dist
-					bestTarget = p.Character.Head
-				end
-			end
-		end
-	end
-
-	return bestTarget
-end
-
 RunService.RenderStepped:Connect(function()
 	local char = player.Character
 	if char and char:FindFirstChild("Humanoid") then
 		local hum = char.Humanoid
-		
-		if _G_WalkSpeedEnabled then 
-			hum.WalkSpeed = _G_WalkSpeedValue 
-		end
-		
+		if _G_WalkSpeedEnabled then hum.WalkSpeed = _G_WalkSpeedValue end
 		if _G_JumpPowerEnabled then 
 			hum.UseJumpPower = true
 			hum.JumpPower = _G_JumpPowerValue 
-		else
-			hum.UseJumpPower = true
-			hum.JumpPower = 50
-		end
-	end
-
-	if char then
-		for _, part in pairs(char:GetDescendants()) do
-			if part:IsA("BasePart") then
-				part.CanCollide = not _G_NoclipEnabled
-			end
-		end
-	end
-
-	if _G_EnergyEnabled and char then
-		if char:GetAttribute("Energy") then char:SetAttribute("Energy", 999999) end
-		if char:GetAttribute("Stamina") then char:SetAttribute("Stamina", 999999) end
-
-		local energyObj = char:FindFirstChild("Energy") or (player:FindFirstChild("Data") and player.Data:FindFirstChild("Energy"))
-		if energyObj and energyObj:IsA("ValueBase") then energyObj.Value = 999999 end
-		
-		local stats = player:FindFirstChild("Stats")
-		if stats then
-			local statEnergy = stats:FindFirstChild("Energy") or stats:FindFirstChild("Stamina")
-			if statEnergy and statEnergy:IsA("ValueBase") then statEnergy.Value = 999999 end
-		end
-	end
-
-	if _G_FovVisible and fovCircleDrawing then
-		pcall(function()
-			fovCircleDrawing.Visible = true
-			fovCircleDrawing.Radius = _G_FovRadius
-			fovCircleDrawing.Thickness = _G_FovThickness
-			fovCircleDrawing.Transparency = _G_FovTransparency
-			fovCircleDrawing.Color = _G_ColorFov
-			fovCircleDrawing.Position = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
-			fovCircleDrawing.Filled = false
-		end)
-	elseif fovCircleDrawing then
-		pcall(function() fovCircleDrawing.Visible = false end)
-	end
-
-	if isLockOnEnabled then
-		local targetHeadToLock = nil
-		if lockOnMode == "Nearest" then
-			targetHeadToLock = getAdvancedTarget()
-		elseif lockOnMode == "Manual" then
-			targetHeadToLock = getManualTarget()
-		end
-
-		if targetHeadToLock and targetHeadToLock:IsA("BasePart") then
-			camera.CFrame = CFrame.new(camera.CFrame.Position, targetHeadToLock.Position)
-		end
-	end
-
-	for _, targetPlayer in pairs(Players:GetPlayers()) do
-		if targetPlayer ~= player then
-			local tChar = targetPlayer.Character
-			if _G_EspMaster and tChar and tChar:FindFirstChild("HumanoidRootPart") and tChar:FindFirstChild("Humanoid") and tChar.Humanoid.Health > 0 then
-				local hrp = tChar.HumanoidRootPart
-				local pos, onScreen = camera:WorldToViewportPoint(hrp.Position)
-
-				if not espDrawings[targetPlayer] then
-					pcall(function()
-						espDrawings[targetPlayer] = {
-							Box = Drawing.new("Square"),
-							Line = Drawing.new("Line"),
-							NameText = Drawing.new("Text"),
-							DistText = Drawing.new("Text"),
-							HeadDot = Drawing.new("Circle"),
-							HealthBarBg = Drawing.new("Square"),
-							HealthBarFill = Drawing.new("Square")
-						}
-					end)
-				end
-
-				local cache = espDrawings[targetPlayer]
-				if cache then
-					local head = tChar:FindFirstChild("Head")
-
-					if _G_EspBox and onScreen then
-						local headPos = head and camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0)) or pos
-						local legPos = camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3, 0))
-						local height = math.abs(headPos.Y - legPos.Y)
-						local width = height / 1.8
-
-						cache.Box.Size = Vector2.new(width, height)
-						cache.Box.Position = Vector2.new(pos.X - width / 2, pos.Y - height / 2)
-						cache.Box.Color = _G_ColorBox
-						cache.Box.Thickness = 1
-						cache.Box.Visible = true
-					else
-						cache.Box.Visible = false
-					end
-
-					if _G_EspLine and onScreen then
-						local originY = camera.ViewportSize.Y
-						if _G_TracerOrigin == "Top" then
-							originY = 0
-						elseif _G_TracerOrigin == "Center" then
-							originY = camera.ViewportSize.Y / 2
-						else
-							originY = camera.ViewportSize.Y
-						end
-
-						cache.Line.From = Vector2.new(camera.ViewportSize.X / 2, originY)
-						cache.Line.To = Vector2.new(pos.X, pos.Y)
-						cache.Line.Color = _G_ColorLine
-						cache.Line.Thickness = 1
-						cache.Line.Visible = true
-					else
-						cache.Line.Visible = false
-					end
-
-					local highlight = tChar:FindFirstChild("AetherisHighlight")
-					if _G_EspChams then
-						if not highlight then
-							highlight = Instance.new("Highlight")
-							highlight.Name = "AetherisHighlight"
-							highlight.Parent = tChar
-						end
-						highlight.FillColor = _G_ColorChams
-						highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-						highlight.Enabled = true
-					elseif highlight then
-						highlight.Enabled = false
-					end
-
-					if _G_EspHealth and onScreen then
-						local hum = tChar.Humanoid
-						local headPos = head and camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0)) or pos
-						local legPos = camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3, 0))
-						local height = math.abs(headPos.Y - legPos.Y)
-						local width = height / 1.8
-
-						local barHeight = height
-						local currentHealthHeight = barHeight * (hum.Health / hum.MaxHealth)
-
-						cache.HealthBarBg.Size = Vector2.new(3, barHeight)
-						cache.HealthBarBg.Position = Vector2.new(pos.X - width / 2 - 6, pos.Y - height / 2)
-						cache.HealthBarBg.Color = Color3.fromRGB(20, 20, 20)
-						cache.HealthBarBg.Filled = true
-						cache.HealthBarBg.Visible = true
-
-						cache.HealthBarFill.Size = Vector2.new(1, currentHealthHeight)
-						cache.HealthBarFill.Position = Vector2.new(pos.X - width / 2 - 5, pos.Y - height / 2 + (barHeight - currentHealthHeight))
-						cache.HealthBarFill.Color = _G_ColorHealth
-						cache.HealthBarFill.Filled = true
-						cache.HealthBarFill.Visible = true
-					else
-						cache.HealthBarBg.Visible = false
-						cache.HealthBarFill.Visible = false
-					end
-
-					if _G_EspName and onScreen and hrp then
-						cache.NameText.Text = targetPlayer.Name
-						cache.NameText.Size = 12
-						cache.NameText.Center = true
-						cache.NameText.Outline = true
-						cache.NameText.Color = _G_ColorName
-						cache.NameText.Position = Vector2.new(pos.X, pos.Y - 35)
-						cache.NameText.Visible = true
-					else
-						cache.NameText.Visible = false
-					end
-
-					if _G_EspDistance and onScreen then
-						local dist = math.floor((camera.CFrame.Position - hrp.Position).Magnitude)
-						cache.DistText.Text = "[" .. dist .. "m]"
-						cache.DistText.Size = 11
-						cache.DistText.Center = true
-						cache.DistText.Outline = true
-						cache.DistText.Color = _G_ColorDistance
-						cache.DistText.Position = Vector2.new(pos.X, pos.Y + 25)
-						cache.DistText.Visible = true
-					else
-						cache.DistText.Visible = false
-					end
-
-					if _G_EspHead and head and onScreen then
-						local headPos = camera:WorldToViewportPoint(head.Position)
-						cache.HeadDot.Radius = 4
-						cache.HeadDot.Position = Vector2.new(headPos.X, headPos.Y)
-						cache.HeadDot.Color = _G_ColorHead
-						cache.HeadDot.Filled = true
-						cache.HeadDot.Visible = true
-					else
-						cache.HeadDot.Visible = false
-					end
-				end
-			else
-				if espDrawings[targetPlayer] then
-					pcall(function()
-						espDrawings[targetPlayer].Box.Visible = false
-						espDrawings[targetPlayer].Line.Visible = false
-						espDrawings[targetPlayer].NameText.Visible = false
-						espDrawings[targetPlayer].DistText.Visible = false
-						espDrawings[targetPlayer].HeadDot.Visible = false
-						espDrawings[targetPlayer].HealthBarBg.Visible = false
-						espDrawings[targetPlayer].HealthBarFill.Visible = false
-					end)
-				end
-				local hl = tChar and tChar:FindFirstChild("AetherisHighlight")
-				if hl then hl.Enabled = false end
-			end
-		end
-	end
-
-	-- Render Loop para Enemy ESP (NPC) com cores individuais
-	if _G_EnemyEspMaster then
-		local myRoot = char and char:FindFirstChild("HumanoidRootPart")
-		if myRoot then
-			for enemy, data in pairs(enemyObjects) do
-				local root = getEnemyRoot(enemy)
-				local humanoid = enemy:FindFirstChildOfClass("Humanoid")
-				if enemy.Parent and root and humanoid and humanoid.Health > 0 then
-					local dist = (root.Position - myRoot.Position).Magnitude
-					data.highlight.Enabled = _G_EnemyEspChams
-					data.highlight.FillColor = _G_ColorEnemyChams
-					data.nameLabel.Visible = _G_EnemyEspName
-					data.nameLabel.TextColor3 = _G_ColorEnemyName
-					data.distanceLabel.Visible = _G_EnemyEspDistance
-					data.distanceLabel.TextColor3 = _G_ColorEnemyDist
-					data.billboard.Enabled = (_G_EnemyEspName or _G_EnemyEspDistance)
-					data.nameLabel.Text = enemy.Name
-					data.distanceLabel.Text = string.format("%.0f studs", dist)
-				else
-					data.highlight.Enabled = false
-					data.billboard.Enabled = false
-				end
-			end
-		end
-	else
-		for _, data in pairs(enemyObjects) do
-			if data.highlight then data.highlight.Enabled = false end
-			if data.billboard then data.billboard.Enabled = false end
 		end
 	end
 end)
