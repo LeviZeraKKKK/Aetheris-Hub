@@ -751,18 +751,6 @@ function showMainPanel()
 		btnCorner.CornerRadius = UDim.new(0, 5)
 		btnCorner.Parent = tabButton
 
-		-- Efeito de Hover nas Abas
-		tabButton.MouseEnter:Connect(function()
-			if activePage ~= pages[tabInfo.Name] then
-				TweenService:Create(tabButton, TweenInfo.new(0.15), {BackgroundTransparency = 0.3, TextColor3 = Color3.fromRGB(220, 220, 220)}):Play()
-			end
-		end)
-		tabButton.MouseLeave:Connect(function()
-			if activePage ~= pages[tabInfo.Name] then
-				TweenService:Create(tabButton, TweenInfo.new(0.15), {BackgroundTransparency = 0.5, TextColor3 = Color3.fromRGB(180, 180, 180)}):Play()
-			end
-		end)
-
 		local indicator = Instance.new("Frame")
 		indicator.Size = UDim2.new(0, 2, 0, 0)
 		indicator.Position = UDim2.new(0, 0, 0.5, 0)
@@ -796,11 +784,11 @@ function showMainPanel()
 
 			for _, tData in ipairs(tabButtonsList) do
 				TweenService:Create(tData.Indicator, TweenInfo.new(0.15), {Size = UDim2.new(0, 2, 0, 0)}):Play()
-				TweenService:Create(tData.Button, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(180, 180, 180), BackgroundTransparency = 0.5}):Play()
+				TweenService:Create(tData.Button, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(180, 180, 180)}):Play()
 			end
 
 			TweenService:Create(indicator, TweenInfo.new(0.15), {Size = UDim2.new(0, 2, 0, 16)}):Play()
-			TweenService:Create(tabButton, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(255, 255, 255), BackgroundTransparency = 0.4}):Play()
+			TweenService:Create(tabButton, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 
 			activePage = page
 		end)
@@ -811,7 +799,6 @@ function showMainPanel()
 			activePage = page
 			indicator.Size = UDim2.new(0, 2, 0, 16)
 			tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-			tabButton.BackgroundTransparency = 0.4
 		end
 	end
 
@@ -873,44 +860,6 @@ function showMainPanel()
 		return sContainer
 	end
 
-	-- Função para criar Cards internos de agrupamento
-	local function createCard(parent, title)
-		local card = Instance.new("Frame")
-		card.Size = UDim2.new(1, 0, 0, 0)
-		card.BackgroundColor3 = Color3.fromRGB(30, 30, 42)
-		card.BackgroundTransparency = 0.4
-		card.Parent = parent
-
-		local cCorner = Instance.new("UICorner")
-		cCorner.CornerRadius = UDim.new(0, 5)
-		cCorner.Parent = card
-
-		local cLayout = Instance.new("UIListLayout")
-		cLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		cLayout.Padding = UDim.new(0, 4)
-		cLayout.Parent = card
-
-		if title and title ~= "" then
-			local cTitle = Instance.new("TextLabel")
-			cTitle.Size = UDim2.new(1, -16, 0, 18)
-			cTitle.Position = UDim2.new(0, 8, 0, 4)
-			cTitle.BackgroundTransparency = 1
-			cTitle.Font = Enum.Font.GothamBold
-			cTitle.Text = title
-			cTitle.TextColor3 = currentThemeColor
-			cTitle.TextSize = 10
-			cTitle.TextXAlignment = Enum.TextXAlignment.Left
-			cTitle.Parent = card
-			table.insert(themeTexts, cTitle)
-		end
-
-		cLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			card.Size = UDim2.new(1, 0, 0, cLayout.AbsoluteContentSize.Y + 8)
-		end)
-
-		return card
-	end
-
 	local function addColorPicker(parent, title, defaultColor, callback)
 		local pickerFrame = Instance.new("Frame")
 		pickerFrame.Size = UDim2.new(1, 0, 0, 26)
@@ -943,13 +892,6 @@ function showMainPanel()
 		local btnCorner = Instance.new("UICorner")
 		btnCorner.CornerRadius = UDim.new(0, 3)
 		btnCorner.Parent = colorBtn
-
-		colorBtn.MouseEnter:Connect(function()
-			TweenService:Create(colorBtn, TweenInfo.new(0.15), {Size = UDim2.new(0, 22, 0, 16), Position = UDim2.new(1, -27, 0.5, -8)}):Play()
-		end)
-		colorBtn.MouseLeave:Connect(function()
-			TweenService:Create(colorBtn, TweenInfo.new(0.15), {Size = UDim2.new(0, 20, 0, 14), Position = UDim2.new(1, -26, 0.5, -7)}):Play()
-		end)
 
 		local modal = Instance.new("Frame")
 		modal.Size = UDim2.new(0, 150, 0, 130)
@@ -1123,13 +1065,6 @@ function showMainPanel()
 		corner.CornerRadius = UDim.new(0, 5)
 		corner.Parent = toggleFrame
 
-		toggleFrame.MouseEnter:Connect(function()
-			TweenService:Create(toggleFrame, TweenInfo.new(0.15), {BackgroundTransparency = 0.3}):Play()
-		end)
-		toggleFrame.MouseLeave:Connect(function()
-			TweenService:Create(toggleFrame, TweenInfo.new(0.15), {BackgroundTransparency = 0.5}):Play()
-		end)
-
 		local ledIndicator = Instance.new("Frame")
 		ledIndicator.Size = UDim2.new(0, 6, 0, 6)
 		ledIndicator.Position = UDim2.new(0, 8, 0.5, -3)
@@ -1185,13 +1120,6 @@ function showMainPanel()
 		local cBtnCorner = Instance.new("UICorner")
 		cBtnCorner.CornerRadius = UDim.new(0, 3)
 		cBtnCorner.Parent = colorBtn
-
-		colorBtn.MouseEnter:Connect(function()
-			TweenService:Create(colorBtn, TweenInfo.new(0.15), {Size = UDim2.new(0, 20, 0, 16), Position = UDim2.new(1, -59, 0.5, -8)}):Play()
-		end)
-		colorBtn.MouseLeave:Connect(function()
-			TweenService:Create(colorBtn, TweenInfo.new(0.15), {Size = UDim2.new(0, 18, 0, 14), Position = UDim2.new(1, -58, 0.5, -7)}):Play()
-		end)
 
 		local modal = Instance.new("Frame")
 		modal.Size = UDim2.new(0, 150, 0, 130)
@@ -1375,13 +1303,6 @@ function showMainPanel()
 		corner.CornerRadius = UDim.new(0, 5)
 		corner.Parent = toggleFrame
 
-		toggleFrame.MouseEnter:Connect(function()
-			TweenService:Create(toggleFrame, TweenInfo.new(0.15), {BackgroundTransparency = 0.3}):Play()
-		end)
-		toggleFrame.MouseLeave:Connect(function()
-			TweenService:Create(toggleFrame, TweenInfo.new(0.15), {BackgroundTransparency = 0.5}):Play()
-		end)
-
 		local ledIndicator = Instance.new("Frame")
 		ledIndicator.Size = UDim2.new(0, 6, 0, 6)
 		ledIndicator.Position = UDim2.new(0, 8, 0.5, -3)
@@ -1452,13 +1373,6 @@ function showMainPanel()
 		corner.CornerRadius = UDim.new(0, 5)
 		corner.Parent = sliderFrame
 
-		sliderFrame.MouseEnter:Connect(function()
-			TweenService:Create(sliderFrame, TweenInfo.new(0.15), {BackgroundTransparency = 0.3}):Play()
-		end)
-		sliderFrame.MouseLeave:Connect(function()
-			TweenService:Create(sliderFrame, TweenInfo.new(0.15), {BackgroundTransparency = 0.5}):Play()
-		end)
-
 		local label = Instance.new("TextLabel")
 		label.Size = UDim2.new(1, -16, 0, 16)
 		label.Position = UDim2.new(0, 8, 0, 3)
@@ -1515,25 +1429,20 @@ function showMainPanel()
 	-----------------------------------------------------------------
 	local playerPage = pages["Player"]
 	local secMovimento = createSection(playerPage, "Movimento", "🏃‍♂️")
-	
-	local cardSpeed = createCard(secMovimento, "Velocidade")
-	addToggle(cardSpeed, "Ativar WalkSpeed", function(state) _G_WalkSpeedEnabled = state end, false)
-	addSlider(cardSpeed, "Velocidade", 16, 250, 16, function(val) _G_WalkSpeedValue = val end)
+	addToggle(secMovimento, "Ativar WalkSpeed", function(state) _G_WalkSpeedEnabled = state end, false)
+	addSlider(secMovimento, "Velocidade", 16, 250, 16, function(val) _G_WalkSpeedValue = val end)
 
-	local cardJump = createCard(secMovimento, "Pulo")
-	addToggle(cardJump, "Ativar JumpPower", function(state) _G_JumpPowerEnabled = state end, false)
-	addSlider(cardJump, "Força do Pulo", 50, 300, 50, function(val) _G_JumpPowerValue = val end)
+	addToggle(secMovimento, "Ativar JumpPower", function(state) _G_JumpPowerEnabled = state end, false)
+	addSlider(secMovimento, "Força do Pulo", 50, 300, 50, function(val) _G_JumpPowerValue = val end)
 
 	local secFisico = createSection(playerPage, "Habilidades Físicas", "⚙️")
-	local cardFisico = createCard(secFisico, "Modificadores")
-	addToggle(cardFisico, "Noclip (Atravessar Paredes)", function(state) _G_NoclipEnabled = state end, false)
-	addToggle(cardFisico, "Energia Infinita", function(state) _G_EnergyEnabled = state end, false)
+	addToggle(secFisico, "Noclip (Atravessar Paredes)", function(state) _G_NoclipEnabled = state end, false)
+	addToggle(secFisico, "Energia Infinita", function(state) _G_EnergyEnabled = state end, false)
 
 	-----------------------------------------------------------------
 	-- SEÇÃO DE VIAGEM PARA ILHAS (DENTRO DA ABA PLAYER)
 	-----------------------------------------------------------------
 	local secTravel = createSection(playerPage, "Viajar para Ilhas", "🏝️")
-	local cardTravel = createCard(secTravel, "Teletransporte Automático")
 
 	local function refreshIslands()
 		local oldName = selectedIsland and selectedIsland.Name
@@ -1567,7 +1476,7 @@ function showMainPanel()
 	dropdownFrame.Size = UDim2.new(1, 0, 0, 26)
 	dropdownFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
 	dropdownFrame.BackgroundTransparency = 0.5
-	dropdownFrame.Parent = cardTravel
+	dropdownFrame.Parent = secTravel
 
 	local dfCorner = Instance.new("UICorner")
 	dfCorner.CornerRadius = UDim.new(0, 5)
@@ -1742,7 +1651,7 @@ function showMainPanel()
 		end)
 	end
 
-	addToggle(cardTravel, "Viajar", function(state)
+	addToggle(secTravel, "Viajar", function(state)
 		if state then
 			startTravel()
 		else
@@ -1750,7 +1659,7 @@ function showMainPanel()
 		end
 	end, false)
 
-	addSlider(cardTravel, "Velocidade de Viagem", 20, 300, 80, function(val)
+	addSlider(secTravel, "Velocidade de Viagem", 20, 300, 80, function(val)
 		travelSpeed = val
 	end)
 
@@ -1759,28 +1668,20 @@ function showMainPanel()
     -----------------------------------------------------------------
     local visualPage = pages["Visual"]
     local secEspPlayers = createSection(visualPage, "ESP Players", "👁️")
-    local cardEspPl = createCard(secEspPlayers, "Jogadores")
-    addToggle(cardEspPl, "Ativar ESP Players", function(state) _G_EspMaster = state end, false)
+    addToggle(secEspPlayers, "Ativar ESP Players", function(state) _G_EspMaster = state end, false)
 
-    addEspToggleWithColor(cardEspPl, "Box ESP", _G_ColorBox, function(c) _G_ColorBox = c end, function(s) _G_EspBox = s end)
+    addEspToggleWithColor(secEspPlayers, "Box ESP", _G_ColorBox, function(c) _G_ColorBox = c end, function(s) _G_EspBox = s end)
 	
 	-- Tracers / Line ESP com botão retangular arredondado à esquerda do color picker
 	local tracerToggleFrame = Instance.new("Frame")
 	tracerToggleFrame.Size = UDim2.new(1, 0, 0, 26)
 	tracerToggleFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
 	tracerToggleFrame.BackgroundTransparency = 0.5
-	tracerToggleFrame.Parent = cardEspPl
+	tracerToggleFrame.Parent = secEspPlayers
 
 	local ttfCorner = Instance.new("UICorner")
 	ttfCorner.CornerRadius = UDim.new(0, 5)
 	ttfCorner.Parent = tracerToggleFrame
-
-	tracerToggleFrame.MouseEnter:Connect(function()
-		TweenService:Create(tracerToggleFrame, TweenInfo.new(0.15), {BackgroundTransparency = 0.3}):Play()
-	end)
-	tracerToggleFrame.MouseLeave:Connect(function()
-		TweenService:Create(tracerToggleFrame, TweenInfo.new(0.15), {BackgroundTransparency = 0.5}):Play()
-	end)
 
 	local tracerLed = Instance.new("Frame")
 	tracerLed.Size = UDim2.new(0, 6, 0, 6)
@@ -2027,24 +1928,22 @@ function showMainPanel()
 		TweenService:Create(tracerLed, TweenInfo.new(0.18), {BackgroundColor3 = targetLedColor}):Play()
 	end)
 
-	addEspToggleWithColor(cardEspPl, "Chams (Highlight)", _G_ColorChams, function(c) _G_ColorChams = c end, function(s) _G_EspChams = s end)
-	addEspToggleWithColor(cardEspPl, "Health Bar", _G_ColorHealth, function(c) _G_ColorHealth = c end, function(s) _G_EspHealth = s end)
-	addEspToggleWithColor(cardEspPl, "Name ESP", _G_ColorName, function(c) _G_ColorName = c end, function(s) _G_EspName = s end)
-	addEspToggleWithColor(cardEspPl, "Distance ESP", _G_ColorDistance, function(c) _G_ColorDistance = c end, function(s) _G_EspDistance = s end)
-	addEspToggleWithColor(cardEspPl, "Head Dot ESP", _G_ColorHead, function(c) _G_ColorHead = c end, function(s) _G_EspHead = s end)
+	addEspToggleWithColor(secEspPlayers, "Chams (Highlight)", _G_ColorChams, function(c) _G_ColorChams = c end, function(s) _G_EspChams = s end)
+	addEspToggleWithColor(secEspPlayers, "Health Bar", _G_ColorHealth, function(c) _G_ColorHealth = c end, function(s) _G_EspHealth = s end)
+	addEspToggleWithColor(secEspPlayers, "Name ESP", _G_ColorName, function(c) _G_ColorName = c end, function(s) _G_EspName = s end)
+	addEspToggleWithColor(secEspPlayers, "Distance ESP", _G_ColorDistance, function(c) _G_ColorDistance = c end, function(s) _G_EspDistance = s end)
+	addEspToggleWithColor(secEspPlayers, "Head Dot ESP", _G_ColorHead, function(c) _G_ColorHead = c end, function(s) _G_EspHead = s end)
 
-    -- Seção de Inimigos (NPC) na aba Visual
+    -- Seção de Inimigos (NPC) na aba Visual com Cores Individuais ao lado do toggle
     local secEspEnemies = createSection(visualPage, "ESP Inimigos (NPC)", "👾")
-    local cardEspEn = createCard(secEspEnemies, "Inimigos")
-    addToggle(cardEspEn, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state end, false)
+    addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state end, false)
     
-    addEspToggleWithColor(cardEspEn, "ESP Chams", _G_ColorEnemyChams, function(c) _G_ColorEnemyChams = c end, function(s) _G_EnemyEspChams = s end)
-    addEspToggleWithColor(cardEspEn, "ESP Nome", _G_ColorEnemyName, function(c) _G_ColorEnemyName = c end, function(s) _G_EnemyEspName = s end)
-    addEspToggleWithColor(cardEspEn, "ESP Distância", _G_ColorEnemyDist, function(c) _G_ColorEnemyDist = c end, function(s) _G_EnemyEspDistance = s end)
+    addEspToggleWithColor(secEspEnemies, "ESP Chams", _G_ColorEnemyChams, function(c) _G_ColorEnemyChams = c end, function(s) _G_EnemyEspChams = s end)
+    addEspToggleWithColor(secEspEnemies, "ESP Nome", _G_ColorEnemyName, function(c) _G_ColorEnemyName = c end, function(s) _G_EnemyEspName = s end)
+    addEspToggleWithColor(secEspEnemies, "ESP Distância", _G_ColorEnemyDist, function(c) _G_ColorEnemyDist = c end, function(s) _G_EnemyEspDistance = s end)
 
     local secWorld = createSection(visualPage, "Visual do Mapa", "🌐")
-    local cardWorld = createCard(secWorld, "Ambiente")
-    addToggle(cardWorld, "Fullbright (Remover Escuridão)", function(state)
+    addToggle(secWorld, "Fullbright (Remover Escuridão)", function(state)
         _G_FullbrightEnabled = state
         Lighting.Brightness = _G_FullbrightEnabled and 2 or 1
         Lighting.ClockTime = _G_FullbrightEnabled and 14 or 0
@@ -2056,17 +1955,16 @@ function showMainPanel()
 	-----------------------------------------------------------------
 	local aimLockPage = pages["Aim Lock"]
 	local secCombat = createSection(aimLockPage, "Sistema Lock-On", "⚔️")
-	local cardCombat = createCard(secCombat, "Mira Automática")
 
-	addToggle(cardCombat, "Ativar Lock-On", function(state)
+	addToggle(secCombat, "Ativar Lock-On", function(state)
 		isLockOnEnabled = state
 	end, false)
 
-	addToggle(cardCombat, "Lock Players", function(state)
+	addToggle(secCombat, "Lock Players", function(state)
 		_G_LockOnPlayers = state
 	end, true)
 
-	addToggle(cardCombat, "Ativar Lock inimigos (NPC)", function(state)
+	addToggle(secCombat, "Ativar Lock inimigos (NPC)", function(state)
 		_G_LockOnEnemies = state
 	end, false)
 
@@ -2074,18 +1972,11 @@ function showMainPanel()
 	modeFrame.Size = UDim2.new(1, 0, 0, 26)
 	modeFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
 	modeFrame.BackgroundTransparency = 0.5
-	modeFrame.Parent = cardCombat
+	modeFrame.Parent = secCombat
 
 	local mfCorner = Instance.new("UICorner")
 	mfCorner.CornerRadius = UDim.new(0, 5)
 	mfCorner.Parent = modeFrame
-
-	modeFrame.MouseEnter:Connect(function()
-		TweenService:Create(modeFrame, TweenInfo.new(0.15), {BackgroundTransparency = 0.3}):Play()
-	end)
-	modeFrame.MouseLeave:Connect(function()
-		TweenService:Create(modeFrame, TweenInfo.new(0.15), {BackgroundTransparency = 0.5}):Play()
-	end)
 
 	local modeLabel = Instance.new("TextLabel")
 	modeLabel.Size = UDim2.new(1, -90, 1, 0)
@@ -2113,19 +2004,18 @@ function showMainPanel()
 	msCorner.Parent = modeSwitchBtn
 
 	local secFilters = createSection(aimLockPage, "FOV & Filtros de Alvo", "🎯")
-	local cardFilters = createCard(secFilters, "Configurações de Alvo")
-	addToggle(cardFilters, "Ativar Círculo FOV", function(state) _G_FovVisible = state end, false)
-	addSlider(cardFilters, "Raio do FOV", 50, 500, 150, function(val) _G_FovRadius = val end)
-	addSlider(cardFilters, "Grossura do FOV", 1, 5, 1, function(val) _G_FovThickness = val end)
-	addSlider(cardFilters, "Transparência do FOV (%)", 10, 100, 70, function(val) _G_FovTransparency = val / 100 end)
-	addColorPicker(cardFilters, "Cor do Círculo FOV", _G_ColorFov, function(c) _G_ColorFov = c end)
+	addToggle(secFilters, "Ativar Círculo FOV", function(state) _G_FovVisible = state end, false)
+	addSlider(secFilters, "Raio do FOV", 50, 500, 150, function(val) _G_FovRadius = val end)
+	addSlider(secFilters, "Grossura do FOV", 1, 5, 1, function(val) _G_FovThickness = val end)
+	addSlider(secFilters, "Transparência do FOV (%)", 10, 100, 70, function(val) _G_FovTransparency = val / 100 end)
+	addColorPicker(secFilters, "Cor do Círculo FOV", _G_ColorFov, function(c) _G_ColorFov = c end)
 
-	addToggle(cardFilters, "Filtro por Distância Máxima", function(state) _G_FilterDistanceEnabled = state end, false)
-	addSlider(cardFilters, "Distância Máxima", 50, 2000, 500, function(val) _G_FilterDistanceMax = val end)
-	addToggle(cardFilters, "Mais Perto de Mim (Mais Próximo)", function(state) _G_FilterClosest = state end, false)
-	addToggle(cardFilters, "Priorizar Menor Vida (HP)", function(state) _G_FilterLowestHP = state end, false)
-	addToggle(cardFilters, "Mais Perto da Mira (Crosshair)", function(state) _G_FilterCrosshair = state end, false)
-	addToggle(cardFilters, "Apenas se EU Estiver com Item", function(state) _G_FilterHoldingItem = state end, false)
+	addToggle(secFilters, "Filtro por Distância Máxima", function(state) _G_FilterDistanceEnabled = state end, false)
+	addSlider(secFilters, "Distância Máxima", 50, 2000, 500, function(val) _G_FilterDistanceMax = val end)
+	addToggle(secFilters, "Mais Perto de Mim (Mais Próximo)", function(state) _G_FilterClosest = state end, false)
+	addToggle(secFilters, "Priorizar Menor Vida (HP)", function(state) _G_FilterLowestHP = state end, false)
+	addToggle(secFilters, "Mais Perto da Mira (Crosshair)", function(state) _G_FilterCrosshair = state end, false)
+	addToggle(secFilters, "Apenas se EU Estiver com Item", function(state) _G_FilterHoldingItem = state end, false)
 
 	local refreshBtn = Instance.new("TextButton")
 	refreshBtn.Size = UDim2.new(1, 0, 0, 26)
@@ -2136,7 +2026,7 @@ function showMainPanel()
 	refreshBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
 	refreshBtn.TextSize = 11
 	refreshBtn.TextXAlignment = Enum.TextXAlignment.Left
-	refreshBtn.Parent = cardCombat
+	refreshBtn.Parent = secCombat
 
 	local rbCorner = Instance.new("UICorner")
 	rbCorner.CornerRadius = UDim.new(0, 5)
@@ -2149,7 +2039,7 @@ function showMainPanel()
 	scrollList.BorderSizePixel = 0
 	scrollList.CanvasSize = UDim2.new(0, 0, 0, 0)
 	scrollList.ScrollBarThickness = 3
-	scrollList.Parent = cardCombat
+	scrollList.Parent = secCombat
 
 	local slCorner = Instance.new("UICorner")
 	slCorner.CornerRadius = UDim.new(0, 5)
@@ -2226,7 +2116,6 @@ function showMainPanel()
 	-----------------------------------------------------------------
 	local farmingPage = pages["Farming"]
 	local secFarm = createSection(farmingPage, "Automação", "⚡")
-	local cardFarm = createCard(secFarm, "Chest Collector")
 
 	local chestFolder = workspace:WaitForChild("ChestModels")
 	local mapFolder = workspace:WaitForChild("Map")
@@ -2468,7 +2357,7 @@ function showMainPanel()
 		end)
 	end
 
-	addToggle(cardFarm, "Auto Collect Chest", function(state)
+	addToggle(secFarm, "Auto Collect Chest", function(state)
 		if state then
 			startChestCollector()
 		else
@@ -2476,19 +2365,16 @@ function showMainPanel()
 		end
 	end, false)
 
-	addSlider(cardFarm, "Velocidade do Chest Collector", 5, 500, 50, function(val)
+	addSlider(secFarm, "Velocidade do Chest Collector", 5, 500, 50, function(val)
 		chestSpeed = val
 	end)
 
 	-----------------------------------------------------------------
-	-- ABA FRUTA
+	-- ABA FRUTA (CORRIGIDO E FUNCIONAL)
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
 	local secFrutaAction = createSection(frutaPage, "Automação", "⚡")
-	local cardFrutaAct = createCard(secFrutaAction, "Automação de Frutas")
-	
 	local secFrutaEsp = createSection(frutaPage, "Fruit ESP", "👁️")
-	local cardFrutaEsp = createCard(secFrutaEsp, "ESP")
 
 	local fruitConfig = {
 		MaxDistance  = 2000,
@@ -2507,6 +2393,7 @@ function showMainPanel()
 	local fruitEspMasterEnabled = false
 	local fruitEspObjects = {}
 	local fruitList = {}
+	local fruitCache = {} -- Cache corrigido e populado dinamicamente
 
 	local function isHeldByPlayer(tool)
 		local parent = tool.Parent
@@ -2525,6 +2412,10 @@ function showMainPanel()
 		return false
 	end
 
+	local function isFruit(obj)
+		return obj:IsA("Tool") and string.find(obj.Name:lower(), "fruit", 1, true) ~= nil
+	end
+
 	local function removeFruitESP(tool)
 		local data = fruitEspObjects[tool]
 		if not data then return end
@@ -2532,9 +2423,16 @@ function showMainPanel()
 		if data.billboard then data.billboard:Destroy() end
 		if data.ancestryConn then data.ancestryConn:Disconnect() end
 		fruitEspObjects[tool] = nil
+		
 		for i = #fruitList, 1, -1 do
 			if fruitList[i] == tool then
 				table.remove(fruitList, i)
+				break
+			end
+		end
+		for i = #fruitCache, 1, -1 do
+			if fruitCache[i] == tool then
+				table.remove(fruitCache, i)
 				break
 			end
 		end
@@ -2615,10 +2513,10 @@ function showMainPanel()
 		setFruitHeldState(data, isHeldByPlayer(tool))
 		fruitEspObjects[tool] = data
 		table.insert(fruitList, tool)
-	end
-
-	local function isFruit(obj)
-		return obj:IsA("Tool") and string.find(obj.Name:lower(), "fruit", 1, true) ~= nil
+		
+		if not table.find(fruitCache, tool) then
+			table.insert(fruitCache, tool)
+		end
 	end
 
 	workspace.DescendantAdded:Connect(function(obj)
@@ -2637,6 +2535,7 @@ function showMainPanel()
 		end
 	end)
 
+	-- Varredura inicial e populamento do cache de frutas
 	task.spawn(function()
 		local queue = { workspace }
 		local idx = 1
@@ -2656,7 +2555,6 @@ function showMainPanel()
 		end
 	end)
 
-	local fruitCache = {}
 	local handled = setmetatable({}, {__mode = "k"})
 	local fruitActive = false
 	local fruitConn = nil
@@ -2698,7 +2596,7 @@ function showMainPanel()
 		return nil, nil
 	end
 
-	addToggle(cardFrutaAct, "Auto Coletar Frutas", function(state)
+	addToggle(secFrutaAction, "Auto Coletar Frutas", function(state)
 		fruitActive = state
 		if state then
 			table.clear(handled)
@@ -2724,7 +2622,7 @@ function showMainPanel()
 		end
 	end, false)
 
-	addToggle(cardFrutaEsp, "Ativar Fruit ESP", function(state)
+	addToggle(secFrutaEsp, "Ativar Fruit ESP", function(state)
 		fruitEspMasterEnabled = state
 		if not state then
 			for _, data in pairs(fruitEspObjects) do
@@ -2734,21 +2632,21 @@ function showMainPanel()
 		end
 	end, false)
 
-	addEspToggleWithColor(cardFrutaEsp, "ESP Chams", _G_ColorFruitChams, function(c)
+	addEspToggleWithColor(secFrutaEsp, "ESP Chams", _G_ColorFruitChams, function(c)
 		_G_ColorFruitChams = c
 		for _, data in pairs(fruitEspObjects) do
 			if not data.isHeld then data.highlight.FillColor = c end
 		end
 	end, function(s) fruitEnabledOptions.Chams = s end)
 
-	addEspToggleWithColor(cardFrutaEsp, "ESP Nome", _G_ColorFruitName, function(c)
+	addEspToggleWithColor(secFrutaEsp, "ESP Nome", _G_ColorFruitName, function(c)
 		_G_ColorFruitName = c
 		for _, data in pairs(fruitEspObjects) do
 			if not data.isHeld then data.label.TextColor3 = c end
 		end
 	end, function(s) fruitEnabledOptions.Name = s end)
 
-	addEspToggleWithColor(cardFrutaEsp, "ESP Distance", _G_ColorFruitDist, function(c)
+	addEspToggleWithColor(secFrutaEsp, "ESP Distance", _G_ColorFruitDist, function(c)
 		_G_ColorFruitDist = c
 	end, function(s) fruitEnabledOptions.Distance = s end)
 
@@ -2839,37 +2737,28 @@ function showMainPanel()
 	-----------------------------------------------------------------
 	local configPage = pages["Config"]
 	local secConfig = createSection(configPage, "Tema do Hub", "⚙️")
-	local cardTheme = createCard(secConfig, "Personalização")
 	
-	addColorPicker(cardTheme, "Cor Principal do Hub", currentThemeColor, function(color)
+	addColorPicker(secConfig, "Cor Principal do Hub", currentThemeColor, function(color)
 		updateGlobalTheme(color)
 	end)
 
-	addSlider(cardTheme, "Transparência do Painel", 0, 80, 20, function(val)
+	addSlider(secConfig, "Transparência do Painel", 0, 80, 20, function(val)
 		panelTransparencyValue = val / 100
 		mainPanel.BackgroundTransparency = panelTransparencyValue
 		floatingBtn.BackgroundTransparency = panelTransparencyValue
 	end)
 
 	local secKeybind = createSection(configPage, "Atalhos (PC)", "⌨️")
-	local cardKeybind = createCard(secKeybind, "Atalho de Ocultação")
 	
 	local kbFrame = Instance.new("Frame")
 	kbFrame.Size = UDim2.new(1, 0, 0, 32)
 	kbFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
 	kbFrame.BackgroundTransparency = 0.5
-	kbFrame.Parent = cardKeybind
+	kbFrame.Parent = secKeybind
 
 	local kbCorner = Instance.new("UICorner")
 	kbCorner.CornerRadius = UDim.new(0, 5)
 	kbCorner.Parent = kbFrame
-
-	kbFrame.MouseEnter:Connect(function()
-		TweenService:Create(kbFrame, TweenInfo.new(0.15), {BackgroundTransparency = 0.3}):Play()
-	end)
-	kbFrame.MouseLeave:Connect(function()
-		TweenService:Create(kbFrame, TweenInfo.new(0.15), {BackgroundTransparency = 0.5}):Play()
-	end)
 
 	local kbLed = Instance.new("Frame")
 	kbLed.Size = UDim2.new(0, 6, 0, 6)
