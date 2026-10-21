@@ -38,7 +38,8 @@ local themeSliders = {}
 local themeParticles = {}
 local tabIndicators = {}
 local allTextLabels = {}
-local resizeSymbolsLines = {} -- Armazena as linhas do redimensionador para atualizar com o tema
+local resizeSymbolsLines = {}
+local headerSubtitles = {} -- Armazena o subtítulo do header para atualizar com o tema
 
 local function updateGlobalTheme(newColor)
 	currentThemeColor = newColor
@@ -61,6 +62,11 @@ local function updateGlobalTheme(newColor)
 
 	for _, line in pairs(resizeSymbolsLines) do
 		line.BackgroundColor3 = newColor
+	end
+
+	-- Atualiza a cor do subtítulo do header dinamicamente com o tema escolhido
+	for _, subLabel in pairs(headerSubtitles) do
+		subLabel.TextColor3 = newColor
 	end
 
 	for _, ind in pairs(tabIndicators) do
@@ -113,7 +119,6 @@ local _G_NoclipEnabled = false
 local _G_FullbrightEnabled = false
 local _G_EnergyEnabled = false
 
--- Estados de Viagem (Travel Islands)
 local travelling = false
 local selectedIsland = nil
 local islands = {}
@@ -137,7 +142,6 @@ local _G_FilterCrosshair = false
 local _G_FilterHoldingItem = false
 local _G_FilterClosest = false
 
--- Estados do FOV Customizável
 local _G_FovVisible = false
 local _G_FovRadius = 150
 local _G_FovThickness = 1
@@ -161,7 +165,6 @@ local _G_EspName = false
 local _G_EspDistance = false
 local _G_EspHead = false
 
--- Estados do Enemy ESP (NPC)
 local _G_EnemyEspMaster = false
 local _G_EnemyEspName = false
 local _G_EnemyEspChams = false
@@ -175,7 +178,6 @@ local _G_ColorName = Color3.fromRGB(255, 255, 255)
 local _G_ColorDistance = Color3.fromRGB(200, 200, 255)
 local _G_ColorHead = Color3.fromRGB(255, 100, 100)
 
--- Cores Individuais para Inimigos e Frutas
 local _G_ColorEnemyChams = Color3.fromRGB(255, 65, 75)
 local _G_ColorEnemyName = Color3.fromRGB(255, 255, 255)
 local _G_ColorEnemyDist = Color3.fromRGB(200, 200, 255)
@@ -184,7 +186,6 @@ local _G_ColorFruitChams = Color3.fromRGB(170, 90, 255)
 local _G_ColorFruitName = Color3.fromRGB(255, 255, 255)
 local _G_ColorFruitDist = Color3.fromRGB(200, 200, 255)
 
--- Variável da Keybind de Esconder Painel
 local hideKeybindEnabled = false
 local hideKeybindKey = Enum.KeyCode.RightControl
 
@@ -375,7 +376,7 @@ function showMainPanel()
 	panelStroke.Transparency = 0.25
 	panelStroke.Thickness = 1.6
 	panelStroke.Parent = mainPanel
-	table.insert(themeSections, panelStroke) -- Adicionado para atualizar a borda principal com o tema!
+	table.insert(themeSections, panelStroke)
 
 	local glassGradient = Instance.new("UIGradient")
 	glassGradient.Rotation = 45
@@ -385,9 +386,6 @@ function showMainPanel()
 	})
 	glassGradient.Parent = mainPanel
 
-	-----------------------------------------------------------------
-	-- BARRINHA EXTERNA INFERIOR PARA ARRASTAR O PAINEL
-	-----------------------------------------------------------------
 	local dragBar = Instance.new("TextButton")
 	dragBar.Size = UDim2.new(0, 80, 0, 4)
 	dragBar.Position = UDim2.new(0.5, -40, 1, 5)
@@ -403,9 +401,6 @@ function showMainPanel()
 	dbCorner.CornerRadius = UDim.new(1, 0)
 	dbCorner.Parent = dragBar
 
-	-----------------------------------------------------------------
-	-- SISTEMA DE PARTÍCULAS ANIMADAS DE FUNDO
-	-----------------------------------------------------------------
 	local particleContainer = Instance.new("Folder")
 	particleContainer.Name = "ThemeParticles"
 	particleContainer.Parent = mainPanel
@@ -438,9 +433,6 @@ function showMainPanel()
 		end)
 	end
 
-	-----------------------------------------------------------------
-	-- BLOQUEIO GLOBAL DE INTERAÇÃO (INTERACTION BLOCKER)
-	-----------------------------------------------------------------
 	local interactionBlocker = Instance.new("TextButton")
 	interactionBlocker.Size = UDim2.new(1, 0, 1, 0)
 	interactionBlocker.BackgroundTransparency = 1
@@ -494,7 +486,6 @@ function showMainPanel()
 		end
 	end)
 
-	-- Lógica para arrastar o painel
 	local dragging, dragStart, startPos
 	local function startDragging(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -529,9 +520,6 @@ function showMainPanel()
 		end
 	end)
 
-	-----------------------------------------------------------------
-	-- SÍMBOLOS DE REDIMENSIONAR (CANTO INFERIOR DIREITO)
-	-----------------------------------------------------------------
 	local function createResizeSymbol(parent, pos)
 		local symbolFrame = Instance.new("Frame")
 		symbolFrame.Size = UDim2.new(0, 14, 0, 14)
@@ -545,7 +533,7 @@ function showMainPanel()
 		line1.BackgroundColor3 = currentThemeColor
 		line1.BorderSizePixel = 0
 		line1.Parent = symbolFrame
-		table.insert(resizeSymbolsLines, line1) -- Linha do redimensionador atualiza com o tema!
+		table.insert(resizeSymbolsLines, line1)
 
 		local c1 = Instance.new("UICorner")
 		c1.CornerRadius = UDim.new(1, 0)
@@ -557,7 +545,7 @@ function showMainPanel()
 		line2.BackgroundColor3 = currentThemeColor
 		line2.BorderSizePixel = 0
 		line2.Parent = symbolFrame
-		table.insert(resizeSymbolsLines, line2) -- Linha do redimensionador atualiza com o tema!
+		table.insert(resizeSymbolsLines, line2)
 
 		local c2 = Instance.new("UICorner")
 		c2.CornerRadius = UDim.new(1, 0)
@@ -601,18 +589,19 @@ function showMainPanel()
 		end
 	end)
 
-	-- CABEÇALHO FIXO (Não sofre alteração do Color Picker geral de textos)
+	-- TÍTULO PRINCIPAL (Fixo sempre em Branco)
 	local titleLabel = Instance.new("TextLabel")
 	titleLabel.Size = UDim2.new(0, 180, 0, 18)
 	titleLabel.Position = UDim2.new(0, 10, 0, 6)
 	titleLabel.BackgroundTransparency = 1
 	titleLabel.Font = currentGlobalFont
 	titleLabel.Text = "AETHERIS HUB"
-	titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- Fixo em Branco
+	titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 	titleLabel.TextSize = 13
 	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 	titleLabel.Parent = mainPanel
 
+	-- SUBTÍTULO DO HEADER (Agora muda de cor dinamicamente com o tema)
 	local subTitleLabel = Instance.new("TextLabel")
 	subTitleLabel.Size = UDim2.new(0, 180, 0, 12)
 	subTitleLabel.Position = UDim2.new(0, 10, 0, 22)
@@ -623,7 +612,7 @@ function showMainPanel()
 	subTitleLabel.TextSize = 9
 	subTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 	subTitleLabel.Parent = mainPanel
-	table.insert(themeTexts, subTitleLabel)
+	table.insert(headerSubtitles, subTitleLabel)
 
 	local controlsContainer = Instance.new("Frame")
 	controlsContainer.Size = UDim2.new(0, 70, 0, 26)
@@ -1463,9 +1452,6 @@ function showMainPanel()
 	addToggle(secFisico, "Noclip (Atravessar Paredes)", function(state) _G_NoclipEnabled = state end, false)
 	addToggle(secFisico, "Energia Infinita", function(state) _G_EnergyEnabled = state end, false)
 
-	-----------------------------------------------------------------
-	-- SEÇÃO DE VIAGEM PARA ILHAS (DENTRO DA ABA PLAYER)
-	-----------------------------------------------------------------
 	local secTravel = createSection(playerPage, "Viajar para Ilhas", "🏝️")
 
 	local function refreshIslands()
@@ -1691,13 +1677,13 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-    -- ABA VISUAL
-    -----------------------------------------------------------------
-    local visualPage = pages["Visual"]
-    local secEspPlayers = createSection(visualPage, "ESP Players", "👁️")
-    addToggle(secEspPlayers, "Ativar ESP Players", function(state) _G_EspMaster = state end, false)
+	-- ABA VISUAL
+	-----------------------------------------------------------------
+	local visualPage = pages["Visual"]
+	local secEspPlayers = createSection(visualPage, "ESP Players", "👁️")
+	addToggle(secEspPlayers, "Ativar ESP Players", function(state) _G_EspMaster = state end, false)
 
-    addEspToggleWithColor(secEspPlayers, "Box ESP", _G_ColorBox, function(c) _G_ColorBox = c end, function(s) _G_EspBox = s end)
+	addEspToggleWithColor(secEspPlayers, "Box ESP", _G_ColorBox, function(c) _G_ColorBox = c end, function(s) _G_EspBox = s end)
 	
 	local tracerToggleFrame = Instance.new("Frame")
 	tracerToggleFrame.Size = UDim2.new(1, 0, 0, 26)
@@ -1962,20 +1948,20 @@ function showMainPanel()
 	addEspToggleWithColor(secEspPlayers, "Distance ESP", _G_ColorDistance, function(c) _G_ColorDistance = c end, function(s) _G_EspDistance = s end)
 	addEspToggleWithColor(secEspPlayers, "Head Dot ESP", _G_ColorHead, function(c) _G_ColorHead = c end, function(s) _G_EspHead = s end)
 
-    local secEspEnemies = createSection(visualPage, "ESP Inimigos (NPC)", "👾")
-    addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state end, false)
-    
-    addEspToggleWithColor(secEspEnemies, "ESP Chams", _G_ColorEnemyChams, function(c) _G_ColorEnemyChams = c end, function(s) _G_EnemyEspChams = s end)
-    addEspToggleWithColor(secEspEnemies, "ESP Nome", _G_ColorEnemyName, function(c) _G_ColorEnemyName = c end, function(s) _G_EnemyEspName = s end)
-    addEspToggleWithColor(secEspEnemies, "ESP Distância", _G_ColorEnemyDist, function(c) _G_ColorEnemyDist = c end, function(s) _G_EnemyEspDistance = s end)
+	local secEspEnemies = createSection(visualPage, "ESP Inimigos (NPC)", "👾")
+	addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state end, false)
+	
+	addEspToggleWithColor(secEspEnemies, "ESP Chams", _G_ColorEnemyChams, function(c) _G_ColorEnemyChams = c end, function(s) _G_EnemyEspChams = s end)
+	addEspToggleWithColor(secEspEnemies, "ESP Nome", _G_ColorEnemyName, function(c) _G_ColorEnemyName = c end, function(s) _G_EnemyEspName = s end)
+	addEspToggleWithColor(secEspEnemies, "ESP Distância", _G_ColorEnemyDist, function(c) _G_ColorEnemyDist = c end, function(s) _G_EnemyEspDistance = s end)
 
-    local secWorld = createSection(visualPage, "Visual do Mapa", "🌐")
-    addToggle(secWorld, "Fullbright (Remover Escuridão)", function(state)
-        _G_FullbrightEnabled = state
-        Lighting.Brightness = _G_FullbrightEnabled and 2 or 1
-        Lighting.ClockTime = _G_FullbrightEnabled and 14 or 0
-        Lighting.GlobalShadows = not _G_FullbrightEnabled
-    end, false)
+	local secWorld = createSection(visualPage, "Visual do Mapa", "🌐")
+	addToggle(secWorld, "Fullbright (Remover Escuridão)", function(state)
+		_G_FullbrightEnabled = state
+		Lighting.Brightness = _G_FullbrightEnabled and 2 or 1
+		Lighting.ClockTime = _G_FullbrightEnabled and 14 or 0
+		Lighting.GlobalShadows = not _G_FullbrightEnabled
+	end, false)
 
 	-----------------------------------------------------------------
 	-- ABA AIM LOCK
