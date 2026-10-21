@@ -37,7 +37,8 @@ local themeTexts = {}
 local themeSliders = {}
 local themeParticles = {}
 local tabIndicators = {}
-local allTextLabels = {} -- Rastreia todos os textos para alteração dinâmica de fonte e cor
+local allTextLabels = {}
+local resizeSymbolsLines = {} -- Armazena as linhas do redimensionador para atualizar com o tema
 
 local function updateGlobalTheme(newColor)
 	currentThemeColor = newColor
@@ -56,6 +57,10 @@ local function updateGlobalTheme(newColor)
 
 	for _, fill in pairs(themeSliders) do
 		fill.BackgroundColor3 = newColor
+	end
+
+	for _, line in pairs(resizeSymbolsLines) do
+		line.BackgroundColor3 = newColor
 	end
 
 	for _, ind in pairs(tabIndicators) do
@@ -83,8 +88,7 @@ end
 local function updateGlobalTextColor(newColor)
 	currentTextColor = newColor
 	for _, txtObj in pairs(allTextLabels) do
-		if txtObj and txtObj.Parent and txtObj:IsA("TextLabel") or txtObj:IsA("TextButton") or txtObj:IsA("TextBox") then
-			-- Ignoramos textos que tenham cores especiais/específicas (como títulos principais se desejar, ou aplicamos geral)
+		if txtObj and txtObj.Parent and (txtObj:IsA("TextLabel") or txtObj:IsA("TextButton") or txtObj:IsA("TextBox")) then
 			pcall(function()
 				txtObj.TextColor3 = newColor
 			end)
@@ -205,7 +209,7 @@ loadStroke.Color = currentThemeColor
 loadStroke.Transparency = 0.2
 loadStroke.Thickness = 2
 loadStroke.Parent = loadWrapper
-table.insert(themeTexts, loadStroke)
+table.insert(themeSections, loadStroke)
 
 local sciFiRing = Instance.new("Frame")
 sciFiRing.Size = UDim2.new(0, 60, 0, 60)
@@ -218,7 +222,7 @@ ringStroke.Color = currentThemeColor
 ringStroke.Transparency = 0.4
 ringStroke.Thickness = 1.8
 ringStroke.Parent = sciFiRing
-table.insert(themeTexts, ringStroke)
+table.insert(themeSections, ringStroke)
 
 local ringCorner = Instance.new("UICorner")
 ringCorner.CornerRadius = UDim.new(1, 0)
@@ -234,8 +238,6 @@ loadIcon.TextColor3 = currentThemeColor
 loadIcon.TextSize = 22
 loadIcon.TextTransparency = 1
 loadIcon.Parent = loadWrapper
-table.insert(themeTexts, loadIcon)
-table.insert(allTextLabels, loadIcon)
 
 local iconCorner = Instance.new("UICorner")
 iconCorner.CornerRadius = UDim.new(0, 12)
@@ -251,7 +253,6 @@ loadTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 loadTitle.TextSize = 16
 loadTitle.TextTransparency = 1
 loadTitle.Parent = loadWrapper
-table.insert(allTextLabels, loadTitle)
 
 local loadStatus = Instance.new("TextLabel")
 loadStatus.Size = UDim2.new(1, 0, 0, 14)
@@ -263,7 +264,6 @@ loadStatus.TextColor3 = Color3.fromRGB(170, 170, 200)
 loadStatus.TextSize = 10
 loadStatus.TextTransparency = 1
 loadStatus.Parent = loadWrapper
-table.insert(allTextLabels, loadStatus)
 
 local percentLabel = Instance.new("TextLabel")
 percentLabel.Size = UDim2.new(1, 0, 0, 14)
@@ -275,8 +275,6 @@ percentLabel.TextColor3 = currentThemeColor
 percentLabel.TextSize = 12
 percentLabel.TextTransparency = 1
 percentLabel.Parent = loadWrapper
-table.insert(themeTexts, percentLabel)
-table.insert(allTextLabels, percentLabel)
 
 local loadBarBg = Instance.new("Frame")
 loadBarBg.Size = UDim2.new(0, 300, 0, 6)
@@ -377,7 +375,7 @@ function showMainPanel()
 	panelStroke.Transparency = 0.25
 	panelStroke.Thickness = 1.6
 	panelStroke.Parent = mainPanel
-	table.insert(themeTexts, panelStroke)
+	table.insert(themeSections, panelStroke) -- Adicionado para atualizar a borda principal com o tema!
 
 	local glassGradient = Instance.new("UIGradient")
 	glassGradient.Rotation = 45
@@ -463,7 +461,6 @@ function showMainPanel()
 	floatingBtn.Visible = false
 	floatingBtn.Parent = screenGui
 	table.insert(themeTexts, floatingBtn)
-	table.insert(allTextLabels, floatingBtn)
 
 	local floatCorner = Instance.new("UICorner")
 	floatCorner.CornerRadius = UDim.new(0, 8)
@@ -473,7 +470,7 @@ function showMainPanel()
 	floatStroke.Color = currentThemeColor
 	floatStroke.Thickness = 1.3
 	floatStroke.Parent = floatingBtn
-	table.insert(themeTexts, floatStroke)
+	table.insert(themeSections, floatStroke)
 
 	local floatDragging, floatDragStart, floatStartPos
 	floatingBtn.InputBegan:Connect(function(input)
@@ -548,7 +545,7 @@ function showMainPanel()
 		line1.BackgroundColor3 = currentThemeColor
 		line1.BorderSizePixel = 0
 		line1.Parent = symbolFrame
-		table.insert(themeTexts, line1)
+		table.insert(resizeSymbolsLines, line1) -- Linha do redimensionador atualiza com o tema!
 
 		local c1 = Instance.new("UICorner")
 		c1.CornerRadius = UDim.new(1, 0)
@@ -560,7 +557,7 @@ function showMainPanel()
 		line2.BackgroundColor3 = currentThemeColor
 		line2.BorderSizePixel = 0
 		line2.Parent = symbolFrame
-		table.insert(themeTexts, line2)
+		table.insert(resizeSymbolsLines, line2) -- Linha do redimensionador atualiza com o tema!
 
 		local c2 = Instance.new("UICorner")
 		c2.CornerRadius = UDim.new(1, 0)
@@ -604,17 +601,17 @@ function showMainPanel()
 		end
 	end)
 
+	-- CABEÇALHO FIXO (Não sofre alteração do Color Picker geral de textos)
 	local titleLabel = Instance.new("TextLabel")
 	titleLabel.Size = UDim2.new(0, 180, 0, 18)
 	titleLabel.Position = UDim2.new(0, 10, 0, 6)
 	titleLabel.BackgroundTransparency = 1
 	titleLabel.Font = currentGlobalFont
 	titleLabel.Text = "AETHERIS HUB"
-	titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- Fixo em Branco
 	titleLabel.TextSize = 13
 	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 	titleLabel.Parent = mainPanel
-	table.insert(allTextLabels, titleLabel)
 
 	local subTitleLabel = Instance.new("TextLabel")
 	subTitleLabel.Size = UDim2.new(0, 180, 0, 12)
@@ -627,7 +624,6 @@ function showMainPanel()
 	subTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 	subTitleLabel.Parent = mainPanel
 	table.insert(themeTexts, subTitleLabel)
-	table.insert(allTextLabels, subTitleLabel)
 
 	local controlsContainer = Instance.new("Frame")
 	controlsContainer.Size = UDim2.new(0, 70, 0, 26)
@@ -670,7 +666,6 @@ function showMainPanel()
 		btn.TextColor3 = Color3.fromRGB(200, 200, 200)
 		btn.TextSize = 10
 		btn.Parent = controlsContainer
-		table.insert(allTextLabels, btn)
 
 		local corner = Instance.new("UICorner")
 		corner.CornerRadius = UDim.new(0, 5)
@@ -685,7 +680,6 @@ function showMainPanel()
 
 	floatingBtn.MouseButton1Click:Connect(toggleMinimizePanel)
 
-	-- Listener de Atalho (Keybind) para esconder/mostrar painel
 	UserInputService.InputBegan:Connect(function(input, gameProcessed)
 		if not gameProcessed and hideKeybindEnabled and input.UserInputType == Enum.UserInputType.Keyboard then
 			if input.KeyCode == hideKeybindKey then
@@ -855,7 +849,6 @@ function showMainPanel()
 		iconLabel.TextSize = 10
 		iconLabel.Parent = section
 		table.insert(themeTexts, iconLabel)
-		table.insert(allTextLabels, iconLabel)
 
 		local sTitle = Instance.new("TextLabel")
 		sTitle.Size = UDim2.new(1, -36, 0, 20)
@@ -2771,7 +2764,7 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- ABA CONFIG (COM MUDANÇA DE FONTE SEGURA E COR DE TEXTO)
+	-- ABA CONFIG
 	-----------------------------------------------------------------
 	local configPage = pages["Config"]
 	local secConfig = createSection(configPage, "Tema do Hub", "⚙️")
@@ -2786,14 +2779,12 @@ function showMainPanel()
 		floatingBtn.BackgroundTransparency = panelTransparencyValue
 	end)
 
-	-- SEÇÃO DE APARÊNCIA DE TEXTOS E FONTES SEGURAS DO ROBLOX
 	local secTextConfig = createSection(configPage, "Customização de Textos", "🔤")
 
 	addColorPicker(secTextConfig, "Cor dos Textos do Hub", currentTextColor, function(color)
 		updateGlobalTextColor(color)
 	end)
 
-	-- Lista de Fontes Seguras e Nativas do Roblox (Enum.Font)
 	local safeFonts = {
 		{Name = "Gotham Medium", Enum = Enum.Font.GothamMedium},
 		{Name = "Gotham Bold", Enum = Enum.Font.GothamBold},
@@ -3474,7 +3465,7 @@ RunService.RenderStepped:Connect(function()
 					data.distanceLabel.TextColor3 = _G_ColorEnemyDist
 					data.billboard.Enabled = (_G_EnemyEspName or _G_EnemyEspDistance)
 					data.nameLabel.Text = enemy.Name
-					data.distanceLabel.Text = string.format("%.0f studs5", dist)
+					data.distanceLabel.Text = string.format("%.0f studs", dist)
 				else
 					data.highlight.Enabled = false
 					data.billboard.Enabled = false
