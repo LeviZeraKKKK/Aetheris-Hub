@@ -1934,18 +1934,13 @@ function showMainPanel()
 	addEspToggleWithColor(secEspPlayers, "Distance ESP", _G_ColorDistance, function(c) _G_ColorDistance = c end, function(s) _G_EspDistance = s end)
 	addEspToggleWithColor(secEspPlayers, "Head Dot ESP", _G_ColorHead, function(c) _G_ColorHead = c end, function(s) _G_EspHead = s end)
 
-    -- Seção de Inimigos (NPC) na aba Visual com Cores Individuais
+    -- Seção de Inimigos (NPC) na aba Visual com Cores Individuais ao lado do toggle
     local secEspEnemies = createSection(visualPage, "ESP Inimigos (NPC)", "👾")
     addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state end, false)
     
-    addToggle(secEspEnemies, "ESP Chams", function(state) _G_EnemyEspChams = state end, false)
-    addColorPicker(secEspEnemies, "Cor do Chams (Inimigos)", _G_ColorEnemyChams, function(c) _G_ColorEnemyChams = c end)
-    
-    addToggle(secEspEnemies, "ESP Nome", function(state) _G_EnemyEspName = state end, false)
-    addColorPicker(secEspEnemies, "Cor do Nome (Inimigos)", _G_ColorEnemyName, function(c) _G_ColorEnemyName = c end)
-    
-    addToggle(secEspEnemies, "ESP Distância", function(state) _G_EnemyEspDistance = state end, false)
-    addColorPicker(secEspEnemies, "Cor da Distância (Inimigos)", _G_ColorEnemyDist, function(c) _G_ColorEnemyDist = c end)
+    addEspToggleWithColor(secEspEnemies, "ESP Chams", _G_ColorEnemyChams, function(c) _G_ColorEnemyChams = c end, function(s) _G_EnemyEspChams = s end)
+    addEspToggleWithColor(secEspEnemies, "ESP Nome", _G_ColorEnemyName, function(c) _G_ColorEnemyName = c end, function(s) _G_EnemyEspName = s end)
+    addEspToggleWithColor(secEspEnemies, "ESP Distância", _G_ColorEnemyDist, function(c) _G_ColorEnemyDist = c end, function(s) _G_EnemyEspDistance = s end)
 
     local secWorld = createSection(visualPage, "Visual do Mapa", "🌐")
     addToggle(secWorld, "Fullbright (Remover Escuridão)", function(state)
@@ -2375,7 +2370,7 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- ABA FRUTA (COM CORES INDIVIDUAIS PARA CHAMS, NOME E DISTÂNCIA)
+	-- ABA FRUTA (COM CORES INDIVIDUAIS USANDO addEspToggleWithColor)
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
 	local secFrutaAction = createSection(frutaPage, "Automação", "⚡")
@@ -2625,23 +2620,23 @@ function showMainPanel()
 		end
 	end, false)
 
-	addToggle(secFrutaEsp, "ESP Chams", function(state) fruitEnabledOptions.Chams = state end, true)
-	addColorPicker(secFrutaEsp, "Cor do Chams (Frutas)", _G_ColorFruitChams, function(c)
+	addEspToggleWithColor(secFrutaEsp, "ESP Chams", _G_ColorFruitChams, function(c)
 		_G_ColorFruitChams = c
 		for _, data in pairs(fruitEspObjects) do
 			if not data.isHeld then data.highlight.FillColor = c end
 		end
-	end)
+	end, function(s) fruitEnabledOptions.Chams = s end)
 
-	addToggle(secFrutaEsp, "ESP Nome", function(state) fruitEnabledOptions.Name = state end, true)
-	addColorPicker(secFrutaEsp, "Cor do Nome (Frutas)", _G_ColorFruitName, function(c)
+	addEspToggleWithColor(secFrutaEsp, "ESP Nome", _G_ColorFruitName, function(c)
 		_G_ColorFruitName = c
 		for _, data in pairs(fruitEspObjects) do
 			if not data.isHeld then data.label.TextColor3 = c end
 		end
-	end)
+	end, function(s) fruitEnabledOptions.Name = s end)
 
-	addToggle(secFrutaEsp, "ESP Distance", function(state) fruitEnabledOptions.Distance = state end, true)
+	addEspToggleWithColor(secFrutaEsp, "ESP Distance", _G_ColorFruitDist, function(c)
+		_G_ColorFruitDist = c
+	end, function(s) fruitEnabledOptions.Distance = s end)
 
 	local fruitAccumulator = 0
 	RunService.RenderStepped:Connect(function(dt)
