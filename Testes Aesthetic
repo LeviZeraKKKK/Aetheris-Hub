@@ -27,6 +27,8 @@ screenGui.Parent = playerGui
 -- SISTEMA DE CORES DINÂMICAS & TEMA GLOBAL
 -----------------------------------------------------------------
 local currentThemeColor = Color3.fromRGB(138, 43, 226)
+local currentTextColor = Color3.fromRGB(255, 255, 255)
+local currentGlobalFont = Enum.Font.GothamMedium
 local panelTransparencyValue = 0.2
 
 local themeToggles = {}
@@ -35,6 +37,7 @@ local themeTexts = {}
 local themeSliders = {}
 local themeParticles = {}
 local tabIndicators = {}
+local allTextLabels = {} -- Rastreia todos os textos para alteração dinâmica de fonte e cor
 
 local function updateGlobalTheme(newColor)
 	currentThemeColor = newColor
@@ -51,16 +54,6 @@ local function updateGlobalTheme(newColor)
 		secStroke.Color = newColor
 	end
 
-	for _, obj in pairs(themeTexts) do
-		if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
-			obj.TextColor3 = newColor
-		elseif obj:IsA("UIStroke") then
-			obj.Color = newColor
-		elseif obj:IsA("Frame") then
-			obj.BackgroundColor3 = newColor
-		end
-	end
-
 	for _, fill in pairs(themeSliders) do
 		fill.BackgroundColor3 = newColor
 	end
@@ -72,6 +65,29 @@ local function updateGlobalTheme(newColor)
 	for _, part in pairs(themeParticles) do
 		if part and part.Parent then
 			part.BackgroundColor3 = newColor
+		end
+	end
+end
+
+local function updateGlobalTextFont(newFont)
+	currentGlobalFont = newFont
+	for _, txtObj in pairs(allTextLabels) do
+		if txtObj and txtObj.Parent then
+			pcall(function()
+				txtObj.Font = newFont
+			end)
+		end
+	end
+end
+
+local function updateGlobalTextColor(newColor)
+	currentTextColor = newColor
+	for _, txtObj in pairs(allTextLabels) do
+		if txtObj and txtObj.Parent and txtObj:IsA("TextLabel") or txtObj:IsA("TextButton") or txtObj:IsA("TextBox") then
+			-- Ignoramos textos que tenham cores especiais/específicas (como títulos principais se desejar, ou aplicamos geral)
+			pcall(function()
+				txtObj.TextColor3 = newColor
+			end)
 		end
 	end
 end
@@ -219,6 +235,7 @@ loadIcon.TextSize = 22
 loadIcon.TextTransparency = 1
 loadIcon.Parent = loadWrapper
 table.insert(themeTexts, loadIcon)
+table.insert(allTextLabels, loadIcon)
 
 local iconCorner = Instance.new("UICorner")
 iconCorner.CornerRadius = UDim.new(0, 12)
@@ -234,6 +251,7 @@ loadTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 loadTitle.TextSize = 16
 loadTitle.TextTransparency = 1
 loadTitle.Parent = loadWrapper
+table.insert(allTextLabels, loadTitle)
 
 local loadStatus = Instance.new("TextLabel")
 loadStatus.Size = UDim2.new(1, 0, 0, 14)
@@ -245,6 +263,7 @@ loadStatus.TextColor3 = Color3.fromRGB(170, 170, 200)
 loadStatus.TextSize = 10
 loadStatus.TextTransparency = 1
 loadStatus.Parent = loadWrapper
+table.insert(allTextLabels, loadStatus)
 
 local percentLabel = Instance.new("TextLabel")
 percentLabel.Size = UDim2.new(1, 0, 0, 14)
@@ -257,6 +276,7 @@ percentLabel.TextSize = 12
 percentLabel.TextTransparency = 1
 percentLabel.Parent = loadWrapper
 table.insert(themeTexts, percentLabel)
+table.insert(allTextLabels, percentLabel)
 
 local loadBarBg = Instance.new("Frame")
 loadBarBg.Size = UDim2.new(0, 300, 0, 6)
@@ -436,13 +456,14 @@ function showMainPanel()
 	floatingBtn.Position = UDim2.new(0, 15, 0.5, -18)
 	floatingBtn.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
 	floatingBtn.BackgroundTransparency = panelTransparencyValue
-	floatingBtn.Font = Enum.Font.GothamBold
+	floatingBtn.Font = currentGlobalFont
 	floatingBtn.Text = "•"
 	floatingBtn.TextColor3 = currentThemeColor
 	floatingBtn.TextSize = 24
 	floatingBtn.Visible = false
 	floatingBtn.Parent = screenGui
 	table.insert(themeTexts, floatingBtn)
+	table.insert(allTextLabels, floatingBtn)
 
 	local floatCorner = Instance.new("UICorner")
 	floatCorner.CornerRadius = UDim.new(0, 8)
@@ -587,24 +608,26 @@ function showMainPanel()
 	titleLabel.Size = UDim2.new(0, 180, 0, 18)
 	titleLabel.Position = UDim2.new(0, 10, 0, 6)
 	titleLabel.BackgroundTransparency = 1
-	titleLabel.Font = Enum.Font.GothamBold
+	titleLabel.Font = currentGlobalFont
 	titleLabel.Text = "AETHERIS HUB"
 	titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 	titleLabel.TextSize = 13
 	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 	titleLabel.Parent = mainPanel
+	table.insert(allTextLabels, titleLabel)
 
 	local subTitleLabel = Instance.new("TextLabel")
 	subTitleLabel.Size = UDim2.new(0, 180, 0, 12)
 	subTitleLabel.Position = UDim2.new(0, 10, 0, 22)
 	subTitleLabel.BackgroundTransparency = 1
-	subTitleLabel.Font = Enum.Font.GothamMedium
+	subTitleLabel.Font = currentGlobalFont
 	subTitleLabel.Text = "Blox Fruits V2"
 	subTitleLabel.TextColor3 = currentThemeColor
 	subTitleLabel.TextSize = 9
 	subTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 	subTitleLabel.Parent = mainPanel
 	table.insert(themeTexts, subTitleLabel)
+	table.insert(allTextLabels, subTitleLabel)
 
 	local controlsContainer = Instance.new("Frame")
 	controlsContainer.Size = UDim2.new(0, 70, 0, 26)
@@ -642,11 +665,12 @@ function showMainPanel()
 		btn.Size = UDim2.new(0, 20, 0, 20)
 		btn.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
 		btn.BackgroundTransparency = 0.3
-		btn.Font = Enum.Font.GothamBold
+		btn.Font = currentGlobalFont
 		btn.Text = text
 		btn.TextColor3 = Color3.fromRGB(200, 200, 200)
 		btn.TextSize = 10
 		btn.Parent = controlsContainer
+		table.insert(allTextLabels, btn)
 
 		local corner = Instance.new("UICorner")
 		corner.CornerRadius = UDim.new(0, 5)
@@ -739,13 +763,14 @@ function showMainPanel()
 		tabButton.Size = UDim2.new(1, 0, 0, 28)
 		tabButton.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 		tabButton.BackgroundTransparency = 0.5
-		tabButton.Font = Enum.Font.GothamMedium
+		tabButton.Font = currentGlobalFont
 		tabButton.Text = "   " .. tabInfo.Icon .. "  " .. tabInfo.Name
 		tabButton.TextColor3 = Color3.fromRGB(180, 180, 180)
 		tabButton.TextSize = 11
 		tabButton.TextXAlignment = Enum.TextXAlignment.Left
 		tabButton.LayoutOrder = i
 		tabButton.Parent = sidebar
+		table.insert(allTextLabels, tabButton)
 
 		local btnCorner = Instance.new("UICorner")
 		btnCorner.CornerRadius = UDim.new(0, 5)
@@ -788,7 +813,7 @@ function showMainPanel()
 			end
 
 			TweenService:Create(indicator, TweenInfo.new(0.15), {Size = UDim2.new(0, 2, 0, 16)}):Play()
-			TweenService:Create(tabButton, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+			TweenService:Create(tabButton, TweenInfo.new(0.15), {TextColor3 = currentTextColor}):Play()
 
 			activePage = page
 		end)
@@ -798,7 +823,7 @@ function showMainPanel()
 			page.Position = UDim2.new(0, 4, 0, 4)
 			activePage = page
 			indicator.Size = UDim2.new(0, 2, 0, 16)
-			tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+			tabButton.TextColor3 = currentTextColor
 		end
 	end
 
@@ -824,23 +849,25 @@ function showMainPanel()
 		iconLabel.Size = UDim2.new(0, 20, 0, 20)
 		iconLabel.Position = UDim2.new(0, 8, 0, 3)
 		iconLabel.BackgroundTransparency = 1
-		iconLabel.Font = Enum.Font.GothamBold
+		iconLabel.Font = currentGlobalFont
 		iconLabel.Text = iconSymbol or "🔹"
 		iconLabel.TextColor3 = currentThemeColor
 		iconLabel.TextSize = 10
 		iconLabel.Parent = section
 		table.insert(themeTexts, iconLabel)
+		table.insert(allTextLabels, iconLabel)
 
 		local sTitle = Instance.new("TextLabel")
 		sTitle.Size = UDim2.new(1, -36, 0, 20)
 		sTitle.Position = UDim2.new(0, 28, 0, 3)
 		sTitle.BackgroundTransparency = 1
-		sTitle.Font = Enum.Font.GothamBold
+		sTitle.Font = currentGlobalFont
 		sTitle.Text = title
 		sTitle.TextColor3 = Color3.fromRGB(220, 220, 220)
 		sTitle.TextSize = 11
 		sTitle.TextXAlignment = Enum.TextXAlignment.Left
 		sTitle.Parent = section
+		table.insert(allTextLabels, sTitle)
 
 		local sContainer = Instance.new("Frame")
 		sContainer.Size = UDim2.new(1, -10, 1, -26)
@@ -875,12 +902,13 @@ function showMainPanel()
 		label.Size = UDim2.new(1, -40, 1, 0)
 		label.Position = UDim2.new(0, 8, 0, 0)
 		label.BackgroundTransparency = 1
-		label.Font = Enum.Font.GothamMedium
+		label.Font = currentGlobalFont
 		label.Text = title
-		label.TextColor3 = Color3.fromRGB(200, 200, 200)
+		label.TextColor3 = currentTextColor
 		label.TextSize = 11
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.Parent = pickerFrame
+		table.insert(allTextLabels, label)
 
 		local colorBtn = Instance.new("TextButton")
 		colorBtn.Size = UDim2.new(0, 20, 0, 14)
@@ -1079,12 +1107,13 @@ function showMainPanel()
 		label.Size = UDim2.new(1, -85, 1, 0)
 		label.Position = UDim2.new(0, 20, 0, 0)
 		label.BackgroundTransparency = 1
-		label.Font = Enum.Font.GothamMedium
+		label.Font = currentGlobalFont
 		label.Text = name
-		label.TextColor3 = Color3.fromRGB(200, 200, 200)
+		label.TextColor3 = currentTextColor
 		label.TextSize = 11
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.Parent = toggleFrame
+		table.insert(allTextLabels, label)
 
 		local toggleBtn = Instance.new("TextButton")
 		toggleBtn.Size = UDim2.new(0, 28, 0, 16)
@@ -1317,12 +1346,13 @@ function showMainPanel()
 		label.Size = UDim2.new(1, -50, 1, 0)
 		label.Position = UDim2.new(0, 20, 0, 0)
 		label.BackgroundTransparency = 1
-		label.Font = Enum.Font.GothamMedium
+		label.Font = currentGlobalFont
 		label.Text = name
-		label.TextColor3 = Color3.fromRGB(200, 200, 200)
+		label.TextColor3 = currentTextColor
 		label.TextSize = 11
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.Parent = toggleFrame
+		table.insert(allTextLabels, label)
 
 		local toggleBtn = Instance.new("TextButton")
 		toggleBtn.Size = UDim2.new(0, 28, 0, 16)
@@ -1377,12 +1407,13 @@ function showMainPanel()
 		label.Size = UDim2.new(1, -16, 0, 16)
 		label.Position = UDim2.new(0, 8, 0, 3)
 		label.BackgroundTransparency = 1
-		label.Font = Enum.Font.GothamMedium
+		label.Font = currentGlobalFont
 		label.Text = name .. ": " .. default
-		label.TextColor3 = Color3.fromRGB(200, 200, 200)
+		label.TextColor3 = currentTextColor
 		label.TextSize = 11
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.Parent = sliderFrame
+		table.insert(allTextLabels, label)
 
 		local bar = Instance.new("Frame")
 		bar.Size = UDim2.new(1, -16, 0, 4)
@@ -1486,23 +1517,25 @@ function showMainPanel()
 	dropLabel.Size = UDim2.new(1, -30, 1, 0)
 	dropLabel.Position = UDim2.new(0, 8, 0, 0)
 	dropLabel.BackgroundTransparency = 1
-	dropLabel.Font = Enum.Font.GothamMedium
+	dropLabel.Font = currentGlobalFont
 	dropLabel.Text = selectedIsland and selectedIsland.Name or "Selecione a Ilha"
-	dropLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+	dropLabel.TextColor3 = currentTextColor
 	dropLabel.TextSize = 11
 	dropLabel.TextXAlignment = Enum.TextXAlignment.Left
 	dropLabel.TextTruncate = Enum.TextTruncate.AtEnd
 	dropLabel.Parent = dropdownFrame
+	table.insert(allTextLabels, dropLabel)
 
 	local dropBtn = Instance.new("TextButton")
 	dropBtn.Size = UDim2.new(0, 24, 0, 24)
 	dropBtn.Position = UDim2.new(1, -26, 0.5, -12)
 	dropBtn.BackgroundTransparency = 1
-	dropBtn.Font = Enum.Font.GothamBold
+	dropBtn.Font = currentGlobalFont
 	dropBtn.Text = "▼"
-	dropBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+	dropBtn.TextColor3 = currentTextColor
 	dropBtn.TextSize = 10
 	dropBtn.Parent = dropdownFrame
+	table.insert(allTextLabels, dropBtn)
 
 	local dropList = Instance.new("ScrollingFrame")
 	dropList.Size = UDim2.new(1, 0, 0, 110)
@@ -1533,13 +1566,14 @@ function showMainPanel()
 			opt.Size = UDim2.new(1, 0, 0, 22)
 			opt.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 			opt.BackgroundTransparency = 0.5
-			opt.Font = Enum.Font.GothamMedium
+			opt.Font = currentGlobalFont
 			opt.Text = "  " .. island.Name
-			opt.TextColor3 = Color3.fromRGB(220, 220, 220)
+			opt.TextColor3 = currentTextColor
 			opt.TextSize = 10
 			opt.TextXAlignment = Enum.TextXAlignment.Left
 			opt.ZIndex = 61
 			opt.Parent = dropList
+			table.insert(allTextLabels, opt)
 
 			opt.MouseButton1Click:Connect(function()
 				selectedIsland = island
@@ -1672,7 +1706,6 @@ function showMainPanel()
 
     addEspToggleWithColor(secEspPlayers, "Box ESP", _G_ColorBox, function(c) _G_ColorBox = c end, function(s) _G_EspBox = s end)
 	
-	-- Tracers / Line ESP com botão retangular arredondado à esquerda do color picker
 	local tracerToggleFrame = Instance.new("Frame")
 	tracerToggleFrame.Size = UDim2.new(1, 0, 0, 26)
 	tracerToggleFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
@@ -1697,12 +1730,13 @@ function showMainPanel()
 	tracerLabel.Size = UDim2.new(1, -150, 1, 0)
 	tracerLabel.Position = UDim2.new(0, 20, 0, 0)
 	tracerLabel.BackgroundTransparency = 1
-	tracerLabel.Font = Enum.Font.GothamMedium
+	tracerLabel.Font = currentGlobalFont
 	tracerLabel.Text = "Tracers / Line ESP"
-	tracerLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+	tracerLabel.TextColor3 = currentTextColor
 	tracerLabel.TextSize = 11
 	tracerLabel.TextXAlignment = Enum.TextXAlignment.Left
 	tracerLabel.Parent = tracerToggleFrame
+	table.insert(allTextLabels, tracerLabel)
 
 	local tracerToggleBtn = Instance.new("TextButton")
 	tracerToggleBtn.Size = UDim2.new(0, 28, 0, 16)
@@ -1732,11 +1766,12 @@ function showMainPanel()
 	tracerPosModeBtn.Size = UDim2.new(0, 52, 0, 16)
 	tracerPosModeBtn.Position = UDim2.new(1, -114, 0.5, -8)
 	tracerPosModeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
-	tracerPosModeBtn.Font = Enum.Font.GothamBold
+	tracerPosModeBtn.Font = currentGlobalFont
 	tracerPosModeBtn.Text = _G_TracerOrigin
-	tracerPosModeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	tracerPosModeBtn.TextColor3 = currentTextColor
 	tracerPosModeBtn.TextSize = 9
 	tracerPosModeBtn.Parent = tracerToggleFrame
+	table.insert(allTextLabels, tracerPosModeBtn)
 
 	local tpmCorner = Instance.new("UICorner")
 	tpmCorner.CornerRadius = UDim.new(0, 4)
@@ -1934,7 +1969,6 @@ function showMainPanel()
 	addEspToggleWithColor(secEspPlayers, "Distance ESP", _G_ColorDistance, function(c) _G_ColorDistance = c end, function(s) _G_EspDistance = s end)
 	addEspToggleWithColor(secEspPlayers, "Head Dot ESP", _G_ColorHead, function(c) _G_ColorHead = c end, function(s) _G_EspHead = s end)
 
-    -- Seção de Inimigos (NPC) na aba Visual com Cores Individuais ao lado do toggle
     local secEspEnemies = createSection(visualPage, "ESP Inimigos (NPC)", "👾")
     addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state end, false)
     
@@ -1982,22 +2016,24 @@ function showMainPanel()
 	modeLabel.Size = UDim2.new(1, -90, 1, 0)
 	modeLabel.Position = UDim2.new(0, 8, 0, 0)
 	modeLabel.BackgroundTransparency = 1
-	modeLabel.Font = Enum.Font.GothamMedium
+	modeLabel.Font = currentGlobalFont
 	modeLabel.Text = "Modo Lock-On"
-	modeLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+	modeLabel.TextColor3 = currentTextColor
 	modeLabel.TextSize = 11
 	modeLabel.TextXAlignment = Enum.TextXAlignment.Left
 	modeLabel.Parent = modeFrame
+	table.insert(allTextLabels, modeLabel)
 
 	local modeSwitchBtn = Instance.new("TextButton")
 	modeSwitchBtn.Size = UDim2.new(0, 80, 0, 18)
 	modeSwitchBtn.Position = UDim2.new(1, -86, 0.5, -9)
 	modeSwitchBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
-	modeSwitchBtn.Font = Enum.Font.GothamBold
+	modeSwitchBtn.Font = currentGlobalFont
 	modeSwitchBtn.Text = lockOnMode
-	modeSwitchBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	modeSwitchBtn.TextColor3 = currentTextColor
 	modeSwitchBtn.TextSize = 10
 	modeSwitchBtn.Parent = modeFrame
+	table.insert(allTextLabels, modeSwitchBtn)
 
 	local msCorner = Instance.new("UICorner")
 	msCorner.CornerRadius = UDim.new(0, 4)
@@ -2021,12 +2057,13 @@ function showMainPanel()
 	refreshBtn.Size = UDim2.new(1, 0, 0, 26)
 	refreshBtn.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
 	refreshBtn.BackgroundTransparency = 0.5
-	refreshBtn.Font = Enum.Font.GothamMedium
+	refreshBtn.Font = currentGlobalFont
 	refreshBtn.Text = "  🔄 Atualizar Lista de Jogadores"
-	refreshBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+	refreshBtn.TextColor3 = currentTextColor
 	refreshBtn.TextSize = 11
 	refreshBtn.TextXAlignment = Enum.TextXAlignment.Left
 	refreshBtn.Parent = secCombat
+	table.insert(allTextLabels, refreshBtn)
 
 	local rbCorner = Instance.new("UICorner")
 	rbCorner.CornerRadius = UDim.new(0, 5)
@@ -2065,12 +2102,13 @@ function showMainPanel()
 				local isSelected = selectedManualTargets[p] == true
 				item.BackgroundColor3 = isSelected and currentThemeColor or Color3.fromRGB(34, 34, 46)
 				
-				item.Font = Enum.Font.GothamMedium
+				item.Font = currentGlobalFont
 				item.Text = "  " .. p.DisplayName .. " (@" .. p.Name .. ")"
-				item.TextColor3 = Color3.fromRGB(255, 255, 255)
+				item.TextColor3 = currentTextColor
 				item.TextSize = 10
 				item.TextXAlignment = Enum.TextXAlignment.Left
 				item.Parent = scrollList
+				table.insert(allTextLabels, item)
 
 				local itemCorner = Instance.new("UICorner")
 				itemCorner.CornerRadius = UDim.new(0, 4)
@@ -2370,7 +2408,7 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- ABA FRUTA (CORRIGIDO E FUNCIONAL)
+	-- ABA FRUTA
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
 	local secFrutaAction = createSection(frutaPage, "Automação", "⚡")
@@ -2393,7 +2431,7 @@ function showMainPanel()
 	local fruitEspMasterEnabled = false
 	local fruitEspObjects = {}
 	local fruitList = {}
-	local fruitCache = {} -- Cache corrigido e populado dinamicamente
+	local fruitCache = {}
 
 	local function isHeldByPlayer(tool)
 		local parent = tool.Parent
@@ -2487,10 +2525,11 @@ function showMainPanel()
 		text.BackgroundTransparency = 1
 		text.TextColor3 = _G_ColorFruitName
 		text.TextStrokeTransparency = 0.2
-		text.Font = Enum.Font.GothamBold
+		text.Font = currentGlobalFont
 		text.TextSize = 12
 		text.TextWrapped = true
 		text.Parent = billboard
+		table.insert(allTextLabels, text)
 
 		local data = {
 			highlight  = highlight,
@@ -2535,7 +2574,6 @@ function showMainPanel()
 		end
 	end)
 
-	-- Varredura inicial e populamento do cache de frutas
 	task.spawn(function()
 		local queue = { workspace }
 		local idx = 1
@@ -2733,7 +2771,7 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- ABA CONFIG
+	-- ABA CONFIG (COM MUDANÇA DE FONTE SEGURA E COR DE TEXTO)
 	-----------------------------------------------------------------
 	local configPage = pages["Config"]
 	local secConfig = createSection(configPage, "Tema do Hub", "⚙️")
@@ -2746,6 +2784,112 @@ function showMainPanel()
 		panelTransparencyValue = val / 100
 		mainPanel.BackgroundTransparency = panelTransparencyValue
 		floatingBtn.BackgroundTransparency = panelTransparencyValue
+	end)
+
+	-- SEÇÃO DE APARÊNCIA DE TEXTOS E FONTES SEGURAS DO ROBLOX
+	local secTextConfig = createSection(configPage, "Customização de Textos", "🔤")
+
+	addColorPicker(secTextConfig, "Cor dos Textos do Hub", currentTextColor, function(color)
+		updateGlobalTextColor(color)
+	end)
+
+	-- Lista de Fontes Seguras e Nativas do Roblox (Enum.Font)
+	local safeFonts = {
+		{Name = "Gotham Medium", Enum = Enum.Font.GothamMedium},
+		{Name = "Gotham Bold", Enum = Enum.Font.GothamBold},
+		{Name = "Source Sans", Enum = Enum.Font.SourceSans},
+		{Name = "Source Sans Bold", Enum = Enum.Font.SourceSansBold},
+		{Name = "Code", Enum = Enum.Font.Code},
+		{Name = "Fredoka One", Enum = Enum.Font.FredokaOne},
+		{Name = "Highway", Enum = Enum.Font.Highway},
+		{Name = "SciFi", Enum = Enum.Font.SciFi},
+		{Name = "Ubuntu", Enum = Enum.Font.Ubuntu},
+	}
+	local currentFontIndex = 1
+
+	local fontDropFrame = Instance.new("Frame")
+	fontDropFrame.Size = UDim2.new(1, 0, 0, 26)
+	fontDropFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+	fontDropFrame.BackgroundTransparency = 0.5
+	fontDropFrame.Parent = secTextConfig
+
+	local fdCorner = Instance.new("UICorner")
+	fdCorner.CornerRadius = UDim.new(0, 5)
+	fdCorner.Parent = fontDropFrame
+
+	local fontDropLabel = Instance.new("TextLabel")
+	fontDropLabel.Size = UDim2.new(1, -30, 1, 0)
+	fontDropLabel.Position = UDim2.new(0, 8, 0, 0)
+	fontDropLabel.BackgroundTransparency = 1
+	fontDropLabel.Font = currentGlobalFont
+	fontDropLabel.Text = "Fonte: " .. safeFonts[currentFontIndex].Name
+	fontDropLabel.TextColor3 = currentTextColor
+	fontDropLabel.TextSize = 11
+	fontDropLabel.TextXAlignment = Enum.TextXAlignment.Left
+	fontDropLabel.Parent = fontDropFrame
+	table.insert(allTextLabels, fontDropLabel)
+
+	local fontDropBtn = Instance.new("TextButton")
+	fontDropBtn.Size = UDim2.new(0, 24, 0, 24)
+	fontDropBtn.Position = UDim2.new(1, -26, 0.5, -12)
+	fontDropBtn.BackgroundTransparency = 1
+	fontDropBtn.Font = currentGlobalFont
+	fontDropBtn.Text = "▼"
+	fontDropBtn.TextColor3 = currentTextColor
+	fontDropBtn.TextSize = 10
+	fontDropBtn.Parent = fontDropFrame
+	table.insert(allTextLabels, fontDropBtn)
+
+	local fontDropList = Instance.new("ScrollingFrame")
+	fontDropList.Size = UDim2.new(1, 0, 0, 110)
+	fontDropList.Position = UDim2.new(0, 0, 1, 4)
+	fontDropList.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+	fontDropList.BorderSizePixel = 0
+	fontDropList.Visible = false
+	fontDropList.ZIndex = 60
+	fontDropList.ScrollBarThickness = 3
+	fontDropList.Parent = fontDropFrame
+
+	local fdlCorner = Instance.new("UICorner")
+	fdlCorner.CornerRadius = UDim.new(0, 5)
+	fdlCorner.Parent = fontDropList
+
+	local fdlLayout = Instance.new("UIListLayout")
+	fdlLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	fdlLayout.Padding = UDim.new(0, 2)
+	fdlLayout.Parent = fontDropList
+
+	for _, fontInfo in ipairs(safeFonts) do
+		local opt = Instance.new("TextButton")
+		opt.Size = UDim2.new(1, 0, 0, 22)
+		opt.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+		opt.BackgroundTransparency = 0.5
+		opt.Font = fontInfo.Enum
+		opt.Text = "  " .. fontInfo.Name
+		opt.TextColor3 = currentTextColor
+		opt.TextSize = 10
+		opt.TextXAlignment = Enum.TextXAlignment.Left
+		opt.ZIndex = 61
+		opt.Parent = fontDropList
+		table.insert(allTextLabels, opt)
+
+		opt.MouseButton1Click:Connect(function()
+			currentGlobalFont = fontInfo.Enum
+			fontDropLabel.Text = "Fonte: " .. fontInfo.Name
+			fontDropList.Visible = false
+			updateGlobalTextFont(fontInfo.Enum)
+		end)
+	end
+	fontDropList.CanvasSize = UDim2.new(0, 0, 0, #safeFonts * 24)
+
+	fontDropBtn.MouseButton1Click:Connect(function()
+		fontDropList.Visible = not fontDropList.Visible
+	end)
+
+	fontDropLabel.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			fontDropList.Visible = not fontDropList.Visible
+		end
 	end)
 
 	local secKeybind = createSection(configPage, "Atalhos (PC)", "⌨️")
@@ -2774,12 +2918,13 @@ function showMainPanel()
 	kbLabel.Size = UDim2.new(1, -110, 1, 0)
 	kbLabel.Position = UDim2.new(0, 20, 0, 0)
 	kbLabel.BackgroundTransparency = 1
-	kbLabel.Font = Enum.Font.GothamMedium
+	kbLabel.Font = currentGlobalFont
 	kbLabel.Text = "Keybind Esconder Painel (PC)"
-	kbLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+	kbLabel.TextColor3 = currentTextColor
 	kbLabel.TextSize = 10
 	kbLabel.TextXAlignment = Enum.TextXAlignment.Left
 	kbLabel.Parent = kbFrame
+	table.insert(allTextLabels, kbLabel)
 
 	local kbToggleBtn = Instance.new("TextButton")
 	kbToggleBtn.Size = UDim2.new(0, 28, 0, 16)
@@ -2809,13 +2954,14 @@ function showMainPanel()
 	keyBox.Size = UDim2.new(0, 64, 0, 20)
 	keyBox.Position = UDim2.new(1, -68, 0.5, -10)
 	keyBox.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
-	keyBox.Font = Enum.Font.GothamBold
+	keyBox.Font = currentGlobalFont
 	keyBox.Text = hideKeybindKey.Name
-	keyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+	keyBox.TextColor3 = currentTextColor
 	keyBox.TextSize = 10
 	keyBox.ClearTextOnFocus = true
 	keyBox.Parent = kbFrame
 	table.insert(themeTexts, keyBox)
+	table.insert(allTextLabels, keyBox)
 
 	local kBoxCorner = Instance.new("UICorner")
 	kBoxCorner.CornerRadius = UDim.new(0, 4)
@@ -2875,7 +3021,7 @@ local function makeEnemyText(parent, name, size, position, fontSize)
 	label.TextColor3 = Color3.new(1, 1, 1)
 	label.TextStrokeColor3 = Color3.new(0, 0, 0)
 	label.TextStrokeTransparency = 0.25
-	label.Font = Enum.Font.GothamBold
+	label.Font = currentGlobalFont
 	label.TextSize = fontSize
 	label.TextWrapped = false
 	label.TextTruncate = Enum.TextTruncate.AtEnd
@@ -3312,7 +3458,6 @@ RunService.RenderStepped:Connect(function()
 		end
 	end
 
-	-- Render Loop para Enemy ESP (NPC) com cores individuais
 	if _G_EnemyEspMaster then
 		local myRoot = char and char:FindFirstChild("HumanoidRootPart")
 		if myRoot then
@@ -3329,7 +3474,7 @@ RunService.RenderStepped:Connect(function()
 					data.distanceLabel.TextColor3 = _G_ColorEnemyDist
 					data.billboard.Enabled = (_G_EnemyEspName or _G_EnemyEspDistance)
 					data.nameLabel.Text = enemy.Name
-					data.distanceLabel.Text = string.format("%.0f studs", dist)
+					data.distanceLabel.Text = string.format("%.0f studs5", dist)
 				else
 					data.highlight.Enabled = false
 					data.billboard.Enabled = false
