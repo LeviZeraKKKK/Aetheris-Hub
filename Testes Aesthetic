@@ -15,7 +15,7 @@ if playerGui:FindFirstChild("AetherisHub") then
 	playerGui.AetherisHub:Destroy()
 end
 
--- ScreenGui Principal (Garantindo DisplayOrder máximo)
+-- ScreenGui Principal
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AetherisHub"
 screenGui.ResetOnSpawn = false
@@ -416,7 +416,7 @@ function showMainPanel()
 	particleContainer.Name = "ThemeParticles"
 	particleContainer.Parent = mainPanel
 
-	-- Partículas otimizadas e brilhantes
+	-- Partículas animadas brilhantes
 	for i = 1, 24 do
 		task.spawn(function()
 			local p = Instance.new("Frame")
@@ -454,28 +454,28 @@ function showMainPanel()
 	interactionBlocker.ZIndex = 9999
 	interactionBlocker.Parent = mainPanel
 
-	-- BOTÃO FLUTUANTE PERFEITO ("A" ESTILIZADO COM BORA & ZINDEX MÁXIMO)
+	-- BOTÃO FLUTUANTE (QUADRADO CONTORNADO POR UIROUTLINE E LETRA "A" PROPORCIONAL)
 	local floatingBtn = Instance.new("TextButton")
 	floatingBtn.Size = UDim2.new(0, 0, 0, 0)
 	floatingBtn.Position = UDim2.new(0, 20, 0.5, -24)
-	floatingBtn.BackgroundColor3 = Color3.fromRGB(14, 14, 20)
-	floatingBtn.BackgroundTransparency = 0.1
+	floatingBtn.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
+	floatingBtn.BackgroundTransparency = 0.15
 	floatingBtn.Font = Enum.Font.GothamBold
 	floatingBtn.Text = "A"
 	floatingBtn.TextColor3 = currentThemeColor
-	floatingBtn.TextSize = 30
+	floatingBtn.TextSize = 24
 	floatingBtn.Visible = false
 	floatingBtn.ZIndex = 99999
 	floatingBtn.Parent = screenGui
 	table.insert(floatingButtonElements, floatingBtn)
 
 	local floatCorner = Instance.new("UICorner")
-	floatCorner.CornerRadius = UDim.new(0, 14)
+	floatCorner.CornerRadius = UDim.new(0, 10)
 	floatCorner.Parent = floatingBtn
 
 	local floatStroke = Instance.new("UIStroke")
 	floatStroke.Color = currentThemeColor
-	floatStroke.Thickness = 3
+	floatStroke.Thickness = 1.8
 	floatStroke.Parent = floatingBtn
 	table.insert(floatingButtonElements, floatStroke)
 
@@ -647,7 +647,7 @@ function showMainPanel()
 			task.wait(0.25)
 			mainPanel.Visible = false
 			floatingBtn.Visible = true
-			TweenService:Create(floatingBtn, TweenInfo.new(0.18), {Size = UDim2.new(0, 50, 0, 50)}):Play()
+			TweenService:Create(floatingBtn, TweenInfo.new(0.18), {Size = UDim2.new(0, 44, 0, 44)}):Play()
 		else
 			TweenService:Create(floatingBtn, TweenInfo.new(0.18), {Size = UDim2.new(0, 0, 0, 0)}):Play()
 			task.wait(0.18)
