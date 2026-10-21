@@ -95,8 +95,8 @@ local _G_EnergyEnabled = false
 local isLockOnEnabled = false
 local lockOnMode = "Nearest"
 local selectedManualTargets = {}
-local _G_LockOnPlayers = true  -- Lock Players (separado e ligado por padrão)
-local _G_LockOnEnemies = false -- Ativar Lock inimigos (NPC)
+local _G_LockOnPlayers = true
+local _G_LockOnEnemies = false
 
 local _G_FilterDistanceEnabled = false
 local _G_FilterDistanceMax = 500
@@ -1483,9 +1483,10 @@ function showMainPanel()
 	addEspToggleWithColor(secEspPlayers, "Distance ESP", _G_ColorDistance, function(c) _G_ColorDistance = c end, function(s) _G_EspDistance = s end)
 	addEspToggleWithColor(secEspPlayers, "Head Dot ESP", _G_ColorHead, function(c) _G_ColorHead = c end, function(s) _G_EspHead = s end)
 
-	-- Seção de Inimigos (NPC) na aba Visual
+	-- Seção de Inimigos (NPC) na aba Visual (COM COLOR PICKER PARA A COR DO INIMIGO)
 	local secEspEnemies = createSection(visualPage, "ESP Inimigos (NPC)", "👾")
 	addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state end, false)
+	addColorPicker(secEspEnemies, "Cor dos Inimigos", _G_ColorEnemy, function(c) _G_ColorEnemy = c end)
 	addToggle(secEspEnemies, "ESP Nome", function(state) _G_EnemyEspName = state end, false)
 	addToggle(secEspEnemies, "ESP Chams", function(state) _G_EnemyEspChams = state end, false)
 	addToggle(secEspEnemies, "ESP Distância", function(state) _G_EnemyEspDistance = state end, false)
@@ -1499,7 +1500,7 @@ function showMainPanel()
 	end, false)
 
 	-----------------------------------------------------------------
-	-- ABA AIM LOCK (SEPARADO: Lock Players e Lock Inimigos NPC)
+	-- ABA AIM LOCK
 	-----------------------------------------------------------------
 	local aimLockPage = pages["Aim Lock"]
 	local secCombat = createSection(aimLockPage, "Sistema Lock-On", "⚔️")
@@ -1508,10 +1509,9 @@ function showMainPanel()
 		isLockOnEnabled = state
 	end, false)
 
-	-- Separados e independentes
 	addToggle(secCombat, "Lock Players", function(state)
 		_G_LockOnPlayers = state
-	end, true) -- Ligado por padrão
+	end, true)
 
 	addToggle(secCombat, "Ativar Lock inimigos (NPC)", function(state)
 		_G_LockOnEnemies = state
@@ -1949,7 +1949,7 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- ABA FRUTA
+	-- ABA FRUTA (COM COLOR PICKER PARA A COR DA FRUTA)
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
 	local secFrutaAction = createSection(frutaPage, "Automação", "⚡")
@@ -2217,6 +2217,15 @@ function showMainPanel()
 			end
 		end
 	end, false)
+
+	addColorPicker(secFrutaEsp, "Cor das Frutas", fruitConfig.Color, function(c)
+		fruitConfig.Color = c
+		for _, data in pairs(fruitEspObjects) do
+			if not data.isHeld then
+				data.highlight.FillColor = c
+			end
+		end
+	end)
 
 	addToggle(secFrutaEsp, "ESP Nome", function(state) fruitEnabledOptions.Name = state end, true)
 	addToggle(secFrutaEsp, "ESP Chams", function(state) fruitEnabledOptions.Chams = state end, true)
@@ -2534,7 +2543,7 @@ task.spawn(function()
 end)
 
 -----------------------------------------------------------------
--- RENDER LOOP (ESP PLAYERS, FOV, LOCK-ON E MOVIMENTOS)
+-- RENDER LOOP (ESP PLAYERS, FOV, LOCK-ON E MOVIMENTOS CORRIGIDOS)
 -----------------------------------------------------------------
 local espDrawings = {}
 
@@ -2701,9 +2710,12 @@ RunService.RenderStepped:Connect(function()
 		end
 	end
 
-	if _G_NoclipEnabled and char then
+	-- CORREÇÃO DO NOCLIP: Restaura imediatamente a colisão das partes ao desligar o toggle
+	if char then
 		for _, part in pairs(char:GetDescendants()) do
-			if part:IsA("BasePart") then part.CanCollide = false end
+			if part:IsA("BasePart") then
+				part.CanCollide = not _G_NoclipEnabled
+			end
 		end
 	end
 
@@ -2912,7 +2924,7 @@ RunService.RenderStepped:Connect(function()
 		end
 	end
 
-	-- Render Loop para Enemy ESP (NPC)
+	-- Render Loop para Enemy ESP (NPC) com cor customizável
 	if _G_EnemyEspMaster then
 		local myRoot = char and char:FindFirstChild("HumanoidRootPart")
 		if myRoot then
@@ -2922,6 +2934,7 @@ RunService.RenderStepped:Connect(function()
 				if enemy.Parent and root and humanoid and humanoid.Health > 0 then
 					local dist = (root.Position - myRoot.Position).Magnitude
 					data.highlight.Enabled = _G_EnemyEspChams
+					data.highlight.FillColor = _G_ColorEnemy
 					data.nameLabel.Visible = _G_EnemyEspName
 					data.distanceLabel.Visible = _G_EnemyEspDistance
 					data.billboard.Enabled = (_G_EnemyEspName or _G_EnemyEspDistance)
