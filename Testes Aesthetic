@@ -4,7 +4,6 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
-local HttpService = game:GetService("HttpService")
 
 local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
@@ -78,44 +77,6 @@ local function updateGlobalTheme(newColor)
 end
 
 -----------------------------------------------------------------
--- GERENCIADOR DE CONFIGURAÇÕES (CONFIG SAVING SYSTEM)
------------------------------------------------------------------
-local configFileName = "AetherisHub_Config.json"
-
-local function saveConfig()
-	local configData = {
-		ThemeColorR = currentThemeColor.R,
-		ThemeColorG = currentThemeColor.G,
-		ThemeColorB = currentThemeColor.B,
-		PanelTransparency = panelTransparencyValue,
-		HideKeybind = tostring(hideKeybindKey)
-	}
-	pcall(function()
-		if writefile then
-			writefile(configFileName, HttpService:JSONEncode(configData))
-		end
-	end)
-end
-
-local function loadConfig()
-	pcall(function()
-		if readfile and isfile and isfile(configFileName) then
-			local content = readfile(configFileName)
-			local data = HttpService:JSONDecode(content)
-			if data then
-				if data.ThemeColorR then
-					currentThemeColor = Color3.new(data.ThemeColorR, data.ThemeColorG, data.ThemeColorB)
-				end
-				if data.PanelTransparency then
-					panelTransparencyValue = data.PanelTransparency
-				end
-			end
-		end
-	end)
-end
-loadConfig()
-
------------------------------------------------------------------
 -- DETECÇÃO DE PLATAFORMA & TAMANHO DINÂMICO
 -----------------------------------------------------------------
 local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
@@ -132,6 +93,7 @@ local _G_NoclipEnabled = false
 local _G_FullbrightEnabled = false
 local _G_EnergyEnabled = false
 
+-- Estados de Viagem (Travel Islands)
 local travelling = false
 local selectedIsland = nil
 local islands = {}
@@ -155,6 +117,7 @@ local _G_FilterCrosshair = false
 local _G_FilterHoldingItem = false
 local _G_FilterClosest = false
 
+-- Estados do FOV Customizável
 local _G_FovVisible = false
 local _G_FovRadius = 150
 local _G_FovThickness = 1
@@ -178,6 +141,7 @@ local _G_EspName = false
 local _G_EspDistance = false
 local _G_EspHead = false
 
+-- Estados do Enemy ESP (NPC)
 local _G_EnemyEspMaster = false
 local _G_EnemyEspName = false
 local _G_EnemyEspChams = false
@@ -191,6 +155,7 @@ local _G_ColorName = Color3.fromRGB(255, 255, 255)
 local _G_ColorDistance = Color3.fromRGB(200, 200, 255)
 local _G_ColorHead = Color3.fromRGB(255, 100, 100)
 
+-- Cores Individuais para Inimigos e Frutas
 local _G_ColorEnemyChams = Color3.fromRGB(255, 65, 75)
 local _G_ColorEnemyName = Color3.fromRGB(255, 255, 255)
 local _G_ColorEnemyDist = Color3.fromRGB(200, 200, 255)
@@ -369,7 +334,7 @@ task.spawn(function()
 end)
 
 -----------------------------------------------------------------
--- PAINEL PRINCIPAL COM GRADIENTES E HOVER DINÂMICO
+-- PAINEL PRINCIPAL COM GRADIENTES SUTIS (GLASSMORPHISM)
 -----------------------------------------------------------------
 function showMainPanel()
 	local mainPanel = Instance.new("Frame")
@@ -393,6 +358,7 @@ function showMainPanel()
 	panelStroke.Parent = mainPanel
 	table.insert(themeTexts, panelStroke)
 
+	-- Gradiente sutil profissional de fundo (Glassmorphism avançado)
 	local glassGradient = Instance.new("UIGradient")
 	glassGradient.Rotation = 45
 	glassGradient.Color = ColorSequence.new({
@@ -681,10 +647,7 @@ function showMainPanel()
 		return btn
 	end
 
-	createControlButton("X", function()
-		saveConfig()
-		screenGui:Destroy()
-	end)
+	createControlButton("X", function() screenGui:Destroy() end)
 	createControlButton("-", toggleMinimizePanel)
 	floatingBtn.MouseButton1Click:Connect(toggleMinimizePanel)
 
@@ -777,18 +740,6 @@ function showMainPanel()
 		btnCorner.CornerRadius = UDim.new(0, 5)
 		btnCorner.Parent = tabButton
 
-		-- Efeito de Hover Dinâmico nas Abas
-		tabButton.MouseEnter:Connect(function()
-			if activePage ~= pages[tabInfo.Name] then
-				TweenService:Create(tabButton, TweenInfo.new(0.15), {BackgroundTransparency = 0.3, TextColor3 = Color3.fromRGB(220, 220, 220)}):Play()
-			end
-		end)
-		tabButton.MouseLeave:Connect(function()
-			if activePage ~= pages[tabInfo.Name] then
-				TweenService:Create(tabButton, TweenInfo.new(0.15), {BackgroundTransparency = 0.5, TextColor3 = Color3.fromRGB(180, 180, 180)}):Play()
-			end
-		end)
-
 		local indicator = Instance.new("Frame")
 		indicator.Size = UDim2.new(0, 2, 0, 0)
 		indicator.Position = UDim2.new(0, 0, 0.5, 0)
@@ -822,11 +773,11 @@ function showMainPanel()
 
 			for _, tData in ipairs(tabButtonsList) do
 				TweenService:Create(tData.Indicator, TweenInfo.new(0.15), {Size = UDim2.new(0, 2, 0, 0)}):Play()
-				TweenService:Create(tData.Button, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(180, 180, 180), BackgroundTransparency = 0.5}):Play()
+				TweenService:Create(tData.Button, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(180, 180, 180)}):Play()
 			end
 
 			TweenService:Create(indicator, TweenInfo.new(0.15), {Size = UDim2.new(0, 2, 0, 16)}):Play()
-			TweenService:Create(tabButton, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(255, 255, 255), BackgroundTransparency = 0.4}):Play()
+			TweenService:Create(tabButton, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 
 			activePage = page
 		end)
@@ -837,7 +788,6 @@ function showMainPanel()
 			activePage = page
 			indicator.Size = UDim2.new(0, 2, 0, 16)
 			tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-			tabButton.BackgroundTransparency = 0.4
 		end
 	end
 
@@ -900,47 +850,7 @@ function showMainPanel()
 	end
 
 	-----------------------------------------------------------------
-	-- SUPORTE A CARDS INTERNOS (AGRUPAMENTO)
-	-----------------------------------------------------------------
-	local function createCard(parent, title)
-		local card = Instance.new("Frame")
-		card.Size = UDim2.new(1, 0, 0, 0)
-		card.BackgroundColor3 = Color3.fromRGB(30, 30, 42)
-		card.BackgroundTransparency = 0.4
-		card.Parent = parent
-
-		local cCorner = Instance.new("UICorner")
-		cCorner.CornerRadius = UDim.new(0, 5)
-		cCorner.Parent = card
-
-		local cLayout = Instance.new("UIListLayout")
-		cLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		cLayout.Padding = UDim.new(0, 4)
-		cLayout.Parent = card
-
-		if title and title ~= "" then
-			local cTitle = Instance.new("TextLabel")
-			cTitle.Size = UDim2.new(1, -16, 0, 18)
-			cTitle.Position = UDim2.new(0, 8, 0, 4)
-			cTitle.BackgroundTransparency = 1
-			cTitle.Font = Enum.Font.GothamBold
-			cTitle.Text = title
-			cTitle.TextColor3 = currentThemeColor
-			cTitle.TextSize = 10
-			cTitle.TextXAlignment = Enum.TextXAlignment.Left
-			cTitle.Parent = card
-			table.insert(themeTexts, cTitle)
-		end
-
-		cLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			card.Size = UDim2.new(1, 0, 0, cLayout.AbsoluteContentSize.Y + 8)
-		end)
-
-		return card
-	end
-
-	-----------------------------------------------------------------
-	-- COLOR PICKER ESTÁVEL (COM HOVER E ANIMAÇÃO)
+	-- COLOR PICKER CORRIGIDO (FIXO/ESTÁVEL SEM PULAR A TELA)
 	-----------------------------------------------------------------
 	local function addColorPicker(parent, title, defaultColor, callback)
 		local pickerFrame = Instance.new("Frame")
@@ -975,13 +885,7 @@ function showMainPanel()
 		btnCorner.CornerRadius = UDim.new(0, 3)
 		btnCorner.Parent = colorBtn
 
-		colorBtn.MouseEnter:Connect(function()
-			TweenService:Create(colorBtn, TweenInfo.new(0.15), {Size = UDim2.new(0, 22, 0, 16), Position = UDim2.new(1, -27, 0.5, -8)}):Play()
-		end)
-		colorBtn.MouseLeave:Connect(function()
-			TweenService:Create(colorBtn, TweenInfo.new(0.15), {Size = UDim2.new(0, 20, 0, 14), Position = UDim2.new(1, -26, 0.5, -7)}):Play()
-		end)
-
+		-- Modal fixo e estável (ZIndex alto, sem rolar junto com a página)
 		local modal = Instance.new("Frame")
 		modal.Size = UDim2.new(0, 150, 0, 130)
 		modal.Position = UDim2.new(1, -155, 1, 4)
@@ -1136,10 +1040,7 @@ function showMainPanel()
 		return colorBtn
 	end
 
-	-----------------------------------------------------------------
-	-- TOGGLE PADRÃO COM HOVER DINÂMICO
-	-----------------------------------------------------------------
-	local function addToggle(parent, name, callback, defaultState)
+	local function addEspToggleWithColor(parent, name, defaultColor, colorCallback, toggleCallback)
 		local toggleFrame = Instance.new("Frame")
 		toggleFrame.Size = UDim2.new(1, 0, 0, 26)
 		toggleFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
@@ -1150,12 +1051,236 @@ function showMainPanel()
 		corner.CornerRadius = UDim.new(0, 5)
 		corner.Parent = toggleFrame
 
-		toggleFrame.MouseEnter:Connect(function()
-			TweenService:Create(toggleFrame, TweenInfo.new(0.15), {BackgroundTransparency = 0.3}):Play()
+		local ledIndicator = Instance.new("Frame")
+		ledIndicator.Size = UDim2.new(0, 6, 0, 6)
+		ledIndicator.Position = UDim2.new(0, 8, 0.5, -3)
+		ledIndicator.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
+		ledIndicator.Parent = toggleFrame
+
+		local ledCorner = Instance.new("UICorner")
+		ledCorner.CornerRadius = UDim.new(1, 0)
+		ledCorner.Parent = ledIndicator
+
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(1, -85, 1, 0)
+		label.Position = UDim2.new(0, 20, 0, 0)
+		label.BackgroundTransparency = 1
+		label.Font = Enum.Font.GothamMedium
+		label.Text = name
+		label.TextColor3 = Color3.fromRGB(200, 200, 200)
+		label.TextSize = 11
+		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.Parent = toggleFrame
+
+		local toggleBtn = Instance.new("TextButton")
+		toggleBtn.Size = UDim2.new(0, 28, 0, 16)
+		toggleBtn.Position = UDim2.new(1, -34, 0.5, -8)
+		toggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+		toggleBtn.Text = ""
+		toggleBtn.Parent = toggleFrame
+
+		local tCorner = Instance.new("UICorner")
+		tCorner.CornerRadius = UDim.new(1, 0)
+		tCorner.Parent = toggleBtn
+
+		local circle = Instance.new("Frame")
+		circle.Size = UDim2.new(0, 12, 0, 12)
+		circle.Position = UDim2.new(0, 2, 0.5, -6)
+		circle.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+		circle.Parent = toggleBtn
+
+		local cCorner = Instance.new("UICorner")
+		cCorner.CornerRadius = UDim.new(1, 0)
+		cCorner.Parent = circle
+
+		local toggleStateRef = {isToggled = false, circle = circle, button = toggleBtn, led = ledIndicator}
+		table.insert(themeToggles, toggleStateRef)
+
+		local colorBtn = Instance.new("TextButton")
+		colorBtn.Size = UDim2.new(0, 18, 0, 14)
+		colorBtn.Position = UDim2.new(1, -58, 0.5, -7)
+		colorBtn.BackgroundColor3 = defaultColor
+		colorBtn.Text = ""
+		colorBtn.Parent = toggleFrame
+
+		local cBtnCorner = Instance.new("UICorner")
+		cBtnCorner.CornerRadius = UDim.new(0, 3)
+		cBtnCorner.Parent = colorBtn
+
+		local modal = Instance.new("Frame")
+		modal.Size = UDim2.new(0, 150, 0, 130)
+		modal.Position = UDim2.new(0, -130, 1, 4)
+		modal.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+		modal.BorderSizePixel = 0
+		modal.Visible = false
+		modal.ZIndex = 100
+		modal.Parent = colorBtn
+
+		local mCorner = Instance.new("UICorner")
+		mCorner.CornerRadius = UDim.new(0, 6)
+		mCorner.Parent = modal
+
+		local mStroke = Instance.new("UIStroke")
+		mStroke.Color = Color3.fromRGB(60, 60, 80)
+		mStroke.Parent = modal
+
+		local canvas = Instance.new("Frame")
+		canvas.Size = UDim2.new(0, 108, 0, 92)
+		canvas.Position = UDim2.new(0, 6, 0, 6)
+		canvas.BackgroundColor3 = Color3.fromHSV(defaultColor:ToHSV())
+		canvas.BorderSizePixel = 0
+		canvas.ZIndex = 101
+		canvas.Parent = modal
+
+		local cnCorner = Instance.new("UICorner")
+		cnCorner.CornerRadius = UDim.new(0, 4)
+		cnCorner.Parent = canvas
+
+		local whiteGradientFrame = Instance.new("Frame")
+		whiteGradientFrame.Size = UDim2.new(1, 0, 1, 0)
+		whiteGradientFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		whiteGradientFrame.BorderSizePixel = 0
+		whiteGradientFrame.ZIndex = 102
+		whiteGradientFrame.Parent = canvas
+
+		local wgCorner = Instance.new("UICorner")
+		wgCorner.CornerRadius = UDim.new(0, 4)
+		wgCorner.Parent = whiteGradientFrame
+
+		local wGradient = Instance.new("UIGradient")
+		wGradient.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1)})
+		wGradient.Parent = whiteGradientFrame
+
+		local blackGradientFrame = Instance.new("Frame")
+		blackGradientFrame.Size = UDim2.new(1, 0, 1, 0)
+		blackGradientFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		blackGradientFrame.BorderSizePixel = 0
+		blackGradientFrame.ZIndex = 103
+		blackGradientFrame.Parent = canvas
+
+		local bgCorner = Instance.new("UICorner")
+		bgCorner.CornerRadius = UDim.new(0, 4)
+		bgCorner.Parent = blackGradientFrame
+
+		local bGradient = Instance.new("UIGradient")
+		bGradient.Rotation = 90
+		bGradient.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0)})
+		bGradient.Parent = blackGradientFrame
+
+		local cur = Instance.new("Frame")
+		cur.Size = UDim2.new(0, 7, 0, 7)
+		cur.AnchorPoint = Vector2.new(0.5, 0.5)
+		cur.Position = UDim2.new(1, 0, 0, 0)
+		cur.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		cur.ZIndex = 104
+		cur.Parent = canvas
+
+		local curCorner = Instance.new("UICorner")
+		curCorner.CornerRadius = UDim.new(1, 0)
+		curCorner.Parent = cur
+
+		local hueBar = Instance.new("Frame")
+		hueBar.Size = UDim2.new(0, 14, 0, 92)
+		hueBar.Position = UDim2.new(0, 122, 0, 6)
+		hueBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		hueBar.BorderSizePixel = 0
+		hueBar.ZIndex = 101
+		hueBar.Parent = modal
+
+		local hCorner = Instance.new("UICorner")
+		hCorner.CornerRadius = UDim.new(0, 4)
+		hCorner.Parent = hueBar
+
+		local uifig = Instance.new("UIGradient")
+		uifig.Rotation = 90
+		uifig.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
+			ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 255, 0)),
+			ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 255, 0)),
+			ColorSequenceKeypoint.new(0.50, Color3.fromRGB(0, 255, 255)),
+			ColorSequenceKeypoint.new(0.67, Color3.fromRGB(0, 0, 255)),
+			ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 0, 255)),
+			ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 0, 0))
+		})
+		uifig.Parent = hueBar
+
+		local huePicker = Instance.new("Frame")
+		huePicker.Size = UDim2.new(1, 0, 0, 3)
+		huePicker.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		huePicker.ZIndex = 104
+		huePicker.Parent = hueBar
+
+		local currentH, currentS, currentV = defaultColor:ToHSV()
+
+		local function updateColor()
+			local color = Color3.fromHSV(currentH, currentS, currentV)
+			canvas.BackgroundColor3 = Color3.fromHSV(currentH, 1, 1)
+			colorBtn.BackgroundColor3 = color
+			colorCallback(color)
+		end
+
+		colorBtn.MouseButton1Click:Connect(function()
+			modal.Visible = not modal.Visible
 		end)
-		toggleFrame.MouseLeave:Connect(function()
-			TweenService:Create(toggleFrame, TweenInfo.new(0.15), {BackgroundTransparency = 0.5}):Play()
+
+		local draggingHue = false
+		hueBar.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingHue = true end
 		end)
+		UserInputService.InputEnded:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingHue = false end
+		end)
+		UserInputService.InputChanged:Connect(function(input)
+			if draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+				local y = math.clamp((input.Position.Y - hueBar.AbsolutePosition.Y) / hueBar.AbsoluteSize.Y, 0, 1)
+				huePicker.Position = UDim2.new(0, 0, y, -1)
+				currentH = y
+				updateColor()
+			end
+		end)
+
+		local draggingCanvas = false
+		canvas.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingCanvas = true end
+		end)
+		UserInputService.InputEnded:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingCanvas = false end
+		end)
+		UserInputService.InputChanged:Connect(function(input)
+			if draggingCanvas and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+				local x = math.clamp((input.Position.X - canvas.AbsolutePosition.X) / canvas.AbsoluteSize.X, 0, 1)
+				local y = math.clamp((input.Position.Y - canvas.AbsolutePosition.Y) / canvas.AbsoluteSize.Y, 0, 1)
+				cur.Position = UDim2.new(x, 0, y, 0)
+				currentS = x
+				currentV = 1 - y
+				updateColor()
+			end
+		end)
+
+		toggleBtn.MouseButton1Click:Connect(function()
+			toggleStateRef.isToggled = not toggleStateRef.isToggled
+			local targetPos = toggleStateRef.isToggled and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
+			local targetColor = toggleStateRef.isToggled and currentThemeColor or Color3.fromRGB(50, 50, 70)
+			local targetLedColor = toggleStateRef.isToggled and currentThemeColor or Color3.fromRGB(80, 80, 100)
+			
+			TweenService:Create(circle, TweenInfo.new(0.18), {Position = targetPos}):Play()
+			TweenService:Create(toggleBtn, TweenInfo.new(0.18), {BackgroundColor3 = targetColor}):Play()
+			TweenService:Create(ledIndicator, TweenInfo.new(0.18), {BackgroundColor3 = targetLedColor}):Play()
+			
+			toggleCallback(toggleStateRef.isToggled)
+		end)
+	end
+
+	local function addToggle(parent, name, callback, defaultState)
+		local toggleFrame = Instance.new("Frame")
+		toggleFrame.Size = UDim2.new(1, 0, 0, 26)
+		toggleFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+		toggleFrame.BackgroundTransparency = 0.5
+		toggleFrame.Parent = parent
+
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 5)
+		corner.Parent = toggleFrame
 
 		local ledIndicator = Instance.new("Frame")
 		ledIndicator.Size = UDim2.new(0, 6, 0, 6)
@@ -1216,9 +1341,6 @@ function showMainPanel()
 		end)
 	end
 
-	-----------------------------------------------------------------
-	-- SLIDER COM HOVER
-	-----------------------------------------------------------------
 	local function addSlider(parent, name, min, max, default, callback)
 		local sliderFrame = Instance.new("Frame")
 		sliderFrame.Size = UDim2.new(1, 0, 0, 38)
@@ -1229,13 +1351,6 @@ function showMainPanel()
 		local corner = Instance.new("UICorner")
 		corner.CornerRadius = UDim.new(0, 5)
 		corner.Parent = sliderFrame
-
-		sliderFrame.MouseEnter:Connect(function()
-			TweenService:Create(sliderFrame, TweenInfo.new(0.15), {BackgroundTransparency = 0.3}):Play()
-		end)
-		sliderFrame.MouseLeave:Connect(function()
-			TweenService:Create(sliderFrame, TweenInfo.new(0.15), {BackgroundTransparency = 0.5}):Play()
-		end)
 
 		local label = Instance.new("TextLabel")
 		label.Size = UDim2.new(1, -16, 0, 16)
@@ -1289,30 +1404,168 @@ function showMainPanel()
 	end
 
 	-----------------------------------------------------------------
-	-- ABAS DO HUB (Exemplo organizado com Cards e Seções)
+	-- ABAS DO HUB (Player, Aim Lock, Visual, Farming, Fruta, Config)
 	-----------------------------------------------------------------
 	local playerPage = pages["Player"]
 	local secMovimento = createSection(playerPage, "Movimento", "🏃‍♂️")
-	
-	-- Exemplo de Agrupamento em Cards dentro da seção
-	local cardWalk = createCard(secMovimento, "Configurações de Velocidade")
-	addToggle(cardWalk, "Ativar WalkSpeed", function(state) _G_WalkSpeedEnabled = state end, false)
-	addSlider(cardWalk, "Velocidade", 16, 250, 16, function(val) _G_WalkSpeedValue = val end)
+	addToggle(secMovimento, "Ativar WalkSpeed", function(state) _G_WalkSpeedEnabled = state end, false)
+	addSlider(secMovimento, "Velocidade", 16, 250, 16, function(val) _G_WalkSpeedValue = val end)
+	addToggle(secMovimento, "Ativar JumpPower", function(state) _G_JumpPowerEnabled = state end, false)
+	addSlider(secMovimento, "Força do Pulo", 50, 300, 50, function(val) _G_JumpPowerValue = val end)
 
-	local cardJump = createCard(secMovimento, "Configurações de Pulo")
-	addToggle(cardJump, "Ativar JumpPower", function(state) _G_JumpPowerEnabled = state end, false)
-	addSlider(cardJump, "Força do Pulo", 50, 300, 50, function(val) _G_JumpPowerValue = val end)
+	local secFisico = createSection(playerPage, "Habilidades Físicas", "⚙️")
+	addToggle(secFisico, "Noclip (Atravessar Paredes)", function(state) _G_NoclipEnabled = state end, false)
+	addToggle(secFisico, "Energia Infinita", function(state) _G_EnergyEnabled = state end, false)
 
-	local secConfig = createSection(pages["Config"], "Tema do Hub", "⚙️")
+	local secTravel = createSection(playerPage, "Viajar para Ilhas", "🏝️")
+	local function refreshIslands()
+		local oldName = selectedIsland and selectedIsland.Name
+		islands = {}
+		for _, object in ipairs(map:GetChildren()) do
+			if object:IsA("Model") then table.insert(islands, object) end
+		end
+		table.sort(islands, function(a, b) return a.Name:lower() < b.Name:lower() end)
+		islandIndex = 1
+		if oldName then
+			for i, island in ipairs(islands) do
+				if island.Name == oldName then islandIndex = i break end
+			end
+		end
+		selectedIsland = islands[islandIndex]
+	end
+	refreshIslands()
+
+	local dropdownFrame = Instance.new("Frame")
+	dropdownFrame.Size = UDim2.new(1, 0, 0, 26)
+	dropdownFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+	dropdownFrame.BackgroundTransparency = 0.5
+	dropdownFrame.Parent = secTravel
+
+	local dfCorner = Instance.new("UICorner")
+	dfCorner.CornerRadius = UDim.new(0, 5)
+	dfCorner.Parent = dropdownFrame
+
+	local dropLabel = Instance.new("TextLabel")
+	dropLabel.Size = UDim2.new(1, -30, 1, 0)
+	dropLabel.Position = UDim2.new(0, 8, 0, 0)
+	dropLabel.BackgroundTransparency = 1
+	dropLabel.Font = Enum.Font.GothamMedium
+	dropLabel.Text = selectedIsland and selectedIsland.Name or "Selecione a Ilha"
+	dropLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+	dropLabel.TextSize = 11
+	dropLabel.TextXAlignment = Enum.TextXAlignment.Left
+	dropLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	dropLabel.Parent = dropdownFrame
+
+	local dropBtn = Instance.new("TextButton")
+	dropBtn.Size = UDim2.new(0, 24, 0, 24)
+	dropBtn.Position = UDim2.new(1, -26, 0.5, -12)
+	dropBtn.BackgroundTransparency = 1
+	dropBtn.Font = Enum.Font.GothamBold
+	dropBtn.Text = "▼"
+	dropBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+	dropBtn.TextSize = 10
+	dropBtn.Parent = dropdownFrame
+
+	local dropList = Instance.new("ScrollingFrame")
+	dropList.Size = UDim2.new(1, 0, 0, 110)
+	dropList.Position = UDim2.new(0, 0, 1, 4)
+	dropList.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+	dropList.BorderSizePixel = 0
+	dropList.Visible = false
+	dropList.ZIndex = 60
+	dropList.ScrollBarThickness = 3
+	dropList.Parent = dropdownFrame
+
+	local dlCorner = Instance.new("UICorner")
+	dlCorner.CornerRadius = UDim.new(0, 5)
+	dlCorner.Parent = dropList
+
+	local dlLayout = Instance.new("UIListLayout")
+	dlLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	dlLayout.Padding = UDim.new(0, 2)
+	dlLayout.Parent = dropList
+
+	local function updateDropdownList()
+		for _, child in ipairs(dropList:GetChildren()) do
+			if child:IsA("TextButton") then child:Destroy() end
+		end
+		refreshIslands()
+		for _, island in ipairs(islands) do
+			local opt = Instance.new("TextButton")
+			opt.Size = UDim2.new(1, 0, 0, 22)
+			opt.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+			opt.BackgroundTransparency = 0.5
+			opt.Font = Enum.Font.GothamMedium
+			opt.Text = "  " .. island.Name
+			opt.TextColor3 = Color3.fromRGB(220, 220, 220)
+			opt.TextSize = 10
+			opt.TextXAlignment = Enum.TextXAlignment.Left
+			opt.ZIndex = 61
+			opt.Parent = dropList
+
+			opt.MouseButton1Click:Connect(function()
+				selectedIsland = island
+				dropLabel.Text = island.Name
+				dropList.Visible = false
+			end)
+		end
+		dropList.CanvasSize = UDim2.new(0, 0, 0, #islands * 24)
+	end
+
+	dropBtn.MouseButton1Click:Connect(function()
+		dropList.Visible = not dropList.Visible
+		if dropList.Visible then updateDropdownList() end
+	end)
+
+	dropLabel.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dropList.Visible = not dropList.Visible
+			if dropList.Visible then updateDropdownList() end
+		end
+	end)
+
+	local visualPage = pages["Visual"]
+	local secEspPlayers = createSection(visualPage, "ESP Players", "👁️")
+	addToggle(secEspPlayers, "Ativar ESP Players", function(state) _G_EspMaster = state end, false)
+	addEspToggleWithColor(secEspPlayers, "Box ESP", _G_ColorBox, function(c) _G_ColorBox = c end, function(s) _G_EspBox = s end)
+	addEspToggleWithColor(secEspPlayers, "Chams (Highlight)", _G_ColorChams, function(c) _G_ColorChams = c end, function(s) _G_EspChams = s end)
+	addEspToggleWithColor(secEspPlayers, "Health Bar", _G_ColorHealth, function(c) _G_ColorHealth = c end, function(s) _G_EspHealth = s end)
+	addEspToggleWithColor(secEspPlayers, "Name ESP", _G_ColorName, function(c) _G_ColorName = c end, function(s) _G_EspName = s end)
+	addEspToggleWithColor(secEspPlayers, "Distance ESP", _G_ColorDistance, function(c) _G_ColorDistance = c end, function(s) _G_EspDistance = s end)
+	addEspToggleWithColor(secEspPlayers, "Head Dot ESP", _G_ColorHead, function(c) _G_ColorHead = c end, function(s) _G_EspHead = s end)
+
+	local secEspEnemies = createSection(visualPage, "ESP Inimigos (NPC)", "👾")
+	addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state end, false)
+	addEspToggleWithColor(secEspEnemies, "ESP Chams", _G_ColorEnemyChams, function(c) _G_ColorEnemyChams = c end, function(s) _G_EnemyEspChams = s end)
+	addEspToggleWithColor(secEspEnemies, "ESP Nome", _G_ColorEnemyName, function(c) _G_ColorEnemyName = c end, function(s) _G_EnemyEspName = s end)
+	addEspToggleWithColor(secEspEnemies, "ESP Distância", _G_ColorEnemyDist, function(c) _G_ColorEnemyDist = c end, function(s) _G_EnemyEspDistance = s end)
+
+	local aimLockPage = pages["Aim Lock"]
+	local secCombat = createSection(aimLockPage, "Sistema Lock-On", "⚔️")
+	addToggle(secCombat, "Ativar Lock-On", function(state) isLockOnEnabled = state end, false)
+	addToggle(secCombat, "Lock Players", function(state) _G_LockOnPlayers = state end, true)
+	addToggle(secCombat, "Ativar Lock inimigos (NPC)", function(state) _G_LockOnEnemies = state end, false)
+
+	local farmingPage = pages["Farming"]
+	local secFarm = createSection(farmingPage, "Automação", "⚡")
+	addToggle(secFarm, "Auto Collect Chest", function(state) end, false)
+
+	local frutaPage = pages["Fruta"]
+	local secFrutaEsp = createSection(frutaPage, "Fruit ESP", "👁️")
+	addToggle(secFrutaEsp, "Ativar Fruit ESP", function(state) end, false)
+	addEspToggleWithColor(secFrutaEsp, "ESP Chams", _G_ColorFruitChams, function(c) _G_ColorFruitChams = c end, function(s) end)
+	addEspToggleWithColor(secFrutaEsp, "ESP Nome", _G_ColorFruitName, function(c) _G_ColorFruitName = c end, function(s) end)
+
+	local configPage = pages["Config"]
+	local secConfig = createSection(configPage, "Tema do Hub", "⚙️")
 	addColorPicker(secConfig, "Cor Principal do Hub", currentThemeColor, function(color)
 		updateGlobalTheme(color)
-		saveConfig()
 	end)
-	addSlider(secConfig, "Transparência do Painel", 0, 80, math.floor(panelTransparencyValue * 100), function(val)
+	addSlider(secConfig, "Transparência do Painel", 0, 80, 20, function(val)
 		panelTransparencyValue = val / 100
 		mainPanel.BackgroundTransparency = panelTransparencyValue
 		floatingBtn.BackgroundTransparency = panelTransparencyValue
-		saveConfig()
 	end)
 
 	TweenService:Create(mainPanel, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
