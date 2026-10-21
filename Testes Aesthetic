@@ -8,6 +8,7 @@ local Lighting = game:GetService("Lighting")
 local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 local playerGui = player:WaitForChild("PlayerGui")
+local map = workspace:WaitForChild("Map")
 
 -- Remove instâncias antigas
 if playerGui:FindFirstChild("AetherisHub") then
@@ -91,6 +92,17 @@ local _G_JumpPowerValue = 50
 local _G_NoclipEnabled = false
 local _G_FullbrightEnabled = false
 local _G_EnergyEnabled = false
+
+-- Estados de Viagem (Travel Islands)
+local travelling = false
+local selectedIsland = nil
+local islands = {}
+local islandIndex = 1
+local travelSpeed = 80
+local travelHeight = 12
+local travelArrivalDist = 8
+local moveConnection, noclipConnection, activeVelocity, activeGyro
+local originalCollision = {}
 
 local isLockOnEnabled = false
 local lockOnMode = "Nearest"
@@ -1420,6 +1432,236 @@ function showMainPanel()
 	addToggle(secFisico, "Energia Infinita", function(state) _G_EnergyEnabled = state end, false)
 
 	-----------------------------------------------------------------
+	-- SEÇÃO DE VIAGEM PARA ILHAS (DENTRO DA ABA PLAYER)
+	-----------------------------------------------------------------
+	local secTravel = createSection(playerPage, "Viajar para Ilhas", "🏝️")
+
+	-- Lógica de Ilhas
+	local function refreshIslands()
+		local oldName = selectedIsland and selectedIsland.Name
+		islands = {}
+
+		for _, object in ipairs(map:GetChildren()) do
+			if object:IsA("Model") then
+				table.insert(islands, object)
+			end
+		end
+
+		table.sort(islands, function(a, b)
+			return a.Name:lower() < b.Name:lower()
+		end)
+
+		islandIndex = 1
+		if oldName then
+			for i, island in ipairs(islands) do
+				if island.Name == oldName then
+					islandIndex = i
+					break
+				end
+			end
+		end
+
+		selectedIsland = islands[islandIndex]
+	end
+	refreshIslands()
+
+	-- Dropdown personalizado de Ilhas
+	local dropdownFrame = Instance.new("Frame")
+	dropdownFrame.Size = UDim2.new(1, 0, 0, 26)
+	dropdownFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+	dropdownFrame.BackgroundTransparency = 0.5
+	dropdownFrame.Parent = secTravel
+
+	local dfCorner = Instance.new("UICorner")
+	dfCorner.CornerRadius = UDim.new(0, 5)
+	dfCorner.Parent = dropdownFrame
+
+	local dropLabel = Instance.new("TextLabel")
+	dropLabel.Size = UDim2.new(1, -30, 1, 0)
+	dropLabel.Position = UDim2.new(0, 8, 0, 0)
+	dropLabel.BackgroundTransparency = 1
+	dropLabel.Font = Enum.Font.GothamMedium
+	dropLabel.Text = selectedIsland and selectedIsland.Name or "Selecione a Ilha"
+	dropLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+	dropLabel.TextSize = 11
+	dropLabel.TextXAlignment = Enum.TextXAlignment.Left
+	dropLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	dropLabel.Parent = dropdownFrame
+
+	local dropBtn = Instance.new("TextButton")
+	dropBtn.Size = UDim2.new(0, 24, 0, 24)
+	dropBtn.Position = UDim2.new(1, -26, 0.5, -12)
+	dropBtn.BackgroundTransparency = 1
+	dropBtn.Font = Enum.Font.GothamBold
+	dropBtn.Text = "▼"
+	dropBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+	dropBtn.TextSize = 10
+	dropBtn.Parent = dropdownFrame
+
+	-- Lista suspensa do Dropdown
+	local dropList = Instance.new("ScrollingFrame")
+	dropList.Size = UDim2.new(1, 0, 0, 110)
+	dropList.Position = UDim2.new(0, 0, 1, 4)
+	dropList.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+	dropList.BorderSizePixel = 0
+	dropList.Visible = false
+	dropList.ZIndex = 60
+	dropList.ScrollBarThickness = 3
+	dropList.Parent = dropdownFrame
+
+	local dlCorner = Instance.new("UICorner")
+	dlCorner.CornerRadius = UDim.new(0, 5)
+	dlCorner.Parent = dropList
+
+	local dlLayout = Instance.new("UIListLayout")
+	dlLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	dlLayout.Padding = UDim.new(0, 2)
+	dlLayout.Parent = dropList
+
+	local function updateDropdownList()
+		for _, child in ipairs(dropList:GetChildren()) do
+			if child:IsA("TextButton") then child:Destroy() end
+		end
+		refreshIslands()
+		for _, island in ipairs(islands) do
+			local opt = Instance.new("TextButton")
+			opt.Size = UDim2.new(1, 0, 0, 22)
+			opt.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+			opt.BackgroundTransparency = 0.5
+			opt.Font = Enum.Font.GothamMedium
+			opt.Text = "  " .. island.Name
+			opt.TextColor3 = Color3.fromRGB(220, 220, 220)
+			opt.TextSize = 10
+			opt.TextXAlignment = Enum.TextXAlignment.Left
+			opt.ZIndex = 61
+			opt.Parent = dropList
+
+			opt.MouseButton1Click:Connect(function()
+				selectedIsland = island
+				dropLabel.Text = island.Name
+				dropList.Visible = false
+			end)
+		end
+		dropList.CanvasSize = UDim2.new(0, 0, 0, #islands * 24)
+	end
+
+	dropBtn.MouseButton1Click:Connect(function()
+		dropList.Visible = not dropList.Visible
+		if dropList.Visible then updateDropdownList() end
+	end)
+
+	dropLabel.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dropList.Visible = not dropList.Visible
+			if dropList.Visible then updateDropdownList() end
+		end
+	end)
+
+	-- Funções de Noclip e Viagem
+	local function disableTravelNoclip()
+		if noclipConnection then
+			noclipConnection:Disconnect()
+			noclipConnection = nil
+		end
+		for part, originalValue in pairs(originalCollision) do
+			if part and part.Parent then
+				part.CanCollide = originalValue
+			end
+		end
+		table.clear(originalCollision)
+	end
+
+	local function enableTravelNoclip(character)
+		disableTravelNoclip()
+		local function processPart(part)
+			if not part:IsA("BasePart") then return end
+			if originalCollision[part] == nil then
+				originalCollision[part] = part.CanCollide
+			end
+			part.CanCollide = false
+		end
+		for _, part in ipairs(character:GetDescendants()) do processPart(part) end
+		noclipConnection = RunService.Stepped:Connect(function()
+			if not travelling or not character.Parent then return end
+			for _, part in ipairs(character:GetDescendants()) do processPart(part) end
+		end)
+	end
+
+	local function stopTravel()
+		travelling = false
+		if moveConnection then moveConnection:Disconnect(); moveConnection = nil end
+		if activeVelocity then activeVelocity:Destroy(); activeVelocity = nil end
+		if activeGyro then activeGyro:Destroy(); activeGyro = nil end
+		disableTravelNoclip()
+	end
+
+	local function startTravel()
+		if not selectedIsland or not selectedIsland.Parent then
+			refreshIslands()
+		end
+		if not selectedIsland then return end
+
+		local character = player.Character
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		local root = character and character:FindFirstChild("HumanoidRootPart")
+		if not humanoid or not root then return end
+
+		travelling = true
+		enableTravelNoclip(character)
+
+		activeVelocity = Instance.new("BodyVelocity")
+		activeVelocity.Name = "TravelVelocity"
+		activeVelocity.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+		activeVelocity.P = 15000
+		activeVelocity.Velocity = Vector3.zero
+		activeVelocity.Parent = root
+
+		activeGyro = Instance.new("BodyGyro")
+		activeGyro.Name = "TravelGyro"
+		activeGyro.MaxTorque = Vector3.new(1e6, 1e6, 1e6)
+		activeGyro.P = 10000
+		activeGyro.CFrame = root.CFrame
+		activeGyro.Parent = root
+
+		moveConnection = RunService.Heartbeat:Connect(function()
+			if not travelling then return end
+			if not character.Parent or not root.Parent or not selectedIsland.Parent then
+				stopTravel()
+				return
+			end
+
+			local destination = selectedIsland:GetPivot().Position + Vector3.new(0, travelHeight, 0)
+			local difference = destination - root.Position
+			local distance = difference.Magnitude
+
+			if distance <= travelArrivalDist then
+				stopTravel()
+				return
+			end
+
+			activeVelocity.Velocity = difference.Unit * travelSpeed
+			local horizontal = Vector3.new(difference.X, 0, difference.Z)
+			if horizontal.Magnitude > 0.1 then
+				activeGyro.CFrame = CFrame.lookAt(root.Position, root.Position + horizontal)
+			end
+		end)
+	end
+
+	-- Toggle Viajar na aba Player
+	addToggle(secTravel, "Viajar", function(state)
+		if state then
+			startTravel()
+		else
+			stopTravel()
+		end
+	end, false)
+
+	-- Slider de Velocidade de Viagem
+	addSlider(secTravel, "Velocidade de Viagem", 20, 300, 80, function(val)
+		travelSpeed = val
+	end)
+
+	-----------------------------------------------------------------
 	-- ABA VISUAL
 	-----------------------------------------------------------------
 	local visualPage = pages["Visual"]
@@ -1690,7 +1932,7 @@ function showMainPanel()
 	addEspToggleWithColor(secEspPlayers, "Distance ESP", _G_ColorDistance, function(c) _G_ColorDistance = c end, function(s) _G_EspDistance = s end)
 	addEspToggleWithColor(secEspPlayers, "Head Dot ESP", _G_ColorHead, function(c) _G_ColorHead = c end, function(s) _G_EspHead = s end)
 
-	-- Seção de Inimigos (NPC) na aba Visual (COM COLOR PICKER COMPLETO)
+	-- Seção de Inimigos (NPC) na aba Visual
 	local secEspEnemies = createSection(visualPage, "ESP Inimigos (NPC)", "👾")
 	addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state end, false)
 	addColorPicker(secEspEnemies, "Cor dos Inimigos", _G_ColorEnemy, function(c) _G_ColorEnemy = c end)
@@ -1886,11 +2128,10 @@ function showMainPanel()
 	local chestTargetType = nil
 	local visitedChests = {}
 	local visitedIslands = {}
-	local originalCollision = {}
+	local originalCollisionChest = {}
 
-	local moveConnection, noclipConnection, sitConnection, healthConnection
+	local moveConnectionChest, noclipConnectionChest, sitConnection, healthConnection
 	local lastHealth = nil
-	local lastDamageTime = 0
 
 	local function getCharacterParts()
 		local character = player.Character
@@ -1903,35 +2144,34 @@ function showMainPanel()
 	end
 
 	local function setOmniNoclip(enabled)
-		if noclipConnection then
-			noclipConnection:Disconnect()
-			noclipConnection = nil
+		if noclipConnectionChest then
+			noclipConnectionChest:Disconnect()
+			noclipConnectionChest = nil
 		end
 
 		if enabled then
-			table.clear(originalCollision)
-			noclipConnection = RunService.Stepped:Connect(function()
+			table.clear(originalCollisionChest)
+			noclipConnectionChest = RunService.Stepped:Connect(function()
 				if not chestActive then return end
 				local currentCharacter = player.Character
 				if not currentCharacter then return end
 
 				for _, part in ipairs(currentCharacter:GetDescendants()) do
 					if part:IsA("BasePart") then
-						if originalCollision[part] == nil then
-							originalCollision[part] = part.CanCollide
+						if originalCollisionChest[part] == nil then
+							originalCollisionChest[part] = part.CanCollide
 						end
 						part.CanCollide = false
-						part.AssemblyLinearVelocity = part.AssemblyLinearVelocity
 					end
 				end
 			end)
 		else
-			for part, originalValue in pairs(originalCollision) do
+			for part, originalValue in pairs(originalCollisionChest) do
 				if part and part.Parent then
 					part.CanCollide = originalValue
 				end
 			end
-			table.clear(originalCollision)
+			table.clear(originalCollisionChest)
 		end
 	end
 
@@ -1958,18 +2198,7 @@ function showMainPanel()
 		local candidates = {}
 		for _, object in ipairs(chestFolder:GetDescendants()) do
 			if object:IsA("Model") or object:IsA("BasePart") then
-				local ancestor = object.Parent
-				local nested = false
-				while ancestor and ancestor ~= chestFolder do
-					if ancestor:IsA("Model") or ancestor:IsA("BasePart") then
-						nested = true
-						break
-					end
-					ancestor = ancestor.Parent
-				end
-				if not nested and getPosition(object) then
-					table.insert(candidates, object)
-				end
+				table.insert(candidates, object)
 			end
 		end
 		return candidates
@@ -1979,18 +2208,7 @@ function showMainPanel()
 		local candidates = {}
 		for _, object in ipairs(mapFolder:GetDescendants()) do
 			if object:IsA("Model") then
-				local ancestor = object.Parent
-				local nestedModel = false
-				while ancestor and ancestor ~= mapFolder do
-					if ancestor:IsA("Model") then
-						nestedModel = true
-						break
-					end
-					ancestor = ancestor.Parent
-				end
-				if not nestedModel and getPosition(object) then
-					table.insert(candidates, object)
-				end
+				table.insert(candidates, object)
 			end
 		end
 		return candidates
@@ -2018,7 +2236,7 @@ function showMainPanel()
 		chestTarget = nil
 		chestTargetType = nil
 
-		if moveConnection then moveConnection:Disconnect(); moveConnection = nil end
+		if moveConnectionChest then moveConnectionChest:Disconnect(); moveConnectionChest = nil end
 		if sitConnection then sitConnection:Disconnect(); sitConnection = nil end
 		if healthConnection then healthConnection:Disconnect(); healthConnection = nil end
 
@@ -2045,7 +2263,6 @@ function showMainPanel()
 		chestTarget = nil
 		chestTargetType = nil
 		lastHealth = humanoid.Health
-		lastDamageTime = 0
 
 		table.clear(visitedChests)
 		table.clear(visitedIslands)
@@ -2053,9 +2270,6 @@ function showMainPanel()
 
 		if healthConnection then healthConnection:Disconnect() end
 		healthConnection = humanoid.HealthChanged:Connect(function(newHealth)
-			if lastHealth and newHealth < lastHealth then
-				lastDamageTime = os.clock()
-			end
 			lastHealth = newHealth
 		end)
 
@@ -2063,7 +2277,7 @@ function showMainPanel()
 			if chestActive then jumpIfSeated() end
 		end)
 
-		moveConnection = RunService.Heartbeat:Connect(function()
+		moveConnectionChest = RunService.Heartbeat:Connect(function()
 			if not chestActive then return end
 
 			local _, hum, hrp = getCharacterParts()
@@ -2115,9 +2329,7 @@ function showMainPanel()
 
 			if chestTargetType == "Island" then
 				local horizontalOffset = Vector3.new(position.X - hrp.Position.X, 0, position.Z - hrp.Position.Z)
-				local recentlyDamaged = (os.clock() - lastDamageTime < 1)
-
-				if horizontalOffset.Magnitude < ISLAND_ARRIVAL_DISTANCE or recentlyDamaged then
+				if horizontalOffset.Magnitude < ISLAND_ARRIVAL_DISTANCE then
 					visitedIslands[chestTarget] = true
 					chestTarget = nil
 					chestTargetType = nil
@@ -2156,7 +2368,7 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- ABA FRUTA (COM COLOR PICKER COMPLETO PARA A COR DA FRUTA)
+	-- ABA FRUTA
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
 	local secFrutaAction = createSection(frutaPage, "Automação", "⚡")
@@ -2333,24 +2545,6 @@ function showMainPanel()
 	local handled = setmetatable({}, {__mode = "k"})
 	local fruitActive = false
 	local fruitConn = nil
-
-	local function rebuildFruitCache()
-		table.clear(fruitCache)
-		local stack = { workspace }
-		local idx = 1
-		while idx <= #stack do
-			local current = stack[idx]
-			idx += 1
-			for _, child in ipairs(current:GetChildren()) do
-				if isFruit(child) then
-					table.insert(fruitCache, child)
-				elseif child:IsA("Model") or child:IsA("Folder") then
-					table.insert(stack, child)
-				end
-			end
-		end
-	end
-	task.spawn(rebuildFruitCache)
 
 	local function isInsideCharacter(tool)
 		local parent = tool.Parent
@@ -2750,7 +2944,7 @@ task.spawn(function()
 end)
 
 -----------------------------------------------------------------
--- RENDER LOOP (ESP PLAYERS, FOV, LOCK-ON E MOVIMENTOS CORRIGIDOS)
+-- RENDER LOOP (ESP PLAYERS, FOV, LOCK-ON E MOVIMENTOS)
 -----------------------------------------------------------------
 local espDrawings = {}
 
@@ -2789,7 +2983,6 @@ local function getAdvancedTarget()
 	local myPos = myChar.HumanoidRootPart.Position
 	local screenCenter = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
 
-	-- 1. Checa Jogadores (Se Lock Players estiver ativado)
 	if _G_LockOnPlayers then
 		for _, p in ipairs(Players:GetPlayers()) do
 			if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Head") then
@@ -2805,18 +2998,9 @@ local function getAdvancedTarget()
 							
 							if not _G_FovVisible or screenDist <= _G_FovRadius then
 								local score = dist
-
-								if _G_FilterClosest then
-									score = dist
-								end
-
-								if _G_FilterLowestHP then
-									score = hum.Health
-								end
-
-								if _G_FilterCrosshair then
-									score = screenDist
-								end
+								if _G_FilterClosest then score = dist end
+								if _G_FilterLowestHP then score = hum.Health end
+								if _G_FilterCrosshair then score = screenDist end
 
 								if score < bestScore then
 									bestScore = score
@@ -2830,7 +3014,6 @@ local function getAdvancedTarget()
 		end
 	end
 
-	-- 2. Checa NPCs Inimigos (Workspace.Enemies) se o toggle estiver ligado
 	if _G_LockOnEnemies and ENEMIES then
 		for _, enemyModel in ipairs(ENEMIES:GetChildren()) do
 			if enemyModel:IsA("Model") then
@@ -2846,18 +3029,9 @@ local function getAdvancedTarget()
 
 							if not _G_FovVisible or screenDist <= _G_FovRadius then
 								local score = dist
-
-								if _G_FilterClosest then
-									score = dist
-								end
-
-								if _G_FilterLowestHP then
-									score = hum.Health
-								end
-
-								if _G_FilterCrosshair then
-									score = screenDist
-								end
+								if _G_FilterClosest then score = dist end
+								if _G_FilterLowestHP then score = hum.Health end
+								if _G_FilterCrosshair then score = screenDist end
 
 								if score < bestScore then
 									bestScore = score
@@ -2926,25 +3100,16 @@ RunService.RenderStepped:Connect(function()
 	end
 
 	if _G_EnergyEnabled and char then
-		if char:GetAttribute("Energy") then
-			char:SetAttribute("Energy", 999999)
-		end
-		
-		if char:GetAttribute("Stamina") then
-			char:SetAttribute("Stamina", 999999)
-		end
+		if char:GetAttribute("Energy") then char:SetAttribute("Energy", 999999) end
+		if char:GetAttribute("Stamina") then char:SetAttribute("Stamina", 999999) end
 
 		local energyObj = char:FindFirstChild("Energy") or (player:FindFirstChild("Data") and player.Data:FindFirstChild("Energy"))
-		if energyObj and energyObj:IsA("ValueBase") then
-			energyObj.Value = 999999
-		end
+		if energyObj and energyObj:IsA("ValueBase") then energyObj.Value = 999999 end
 		
 		local stats = player:FindFirstChild("Stats")
 		if stats then
 			local statEnergy = stats:FindFirstChild("Energy") or stats:FindFirstChild("Stamina")
-			if statEnergy and statEnergy:IsA("ValueBase") then
-				statEnergy.Value = 999999
-			end
+			if statEnergy and statEnergy:IsA("ValueBase") then statEnergy.Value = 999999 end
 		end
 	end
 
@@ -2959,9 +3124,7 @@ RunService.RenderStepped:Connect(function()
 			fovCircleDrawing.Filled = false
 		end)
 	elseif fovCircleDrawing then
-		pcall(function()
-			fovCircleDrawing.Visible = false
-		end)
+		pcall(function() fovCircleDrawing.Visible = false end)
 	end
 
 	if isLockOnEnabled then
@@ -3130,7 +3293,7 @@ RunService.RenderStepped:Connect(function()
 		end
 	end
 
-	-- Render Loop para Enemy ESP (NPC) com cor customizável
+	-- Render Loop para Enemy ESP (NPC)
 	if _G_EnemyEspMaster then
 		local myRoot = char and char:FindFirstChild("HumanoidRootPart")
 		if myRoot then
