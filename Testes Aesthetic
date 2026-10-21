@@ -154,7 +154,15 @@ local _G_ColorHealth = Color3.fromRGB(0, 255, 128)
 local _G_ColorName = Color3.fromRGB(255, 255, 255)
 local _G_ColorDistance = Color3.fromRGB(200, 200, 255)
 local _G_ColorHead = Color3.fromRGB(255, 100, 100)
-local _G_ColorEnemy = Color3.fromRGB(255, 65, 75)
+
+-- Cores Individuais para Inimigos e Frutas
+local _G_ColorEnemyChams = Color3.fromRGB(255, 65, 75)
+local _G_ColorEnemyName = Color3.fromRGB(255, 255, 255)
+local _G_ColorEnemyDist = Color3.fromRGB(200, 200, 255)
+
+local _G_ColorFruitChams = Color3.fromRGB(170, 90, 255)
+local _G_ColorFruitName = Color3.fromRGB(255, 255, 255)
+local _G_ColorFruitDist = Color3.fromRGB(200, 200, 255)
 
 -- Variável da Keybind de Esconder Painel
 local hideKeybindEnabled = false
@@ -1436,7 +1444,6 @@ function showMainPanel()
 	-----------------------------------------------------------------
 	local secTravel = createSection(playerPage, "Viajar para Ilhas", "🏝️")
 
-	-- Lógica de Ilhas
 	local function refreshIslands()
 		local oldName = selectedIsland and selectedIsland.Name
 		islands = {}
@@ -1465,7 +1472,6 @@ function showMainPanel()
 	end
 	refreshIslands()
 
-	-- Dropdown personalizado de Ilhas
 	local dropdownFrame = Instance.new("Frame")
 	dropdownFrame.Size = UDim2.new(1, 0, 0, 26)
 	dropdownFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
@@ -1498,7 +1504,6 @@ function showMainPanel()
 	dropBtn.TextSize = 10
 	dropBtn.Parent = dropdownFrame
 
-	-- Lista suspensa do Dropdown
 	local dropList = Instance.new("ScrollingFrame")
 	dropList.Size = UDim2.new(1, 0, 0, 110)
 	dropList.Position = UDim2.new(0, 0, 1, 4)
@@ -1557,7 +1562,6 @@ function showMainPanel()
 		end
 	end)
 
-	-- Funções de Noclip e Viagem
 	local function disableTravelNoclip()
 		if noclipConnection then
 			noclipConnection:Disconnect()
@@ -1647,7 +1651,6 @@ function showMainPanel()
 		end)
 	end
 
-	-- Toggle Viajar na aba Player
 	addToggle(secTravel, "Viajar", function(state)
 		if state then
 			startTravel()
@@ -1656,19 +1659,18 @@ function showMainPanel()
 		end
 	end, false)
 
-	-- Slider de Velocidade de Viagem
 	addSlider(secTravel, "Velocidade de Viagem", 20, 300, 80, function(val)
 		travelSpeed = val
 	end)
 
 	-----------------------------------------------------------------
-	-- ABA VISUAL
-	-----------------------------------------------------------------
-	local visualPage = pages["Visual"]
-	local secEspPlayers = createSection(visualPage, "ESP Players", "👁️")
-	addToggle(secEspPlayers, "Ativar ESP Players", function(state) _G_EspMaster = state end, false)
+    -- ABA VISUAL
+    -----------------------------------------------------------------
+    local visualPage = pages["Visual"]
+    local secEspPlayers = createSection(visualPage, "ESP Players", "👁️")
+    addToggle(secEspPlayers, "Ativar ESP Players", function(state) _G_EspMaster = state end, false)
 
-	addEspToggleWithColor(secEspPlayers, "Box ESP", _G_ColorBox, function(c) _G_ColorBox = c end, function(s) _G_EspBox = s end)
+    addEspToggleWithColor(secEspPlayers, "Box ESP", _G_ColorBox, function(c) _G_ColorBox = c end, function(s) _G_EspBox = s end)
 	
 	-- Tracers / Line ESP com botão retangular arredondado à esquerda do color picker
 	local tracerToggleFrame = Instance.new("Frame")
@@ -1932,21 +1934,26 @@ function showMainPanel()
 	addEspToggleWithColor(secEspPlayers, "Distance ESP", _G_ColorDistance, function(c) _G_ColorDistance = c end, function(s) _G_EspDistance = s end)
 	addEspToggleWithColor(secEspPlayers, "Head Dot ESP", _G_ColorHead, function(c) _G_ColorHead = c end, function(s) _G_EspHead = s end)
 
-	-- Seção de Inimigos (NPC) na aba Visual
-	local secEspEnemies = createSection(visualPage, "ESP Inimigos (NPC)", "👾")
-	addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state end, false)
-	addColorPicker(secEspEnemies, "Cor dos Inimigos", _G_ColorEnemy, function(c) _G_ColorEnemy = c end)
-	addToggle(secEspEnemies, "ESP Nome", function(state) _G_EnemyEspName = state end, false)
-	addToggle(secEspEnemies, "ESP Chams", function(state) _G_EnemyEspChams = state end, false)
-	addToggle(secEspEnemies, "ESP Distância", function(state) _G_EnemyEspDistance = state end, false)
+    -- Seção de Inimigos (NPC) na aba Visual com Cores Individuais
+    local secEspEnemies = createSection(visualPage, "ESP Inimigos (NPC)", "👾")
+    addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state end, false)
+    
+    addToggle(secEspEnemies, "ESP Chams", function(state) _G_EnemyEspChams = state end, false)
+    addColorPicker(secEspEnemies, "Cor do Chams (Inimigos)", _G_ColorEnemyChams, function(c) _G_ColorEnemyChams = c end)
+    
+    addToggle(secEspEnemies, "ESP Nome", function(state) _G_EnemyEspName = state end, false)
+    addColorPicker(secEspEnemies, "Cor do Nome (Inimigos)", _G_ColorEnemyName, function(c) _G_ColorEnemyName = c end)
+    
+    addToggle(secEspEnemies, "ESP Distância", function(state) _G_EnemyEspDistance = state end, false)
+    addColorPicker(secEspEnemies, "Cor da Distância (Inimigos)", _G_ColorEnemyDist, function(c) _G_ColorEnemyDist = c end)
 
-	local secWorld = createSection(visualPage, "Visual do Mapa", "🌐")
-	addToggle(secWorld, "Fullbright (Remover Escuridão)", function(state)
-		_G_FullbrightEnabled = state
-		Lighting.Brightness = _G_FullbrightEnabled and 2 or 1
-		Lighting.ClockTime = _G_FullbrightEnabled and 14 or 0
-		Lighting.GlobalShadows = not _G_FullbrightEnabled
-	end, false)
+    local secWorld = createSection(visualPage, "Visual do Mapa", "🌐")
+    addToggle(secWorld, "Fullbright (Remover Escuridão)", function(state)
+        _G_FullbrightEnabled = state
+        Lighting.Brightness = _G_FullbrightEnabled and 2 or 1
+        Lighting.ClockTime = _G_FullbrightEnabled and 14 or 0
+        Lighting.GlobalShadows = not _G_FullbrightEnabled
+    end, false)
 
 	-----------------------------------------------------------------
 	-- ABA AIM LOCK
@@ -2368,7 +2375,7 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- ABA FRUTA
+	-- ABA FRUTA (COM CORES INDIVIDUAIS PARA CHAMS, NOME E DISTÂNCIA)
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
 	local secFrutaAction = createSection(frutaPage, "Automação", "⚡")
@@ -2377,7 +2384,6 @@ function showMainPanel()
 	local fruitConfig = {
 		MaxDistance  = 2000,
 		CullDistance = 3000,
-		Color        = Color3.fromRGB(170, 90, 255),
 		HeldColor    = Color3.fromRGB(255, 60, 60),
 		HeldText     = "EM MÃOS",
 		TickInterval = 1 / 20,
@@ -2437,9 +2443,9 @@ function showMainPanel()
 			data.label.TextColor3       = fruitConfig.HeldColor
 			data.label.TextStrokeColor3 = Color3.new(0.3, 0, 0)
 		else
-			data.highlight.FillColor    = fruitConfig.Color
+			data.highlight.FillColor    = _G_ColorFruitChams
 			data.highlight.OutlineColor = Color3.new(1, 1, 1)
-			data.label.TextColor3       = Color3.new(1, 1, 1)
+			data.label.TextColor3       = _G_ColorFruitName
 			data.label.TextStrokeColor3 = Color3.new(0, 0, 0)
 		end
 	end
@@ -2452,7 +2458,7 @@ function showMainPanel()
 		local highlight = Instance.new("Highlight")
 		highlight.Name = "FruitESPHighlight"
 		highlight.Adornee = tool
-		highlight.FillColor = fruitConfig.Color
+		highlight.FillColor = _G_ColorFruitChams
 		highlight.OutlineColor = Color3.new(1, 1, 1)
 		highlight.FillTransparency = 0.55
 		highlight.OutlineTransparency = 0
@@ -2472,7 +2478,7 @@ function showMainPanel()
 		text.Name = "Label"
 		text.Size = UDim2.fromScale(1, 1)
 		text.BackgroundTransparency = 1
-		text.TextColor3 = Color3.new(1, 1, 1)
+		text.TextColor3 = _G_ColorFruitName
 		text.TextStrokeTransparency = 0.2
 		text.Font = Enum.Font.GothamBold
 		text.TextSize = 12
@@ -2619,17 +2625,22 @@ function showMainPanel()
 		end
 	end, false)
 
-	addColorPicker(secFrutaEsp, "Cor das Frutas", fruitConfig.Color, function(c)
-		fruitConfig.Color = c
+	addToggle(secFrutaEsp, "ESP Chams", function(state) fruitEnabledOptions.Chams = state end, true)
+	addColorPicker(secFrutaEsp, "Cor do Chams (Frutas)", _G_ColorFruitChams, function(c)
+		_G_ColorFruitChams = c
 		for _, data in pairs(fruitEspObjects) do
-			if not data.isHeld then
-				data.highlight.FillColor = c
-			end
+			if not data.isHeld then data.highlight.FillColor = c end
 		end
 	end)
 
 	addToggle(secFrutaEsp, "ESP Nome", function(state) fruitEnabledOptions.Name = state end, true)
-	addToggle(secFrutaEsp, "ESP Chams", function(state) fruitEnabledOptions.Chams = state end, true)
+	addColorPicker(secFrutaEsp, "Cor do Nome (Frutas)", _G_ColorFruitName, function(c)
+		_G_ColorFruitName = c
+		for _, data in pairs(fruitEspObjects) do
+			if not data.isHeld then data.label.TextColor3 = c end
+		end
+	end)
+
 	addToggle(secFrutaEsp, "ESP Distance", function(state) fruitEnabledOptions.Distance = state end, true)
 
 	local fruitAccumulator = 0
@@ -2873,7 +2884,7 @@ local function createEnemyESP(enemy)
 	local highlight = Instance.new("Highlight")
 	highlight.Name = "EnemyHighlight"
 	highlight.Adornee = enemy
-	highlight.FillColor = _G_ColorEnemy
+	highlight.FillColor = _G_ColorEnemyChams
 	highlight.OutlineColor = Color3.new(1, 1, 1)
 	highlight.FillTransparency = 0.82
 	highlight.OutlineTransparency = 0
@@ -2891,10 +2902,11 @@ local function createEnemyESP(enemy)
 	billboard.Parent = screenGui
 
 	local nameLabel = makeEnemyText(billboard, "EnemyName", UDim2.new(1, 0, 0, 16), UDim2.fromOffset(0, 0), 12)
+	nameLabel.TextColor3 = _G_ColorEnemyName
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Center
 
 	local distanceLabel = makeEnemyText(billboard, "EnemyDistance", UDim2.new(1, 0, 0, 15), UDim2.fromOffset(0, 18), 10)
-	distanceLabel.TextColor3 = Color3.fromRGB(225, 225, 225)
+	distanceLabel.TextColor3 = _G_ColorEnemyDist
 	distanceLabel.TextXAlignment = Enum.TextXAlignment.Center
 
 	enemyObjects[enemy] = {
@@ -2944,7 +2956,7 @@ task.spawn(function()
 end)
 
 -----------------------------------------------------------------
--- RENDER LOOP (ESP PLAYERS, FOV, LOCK-ON E MOVIMENTOS)
+-- RENDER LOOP
 -----------------------------------------------------------------
 local espDrawings = {}
 
@@ -3293,7 +3305,7 @@ RunService.RenderStepped:Connect(function()
 		end
 	end
 
-	-- Render Loop para Enemy ESP (NPC)
+	-- Render Loop para Enemy ESP (NPC) com cores individuais
 	if _G_EnemyEspMaster then
 		local myRoot = char and char:FindFirstChild("HumanoidRootPart")
 		if myRoot then
@@ -3303,9 +3315,11 @@ RunService.RenderStepped:Connect(function()
 				if enemy.Parent and root and humanoid and humanoid.Health > 0 then
 					local dist = (root.Position - myRoot.Position).Magnitude
 					data.highlight.Enabled = _G_EnemyEspChams
-					data.highlight.FillColor = _G_ColorEnemy
+					data.highlight.FillColor = _G_ColorEnemyChams
 					data.nameLabel.Visible = _G_EnemyEspName
+					data.nameLabel.TextColor3 = _G_ColorEnemyName
 					data.distanceLabel.Visible = _G_EnemyEspDistance
+					data.distanceLabel.TextColor3 = _G_ColorEnemyDist
 					data.billboard.Enabled = (_G_EnemyEspName or _G_EnemyEspDistance)
 					data.nameLabel.Text = enemy.Name
 					data.distanceLabel.Text = string.format("%.0f studs", dist)
