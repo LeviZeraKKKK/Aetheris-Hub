@@ -1427,54 +1427,263 @@ function showMainPanel()
 	addToggle(secEspPlayers, "Ativar ESP Players", function(state) _G_EspMaster = state end, false)
 
 	addEspToggleWithColor(secEspPlayers, "Box ESP", _G_ColorBox, function(c) _G_ColorBox = c end, function(s) _G_EspBox = s end)
-	addEspToggleWithColor(secEspPlayers, "Tracers / Line ESP", _G_ColorLine, function(c) _G_ColorLine = c end, function(s) _G_EspLine = s end)
+	
+	-- Tracers / Line ESP com botão retangular arredondado ao lado esquerdo da cor
+	local tracerToggleFrame = Instance.new("Frame")
+	tracerToggleFrame.Size = UDim2.new(1, 0, 0, 26)
+	tracerToggleFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+	tracerToggleFrame.BackgroundTransparency = 0.5
+	tracerToggleFrame.Parent = secEspPlayers
 
-	local tracerPosFrame = Instance.new("Frame")
-	tracerPosFrame.Size = UDim2.new(1, 0, 0, 32)
-	tracerPosFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-	tracerPosFrame.BackgroundTransparency = 0.5
-	tracerPosFrame.Parent = secEspPlayers
+	local ttfCorner = Instance.new("UICorner")
+	ttfCorner.CornerRadius = UDim.new(0, 5)
+	ttfCorner.Parent = tracerToggleFrame
 
-	local tpCorner = Instance.new("UICorner")
-	tpCorner.CornerRadius = UDim.new(0, 5)
-	tpCorner.Parent = tracerPosFrame
+	local tracerLed = Instance.new("Frame")
+	tracerLed.Size = UDim2.new(0, 6, 0, 6)
+	tracerLed.Position = UDim2.new(0, 8, 0.5, -3)
+	tracerLed.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
+	tracerLed.Parent = tracerToggleFrame
 
-	local tpLabel = Instance.new("TextLabel")
-	tpLabel.Size = UDim2.new(1, -110, 1, 0)
-	tpLabel.Position = UDim2.new(0, 10, 0, 0)
-	tpLabel.BackgroundTransparency = 1
-	tpLabel.Font = Enum.Font.GothamMedium
-	tpLabel.Text = "Origem da Tracer"
-	tpLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-	tpLabel.TextSize = 11
-	tpLabel.TextXAlignment = Enum.TextXAlignment.Left
-	tpLabel.Parent = tracerPosFrame
+	local tracerLedCorner = Instance.new("UICorner")
+	tracerLedCorner.CornerRadius = UDim.new(1, 0)
+	tracerLedCorner.Parent = tracerLed
 
-	local tracerPosBtn = Instance.new("TextButton")
-	tracerPosBtn.Size = UDim2.new(0, 96, 0, 22)
-	tracerPosBtn.Position = UDim2.new(1, -102, 0.5, -11)
-	tracerPosBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
-	tracerPosBtn.Font = Enum.Font.GothamBold
-	tracerPosBtn.Text = "Bottom"
-	tracerPosBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	tracerPosBtn.TextSize = 10
-	tracerPosBtn.Parent = tracerPosFrame
+	local tracerLabel = Instance.new("TextLabel")
+	tracerLabel.Size = UDim2.new(1, -150, 1, 0)
+	tracerLabel.Position = UDim2.new(0, 20, 0, 0)
+	tracerLabel.BackgroundTransparency = 1
+	tracerLabel.Font = Enum.Font.GothamMedium
+	tracerLabel.Text = "Tracers / Line ESP"
+	tracerLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+	tracerLabel.TextSize = 11
+	tracerLabel.TextXAlignment = Enum.TextXAlignment.Left
+	tracerLabel.Parent = tracerToggleFrame
 
-	local tpBtnCorner = Instance.new("UICorner")
-	tpBtnCorner.CornerRadius = UDim.new(0, 6)
-	tpBtnCorner.Parent = tracerPosBtn
+	local tracerToggleBtn = Instance.new("TextButton")
+	tracerToggleBtn.Size = UDim2.new(0, 28, 0, 16)
+	tracerToggleBtn.Position = UDim2.new(1, -34, 0.5, -8)
+	tracerToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+	tracerToggleBtn.Text = ""
+	tracerToggleBtn.Parent = tracerToggleFrame
 
-	tracerPosBtn.MouseButton1Click:Connect(function()
+	local tBtnCorner = Instance.new("UICorner")
+	tBtnCorner.CornerRadius = UDim.new(1, 0)
+	tBtnCorner.Parent = tracerToggleBtn
+
+	local tracerCircle = Instance.new("Frame")
+	tracerCircle.Size = UDim2.new(0, 12, 0, 12)
+	tracerCircle.Position = UDim2.new(0, 2, 0.5, -6)
+	tracerCircle.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+	tracerCircle.Parent = tracerToggleBtn
+
+	local tcCorner = Instance.new("UICorner")
+	tcCorner.CornerRadius = UDim.new(1, 0)
+	tcCorner.Parent = tracerCircle
+
+	local tracerStateRef = {isToggled = false, circle = tracerCircle, button = tracerToggleBtn, led = tracerLed}
+	table.insert(themeToggles, tracerStateRef)
+
+	-- Botão retangular com bordas redondas para alternar a posição (Alto, Centro, Baixo)
+	local tracerPosModeBtn = Instance.new("TextButton")
+	tracerPosModeBtn.Size = UDim2.new(0, 52, 0, 16)
+	tracerPosModeBtn.Position = UDim2.new(1, -114, 0.5, -8)
+	tracerPosModeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+	tracerPosModeBtn.Font = Enum.Font.GothamBold
+	tracerPosModeBtn.Text = _G_TracerOrigin
+	tracerPosModeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	tracerPosModeBtn.TextSize = 9
+	tracerPosModeBtn.Parent = tracerToggleFrame
+
+	local tpmCorner = Instance.new("UICorner")
+	tpmCorner.CornerRadius = UDim.new(0, 4)
+	tpmCorner.Parent = tracerPosModeBtn
+
+	tracerPosModeBtn.MouseButton1Click:Connect(function()
 		if _G_TracerOrigin == "Bottom" then
 			_G_TracerOrigin = "Center"
-			tracerPosBtn.Text = "Center"
+			tracerPosModeBtn.Text = "Center"
 		elseif _G_TracerOrigin == "Center" then
 			_G_TracerOrigin = "Top"
-			tracerPosBtn.Text = "Top"
+			tracerPosModeBtn.Text = "Top"
 		else
 			_G_TracerOrigin = "Bottom"
-			tracerPosBtn.Text = "Bottom"
+			tracerPosModeBtn.Text = "Bottom"
 		end
+	end)
+
+	-- Color Picker da Tracer (agora posicionado ao lado direito do botão de posição)
+	local tracerColorBtn = Instance.new("TextButton")
+	tracerColorBtn.Size = UDim2.new(0, 18, 0, 14)
+	tracerColorBtn.Position = UDim2.new(1, -58, 0.5, -7)
+	tracerColorBtn.BackgroundColor3 = _G_ColorLine
+	tracerColorBtn.Text = ""
+	tracerColorBtn.Parent = tracerToggleFrame
+
+	local tcBtnCorner = Instance.new("UICorner")
+	tcBtnCorner.CornerRadius = UDim.new(0, 3)
+	tcBtnCorner.Parent = tracerColorBtn
+
+	local tracerModal = Instance.new("Frame")
+	tracerModal.Size = UDim2.new(0, 150, 0, 130)
+	tracerModal.Position = UDim2.new(0, -130, 1, 4)
+	tracerModal.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+	tracerModal.BorderSizePixel = 0
+	tracerModal.Visible = false
+	tracerModal.ZIndex = 50
+	tracerModal.Parent = tracerColorBtn
+
+	local tmCorner = Instance.new("UICorner")
+	tmCorner.CornerRadius = UDim.new(0, 6)
+	tmCorner.Parent = tracerModal
+
+	local tmStroke = Instance.new("UIStroke")
+	tmStroke.Color = Color3.fromRGB(60, 60, 80)
+	tmStroke.Parent = tracerModal
+
+	local tracerCanvas = Instance.new("Frame")
+	tracerCanvas.Size = UDim2.new(0, 108, 0, 92)
+	tracerCanvas.Position = UDim2.new(0, 6, 0, 6)
+	tracerCanvas.BackgroundColor3 = Color3.fromHSV(_G_ColorLine:ToHSV())
+	tracerCanvas.BorderSizePixel = 0
+	tracerCanvas.ZIndex = 51
+	tracerCanvas.Parent = tracerModal
+
+	local tcnCorner = Instance.new("UICorner")
+	tcnCorner.CornerRadius = UDim.new(0, 4)
+	tcnCorner.Parent = tracerCanvas
+
+	local twgFrame = Instance.new("Frame")
+	twgFrame.Size = UDim2.new(1, 0, 1, 0)
+	twgFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	twgFrame.BorderSizePixel = 0
+	twgFrame.ZIndex = 52
+	twgFrame.Parent = tracerCanvas
+
+	local twgc = Instance.new("UICorner")
+	twgc.CornerRadius = UDim.new(0, 4)
+	twgc.Parent = twgFrame
+
+	local twg = Instance.new("UIGradient")
+	twg.Rotation = 0
+	twg.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1)})
+	twg.Parent = twgFrame
+
+	local tbgFrame = Instance.new("Frame")
+	tbgFrame.Size = UDim2.new(1, 0, 1, 0)
+	tbgFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	tbgFrame.BorderSizePixel = 0
+	tbgFrame.ZIndex = 53
+	tbgFrame.Parent = tracerCanvas
+
+	local tbgc = Instance.new("UICorner")
+	tbgc.CornerRadius = UDim.new(0, 4)
+	tbgc.Parent = tbgFrame
+
+	local tbg = Instance.new("UIGradient")
+	tbg.Rotation = 90
+	tbg.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0)})
+	tbg.Parent = tbgFrame
+
+	local tCur = Instance.new("Frame")
+	tCur.Size = UDim2.new(0, 7, 0, 7)
+	tCur.AnchorPoint = Vector2.new(0.5, 0.5)
+	tCur.Position = UDim2.new(1, 0, 0, 0)
+	tCur.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	tCur.ZIndex = 54
+	tCur.Parent = tracerCanvas
+
+	local tCurc = Instance.new("UICorner")
+	tCurc.CornerRadius = UDim.new(1, 0)
+	tCurc.Parent = tCur
+
+	local tHueBar = Instance.new("Frame")
+	tHueBar.Size = UDim2.new(0, 14, 0, 92)
+	tHueBar.Position = UDim2.new(0, 122, 0, 6)
+	tHueBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	tHueBar.BorderSizePixel = 0
+	tHueBar.ZIndex = 51
+	tHueBar.Parent = tracerModal
+
+	local thCorner = Instance.new("UICorner")
+	thCorner.CornerRadius = UDim.new(0, 4)
+	thCorner.Parent = tHueBar
+
+	local tuifig = Instance.new("UIGradient")
+	tuifig.Rotation = 90
+	tuifig.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
+		ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 255, 0)),
+		ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 255, 0)),
+		ColorSequenceKeypoint.new(0.50, Color3.fromRGB(0, 255, 255)),
+		ColorSequenceKeypoint.new(0.67, Color3.fromRGB(0, 0, 255)),
+		ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 0, 255)),
+		ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 0, 0))
+	})
+	tuifig.Parent = tHueBar
+
+	local tHuePicker = Instance.new("Frame")
+	tHuePicker.Size = UDim2.new(1, 0, 0, 3)
+	tHuePicker.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	tHuePicker.ZIndex = 54
+	tHuePicker.Parent = tHueBar
+
+	local th, ts, tv = _G_ColorLine:ToHSV()
+	local function updateTracerColor()
+		local col = Color3.fromHSV(th, ts, tv)
+		tracerCanvas.BackgroundColor3 = Color3.fromHSV(th, 1, 1)
+		tracerColorBtn.BackgroundColor3 = col
+		_G_ColorLine = col
+	end
+
+	tracerColorBtn.MouseButton1Click:Connect(function()
+		tracerModal.Visible = not tracerModal.Visible
+	end)
+
+	local dTracerHue = false
+	tHueBar.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dTracerHue = true end
+	end)
+	UserInputService.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dTracerHue = false end
+	end)
+	UserInputService.InputChanged:Connect(function(input)
+		if dTracerHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local y = math.clamp((input.Position.Y - tHueBar.AbsolutePosition.Y) / tHueBar.AbsoluteSize.Y, 0, 1)
+			tHuePicker.Position = UDim2.new(0, 0, y, -1)
+			th = y
+			updateTracerColor()
+		end
+	end)
+
+	local dTracerCanvas = false
+	tracerCanvas.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dTracerCanvas = true end
+	end)
+	UserInputService.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dTracerCanvas = false end
+	end)
+	UserInputService.InputChanged:Connect(function(input)
+		if dTracerCanvas and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local x = math.clamp((input.Position.X - tracerCanvas.AbsolutePosition.X) / tracerCanvas.AbsoluteSize.X, 0, 1)
+			local y = math.clamp((input.Position.Y - tracerCanvas.AbsolutePosition.Y) / tracerCanvas.AbsoluteSize.Y, 0, 1)
+			tCur.Position = UDim2.new(x, 0, y, 0)
+			ts = x
+			tv = 1 - y
+			updateTracerColor()
+		end
+	end)
+
+	tracerToggleBtn.MouseButton1Click:Connect(function()
+		tracerStateRef.isToggled = not tracerStateRef.isToggled
+		_G_EspLine = tracerStateRef.isToggled
+		local targetPos = tracerStateRef.isToggled and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
+		local targetColor = tracerStateRef.isToggled and currentThemeColor or Color3.fromRGB(50, 50, 70)
+		local targetLedColor = tracerStateRef.isToggled and currentThemeColor or Color3.fromRGB(80, 80, 100)
+		
+		TweenService:Create(tracerCircle, TweenInfo.new(0.18), {Position = targetPos}):Play()
+		TweenService:Create(tracerToggleBtn, TweenInfo.new(0.18), {BackgroundColor3 = targetColor}):Play()
+		TweenService:Create(tracerLed, TweenInfo.new(0.18), {BackgroundColor3 = targetLedColor}):Play()
 	end)
 
 	addEspToggleWithColor(secEspPlayers, "Chams (Highlight)", _G_ColorChams, function(c) _G_ColorChams = c end, function(s) _G_EspChams = s end)
@@ -1483,7 +1692,7 @@ function showMainPanel()
 	addEspToggleWithColor(secEspPlayers, "Distance ESP", _G_ColorDistance, function(c) _G_ColorDistance = c end, function(s) _G_EspDistance = s end)
 	addEspToggleWithColor(secEspPlayers, "Head Dot ESP", _G_ColorHead, function(c) _G_ColorHead = c end, function(s) _G_EspHead = s end)
 
-	-- Seção de Inimigos (NPC) na aba Visual (COM COLOR PICKER PARA A COR DO INIMIGO)
+	-- Seção de Inimigos (NPC) na aba Visual
 	local secEspEnemies = createSection(visualPage, "ESP Inimigos (NPC)", "👾")
 	addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state end, false)
 	addColorPicker(secEspEnemies, "Cor dos Inimigos", _G_ColorEnemy, function(c) _G_ColorEnemy = c end)
@@ -1949,7 +2158,7 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- ABA FRUTA (COM COLOR PICKER PARA A COR DA FRUTA)
+	-- ABA FRUTA
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
 	local secFrutaAction = createSection(frutaPage, "Automação", "⚡")
@@ -2710,7 +2919,6 @@ RunService.RenderStepped:Connect(function()
 		end
 	end
 
-	-- CORREÇÃO DO NOCLIP: Restaura imediatamente a colisão das partes ao desligar o toggle
 	if char then
 		for _, part in pairs(char:GetDescendants()) do
 			if part:IsA("BasePart") then
@@ -2924,7 +3132,7 @@ RunService.RenderStepped:Connect(function()
 		end
 	end
 
-	-- Render Loop para Enemy ESP (NPC) com cor customizável
+	-- Render Loop para Enemy ESP (NPC)
 	if _G_EnemyEspMaster then
 		local myRoot = char and char:FindFirstChild("HumanoidRootPart")
 		if myRoot then
