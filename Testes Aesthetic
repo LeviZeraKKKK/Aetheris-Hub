@@ -95,7 +95,8 @@ local _G_EnergyEnabled = false
 local isLockOnEnabled = false
 local lockOnMode = "Nearest"
 local selectedManualTargets = {}
-local _G_LockOnEnemies = false -- Toggle Ativar Lock inimigos (NPC)
+local _G_LockOnPlayers = true  -- Lock Players (separado e ligado por padrão)
+local _G_LockOnEnemies = false -- Ativar Lock inimigos (NPC)
 
 local _G_FilterDistanceEnabled = false
 local _G_FilterDistanceMax = 500
@@ -1271,7 +1272,7 @@ function showMainPanel()
 		end)
 	end
 
-	local function addToggle(parent, name, callback)
+	local function addToggle(parent, name, callback, defaultState)
 		local toggleFrame = Instance.new("Frame")
 		toggleFrame.Size = UDim2.new(1, 0, 0, 26)
 		toggleFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
@@ -1285,7 +1286,7 @@ function showMainPanel()
 		local ledIndicator = Instance.new("Frame")
 		ledIndicator.Size = UDim2.new(0, 6, 0, 6)
 		ledIndicator.Position = UDim2.new(0, 8, 0.5, -3)
-		ledIndicator.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
+		ledIndicator.BackgroundColor3 = defaultState and currentThemeColor or Color3.fromRGB(80, 80, 100)
 		ledIndicator.Parent = toggleFrame
 
 		local ledCorner = Instance.new("UICorner")
@@ -1306,7 +1307,7 @@ function showMainPanel()
 		local toggleBtn = Instance.new("TextButton")
 		toggleBtn.Size = UDim2.new(0, 28, 0, 16)
 		toggleBtn.Position = UDim2.new(1, -34, 0.5, -8)
-		toggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+		toggleBtn.BackgroundColor3 = defaultState and currentThemeColor or Color3.fromRGB(50, 50, 70)
 		toggleBtn.Text = ""
 		toggleBtn.Parent = toggleFrame
 
@@ -1316,7 +1317,7 @@ function showMainPanel()
 
 		local circle = Instance.new("Frame")
 		circle.Size = UDim2.new(0, 12, 0, 12)
-		circle.Position = UDim2.new(0, 2, 0.5, -6)
+		circle.Position = defaultState and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
 		circle.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 		circle.Parent = toggleBtn
 
@@ -1324,7 +1325,7 @@ function showMainPanel()
 		cCorner.CornerRadius = UDim.new(1, 0)
 		cCorner.Parent = circle
 
-		local toggleStateRef = {isToggled = false, circle = circle, button = toggleBtn, led = ledIndicator}
+		local toggleStateRef = {isToggled = (defaultState == true), circle = circle, button = toggleBtn, led = ledIndicator}
 		table.insert(themeToggles, toggleStateRef)
 
 		toggleBtn.MouseButton1Click:Connect(function()
@@ -1408,22 +1409,22 @@ function showMainPanel()
 	-----------------------------------------------------------------
 	local playerPage = pages["Player"]
 	local secMovimento = createSection(playerPage, "Movimento", "🏃‍♂️")
-	addToggle(secMovimento, "Ativar WalkSpeed", function(state) _G_WalkSpeedEnabled = state end)
+	addToggle(secMovimento, "Ativar WalkSpeed", function(state) _G_WalkSpeedEnabled = state end, false)
 	addSlider(secMovimento, "Velocidade", 16, 250, 16, function(val) _G_WalkSpeedValue = val end)
 
-	addToggle(secMovimento, "Ativar JumpPower", function(state) _G_JumpPowerEnabled = state end)
+	addToggle(secMovimento, "Ativar JumpPower", function(state) _G_JumpPowerEnabled = state end, false)
 	addSlider(secMovimento, "Força do Pulo", 50, 300, 50, function(val) _G_JumpPowerValue = val end)
 
 	local secFisico = createSection(playerPage, "Habilidades Físicas", "⚙️")
-	addToggle(secFisico, "Noclip (Atravessar Paredes)", function(state) _G_NoclipEnabled = state end)
-	addToggle(secFisico, "Energia Infinita", function(state) _G_EnergyEnabled = state end)
+	addToggle(secFisico, "Noclip (Atravessar Paredes)", function(state) _G_NoclipEnabled = state end, false)
+	addToggle(secFisico, "Energia Infinita", function(state) _G_EnergyEnabled = state end, false)
 
 	-----------------------------------------------------------------
 	-- ABA VISUAL
 	-----------------------------------------------------------------
 	local visualPage = pages["Visual"]
 	local secEspPlayers = createSection(visualPage, "ESP Players", "👁️")
-	addToggle(secEspPlayers, "Ativar ESP Players", function(state) _G_EspMaster = state end)
+	addToggle(secEspPlayers, "Ativar ESP Players", function(state) _G_EspMaster = state end, false)
 
 	addEspToggleWithColor(secEspPlayers, "Box ESP", _G_ColorBox, function(c) _G_ColorBox = c end, function(s) _G_EspBox = s end)
 	addEspToggleWithColor(secEspPlayers, "Tracers / Line ESP", _G_ColorLine, function(c) _G_ColorLine = c end, function(s) _G_EspLine = s end)
@@ -1484,10 +1485,10 @@ function showMainPanel()
 
 	-- Seção de Inimigos (NPC) na aba Visual
 	local secEspEnemies = createSection(visualPage, "ESP Inimigos (NPC)", "👾")
-	addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state end)
-	addToggle(secEspEnemies, "ESP Nome", function(state) _G_EnemyEspName = state end)
-	addToggle(secEspEnemies, "ESP Chams", function(state) _G_EnemyEspChams = state end)
-	addToggle(secEspEnemies, "ESP Distância", function(state) _G_EnemyEspDistance = state end)
+	addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state end, false)
+	addToggle(secEspEnemies, "ESP Nome", function(state) _G_EnemyEspName = state end, false)
+	addToggle(secEspEnemies, "ESP Chams", function(state) _G_EnemyEspChams = state end, false)
+	addToggle(secEspEnemies, "ESP Distância", function(state) _G_EnemyEspDistance = state end, false)
 
 	local secWorld = createSection(visualPage, "Visual do Mapa", "🌐")
 	addToggle(secWorld, "Fullbright (Remover Escuridão)", function(state)
@@ -1495,22 +1496,26 @@ function showMainPanel()
 		Lighting.Brightness = _G_FullbrightEnabled and 2 or 1
 		Lighting.ClockTime = _G_FullbrightEnabled and 14 or 0
 		Lighting.GlobalShadows = not _G_FullbrightEnabled
-	end)
+	end, false)
 
 	-----------------------------------------------------------------
-	-- ABA AIM LOCK
+	-- ABA AIM LOCK (SEPARADO: Lock Players e Lock Inimigos NPC)
 	-----------------------------------------------------------------
 	local aimLockPage = pages["Aim Lock"]
 	local secCombat = createSection(aimLockPage, "Sistema Lock-On", "⚔️")
 
 	addToggle(secCombat, "Ativar Lock-On", function(state)
 		isLockOnEnabled = state
-	end)
+	end, false)
 
-	-- Nome solicitado ajustado: Ativar Lock inimigos (NPC)
+	-- Separados e independentes
+	addToggle(secCombat, "Lock Players", function(state)
+		_G_LockOnPlayers = state
+	end, true) -- Ligado por padrão
+
 	addToggle(secCombat, "Ativar Lock inimigos (NPC)", function(state)
 		_G_LockOnEnemies = state
-	end)
+	end, false)
 
 	local modeFrame = Instance.new("Frame")
 	modeFrame.Size = UDim2.new(1, 0, 0, 26)
@@ -1548,18 +1553,18 @@ function showMainPanel()
 	msCorner.Parent = modeSwitchBtn
 
 	local secFilters = createSection(aimLockPage, "FOV & Filtros de Alvo", "🎯")
-	addToggle(secFilters, "Ativar Círculo FOV", function(state) _G_FovVisible = state end)
+	addToggle(secFilters, "Ativar Círculo FOV", function(state) _G_FovVisible = state end, false)
 	addSlider(secFilters, "Raio do FOV", 50, 500, 150, function(val) _G_FovRadius = val end)
 	addSlider(secFilters, "Grossura do FOV", 1, 5, 1, function(val) _G_FovThickness = val end)
 	addSlider(secFilters, "Transparência do FOV (%)", 10, 100, 70, function(val) _G_FovTransparency = val / 100 end)
 	addColorPicker(secFilters, "Cor do Círculo FOV", _G_ColorFov, function(c) _G_ColorFov = c end)
 
-	addToggle(secFilters, "Filtro por Distância Máxima", function(state) _G_FilterDistanceEnabled = state end)
+	addToggle(secFilters, "Filtro por Distância Máxima", function(state) _G_FilterDistanceEnabled = state end, false)
 	addSlider(secFilters, "Distância Máxima", 50, 2000, 500, function(val) _G_FilterDistanceMax = val end)
-	addToggle(secFilters, "Mais Perto de Mim (Mais Próximo)", function(state) _G_FilterClosest = state end)
-	addToggle(secFilters, "Priorizar Menor Vida (HP)", function(state) _G_FilterLowestHP = state end)
-	addToggle(secFilters, "Mais Perto da Mira (Crosshair)", function(state) _G_FilterCrosshair = state end)
-	addToggle(secFilters, "Apenas se EU Estiver com Item", function(state) _G_FilterHoldingItem = state end)
+	addToggle(secFilters, "Mais Perto de Mim (Mais Próximo)", function(state) _G_FilterClosest = state end, false)
+	addToggle(secFilters, "Priorizar Menor Vida (HP)", function(state) _G_FilterLowestHP = state end, false)
+	addToggle(secFilters, "Mais Perto da Mira (Crosshair)", function(state) _G_FilterCrosshair = state end, false)
+	addToggle(secFilters, "Apenas se EU Estiver com Item", function(state) _G_FilterHoldingItem = state end, false)
 
 	local refreshBtn = Instance.new("TextButton")
 	refreshBtn.Size = UDim2.new(1, 0, 0, 26)
@@ -1937,14 +1942,14 @@ function showMainPanel()
 		else
 			stopChestCollector()
 		end
-	end)
+	end, false)
 
 	addSlider(secFarm, "Velocidade do Chest Collector", 5, 500, 50, function(val)
 		chestSpeed = val
 	end)
 
 	-----------------------------------------------------------------
-	-- ABA FRUTA (ATUALIZADA COM DETECÇÃO "EM MÃOS" E DESLIGADA POR PADRÃO)
+	-- ABA FRUTA
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
 	local secFrutaAction = createSection(frutaPage, "Automação", "⚡")
@@ -1965,7 +1970,7 @@ function showMainPanel()
 		Distance = true,
 	}
 
-	local fruitEspMasterEnabled = false -- Começa desligado
+	local fruitEspMasterEnabled = false
 	local fruitEspObjects = {}
 	local fruitList = {}
 
@@ -2117,7 +2122,6 @@ function showMainPanel()
 		end
 	end)
 
-	-- Auto Coletar Frutas (Teleport)
 	local fruitCache = {}
 	local handled = setmetatable({}, {__mode = "k"})
 	local fruitActive = false
@@ -2202,7 +2206,7 @@ function showMainPanel()
 			if fruitConn then fruitConn:Disconnect(); fruitConn = nil end
 			table.clear(handled)
 		end
-	end)
+	end, false)
 
 	addToggle(secFrutaEsp, "Ativar Fruit ESP", function(state)
 		fruitEspMasterEnabled = state
@@ -2212,13 +2216,12 @@ function showMainPanel()
 				if data.billboard.Enabled then data.billboard.Enabled = false end
 			end
 		end
-	end)
+	end, false)
 
-	addToggle(secFrutaEsp, "ESP Nome", function(state) fruitEnabledOptions.Name = state end)
-	addToggle(secFrutaEsp, "ESP Chams", function(state) fruitEnabledOptions.Chams = state end)
-	addToggle(secFrutaEsp, "ESP Distance", function(state) fruitEnabledOptions.Distance = state end)
+	addToggle(secFrutaEsp, "ESP Nome", function(state) fruitEnabledOptions.Name = state end, true)
+	addToggle(secFrutaEsp, "ESP Chams", function(state) fruitEnabledOptions.Chams = state end, true)
+	addToggle(secFrutaEsp, "ESP Distance", function(state) fruitEnabledOptions.Distance = state end, true)
 
-	-- Loop de renderização do ESP de Frutas
 	local fruitAccumulator = 0
 	RunService.RenderStepped:Connect(function(dt)
 		if not fruitEspMasterEnabled then return end
@@ -2570,37 +2573,39 @@ local function getAdvancedTarget()
 	local myPos = myChar.HumanoidRootPart.Position
 	local screenCenter = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
 
-	-- 1. Checa Jogadores
-	for _, p in ipairs(Players:GetPlayers()) do
-		if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Head") then
-			local hum = p.Character:FindFirstChild("Humanoid")
-			if hum and hum.Health > 0 then
-				local hrp = p.Character.HumanoidRootPart
-				local dist = (hrp.Position - myPos).Magnitude
+	-- 1. Checa Jogadores (Se Lock Players estiver ativado)
+	if _G_LockOnPlayers then
+		for _, p in ipairs(Players:GetPlayers()) do
+			if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Head") then
+				local hum = p.Character:FindFirstChild("Humanoid")
+				if hum and hum.Health > 0 then
+					local hrp = p.Character.HumanoidRootPart
+					local dist = (hrp.Position - myPos).Magnitude
 
-				if not _G_FilterDistanceEnabled or dist <= _G_FilterDistanceMax then
-					local screenPos, onScreen = camera:WorldToViewportPoint(hrp.Position)
-					if onScreen then
-						local screenDist = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Magnitude
-						
-						if not _G_FovVisible or screenDist <= _G_FovRadius then
-							local score = dist
+					if not _G_FilterDistanceEnabled or dist <= _G_FilterDistanceMax then
+						local screenPos, onScreen = camera:WorldToViewportPoint(hrp.Position)
+						if onScreen then
+							local screenDist = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Magnitude
+							
+							if not _G_FovVisible or screenDist <= _G_FovRadius then
+								local score = dist
 
-							if _G_FilterClosest then
-								score = dist
-							end
+								if _G_FilterClosest then
+									score = dist
+								end
 
-							if _G_FilterLowestHP then
-								score = hum.Health
-							end
+								if _G_FilterLowestHP then
+									score = hum.Health
+								end
 
-							if _G_FilterCrosshair then
-								score = screenDist
-							end
+								if _G_FilterCrosshair then
+									score = screenDist
+								end
 
-							if score < bestScore then
-								bestScore = score
-								bestTarget = p.Character.Head
+								if score < bestScore then
+									bestScore = score
+									bestTarget = p.Character.Head
+								end
 							end
 						end
 					end
