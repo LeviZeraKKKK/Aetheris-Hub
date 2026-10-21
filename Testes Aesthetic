@@ -364,7 +364,7 @@ task.spawn(function()
 end)
 
 -----------------------------------------------------------------
--- PAINEL PRINCIPAL
+-- PAINEL PRINCIPAL (ESTILO NORMAL)
 -----------------------------------------------------------------
 function showMainPanel()
 	local mainPanel = Instance.new("Frame")
@@ -416,7 +416,7 @@ function showMainPanel()
 	particleContainer.Name = "ThemeParticles"
 	particleContainer.Parent = mainPanel
 
-	-- Partículas animadas brilhantes
+	-- Partículas do painel principal
 	for i = 1, 24 do
 		task.spawn(function()
 			local p = Instance.new("Frame")
@@ -454,7 +454,7 @@ function showMainPanel()
 	interactionBlocker.ZIndex = 9999
 	interactionBlocker.Parent = mainPanel
 
-	-- BOTÃO FLUTUANTE (QUADRADO CONTORNADO POR UIROUTLINE E LETRA "A" PROPORCIONAL)
+	-- BOTÃO FLUTUANTE (COM BORDA QUADRADA E LETRA "A")
 	local floatingBtn = Instance.new("TextButton")
 	floatingBtn.Size = UDim2.new(0, 0, 0, 0)
 	floatingBtn.Position = UDim2.new(0, 20, 0.5, -24)
