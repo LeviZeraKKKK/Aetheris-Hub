@@ -1428,7 +1428,7 @@ function showMainPanel()
 
 	addEspToggleWithColor(secEspPlayers, "Box ESP", _G_ColorBox, function(c) _G_ColorBox = c end, function(s) _G_EspBox = s end)
 	
-	-- Tracers / Line ESP com botão retangular arredondado ao lado esquerdo da cor
+	-- Tracers / Line ESP com botão retangular arredondado à esquerda do color picker
 	local tracerToggleFrame = Instance.new("Frame")
 	tracerToggleFrame.Size = UDim2.new(1, 0, 0, 26)
 	tracerToggleFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
@@ -1484,7 +1484,6 @@ function showMainPanel()
 	local tracerStateRef = {isToggled = false, circle = tracerCircle, button = tracerToggleBtn, led = tracerLed}
 	table.insert(themeToggles, tracerStateRef)
 
-	-- Botão retangular com bordas redondas para alternar a posição (Alto, Centro, Baixo)
 	local tracerPosModeBtn = Instance.new("TextButton")
 	tracerPosModeBtn.Size = UDim2.new(0, 52, 0, 16)
 	tracerPosModeBtn.Position = UDim2.new(1, -114, 0.5, -8)
@@ -1512,7 +1511,6 @@ function showMainPanel()
 		end
 	end)
 
-	-- Color Picker da Tracer (agora posicionado ao lado direito do botão de posição)
 	local tracerColorBtn = Instance.new("TextButton")
 	tracerColorBtn.Size = UDim2.new(0, 18, 0, 14)
 	tracerColorBtn.Position = UDim2.new(1, -58, 0.5, -7)
@@ -1692,7 +1690,7 @@ function showMainPanel()
 	addEspToggleWithColor(secEspPlayers, "Distance ESP", _G_ColorDistance, function(c) _G_ColorDistance = c end, function(s) _G_EspDistance = s end)
 	addEspToggleWithColor(secEspPlayers, "Head Dot ESP", _G_ColorHead, function(c) _G_ColorHead = c end, function(s) _G_EspHead = s end)
 
-	-- Seção de Inimigos (NPC) na aba Visual
+	-- Seção de Inimigos (NPC) na aba Visual (COM COLOR PICKER COMPLETO)
 	local secEspEnemies = createSection(visualPage, "ESP Inimigos (NPC)", "👾")
 	addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state end, false)
 	addColorPicker(secEspEnemies, "Cor dos Inimigos", _G_ColorEnemy, function(c) _G_ColorEnemy = c end)
@@ -2158,7 +2156,7 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- ABA FRUTA
+	-- ABA FRUTA (COM COLOR PICKER COMPLETO PARA A COR DA FRUTA)
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
 	local secFrutaAction = createSection(frutaPage, "Automação", "⚡")
@@ -3132,7 +3130,7 @@ RunService.RenderStepped:Connect(function()
 		end
 	end
 
-	-- Render Loop para Enemy ESP (NPC)
+	-- Render Loop para Enemy ESP (NPC) com cor customizável
 	if _G_EnemyEspMaster then
 		local myRoot = char and char:FindFirstChild("HumanoidRootPart")
 		if myRoot then
