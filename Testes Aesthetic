@@ -95,7 +95,7 @@ local _G_EnergyEnabled = false
 local isLockOnEnabled = false
 local lockOnMode = "Nearest"
 local selectedManualTargets = {}
-local _G_LockOnEnemies = false -- NOVO: Toggle Lock Inimigos (NPC)
+local _G_LockOnEnemies = false -- Toggle Ativar Lock inimigos (NPC)
 
 local _G_FilterDistanceEnabled = false
 local _G_FilterDistanceMax = 500
@@ -1507,8 +1507,8 @@ function showMainPanel()
 		isLockOnEnabled = state
 	end)
 
-	-- ADICIONADO: Toggle solicitado Lock Inimigos (NPC)
-	addToggle(secCombat, "Lock Inimigos (NPC)", function(state)
+	-- Nome solicitado ajustado: Ativar Lock inimigos (NPC)
+	addToggle(secCombat, "Ativar Lock inimigos (NPC)", function(state)
 		_G_LockOnEnemies = state
 	end)
 
@@ -2570,7 +2570,7 @@ local function getAdvancedTarget()
 	local myPos = myChar.HumanoidRootPart.Position
 	local screenCenter = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
 
-	-- 1. Checa Jogadores (se aplicável)
+	-- 1. Checa Jogadores
 	for _, p in ipairs(Players:GetPlayers()) do
 		if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Head") then
 			local hum = p.Character:FindFirstChild("Humanoid")
@@ -2609,7 +2609,7 @@ local function getAdvancedTarget()
 		end
 	end
 
-	-- 2. Checa NPCs Inimigos de Workspace.Enemies (se o toggle estiver ativo)
+	-- 2. Checa NPCs Inimigos (Workspace.Enemies) se o toggle estiver ligado
 	if _G_LockOnEnemies and ENEMIES then
 		for _, enemyModel in ipairs(ENEMIES:GetChildren()) do
 			if enemyModel:IsA("Model") then
