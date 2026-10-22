@@ -470,6 +470,31 @@ function showMainPanel()
 	floatStroke.Parent = floatingBtn
 	table.insert(themeSections, floatStroke)
 
+	-- Contorno frontal explícito para garantir que a borda fique nítida e visível.
+	local visibleBorder = Instance.new("Frame")
+	visibleBorder.Name = "VisibleThemeBorder"
+	visibleBorder.Size = UDim2.new(1, 0, 1, 0)
+	visibleBorder.Position = UDim2.new(0, 0, 0, 0)
+	visibleBorder.BackgroundTransparency = 1
+	visibleBorder.BorderSizePixel = 0
+	visibleBorder.Active = false
+	visibleBorder.Selectable = false
+	visibleBorder.ZIndex = 23
+	visibleBorder.Parent = floatingBtn
+
+	local visibleBorderCorner = Instance.new("UICorner")
+	visibleBorderCorner.CornerRadius = UDim.new(0, 9)
+	visibleBorderCorner.Parent = visibleBorder
+
+	local visibleBorderStroke = Instance.new("UIStroke")
+	visibleBorderStroke.Name = "VisibleThemeStroke"
+	visibleBorderStroke.Color = currentThemeColor
+	visibleBorderStroke.Thickness = 2.5
+	visibleBorderStroke.Transparency = 0
+	visibleBorderStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	visibleBorderStroke.Parent = visibleBorder
+	table.insert(themeSections, visibleBorderStroke)
+
 	local floatLetter = Instance.new("TextLabel")
 	floatLetter.Name = "LogoLetter"
 	floatLetter.Size = UDim2.new(1, 0, 1, 0)
