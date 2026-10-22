@@ -195,76 +195,113 @@ local hideKeybindEnabled = false
 local hideKeybindKey = Enum.KeyCode.RightControl
 
 -----------------------------------------------------------------
--- TELA DE CARREGAMENTO APRIMORADA (LUXUOSA)
+-- TELA DE CARREGAMENTO • AETHERIS
 -----------------------------------------------------------------
+local loadViewportWidth = 420
+pcall(function()
+    local currentCamera = workspace.CurrentCamera
+    if currentCamera then
+        loadViewportWidth = currentCamera.ViewportSize.X
+    end
+end)
+local loadWidth = math.clamp(loadViewportWidth - 34, 292, 410)
+
 local loadWrapper = Instance.new("Frame")
-loadWrapper.Size = UDim2.new(0, 400, 0, 210)
-loadWrapper.Position = UDim2.new(0.5, -200, 0.5, -105)
-loadWrapper.BackgroundColor3 = Color3.fromRGB(12, 12, 18)
-loadWrapper.BackgroundTransparency = 0.15
+loadWrapper.Name = "AetherisLoading"
+loadWrapper.AnchorPoint = Vector2.new(0.5, 0.5)
+loadWrapper.Size = UDim2.new(0, loadWidth, 0, 226)
+loadWrapper.Position = UDim2.new(0.5, 0, 0.5, 0)
+loadWrapper.BackgroundColor3 = Color3.fromRGB(10, 9, 17)
+loadWrapper.BackgroundTransparency = 0.2
 loadWrapper.BorderSizePixel = 0
 loadWrapper.ClipsDescendants = true
 loadWrapper.Parent = screenGui
+
+local loadScale = Instance.new("UIScale")
+loadScale.Scale = 0.9
+loadScale.Parent = loadWrapper
 
 local loadCorner = Instance.new("UICorner")
 loadCorner.CornerRadius = UDim.new(0, 18)
 loadCorner.Parent = loadWrapper
 
+local loadGradient = Instance.new("UIGradient")
+loadGradient.Rotation = 45
+loadGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(28, 19, 45)),
+    ColorSequenceKeypoint.new(0.48, Color3.fromRGB(15, 13, 25)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(8, 8, 14))
+})
+loadGradient.Parent = loadWrapper
+
 local loadStroke = Instance.new("UIStroke")
 loadStroke.Color = currentThemeColor
-loadStroke.Transparency = 0.15
-loadStroke.Thickness = 2.2
+loadStroke.Transparency = 0.22
+loadStroke.Thickness = 1.6
 loadStroke.Parent = loadWrapper
 table.insert(themeSections, loadStroke)
 
--- Anel Gradiente / Brilho de Fundo na Tela de Carregamento
-local loadGlowBg = Instance.new("Frame")
-loadGlowBg.Size = UDim2.new(1, 0, 1, 0)
-loadGlowBg.BackgroundTransparency = 1
-loadGlowBg.Parent = loadWrapper
+local loadStrokePulse = TweenService:Create(
+    loadStroke,
+    TweenInfo.new(1.35, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+    {Transparency = 0.48, Thickness = 2.2}
+)
+loadStrokePulse:Play()
+TweenService:Create(
+    loadGradient,
+    TweenInfo.new(10, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true),
+    {Rotation = 315}
+):Play()
+TweenService:Create(loadScale, TweenInfo.new(0.65, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
 
-local loadGradient = Instance.new("UIGradient")
-loadGradient.Transparency = NumberSequence.new({
-	NumberSequenceKeypoint.new(0, 0.4),
-	NumberSequenceKeypoint.new(0.5, 0.85),
-	NumberSequenceKeypoint.new(1, 0.4)
+-- Brilho suave no fundo para dar profundidade sem poluir a interface.
+local loadGlow = Instance.new("Frame")
+loadGlow.Name = "AmbientGlow"
+loadGlow.Size = UDim2.new(0.82, 0, 0, 96)
+loadGlow.Position = UDim2.new(0.09, 0, 0, -20)
+loadGlow.BackgroundColor3 = currentThemeColor
+loadGlow.BackgroundTransparency = 0.9
+loadGlow.BorderSizePixel = 0
+loadGlow.ZIndex = 1
+loadGlow.Parent = loadWrapper
+table.insert(themeParticles, loadGlow)
+local glowCorner = Instance.new("UICorner")
+glowCorner.CornerRadius = UDim.new(1, 0)
+glowCorner.Parent = loadGlow
+local glowGradient = Instance.new("UIGradient")
+glowGradient.Rotation = 90
+glowGradient.Transparency = NumberSequence.new({
+    NumberSequenceKeypoint.new(0, 0.35),
+    NumberSequenceKeypoint.new(1, 1)
 })
-loadGradient.Rotation = 45
-loadGradient.Parent = loadGlowBg
+glowGradient.Parent = loadGlow
 
 local loadAccent = Instance.new("Frame")
 loadAccent.Name = "TopAccent"
-loadAccent.Size = UDim2.new(0.34, 0, 0, 3)
-loadAccent.Position = UDim2.new(0.33, 0, 0, 0)
+loadAccent.Size = UDim2.new(0.28, 0, 0, 3)
+loadAccent.Position = UDim2.new(0.36, 0, 0, 0)
 loadAccent.BackgroundColor3 = currentThemeColor
 loadAccent.BorderSizePixel = 0
+loadAccent.ZIndex = 4
 loadAccent.Parent = loadWrapper
 table.insert(themeSliders, loadAccent)
 local accentCorner = Instance.new("UICorner")
 accentCorner.CornerRadius = UDim.new(1, 0)
 accentCorner.Parent = loadAccent
+TweenService:Create(loadAccent, TweenInfo.new(0.85, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+    Size = UDim2.new(0.58, 0, 0, 3),
+    Position = UDim2.new(0.21, 0, 0, 0)
+}):Play()
 
-local loadSubtitle = Instance.new("TextLabel")
-loadSubtitle.Name = "LoadingSubtitle"
-loadSubtitle.Size = UDim2.new(1, 0, 0, 12)
-loadSubtitle.Position = UDim2.new(0, 0, 0, 78)
-loadSubtitle.BackgroundTransparency = 1
-loadSubtitle.Font = Enum.Font.GothamMedium
-loadSubtitle.Text = "✦  INICIALIZANDO SISTEMA QUÂNTICO  ✦"
-loadSubtitle.TextColor3 = currentThemeColor
-loadSubtitle.TextSize = 8.5
-loadSubtitle.TextTransparency = 1
-loadSubtitle.Parent = loadWrapper
-table.insert(headerSubtitles, loadSubtitle)
-
+-- Pequenos pontos luminosos animados no fundo.
 local loadingParticles = {}
 for i = 1, 16 do
     local spark = Instance.new("Frame")
-    local size = math.random(2, 5)
-    spark.Size = UDim2.new(0, size, 0, size)
-    spark.Position = UDim2.new(math.random(), 0, math.random(), 0)
+    local sparkSize = math.random(2, 4)
+    spark.Size = UDim2.new(0, sparkSize, 0, sparkSize)
+    spark.Position = UDim2.new(math.random(8, 92) / 100, 0, math.random(8, 88) / 100, 0)
     spark.BackgroundColor3 = currentThemeColor
-    spark.BackgroundTransparency = 0.35
+    spark.BackgroundTransparency = math.random(35, 70) / 100
     spark.BorderSizePixel = 0
     spark.ZIndex = 2
     spark.Parent = loadWrapper
@@ -279,9 +316,9 @@ task.spawn(function()
     while loadWrapper.Parent do
         for _, spark in ipairs(loadingParticles) do
             if spark.Parent then
-                TweenService:Create(spark, TweenInfo.new(2.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-                    Position = UDim2.new(math.random(), 0, math.random(), 0),
-                    BackgroundTransparency = math.random(20, 80) / 100
+                TweenService:Create(spark, TweenInfo.new(math.random(18, 32) / 10, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                    Position = UDim2.new(math.random(8, 92) / 100, 0, math.random(8, 88) / 100, 0),
+                    BackgroundTransparency = math.random(25, 78) / 100
                 }):Play()
             end
         end
@@ -289,150 +326,252 @@ task.spawn(function()
     end
 end)
 
+-- Anel orbital e marca minimalista do Aetheris.
 local sciFiRing = Instance.new("Frame")
+sciFiRing.Name = "OrbitRing"
 sciFiRing.Size = UDim2.new(0, 64, 0, 64)
-sciFiRing.Position = UDim2.new(0.5, -32, 0, 14)
+sciFiRing.Position = UDim2.new(0.5, -32, 0, 9)
 sciFiRing.BackgroundTransparency = 1
 sciFiRing.ZIndex = 3
 sciFiRing.Parent = loadWrapper
-
 local ringStroke = Instance.new("UIStroke")
 ringStroke.Color = currentThemeColor
-ringStroke.Transparency = 0.25
-ringStroke.Thickness = 2
+ringStroke.Transparency = 0.35
+ringStroke.Thickness = 1.5
 ringStroke.Parent = sciFiRing
 table.insert(themeSections, ringStroke)
-
 local ringCorner = Instance.new("UICorner")
 ringCorner.CornerRadius = UDim.new(1, 0)
 ringCorner.Parent = sciFiRing
 
+local orbitDot = Instance.new("Frame")
+orbitDot.Name = "OrbitDot"
+orbitDot.Size = UDim2.new(0, 6, 0, 6)
+orbitDot.Position = UDim2.new(0.5, -3, 0, 38)
+orbitDot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+orbitDot.BorderSizePixel = 0
+orbitDot.ZIndex = 5
+orbitDot.Parent = loadWrapper
+local orbitDotCorner = Instance.new("UICorner")
+orbitDotCorner.CornerRadius = UDim.new(1, 0)
+orbitDotCorner.Parent = orbitDot
+
 local loadIcon = Instance.new("TextLabel")
-loadIcon.Size = UDim2.new(0, 50, 0, 50)
-loadIcon.Position = UDim2.new(0.5, -25, 0, 21)
-loadIcon.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
+loadIcon.Name = "LogoMark"
+loadIcon.Size = UDim2.new(0, 44, 0, 44)
+loadIcon.Position = UDim2.new(0.5, -22, 0, 19)
+loadIcon.BackgroundColor3 = Color3.fromRGB(18, 15, 29)
+loadIcon.BackgroundTransparency = 0.08
+loadIcon.BorderSizePixel = 0
 loadIcon.Font = Enum.Font.GothamBold
-loadIcon.Text = "⚡"
+loadIcon.Text = "A"
 loadIcon.TextColor3 = currentThemeColor
-loadIcon.TextSize = 24
+loadIcon.TextSize = 25
 loadIcon.TextTransparency = 1
 loadIcon.ZIndex = 4
 loadIcon.Parent = loadWrapper
-
 local iconCorner = Instance.new("UICorner")
-iconCorner.CornerRadius = UDim.new(0, 14)
+iconCorner.CornerRadius = UDim.new(0, 13)
 iconCorner.Parent = loadIcon
+local iconStroke = Instance.new("UIStroke")
+iconStroke.Color = currentThemeColor
+iconStroke.Thickness = 1
+iconStroke.Transparency = 0.25
+iconStroke.Parent = loadIcon
+table.insert(themeSections, iconStroke)
+
+local loadSubtitle = Instance.new("TextLabel")
+loadSubtitle.Name = "LoadingSubtitle"
+loadSubtitle.Size = UDim2.new(1, -24, 0, 12)
+loadSubtitle.Position = UDim2.new(0, 12, 0, 75)
+loadSubtitle.BackgroundTransparency = 1
+loadSubtitle.Font = Enum.Font.GothamBold
+loadSubtitle.Text = "✦  PERSONALIZANDO SUA EXPERIÊNCIA  ✦"
+loadSubtitle.TextColor3 = currentThemeColor
+loadSubtitle.TextSize = 8
+loadSubtitle.TextTransparency = 1
+loadSubtitle.ZIndex = 4
+loadSubtitle.Parent = loadWrapper
+table.insert(headerSubtitles, loadSubtitle)
 
 local loadTitle = Instance.new("TextLabel")
-loadTitle.Size = UDim2.new(1, 0, 0, 22)
-loadTitle.Position = UDim2.new(0, 0, 0, 93)
+loadTitle.Name = "LoadingTitle"
+loadTitle.Size = UDim2.new(1, -24, 0, 21)
+loadTitle.Position = UDim2.new(0, 12, 0, 91)
 loadTitle.BackgroundTransparency = 1
 loadTitle.Font = Enum.Font.GothamBold
-loadTitle.Text = "AETHERIS HUB V2"
-loadTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+loadTitle.Text = "AETHERIS HUB"
+loadTitle.TextColor3 = Color3.fromRGB(250, 248, 255)
 loadTitle.TextSize = 17
 loadTitle.TextTransparency = 1
+loadTitle.ZIndex = 4
 loadTitle.Parent = loadWrapper
 
 local loadStatus = Instance.new("TextLabel")
-loadStatus.Size = UDim2.new(1, 0, 0, 14)
-loadStatus.Position = UDim2.new(0, 0, 0, 119)
+loadStatus.Name = "LoadingStatus"
+loadStatus.Size = UDim2.new(1, -24, 0, 15)
+loadStatus.Position = UDim2.new(0, 12, 0, 117)
 loadStatus.BackgroundTransparency = 1
 loadStatus.Font = Enum.Font.GothamMedium
-loadStatus.Text = "Sincronizando banco de dados..."
-loadStatus.TextColor3 = Color3.fromRGB(180, 180, 210)
-loadStatus.TextSize = 10.5
+loadStatus.Text = "Preparando a interface..."
+loadStatus.TextColor3 = Color3.fromRGB(177, 171, 195)
+loadStatus.TextSize = 10
 loadStatus.TextTransparency = 1
+loadStatus.ZIndex = 4
 loadStatus.Parent = loadWrapper
 
 local percentLabel = Instance.new("TextLabel")
-percentLabel.Size = UDim2.new(1, 0, 0, 14)
-percentLabel.Position = UDim2.new(0, 0, 0, 147)
+percentLabel.Name = "LoadingPercent"
+percentLabel.Size = UDim2.new(1, -24, 0, 14)
+percentLabel.Position = UDim2.new(0, 12, 0, 143)
 percentLabel.BackgroundTransparency = 1
 percentLabel.Font = Enum.Font.GothamBold
 percentLabel.Text = "0%"
 percentLabel.TextColor3 = currentThemeColor
-percentLabel.TextSize = 13
+percentLabel.TextSize = 12
 percentLabel.TextTransparency = 1
+percentLabel.ZIndex = 4
 percentLabel.Parent = loadWrapper
 
 local loadBarBg = Instance.new("Frame")
-loadBarBg.Size = UDim2.new(0, 320, 0, 7)
-loadBarBg.Position = UDim2.new(0.5, -160, 0, 175)
-loadBarBg.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
+loadBarBg.Name = "ProgressTrack"
+loadBarBg.Size = UDim2.new(0.82, 0, 0, 6)
+loadBarBg.Position = UDim2.new(0.09, 0, 0, 169)
+loadBarBg.BackgroundColor3 = Color3.fromRGB(34, 30, 45)
+loadBarBg.BackgroundTransparency = 0.15
 loadBarBg.BorderSizePixel = 0
+loadBarBg.ClipsDescendants = true
+loadBarBg.ZIndex = 4
 loadBarBg.Parent = loadWrapper
-
 local loadBarCorner = Instance.new("UICorner")
 loadBarCorner.CornerRadius = UDim.new(1, 0)
 loadBarCorner.Parent = loadBarBg
 
 local loadBarFill = Instance.new("Frame")
+loadBarFill.Name = "ProgressFill"
 loadBarFill.Size = UDim2.new(0, 0, 1, 0)
 loadBarFill.BackgroundColor3 = currentThemeColor
 loadBarFill.BorderSizePixel = 0
+loadBarFill.ZIndex = 5
 loadBarFill.Parent = loadBarBg
 table.insert(themeSliders, loadBarFill)
-
 local loadBarFillCorner = Instance.new("UICorner")
 loadBarFillCorner.CornerRadius = UDim.new(1, 0)
 loadBarFillCorner.Parent = loadBarFill
 
-TweenService:Create(loadIcon, TweenInfo.new(0.5, Enum.EasingStyle.Back), {TextTransparency = 0}):Play()
-TweenService:Create(loadTitle, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
-TweenService:Create(loadSubtitle, TweenInfo.new(0.65), {TextTransparency = 0}):Play()
-TweenService:Create(loadAccent, TweenInfo.new(0.8, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0.68, 0, 0, 3), Position = UDim2.new(0.16, 0, 0, 0)}):Play()
-TweenService:Create(loadStatus, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
-TweenService:Create(percentLabel, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
+local loadBarShine = Instance.new("Frame")
+loadBarShine.Name = "ProgressShine"
+loadBarShine.Size = UDim2.new(0.24, 0, 1, 0)
+loadBarShine.Position = UDim2.new(-0.3, 0, 0, 0)
+loadBarShine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+loadBarShine.BackgroundTransparency = 0.55
+loadBarShine.BorderSizePixel = 0
+loadBarShine.ZIndex = 6
+loadBarShine.Parent = loadBarFill
+local shineGradient = Instance.new("UIGradient")
+shineGradient.Transparency = NumberSequence.new({
+    NumberSequenceKeypoint.new(0, 1),
+    NumberSequenceKeypoint.new(0.5, 0.1),
+    NumberSequenceKeypoint.new(1, 1)
+})
+shineGradient.Parent = loadBarShine
+
+task.spawn(function()
+    while loadWrapper.Parent do
+        loadBarShine.Position = UDim2.new(-0.3, 0, 0, 0)
+        local shineTween = TweenService:Create(loadBarShine, TweenInfo.new(0.9, Enum.EasingStyle.Linear), {
+            Position = UDim2.new(1.05, 0, 0, 0)
+        })
+        shineTween:Play()
+        shineTween.Completed:Wait()
+        task.wait(0.12)
+    end
+end)
+
+local loadFooter = Instance.new("TextLabel")
+loadFooter.Name = "LoadingFooter"
+loadFooter.Size = UDim2.new(1, -24, 0, 12)
+loadFooter.Position = UDim2.new(0, 12, 0, 193)
+loadFooter.BackgroundTransparency = 1
+loadFooter.Font = Enum.Font.GothamMedium
+loadFooter.Text = "INTERFACE  •  DESEMPENHO  •  PERSONALIZAÇÃO"
+loadFooter.TextColor3 = Color3.fromRGB(120, 115, 142)
+loadFooter.TextSize = 8
+loadFooter.TextTransparency = 1
+loadFooter.ZIndex = 4
+loadFooter.Parent = loadWrapper
+
+TweenService:Create(loadIcon, TweenInfo.new(0.48, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+TweenService:Create(loadTitle, TweenInfo.new(0.55, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+TweenService:Create(loadSubtitle, TweenInfo.new(0.62, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+TweenService:Create(loadStatus, TweenInfo.new(0.55), {TextTransparency = 0}):Play()
+TweenService:Create(percentLabel, TweenInfo.new(0.55), {TextTransparency = 0}):Play()
+TweenService:Create(loadFooter, TweenInfo.new(0.7), {TextTransparency = 0}):Play()
 
 local ringConn
+local orbitAngle = 0
 ringConn = RunService.RenderStepped:Connect(function(dt)
-	if sciFiRing and sciFiRing.Parent then
-		sciFiRing.Rotation = sciFiRing.Rotation + (dt * 110)
-	else
-		if ringConn then ringConn:Disconnect() end
-	end
+    if loadWrapper and loadWrapper.Parent then
+        sciFiRing.Rotation = (sciFiRing.Rotation + dt * 65) % 360
+        orbitAngle += dt * 1.8
+        orbitDot.Position = UDim2.new(0.5, math.cos(orbitAngle) * 32 - 3, 0, 41 + math.sin(orbitAngle) * 32 - 3)
+    elseif ringConn then
+        ringConn:Disconnect()
+    end
 end)
 
 task.spawn(function()
-	local steps = {
-		{progress = 0.25, text = "Carregando módulos avançados do Blox Fruits..."},
-		{progress = 0.55, text = "Calibrando sistemas de ESP, AimLock e Coleta..."},
-		{progress = 0.85, text = "Otimizando renderização e shaders visuais..."},
-		{progress = 1.00, text = "Inicialização concluída com sucesso!"}
-	}
-	
-	local currentTweenTime = 0.35
-	for _, step in ipairs(steps) do
-		loadStatus.Text = step.text
-		TweenService:Create(loadBarFill, TweenInfo.new(currentTweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-			Size = UDim2.new(step.progress, 0, 1, 0)
-		}):Play()
-		
-		local targetPercent = math.floor(step.progress * 100)
-		percentLabel.Text = targetPercent .. "%"
-		
-		task.wait(currentTweenTime + 0.1)
-	end
-	
-	if ringConn then ringConn:Disconnect() end
-	task.wait(0.2)
-	
-	local fadeOut = TweenInfo.new(0.4, Enum.EasingStyle.Quad)
-	TweenService:Create(loadWrapper, fadeOut, {BackgroundTransparency = 1}):Play()
-	TweenService:Create(loadIcon, fadeOut, {TextTransparency = 1}):Play()
-	TweenService:Create(loadTitle, fadeOut, {TextTransparency = 1}):Play()
-	TweenService:Create(loadSubtitle, fadeOut, {TextTransparency = 1}):Play()
-	TweenService:Create(loadStatus, fadeOut, {TextTransparency = 1}):Play()
-	TweenService:Create(percentLabel, fadeOut, {TextTransparency = 1}):Play()
-	TweenService:Create(loadBarBg, fadeOut, {BackgroundTransparency = 1}):Play()
-	TweenService:Create(loadBarFill, fadeOut, {BackgroundTransparency = 1}):Play()
-	TweenService:Create(sciFiRing, fadeOut, {BackgroundTransparency = 1}):Play()
-	
-	task.wait(0.4)
-	loadWrapper:Destroy()
-	
-	showMainPanel()
+    local steps = {
+        {progress = 0.25, text = "Preparando a interface..."},
+        {progress = 0.55, text = "Carregando componentes visuais..."},
+        {progress = 0.82, text = "Sincronizando informações da sessão..."},
+        {progress = 1.00, text = "Tudo pronto. Bem-vindo ao Aetheris!"}
+    }
+
+    local previousProgress = 0
+    local currentTweenTime = 0.52
+    for _, step in ipairs(steps) do
+        loadStatus.Text = step.text
+        TweenService:Create(loadBarFill, TweenInfo.new(currentTweenTime, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            Size = UDim2.new(step.progress, 0, 1, 0)
+        }):Play()
+
+        local tickCount = 10
+        for tick = 1, tickCount do
+            local shownProgress = previousProgress + (step.progress - previousProgress) * (tick / tickCount)
+            percentLabel.Text = tostring(math.floor(shownProgress * 100 + 0.5)) .. "%"
+            task.wait(currentTweenTime / tickCount)
+        end
+        previousProgress = step.progress
+        task.wait(0.06)
+    end
+
+    if ringConn then
+        ringConn:Disconnect()
+    end
+    task.wait(0.22)
+
+    local fadeOut = TweenInfo.new(0.52, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+    TweenService:Create(loadWrapper, fadeOut, {BackgroundTransparency = 1}):Play()
+    TweenService:Create(loadScale, fadeOut, {Scale = 1.045}):Play()
+    for _, descendant in ipairs(loadWrapper:GetDescendants()) do
+        if descendant:IsA("GuiObject") then
+            pcall(function()
+                TweenService:Create(descendant, fadeOut, {BackgroundTransparency = 1}):Play()
+            end)
+            if descendant:IsA("TextLabel") or descendant:IsA("TextButton") or descendant:IsA("TextBox") then
+                TweenService:Create(descendant, fadeOut, {TextTransparency = 1}):Play()
+            elseif descendant:IsA("ImageLabel") or descendant:IsA("ImageButton") then
+                TweenService:Create(descendant, fadeOut, {ImageTransparency = 1}):Play()
+            end
+        elseif descendant:IsA("UIStroke") then
+            TweenService:Create(descendant, fadeOut, {Transparency = 1}):Play()
+        end
+    end
+
+    task.wait(0.56)
+    loadWrapper:Destroy()
+    showMainPanel()
 end)
 
 -----------------------------------------------------------------
@@ -547,6 +686,7 @@ function showMainPanel()
 	floatStroke.Parent = floatingBtn
 	table.insert(themeSections, floatStroke)
 
+	-- Contorno frontal explícito para garantir que a borda fique nítida e visível.
 	local visibleBorder = Instance.new("Frame")
 	visibleBorder.Name = "VisibleThemeBorder"
 	visibleBorder.Size = UDim2.new(1, 0, 1, 0)
@@ -590,6 +730,7 @@ function showMainPanel()
 	floatLetterStroke.Parent = floatLetter
 	table.insert(themeSections, floatLetterStroke)
 
+	-- Halo pulsante sutil ao redor do ícone.
 	local floatGlow = Instance.new("UIStroke")
 	floatGlow.Name = "SoftGlow"
 	floatGlow.Color = currentThemeColor
@@ -598,6 +739,7 @@ function showMainPanel()
 	floatGlow.Parent = floatingBtn
 	table.insert(themeSections, floatGlow)
 
+	-- Pequenas partículas luminosas que orbitam dentro do botão.
 	local floatParticles = {}
 	for i = 1, 4 do
 		local particle = Instance.new("Frame")
@@ -1661,26 +1803,51 @@ function showMainPanel()
 	end
 
 	-----------------------------------------------------------------
-	-- ABA INFO (1ª ABA): Perfil, Sessão, Desempenho e Novidades
+	-- ABA INFO: perfil, servidor, desempenho e changelog
 	-----------------------------------------------------------------
 	local infoPage = pages["Info"]
+	infoPage.ScrollBarThickness = 3
+
 	local function makeInfoCard(parent, height, order)
 		local card = Instance.new("Frame")
 		card.Size = UDim2.new(1, -8, 0, height)
-		card.BackgroundColor3 = Color3.fromRGB(26, 26, 36)
-		card.BackgroundTransparency = 0.22
+		card.BackgroundColor3 = Color3.fromRGB(23, 22, 33)
+		card.BackgroundTransparency = 0.12
 		card.BorderSizePixel = 0
+		card.ClipsDescendants = true
 		card.LayoutOrder = order
 		card.Parent = parent
+
 		local corner = Instance.new("UICorner")
 		corner.CornerRadius = UDim.new(0, 10)
 		corner.Parent = card
+
+		local gradient = Instance.new("UIGradient")
+		gradient.Rotation = 25
+		gradient.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(35, 29, 49)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(19, 19, 29))
+		})
+		gradient.Parent = card
+
 		local stroke = Instance.new("UIStroke")
 		stroke.Color = currentThemeColor
-		stroke.Transparency = 0.68
+		stroke.Transparency = 0.64
 		stroke.Thickness = 1
 		stroke.Parent = card
 		table.insert(themeSections, stroke)
+
+		local accent = Instance.new("Frame")
+		accent.Name = "AccentLine"
+		accent.Size = UDim2.new(0.24, 0, 0, 2)
+		accent.Position = UDim2.new(0, 10, 0, 0)
+		accent.BackgroundColor3 = currentThemeColor
+		accent.BorderSizePixel = 0
+		accent.Parent = card
+		table.insert(themeSliders, accent)
+		local accentCorner = Instance.new("UICorner")
+		accentCorner.CornerRadius = UDim.new(1, 0)
+		accentCorner.Parent = accent
 		return card
 	end
 
@@ -1696,6 +1863,7 @@ function showMainPanel()
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.TextYAlignment = Enum.TextYAlignment.Center
 		label.TextTruncate = Enum.TextTruncate.AtEnd
+		label.ZIndex = 3
 		label.Parent = parent
 		table.insert(allTextLabels, label)
 		if color == currentThemeColor then
@@ -1704,85 +1872,162 @@ function showMainPanel()
 		return label
 	end
 
-	local infoHeader = makeInfoCard(infoPage, 108, 1)
+	-- Cartão de perfil
+	local infoHeader = makeInfoCard(infoPage, 112, 1)
 	local avatar = Instance.new("ImageLabel")
 	avatar.Name = "PlayerAvatar"
-	avatar.Size = UDim2.new(0, 76, 0, 76)
-	avatar.Position = UDim2.new(0, 15, 0.5, -38)
-	avatar.BackgroundColor3 = Color3.fromRGB(38, 38, 52)
+	avatar.Size = UDim2.new(0, 72, 0, 72)
+	avatar.Position = UDim2.new(0, 12, 0.5, -36)
+	avatar.BackgroundColor3 = Color3.fromRGB(38, 34, 52)
 	avatar.BorderSizePixel = 0
 	avatar.Image = ""
+	avatar.ScaleType = Enum.ScaleType.Crop
+	avatar.ZIndex = 3
 	avatar.Parent = infoHeader
 	local avatarCorner = Instance.new("UICorner")
 	avatarCorner.CornerRadius = UDim.new(0, 18)
 	avatarCorner.Parent = avatar
 	local avatarStroke = Instance.new("UIStroke")
 	avatarStroke.Color = currentThemeColor
-	avatarStroke.Thickness = 1.5
-	avatarStroke.Transparency = 0.12
+	avatarStroke.Thickness = 1.6
+	avatarStroke.Transparency = 0.1
 	avatarStroke.Parent = avatar
 	table.insert(themeSections, avatarStroke)
 
-	makeInfoText(infoHeader, "SEJA BEM-VINDO(A)", 9, UDim2.new(0, 105, 0, 19), UDim2.new(1, -120, 0, 16), currentThemeColor, Enum.Font.GothamBold)
-	makeInfoText(infoHeader, player.DisplayName or player.Name, 19, UDim2.new(0, 105, 0, 37), UDim2.new(1, -120, 0, 25), currentTextColor, Enum.Font.GothamBold)
-	makeInfoText(infoHeader, "@" .. player.Name .. "  •  ID " .. tostring(player.UserId), 10, UDim2.new(0, 105, 0, 66), UDim2.new(1, -120, 0, 18), Color3.fromRGB(175, 175, 195))
-	
+	makeInfoText(infoHeader, "PERFIL DO JOGADOR", 8, UDim2.new(0, 96, 0, 15), UDim2.new(1, -108, 0, 13), currentThemeColor, Enum.Font.GothamBold)
+	makeInfoText(infoHeader, player.DisplayName or player.Name, 16, UDim2.new(0, 96, 0, 33), UDim2.new(1, -108, 0, 22), currentTextColor, Enum.Font.GothamBold)
+	makeInfoText(infoHeader, "@" .. player.Name .. "  •  ID " .. tostring(player.UserId), 9, UDim2.new(0, 96, 0, 57), UDim2.new(1, -108, 0, 15), Color3.fromRGB(176, 171, 192))
+
+	local statusPill = Instance.new("Frame")
+	statusPill.Name = "ProfileStatus"
+	statusPill.Size = UDim2.new(0, 108, 0, 19)
+	statusPill.Position = UDim2.new(0, 96, 0, 79)
+	statusPill.BackgroundColor3 = currentThemeColor
+	statusPill.BackgroundTransparency = 0.78
+	statusPill.BorderSizePixel = 0
+	statusPill.ZIndex = 2
+	statusPill.Parent = infoHeader
+	table.insert(themeSliders, statusPill)
+	local statusPillCorner = Instance.new("UICorner")
+	statusPillCorner.CornerRadius = UDim.new(1, 0)
+	statusPillCorner.Parent = statusPill
+	local statusPillStroke = Instance.new("UIStroke")
+	statusPillStroke.Color = currentThemeColor
+	statusPillStroke.Transparency = 0.42
+	statusPillStroke.Thickness = 0.8
+	statusPillStroke.Parent = statusPill
+	table.insert(themeSections, statusPillStroke)
+	makeInfoText(statusPill, "●  PERFIL ATIVO", 8, UDim2.new(0, 8, 0, 0), UDim2.new(1, -12, 1, 0), Color3.fromRGB(244, 239, 255), Enum.Font.GothamBold)
+
 	task.spawn(function()
 		local ok, image = pcall(function()
 			return Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
 		end)
-		if ok and avatar.Parent then avatar.Image = image end
+		if ok and avatar.Parent then
+			avatar.Image = image
+		end
 	end)
 
-	local serverCard = makeInfoCard(infoPage, 104, 2)
-	makeInfoText(serverCard, "INFORMAÇÕES DA SESSÃO", 10, UDim2.new(0, 13, 0, 9), UDim2.new(1, -26, 0, 17), currentThemeColor, Enum.Font.GothamBold)
-	local playerCount = makeInfoText(serverCard, "Jogadores neste servidor: --", 11, UDim2.new(0, 13, 0, 34), UDim2.new(0.52, -12, 0, 20), currentTextColor)
-	makeInfoText(serverCard, "Servidor: " .. (game.JobId ~= "" and string.sub(game.JobId, 1, 12) .. "…" or "Local"), 10, UDim2.new(0.52, 0, 0, 34), UDim2.new(0.46, -10, 0, 20), Color3.fromRGB(185, 185, 205))
+	-- Dados básicos do servidor / experiência
+	local serverCard = makeInfoCard(infoPage, 108, 2)
+	makeInfoText(serverCard, "SERVIDOR  •  EXPERIÊNCIA", 9, UDim2.new(0, 12, 0, 8), UDim2.new(1, -24, 0, 16), currentThemeColor, Enum.Font.GothamBold)
+	makeInfoText(serverCard, "Experiência: " .. tostring(game.Name), 10, UDim2.new(0, 12, 0, 29), UDim2.new(1, -24, 0, 17), currentTextColor, Enum.Font.GothamMedium)
+	local playerCount = makeInfoText(serverCard, "Jogadores: -- / " .. tostring(Players.MaxPlayers), 10, UDim2.new(0, 12, 0, 51), UDim2.new(0.52, -12, 0, 17), currentTextColor)
 	local serverType = game.PrivateServerId ~= "" and "Privado" or "Público"
-	makeInfoText(serverCard, "Place ID: " .. tostring(game.PlaceId) .. "  •  " .. serverType .. "  •  Limite: " .. tostring(Players.MaxPlayers), 10, UDim2.new(0, 13, 0, 62), UDim2.new(1, -26, 0, 17), Color3.fromRGB(185, 185, 205))
+	local serverTypeLabel = makeInfoText(serverCard, "Tipo: " .. serverType, 10, UDim2.new(0.52, 0, 0, 51), UDim2.new(0.46, -8, 0, 17), Color3.fromRGB(195, 188, 211))
+	makeInfoText(serverCard, "Place ID: " .. tostring(game.PlaceId), 9, UDim2.new(0, 12, 0, 78), UDim2.new(0.48, -8, 0, 15), Color3.fromRGB(177, 171, 192))
+	local shortJobId = game.JobId ~= "" and (string.sub(game.JobId, 1, 8) .. "…") or "Local / Studio"
+	local jobLabel = makeInfoText(serverCard, "Servidor: " .. shortJobId, 9, UDim2.new(0.52, 0, 0, 78), UDim2.new(0.46, -8, 0, 15), Color3.fromRGB(177, 171, 192))
 
-	local perfCard = makeInfoCard(infoPage, 84, 3)
-	makeInfoText(perfCard, "DESEMPENHO DO SISTEMA", 10, UDim2.new(0, 13, 0, 8), UDim2.new(1, -26, 0, 16), currentThemeColor, Enum.Font.GothamBold)
-	local fpsLabel = makeInfoText(perfCard, "FPS   --", 14, UDim2.new(0, 14, 0, 34), UDim2.new(0.48, -14, 0, 25), currentTextColor, Enum.Font.GothamBold)
-	local pingLabel = makeInfoText(perfCard, "PING   -- ms", 14, UDim2.new(0.52, 0, 0, 34), UDim2.new(0.46, -12, 0, 25), currentTextColor, Enum.Font.GothamBold)
+	-- Métricas em cartões individuais
+	local perfCard = makeInfoCard(infoPage, 94, 3)
+	makeInfoText(perfCard, "DESEMPENHO EM TEMPO REAL", 9, UDim2.new(0, 12, 0, 8), UDim2.new(1, -24, 0, 15), currentThemeColor, Enum.Font.GothamBold)
 
-	local changelogCard = makeInfoCard(infoPage, 126, 4)
-	makeInfoText(changelogCard, "NOVIDADES & ATUALIZAÇÕES", 10, UDim2.new(0, 13, 0, 9), UDim2.new(1, -26, 0, 17), currentThemeColor, Enum.Font.GothamBold)
-	makeInfoText(changelogCard, "✦  Aba Info adicionada em destaque com dados em tempo real", 10, UDim2.new(0, 13, 0, 34), UDim2.new(1, -24, 0, 17), currentTextColor)
-	makeInfoText(changelogCard, "✦  Tela de carregamento aprimorada com animações estelares", 10, UDim2.new(0, 13, 0, 57), UDim2.new(1, -24, 0, 17), currentTextColor)
-	makeInfoText(changelogCard, "✦  Chest Collector e Fruit Collector otimizados e blindados", 10, UDim2.new(0, 13, 0, 80), UDim2.new(1, -24, 0, 17), currentTextColor)
-	makeInfoText(changelogCard, "✦  Estilização global fluida e temas dinâmicos expandidos", 10, UDim2.new(0, 13, 0, 103), UDim2.new(1, -24, 0, 17), currentTextColor)
+	local function makeMetricTile(parent, title, xPosition, value)
+		local tile = Instance.new("Frame")
+		tile.Size = UDim2.new(0.46, -6, 0, 47)
+		tile.Position = UDim2.new(xPosition, 0, 0, 31)
+		tile.BackgroundColor3 = Color3.fromRGB(35, 32, 47)
+		tile.BackgroundTransparency = 0.18
+		tile.BorderSizePixel = 0
+		tile.Parent = parent
+		local tileCorner = Instance.new("UICorner")
+		tileCorner.CornerRadius = UDim.new(0, 7)
+		tileCorner.Parent = tile
+		local tileAccent = Instance.new("Frame")
+		tileAccent.Size = UDim2.new(0, 2, 0, 24)
+		tileAccent.Position = UDim2.new(0, 0, 0.5, -12)
+		tileAccent.BackgroundColor3 = currentThemeColor
+		tileAccent.BorderSizePixel = 0
+		tileAccent.Parent = tile
+		table.insert(themeSliders, tileAccent)
+		local titleLabel = makeInfoText(tile, title, 8, UDim2.new(0, 9, 0, 5), UDim2.new(1, -14, 0, 12), Color3.fromRGB(174, 168, 194), Enum.Font.GothamBold)
+		local valueLabel = makeInfoText(tile, value, 14, UDim2.new(0, 9, 0, 18), UDim2.new(1, -14, 0, 23), currentTextColor, Enum.Font.GothamBold)
+		return valueLabel
+	end
 
-	local infoFootnote = makeInfoText(infoPage, "Aetheris Hub V2 • Desenvolvido para máxima performance e elegância.", 9, UDim2.new(0, 4, 0, 0), UDim2.new(1, -12, 0, 18), Color3.fromRGB(145, 145, 165))
-	infoFootnote.LayoutOrder = 5
+	local fpsLabel = makeMetricTile(perfCard, "FPS", 0, "--")
+	local pingLabel = makeMetricTile(perfCard, "PING", 0.52, "-- ms")
 
+	-- Changelog curto e legível
+	local changelogCard = makeInfoCard(infoPage, 132, 4)
+	makeInfoText(changelogCard, "NOVIDADES  •  AETHERIS HUB", 9, UDim2.new(0, 12, 0, 8), UDim2.new(1, -24, 0, 16), currentThemeColor, Enum.Font.GothamBold)
+	local changelogLines = {
+		"✦  Aba Info reorganizada com perfil e servidor",
+		"✦  FPS e ping atualizados durante a sessão",
+		"✦  Carregamento com brilho e partículas suaves",
+		"✦  Transições e detalhes visuais aprimorados"
+	}
+	for index, lineText in ipairs(changelogLines) do
+		makeInfoText(changelogCard, lineText, 9, UDim2.new(0, 12, 0, 29 + ((index - 1) * 22)), UDim2.new(1, -22, 0, 17), currentTextColor)
+	end
+
+	-- Plataforma e tempo desde que a interface foi aberta
+	local sessionCard = makeInfoCard(infoPage, 59, 5)
+	makeInfoText(sessionCard, "SESSÃO", 9, UDim2.new(0, 12, 0, 7), UDim2.new(1, -24, 0, 14), currentThemeColor, Enum.Font.GothamBold)
+	local platformName = isMobile and "Celular / Toque" or (UserInputService.GamepadEnabled and "Controle" or "PC")
+	local platformLabel = makeInfoText(sessionCard, "Plataforma: " .. platformName, 9, UDim2.new(0, 12, 0, 30), UDim2.new(0.52, -12, 0, 16), currentTextColor)
+	local sessionLabel = makeInfoText(sessionCard, "Tempo: 00:00:00", 9, UDim2.new(0.52, 0, 0, 30), UDim2.new(0.46, -8, 0, 16), currentTextColor)
+
+	local infoFootnote = makeInfoText(infoPage, "As métricas são estimativas locais e podem oscilar.", 8, UDim2.new(0, 4, 0, 0), UDim2.new(1, -12, 0, 16), Color3.fromRGB(143, 137, 160))
+	infoFootnote.LayoutOrder = 6
+
+	local sessionStartedAt = os.clock()
 	local fpsFrames, fpsElapsed = 0, 0
 	local infoPerfConnection = RunService.RenderStepped:Connect(function(dt)
 		fpsFrames += 1
 		fpsElapsed += dt
 		if fpsElapsed >= 1 then
-			fpsLabel.Text = "FPS   " .. tostring(math.floor(fpsFrames / fpsElapsed + 0.5))
+			fpsLabel.Text = tostring(math.floor(fpsFrames / math.max(fpsElapsed, 0.001) + 0.5))
 			fpsFrames, fpsElapsed = 0, 0
-			local count = #Players:GetPlayers()
-			playerCount.Text = "Jogadores neste servidor: " .. tostring(count)
+
+			playerCount.Text = "Jogadores: " .. tostring(#Players:GetPlayers()) .. " / " .. tostring(Players.MaxPlayers)
 			local pingText = "--"
 			pcall(function()
 				local stats = game:GetService("Stats")
 				local network = stats.Network
 				local item = network.ServerStatsItem["Data Ping"]
 				local value = item and item:GetValue()
-				if value then pingText = tostring(math.floor(value + 0.5)) end
+				if typeof(value) == "number" then
+					pingText = tostring(math.floor(value + 0.5))
+				end
 			end)
-			pingLabel.Text = "PING   " .. pingText .. " ms"
+			pingLabel.Text = pingText == "--" and "-- ms" or (pingText .. " ms")
+
+			local elapsed = math.max(0, math.floor(os.clock() - sessionStartedAt))
+			local hours = math.floor(elapsed / 3600)
+			local minutes = math.floor((elapsed % 3600) / 60)
+			local seconds = elapsed % 60
+			sessionLabel.Text = string.format("Tempo: %02d:%02d:%02d", hours, minutes, seconds)
 		end
 	end)
+
 	screenGui.Destroying:Connect(function()
 		if infoPerfConnection then
 			infoPerfConnection:Disconnect()
 		end
 	end)
 
-	-----------------------------------------------------------------
 	-- ABA PLAYER
 	-----------------------------------------------------------------
 	local playerPage = pages["Player"]
@@ -2826,16 +3071,20 @@ function showMainPanel()
 	local fruitList = {}
 	local fruitCache = {}
 
+	-- VERIFICA SE A FRUTA ESTÁ COM ALGUÉM (NA MÃO, BACKPACK OU INVENTÁRIO DE JOGADORES)
 	local function isHeldByPlayer(tool)
 		local parent = tool.Parent
 		if not parent or parent == workspace then return false end
 		
+		-- Se o parent for o personagem de algum player
 		if Players:GetPlayerFromCharacter(parent) then return true end
 		
+		-- Se estiver no inventário (Backpack) de um jogador
 		if parent.Name == "Backpack" and parent.Parent and parent.Parent:IsA("Player") then
 			return true
 		end
 		
+		-- Checa ascendentes (caso esteja em algum container interno de player)
 		local ancestor = parent
 		while ancestor and ancestor ~= workspace do
 			if ancestor:IsA("Model") and ancestor:FindFirstChildOfClass("Humanoid") then
@@ -3003,6 +3252,7 @@ function showMainPanel()
 			local i = ((lastFruitIdx - 1 + offset) % count) + 1
 			local fruit = fruitCache[i]
 
+			-- VALIDA SE EXISTE, ESTÁ SOLTA NO MAPA E NÃO ESTÁ NA MÃO DE NINGUÉM
 			if fruit and fruit.Parent and not isHeldByPlayer(fruit) then
 				local lastHandle = handled[fruit]
 				if not lastHandle or (now - lastHandle) >= 3 then
