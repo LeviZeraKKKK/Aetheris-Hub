@@ -232,7 +232,7 @@ accentCorner.Parent = loadAccent
 local loadSubtitle = Instance.new("TextLabel")
 loadSubtitle.Name = "LoadingSubtitle"
 loadSubtitle.Size = UDim2.new(1, 0, 0, 12)
-loadSubtitle.Position = UDim2.new(0, 0, 0, 68)
+loadSubtitle.Position = UDim2.new(0, 0, 0, 72)
 loadSubtitle.BackgroundTransparency = 1
 loadSubtitle.Font = Enum.Font.GothamMedium
 loadSubtitle.Text = "✦  PERSONALIZANDO SUA EXPERIÊNCIA  ✦"
@@ -251,7 +251,7 @@ for i = 1, 12 do
     spark.BackgroundColor3 = currentThemeColor
     spark.BackgroundTransparency = 0.45
     spark.BorderSizePixel = 0
-    spark.ZIndex = 2
+    spark.ZIndex = 1
     spark.Parent = loadWrapper
     local sparkCorner = Instance.new("UICorner")
     sparkCorner.CornerRadius = UDim.new(1, 0)
@@ -1718,9 +1718,9 @@ function showMainPanel()
 	local serverCard = makeInfoCard(infoPage, 104, 2)
 	makeInfoText(serverCard, "INFORMAÇÕES DA SESSÃO", 10, UDim2.new(0, 13, 0, 9), UDim2.new(1, -26, 0, 17), currentThemeColor, Enum.Font.GothamBold)
 	local playerCount = makeInfoText(serverCard, "Jogadores neste servidor: --", 11, UDim2.new(0, 13, 0, 34), UDim2.new(0.52, -12, 0, 20), currentTextColor)
-	local placeInfo = makeInfoText(serverCard, "Experiência: " .. tostring(game.PlaceId), 10, UDim2.new(0, 13, 0, 62), UDim2.new(1, -26, 0, 17), Color3.fromRGB(185, 185, 205))
 	local jobLabel = makeInfoText(serverCard, "Servidor: " .. (game.JobId ~= "" and string.sub(game.JobId, 1, 12) .. "…" or "Local"), 10, UDim2.new(0.52, 0, 0, 34), UDim2.new(0.46, -10, 0, 20), Color3.fromRGB(185, 185, 205))
-	local regionLabel = makeInfoText(serverCard, "Place ID: " .. tostring(game.PlaceId), 10, UDim2.new(0.52, 0, 0, 62), UDim2.new(0.46, -10, 0, 17), Color3.fromRGB(185, 185, 205))
+	local serverType = game.PrivateServerId ~= "" and "Privado" or "Público"
+	makeInfoText(serverCard, "Place ID: " .. tostring(game.PlaceId) .. "  •  " .. serverType .. "  •  Limite: " .. tostring(Players.MaxPlayers), 10, UDim2.new(0, 13, 0, 62), UDim2.new(1, -26, 0, 17), Color3.fromRGB(185, 185, 205))
 
 	local perfCard = makeInfoCard(infoPage, 84, 3)
 	makeInfoText(perfCard, "DESEMPENHO", 10, UDim2.new(0, 13, 0, 8), UDim2.new(1, -26, 0, 16), currentThemeColor, Enum.Font.GothamBold)
@@ -1732,10 +1732,11 @@ function showMainPanel()
 	makeInfoText(changelogCard, "✦  Interface renovada e painel mais organizado", 10, UDim2.new(0, 13, 0, 34), UDim2.new(1, -24, 0, 17), currentTextColor)
 	makeInfoText(changelogCard, "✦  Aba Info com perfil e dados em tempo real", 10, UDim2.new(0, 13, 0, 57), UDim2.new(1, -24, 0, 17), currentTextColor)
 	makeInfoText(changelogCard, "✦  Tema dinâmico, efeitos e partículas aprimorados", 10, UDim2.new(0, 13, 0, 80), UDim2.new(1, -24, 0, 17), currentTextColor)
-	makeInfoText(infoPage, "Os dados de FPS e ping são estimativas locais e podem variar.", 9, UDim2.new(0, 4, 0, 0), UDim2.new(1, -12, 0, 18), Color3.fromRGB(145, 145, 165))
+	local infoFootnote = makeInfoText(infoPage, "FPS e ping são estimativas locais e podem variar.", 9, UDim2.new(0, 4, 0, 0), UDim2.new(1, -12, 0, 18), Color3.fromRGB(145, 145, 165))
+	infoFootnote.LayoutOrder = 5
 
 	local fpsFrames, fpsElapsed = 0, 0
-	RunService.RenderStepped:Connect(function(dt)
+	local infoPerfConnection = RunService.RenderStepped:Connect(function(dt)
 		fpsFrames += 1
 		fpsElapsed += dt
 		if fpsElapsed >= 1 then
@@ -1752,6 +1753,11 @@ function showMainPanel()
 				if value then pingText = tostring(math.floor(value + 0.5)) end
 			end)
 			pingLabel.Text = "PING   " .. pingText .. " ms"
+		end
+	end)
+	screenGui.Destroying:Connect(function()
+		if infoPerfConnection then
+			infoPerfConnection:Disconnect()
 		end
 	end)
 
