@@ -56,6 +56,12 @@ local function updateGlobalTheme(newColor)
 		secStroke.Color = newColor
 	end
 
+	for _, themedText in pairs(themeTexts) do
+		if themedText and themedText.Parent then
+			themedText.TextColor3 = newColor
+		end
+	end
+
 	for _, fill in pairs(themeSliders) do
 		fill.BackgroundColor3 = newColor
 	end
@@ -441,27 +447,93 @@ function showMainPanel()
 	interactionBlocker.Parent = mainPanel
 
 	local floatingBtn = Instance.new("TextButton")
+	floatingBtn.Name = "FloatingMaximizeButton"
 	floatingBtn.Size = UDim2.new(0, 0, 0, 0)
-	floatingBtn.Position = UDim2.new(0, 15, 0.5, -18)
+	floatingBtn.Position = UDim2.new(0, 15, 0.5, -20)
 	floatingBtn.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
 	floatingBtn.BackgroundTransparency = panelTransparencyValue
-	floatingBtn.Font = currentGlobalFont
-	floatingBtn.Text = "•"
-	floatingBtn.TextColor3 = currentThemeColor
-	floatingBtn.TextSize = 24
+	floatingBtn.AutoButtonColor = false
+	floatingBtn.Text = ""
 	floatingBtn.Visible = false
+	floatingBtn.ZIndex = 20
 	floatingBtn.Parent = screenGui
-	table.insert(themeTexts, floatingBtn)
 
 	local floatCorner = Instance.new("UICorner")
-	floatCorner.CornerRadius = UDim.new(0, 8)
+	floatCorner.CornerRadius = UDim.new(0, 9)
 	floatCorner.Parent = floatingBtn
 
 	local floatStroke = Instance.new("UIStroke")
+	floatStroke.Name = "ThemeBorder"
 	floatStroke.Color = currentThemeColor
-	floatStroke.Thickness = 1.3
+	floatStroke.Thickness = 1.8
+	floatStroke.Transparency = 0.08
 	floatStroke.Parent = floatingBtn
 	table.insert(themeSections, floatStroke)
+
+	local floatLetter = Instance.new("TextLabel")
+	floatLetter.Name = "LogoLetter"
+	floatLetter.Size = UDim2.new(1, 0, 1, 0)
+	floatLetter.BackgroundTransparency = 1
+	floatLetter.Font = Enum.Font.GothamBold
+	floatLetter.Text = "A"
+	floatLetter.TextColor3 = currentThemeColor
+	floatLetter.TextSize = 21
+	floatLetter.ZIndex = 21
+	floatLetter.Parent = floatingBtn
+	table.insert(themeTexts, floatLetter)
+
+	local floatLetterStroke = Instance.new("UIStroke")
+	floatLetterStroke.Color = currentThemeColor
+	floatLetterStroke.Transparency = 0.72
+	floatLetterStroke.Thickness = 0.7
+	floatLetterStroke.Parent = floatLetter
+	table.insert(themeSections, floatLetterStroke)
+
+	-- Halo pulsante sutil ao redor do ícone.
+	local floatGlow = Instance.new("UIStroke")
+	floatGlow.Name = "SoftGlow"
+	floatGlow.Color = currentThemeColor
+	floatGlow.Thickness = 4
+	floatGlow.Transparency = 0.78
+	floatGlow.Parent = floatingBtn
+	table.insert(themeSections, floatGlow)
+
+	-- Pequenas partículas luminosas que orbitam dentro do botão.
+	local floatParticles = {}
+	for i = 1, 4 do
+		local particle = Instance.new("Frame")
+		particle.Name = "ThemeParticle"
+		particle.Size = UDim2.new(0, 3, 0, 3)
+		particle.Position = UDim2.new(0.5, math.cos(i * math.pi / 2) * 13 - 1.5, 0.5, math.sin(i * math.pi / 2) * 13 - 1.5)
+		particle.BackgroundColor3 = currentThemeColor
+		particle.BackgroundTransparency = 0.22
+		particle.BorderSizePixel = 0
+		particle.ZIndex = 22
+		particle.Parent = floatingBtn
+		local particleCorner = Instance.new("UICorner")
+		particleCorner.CornerRadius = UDim.new(1, 0)
+		particleCorner.Parent = particle
+		table.insert(themeParticles, particle)
+		table.insert(floatParticles, particle)
+	end
+
+	task.spawn(function()
+		local glowTween = TweenService:Create(floatGlow, TweenInfo.new(1.15, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+			Transparency = 0.48, Thickness = 5
+		})
+		glowTween:Play()
+		local angle = 0
+		while floatingBtn.Parent do
+			angle += 0.035
+			for index, particle in ipairs(floatParticles) do
+				if particle.Parent then
+					local a = angle + (index - 1) * math.pi / 2
+					particle.Position = UDim2.new(0.5, math.cos(a) * 13 - 1.5, 0.5, math.sin(a) * 13 - 1.5)
+				end
+			end
+			task.wait(0.03)
+		end
+	end)
 
 	local floatDragging, floatDragStart, floatStartPos
 	floatingBtn.InputBegan:Connect(function(input)
@@ -633,7 +705,7 @@ function showMainPanel()
 			task.wait(0.25)
 			mainPanel.Visible = false
 			floatingBtn.Visible = true
-			TweenService:Create(floatingBtn, TweenInfo.new(0.18), {Size = UDim2.new(0, 36, 0, 36)}):Play()
+			TweenService:Create(floatingBtn, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 40, 0, 40)}):Play()
 		else
 			TweenService:Create(floatingBtn, TweenInfo.new(0.18), {Size = UDim2.new(0, 0, 0, 0)}):Play()
 			task.wait(0.18)
