@@ -516,6 +516,9 @@ function showMainPanel()
 	floatingBtnRefs.innerStroke = floatInnerStroke
 	floatingBtnRefs.ringStroke = floatRingStroke
 
+	-- ═══════════════════════════════════════════════════════════════════
+	-- PARTÍCULAS ORBITANDO (SOBRE o botão, densas, coloridas pelo tema)
+	-- ═══════════════════════════════════════════════════════════════════
 	task.spawn(function()
 		while floatingBtn and floatingBtn.Parent do
 			if not floatingBtn.Visible or floatingBtn.AbsoluteSize.X < 10 then
@@ -523,50 +526,56 @@ function showMainPanel()
 				continue
 			end
 
-			local p = Instance.new("Frame")
-			p.Size = UDim2.new(0, 3, 0, 3)
-			p.AnchorPoint = Vector2.new(0.5, 0.5)
-			p.BackgroundColor3 = currentThemeColor
-			p.BackgroundTransparency = 0.3
-			p.BorderSizePixel = 0
-			p.ZIndex = 98
-			p.Parent = floatRing
-			Instance.new("UICorner", p).CornerRadius = UDim.new(1, 0)
+			-- Spawna 2 partículas por ciclo para densidade
+			for _ = 1, 2 do
+				local p = Instance.new("Frame")
+				p.Size = UDim2.new(0, 5, 0, 5)
+				p.AnchorPoint = Vector2.new(0.5, 0.5)
+				p.BackgroundColor3 = currentThemeColor
+				p.BackgroundTransparency = 0.15
+				p.BorderSizePixel = 0
+				p.ZIndex = 105
+				p.Parent = floatingBtn
+				Instance.new("UICorner", p).CornerRadius = UDim.new(1, 0)
 
-			local s = Instance.new("UIStroke")
-			s.Color = currentThemeColor
-			s.Thickness = 1
-			s.Transparency = 0.6
-			s.Parent = p
+				local s = Instance.new("UIStroke")
+				s.Color = currentThemeColor
+				s.Thickness = 1
+				s.Transparency = 0.4
+				s.Parent = p
 
-			table.insert(floatingBtnRefs.particles, p)
+				table.insert(floatingBtnRefs.particles, p)
 
-			local angle = math.random() * math.pi * 2
-			local radius = 0.5
-			p.Position = UDim2.new(
-				0.5 + math.cos(angle) * radius, 0,
-				0.5 + math.sin(angle) * radius, 0
-			)
+				-- Começa DENTRO do botão
+				local angle = math.random() * math.pi * 2
+				local startRadius = 0.15
+				p.Position = UDim2.new(
+					0.5 + math.cos(angle) * startRadius, 0,
+					0.5 + math.sin(angle) * startRadius, 0
+				)
 
-			local endAngle = angle + (math.random() - 0.5) * math.pi * 2
-			local endRadius = 0.9 + math.random() * 0.4
+				-- Espirala pra fora
+				local endAngle = angle + (math.random() - 0.5) * math.pi * 2
+				local endRadius = 0.85 + math.random() * 0.5
 
-			local tw = TweenService:Create(p, TweenInfo.new(
-				math.random(15, 25) / 10,
-				Enum.EasingStyle.Sine,
-				Enum.EasingDirection.Out
-			), {
-				Position = UDim2.new(
-					0.5 + math.cos(endAngle) * endRadius, 0,
-					0.5 + math.sin(endAngle) * endRadius, 0
-				),
-				BackgroundTransparency = 1,
-				Size = UDim2.new(0, 0, 0, 0),
-			})
-			tw:Play()
-			tw.Completed:Wait()
-			p:Destroy()
-			task.wait(math.random(4, 8) / 10)
+				local tw = TweenService:Create(p, TweenInfo.new(
+					math.random(12, 20) / 10,
+					Enum.EasingStyle.Sine,
+					Enum.EasingDirection.Out
+				), {
+					Position = UDim2.new(
+						0.5 + math.cos(endAngle) * endRadius, 0,
+						0.5 + math.sin(endAngle) * endRadius, 0
+					),
+					BackgroundTransparency = 1,
+					Size = UDim2.new(0, 0, 0, 0),
+				})
+				tw:Play()
+				tw.Completed:Wait()
+				p:Destroy()
+			end
+
+			task.wait(math.random(3, 6) / 10)
 		end
 	end)
 
