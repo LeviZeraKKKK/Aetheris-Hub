@@ -40,7 +40,14 @@ local tabIndicators = {}
 local allTextLabels = {}
 local resizeSymbolsLines = {}
 local headerSubtitles = {}
-local floatingButtonElements = {}
+
+local floatingBtnRefs = {
+	btn = nil,
+	glowStroke = nil,
+	innerStroke = nil,
+	ringStroke = nil,
+	particles = {},
+}
 
 local function updateGlobalTheme(newColor)
 	currentThemeColor = newColor
@@ -69,16 +76,6 @@ local function updateGlobalTheme(newColor)
 		subLabel.TextColor3 = newColor
 	end
 
-	for _, floatElem in pairs(floatingButtonElements) do
-		if floatElem:IsA("UIStroke") then
-			floatElem.Color = newColor
-		elseif floatElem:IsA("TextLabel") or floatElem:IsA("TextButton") then
-			floatElem.TextColor3 = newColor
-		elseif floatElem:IsA("Frame") then
-			floatElem.BackgroundColor3 = newColor
-		end
-	end
-
 	for _, ind in pairs(tabIndicators) do
 		ind.BackgroundColor3 = newColor
 	end
@@ -86,6 +83,20 @@ local function updateGlobalTheme(newColor)
 	for _, part in pairs(themeParticles) do
 		if part and part.Parent then
 			part.BackgroundColor3 = newColor
+		end
+	end
+
+	if floatingBtnRefs.btn and floatingBtnRefs.btn.Parent then
+		TweenService:Create(floatingBtnRefs.btn, TweenInfo.new(0.2), {TextColor3 = newColor}):Play()
+	end
+	if floatingBtnRefs.glowStroke then floatingBtnRefs.glowStroke.Color = newColor end
+	if floatingBtnRefs.innerStroke then floatingBtnRefs.innerStroke.Color = newColor end
+	if floatingBtnRefs.ringStroke then floatingBtnRefs.ringStroke.Color = newColor end
+	for _, fp in pairs(floatingBtnRefs.particles) do
+		if fp and fp.Parent then
+			fp.BackgroundColor3 = newColor
+			local s = fp:FindFirstChildOfClass("UIStroke")
+			if s then s.Color = newColor end
 		end
 	end
 end
@@ -364,7 +375,7 @@ task.spawn(function()
 end)
 
 -----------------------------------------------------------------
--- PAINEL PRINCIPAL (PADRÃO NORMAL)
+-- PAINEL PRINCIPAL
 -----------------------------------------------------------------
 function showMainPanel()
 	local mainPanel = Instance.new("Frame")
@@ -375,7 +386,6 @@ function showMainPanel()
 	mainPanel.BackgroundTransparency = panelTransparencyValue
 	mainPanel.BorderSizePixel = 0
 	mainPanel.ClipsDescendants = false
-	mainPanel.ZIndex = 10
 	mainPanel.Parent = screenGui
 
 	local panelCorner = Instance.new("UICorner")
@@ -424,7 +434,6 @@ function showMainPanel()
 			p.BackgroundColor3 = currentThemeColor
 			p.BackgroundTransparency = 0.4
 			p.BorderSizePixel = 0
-			p.ZIndex = 12
 			p.Parent = particleContainer
 			table.insert(themeParticles, p)
 
@@ -453,30 +462,125 @@ function showMainPanel()
 	interactionBlocker.ZIndex = 9999
 	interactionBlocker.Parent = mainPanel
 
-	-- BOTÃO FLUTUANTE AJUSTADO (QUADRADO + BORDER + LETRA "A")
+	-----------------------------------------------------------------
+	-- BOTÃO FLUTUANTE "A" PROFISSIONAL INTEGRADO
+	-----------------------------------------------------------------
 	local floatingBtn = Instance.new("TextButton")
 	floatingBtn.Size = UDim2.new(0, 0, 0, 0)
-	floatingBtn.Position = UDim2.new(0, 20, 0.5, -22)
-	floatingBtn.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
-	floatingBtn.BackgroundTransparency = 0.15
-	floatingBtn.Font = Enum.Font.GothamBold
+	floatingBtn.Position = UDim2.new(0, 20, 0.5, -23)
+	floatingBtn.BackgroundColor3 = Color3.fromRGB(14, 14, 22)
+	floatingBtn.BackgroundTransparency = 0.05
+	floatingBtn.BorderSizePixel = 0
+	floatingBtn.Font = currentGlobalFont
 	floatingBtn.Text = "A"
 	floatingBtn.TextColor3 = currentThemeColor
-	floatingBtn.TextSize = 24
+	floatingBtn.TextSize = 22
 	floatingBtn.Visible = false
+	floatingBtn.AutoButtonColor = false
+	floatingBtn.ClipsDescendants = false
 	floatingBtn.ZIndex = 99999
 	floatingBtn.Parent = screenGui
-	table.insert(floatingButtonElements, floatingBtn)
+	table.insert(allTextLabels, floatingBtn)
+	Instance.new("UICorner", floatingBtn).CornerRadius = UDim.new(0, 11)
 
-	local floatCorner = Instance.new("UICorner")
-	floatCorner.CornerRadius = UDim.new(0, 10)
-	floatCorner.Parent = floatingBtn
+	local floatGlowStroke = Instance.new("UIStroke")
+	floatGlowStroke.Color = currentThemeColor
+	floatGlowStroke.Thickness = 2.5
+	floatGlowStroke.Transparency = 0.4
+	floatGlowStroke.Parent = floatingBtn
+	table.insert(themeSections, floatGlowStroke)
 
-	local floatStroke = Instance.new("UIStroke")
-	floatStroke.Color = currentThemeColor
-	floatStroke.Thickness = 1.8
-	floatStroke.Parent = floatingBtn
-	table.insert(floatingButtonElements, floatStroke)
+	local floatInnerStroke = Instance.new("UIStroke")
+	floatInnerStroke.Color = currentThemeColor
+	floatInnerStroke.Thickness = 1
+	floatInnerStroke.Transparency = 0.15
+	floatInnerStroke.Parent = floatingBtn
+	table.insert(themeSections, floatInnerStroke)
+
+	local floatRing = Instance.new("Frame")
+	floatRing.Size = UDim2.new(1, 0, 1, 0)
+	floatRing.BackgroundTransparency = 1
+	floatRing.ZIndex = 99
+	floatRing.Parent = floatingBtn
+
+	local floatRingStroke = Instance.new("UIStroke")
+	floatRingStroke.Color = currentThemeColor
+	floatRingStroke.Thickness = 1
+	floatRingStroke.Transparency = 0.6
+	floatRingStroke.Parent = floatRing
+	table.insert(themeSections, floatRingStroke)
+	Instance.new("UICorner", floatRing).CornerRadius = UDim.new(0, 11)
+
+	floatingBtnRefs.btn = floatingBtn
+	floatingBtnRefs.glowStroke = floatGlowStroke
+	floatingBtnRefs.innerStroke = floatInnerStroke
+	floatingBtnRefs.ringStroke = floatRingStroke
+
+	task.spawn(function()
+		while floatingBtn and floatingBtn.Parent do
+			if not floatingBtn.Visible or floatingBtn.AbsoluteSize.X < 10 then
+				task.wait(0.5)
+				continue
+			end
+
+			local p = Instance.new("Frame")
+			p.Size = UDim2.new(0, 3, 0, 3)
+			p.AnchorPoint = Vector2.new(0.5, 0.5)
+			p.BackgroundColor3 = currentThemeColor
+			p.BackgroundTransparency = 0.3
+			p.BorderSizePixel = 0
+			p.ZIndex = 98
+			p.Parent = floatRing
+			Instance.new("UICorner", p).CornerRadius = UDim.new(1, 0)
+
+			local s = Instance.new("UIStroke")
+			s.Color = currentThemeColor
+			s.Thickness = 1
+			s.Transparency = 0.6
+			s.Parent = p
+
+			table.insert(floatingBtnRefs.particles, p)
+
+			local angle = math.random() * math.pi * 2
+			local radius = 0.5
+			p.Position = UDim2.new(
+				0.5 + math.cos(angle) * radius, 0,
+				0.5 + math.sin(angle) * radius, 0
+			)
+
+			local endAngle = angle + (math.random() - 0.5) * math.pi * 2
+			local endRadius = 0.9 + math.random() * 0.4
+
+			local tw = TweenService:Create(p, TweenInfo.new(
+				math.random(15, 25) / 10,
+				Enum.EasingStyle.Sine,
+				Enum.EasingDirection.Out
+			), {
+				Position = UDim2.new(
+					0.5 + math.cos(endAngle) * endRadius, 0,
+					0.5 + math.sin(endAngle) * endRadius, 0
+				),
+				BackgroundTransparency = 1,
+				Size = UDim2.new(0, 0, 0, 0),
+			})
+			tw:Play()
+			tw.Completed:Wait()
+			p:Destroy()
+			task.wait(math.random(4, 8) / 10)
+		end
+	end)
+
+	floatingBtn.MouseEnter:Connect(function()
+		TweenService:Create(floatingBtn, TweenInfo.new(0.2), {TextSize = 24}):Play()
+		TweenService:Create(floatGlowStroke, TweenInfo.new(0.2), {Transparency = 0.15, Thickness = 3.5}):Play()
+		TweenService:Create(floatInnerStroke, TweenInfo.new(0.2), {Transparency = 0.0}):Play()
+	end)
+
+	floatingBtn.MouseLeave:Connect(function()
+		TweenService:Create(floatingBtn, TweenInfo.new(0.25), {TextSize = 22}):Play()
+		TweenService:Create(floatGlowStroke, TweenInfo.new(0.25), {Transparency = 0.4, Thickness = 2.5}):Play()
+		TweenService:Create(floatInnerStroke, TweenInfo.new(0.25), {Transparency = 0.15}):Play()
+	end)
 
 	local floatDragging, floatDragStart, floatStartPos
 	floatingBtn.InputBegan:Connect(function(input)
@@ -499,6 +603,7 @@ function showMainPanel()
 			)
 		end
 	end)
+	-----------------------------------------------------------------
 
 	local dragging, dragStart, startPos
 	local function startDragging(input)
@@ -646,9 +751,9 @@ function showMainPanel()
 			task.wait(0.25)
 			mainPanel.Visible = false
 			floatingBtn.Visible = true
-			TweenService:Create(floatingBtn, TweenInfo.new(0.18), {Size = UDim2.new(0, 44, 0, 44)}):Play()
+			TweenService:Create(floatingBtn, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 46, 0, 46)}):Play()
 		else
-			TweenService:Create(floatingBtn, TweenInfo.new(0.18), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+			TweenService:Create(floatingBtn, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 0, 0, 0)}):Play()
 			task.wait(0.18)
 			floatingBtn.Visible = false
 			mainPanel.Visible = true
