@@ -217,6 +217,62 @@ loadStroke.Thickness = 2
 loadStroke.Parent = loadWrapper
 table.insert(themeSections, loadStroke)
 
+local loadAccent = Instance.new("Frame")
+loadAccent.Name = "TopAccent"
+loadAccent.Size = UDim2.new(0.34, 0, 0, 3)
+loadAccent.Position = UDim2.new(0.33, 0, 0, 0)
+loadAccent.BackgroundColor3 = currentThemeColor
+loadAccent.BorderSizePixel = 0
+loadAccent.Parent = loadWrapper
+table.insert(themeSliders, loadAccent)
+local accentCorner = Instance.new("UICorner")
+accentCorner.CornerRadius = UDim.new(1, 0)
+accentCorner.Parent = loadAccent
+
+local loadSubtitle = Instance.new("TextLabel")
+loadSubtitle.Name = "LoadingSubtitle"
+loadSubtitle.Size = UDim2.new(1, 0, 0, 12)
+loadSubtitle.Position = UDim2.new(0, 0, 0, 68)
+loadSubtitle.BackgroundTransparency = 1
+loadSubtitle.Font = Enum.Font.GothamMedium
+loadSubtitle.Text = "✦  PERSONALIZANDO SUA EXPERIÊNCIA  ✦"
+loadSubtitle.TextColor3 = currentThemeColor
+loadSubtitle.TextSize = 8
+loadSubtitle.TextTransparency = 1
+loadSubtitle.Parent = loadWrapper
+table.insert(headerSubtitles, loadSubtitle)
+
+local loadingParticles = {}
+for i = 1, 12 do
+    local spark = Instance.new("Frame")
+    local size = math.random(2, 4)
+    spark.Size = UDim2.new(0, size, 0, size)
+    spark.Position = UDim2.new(math.random(), 0, math.random(), 0)
+    spark.BackgroundColor3 = currentThemeColor
+    spark.BackgroundTransparency = 0.45
+    spark.BorderSizePixel = 0
+    spark.ZIndex = 2
+    spark.Parent = loadWrapper
+    local sparkCorner = Instance.new("UICorner")
+    sparkCorner.CornerRadius = UDim.new(1, 0)
+    sparkCorner.Parent = spark
+    table.insert(themeParticles, spark)
+    table.insert(loadingParticles, spark)
+end
+task.spawn(function()
+    while loadWrapper.Parent do
+        for _, spark in ipairs(loadingParticles) do
+            if spark.Parent then
+                TweenService:Create(spark, TweenInfo.new(2.4, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                    Position = UDim2.new(math.random(), 0, math.random(), 0),
+                    BackgroundTransparency = math.random(25, 75) / 100
+                }):Play()
+            end
+        end
+        task.wait(1.2)
+    end
+end)
+
 local sciFiRing = Instance.new("Frame")
 sciFiRing.Size = UDim2.new(0, 60, 0, 60)
 sciFiRing.Position = UDim2.new(0.5, -30, 0, 18)
@@ -306,6 +362,8 @@ loadBarFillCorner.Parent = loadBarFill
 
 TweenService:Create(loadIcon, TweenInfo.new(0.5, Enum.EasingStyle.Back), {TextTransparency = 0}):Play()
 TweenService:Create(loadTitle, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
+TweenService:Create(loadSubtitle, TweenInfo.new(0.65), {TextTransparency = 0}):Play()
+TweenService:Create(loadAccent, TweenInfo.new(0.8, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0.62, 0, 0, 3), Position = UDim2.new(0.19, 0, 0, 0)}):Play()
 TweenService:Create(loadStatus, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
 TweenService:Create(percentLabel, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
 
@@ -826,6 +884,7 @@ function showMainPanel()
 	end
 
 	local tabs = {
+		{Name = "Info", Icon = "✦"},
 		{Name = "Player", Icon = "👤"},
 		{Name = "Aim Lock", Icon = "🎯"},
 		{Name = "Visual", Icon = "👁️"},
@@ -1586,6 +1645,116 @@ function showMainPanel()
 	end
 
 	-----------------------------------------------------------------
+	-- ABA INFO: perfil, sessão, desempenho e novidades
+	-----------------------------------------------------------------
+	local infoPage = pages["Info"]
+	local function makeInfoCard(parent, height, order)
+		local card = Instance.new("Frame")
+		card.Size = UDim2.new(1, -8, 0, height)
+		card.BackgroundColor3 = Color3.fromRGB(26, 26, 36)
+		card.BackgroundTransparency = 0.22
+		card.BorderSizePixel = 0
+		card.LayoutOrder = order
+		card.Parent = parent
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 10)
+		corner.Parent = card
+		local stroke = Instance.new("UIStroke")
+		stroke.Color = currentThemeColor
+		stroke.Transparency = 0.68
+		stroke.Thickness = 1
+		stroke.Parent = card
+		table.insert(themeSections, stroke)
+		return card
+	end
+	local function makeInfoText(parent, text, size, position, dimensions, color, font)
+		local label = Instance.new("TextLabel")
+		label.BackgroundTransparency = 1
+		label.Position = position
+		label.Size = dimensions
+		label.Font = font or Enum.Font.GothamMedium
+		label.Text = text
+		label.TextColor3 = color or currentTextColor
+		label.TextSize = size
+		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.TextYAlignment = Enum.TextYAlignment.Center
+		label.TextTruncate = Enum.TextTruncate.AtEnd
+		label.Parent = parent
+		table.insert(allTextLabels, label)
+		if color == currentThemeColor then
+			table.insert(themeTexts, label)
+		end
+		return label
+	end
+
+	local infoHeader = makeInfoCard(infoPage, 108, 1)
+	local avatar = Instance.new("ImageLabel")
+	avatar.Name = "PlayerAvatar"
+	avatar.Size = UDim2.new(0, 76, 0, 76)
+	avatar.Position = UDim2.new(0, 15, 0.5, -38)
+	avatar.BackgroundColor3 = Color3.fromRGB(38, 38, 52)
+	avatar.BorderSizePixel = 0
+	avatar.Image = ""
+	avatar.Parent = infoHeader
+	local avatarCorner = Instance.new("UICorner")
+	avatarCorner.CornerRadius = UDim.new(0, 18)
+	avatarCorner.Parent = avatar
+	local avatarStroke = Instance.new("UIStroke")
+	avatarStroke.Color = currentThemeColor
+	avatarStroke.Thickness = 1.5
+	avatarStroke.Transparency = 0.12
+	avatarStroke.Parent = avatar
+	table.insert(themeSections, avatarStroke)
+	makeInfoText(infoHeader, "SEJA BEM-VINDO(A)", 9, UDim2.new(0, 105, 0, 19), UDim2.new(1, -120, 0, 16), currentThemeColor, Enum.Font.GothamBold)
+	makeInfoText(infoHeader, player.DisplayName or player.Name, 19, UDim2.new(0, 105, 0, 37), UDim2.new(1, -120, 0, 25), currentTextColor, Enum.Font.GothamBold)
+	makeInfoText(infoHeader, "@" .. player.Name .. "  •  ID " .. tostring(player.UserId), 10, UDim2.new(0, 105, 0, 66), UDim2.new(1, -120, 0, 18), Color3.fromRGB(175, 175, 195))
+	task.spawn(function()
+		local ok, image = pcall(function()
+			return Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+		end)
+		if ok and avatar.Parent then avatar.Image = image end
+	end)
+
+	local serverCard = makeInfoCard(infoPage, 104, 2)
+	makeInfoText(serverCard, "INFORMAÇÕES DA SESSÃO", 10, UDim2.new(0, 13, 0, 9), UDim2.new(1, -26, 0, 17), currentThemeColor, Enum.Font.GothamBold)
+	local playerCount = makeInfoText(serverCard, "Jogadores neste servidor: --", 11, UDim2.new(0, 13, 0, 34), UDim2.new(0.52, -12, 0, 20), currentTextColor)
+	local placeInfo = makeInfoText(serverCard, "Experiência: " .. tostring(game.PlaceId), 10, UDim2.new(0, 13, 0, 62), UDim2.new(1, -26, 0, 17), Color3.fromRGB(185, 185, 205))
+	local jobLabel = makeInfoText(serverCard, "Servidor: " .. (game.JobId ~= "" and string.sub(game.JobId, 1, 12) .. "…" or "Local"), 10, UDim2.new(0.52, 0, 0, 34), UDim2.new(0.46, -10, 0, 20), Color3.fromRGB(185, 185, 205))
+	local regionLabel = makeInfoText(serverCard, "Place ID: " .. tostring(game.PlaceId), 10, UDim2.new(0.52, 0, 0, 62), UDim2.new(0.46, -10, 0, 17), Color3.fromRGB(185, 185, 205))
+
+	local perfCard = makeInfoCard(infoPage, 84, 3)
+	makeInfoText(perfCard, "DESEMPENHO", 10, UDim2.new(0, 13, 0, 8), UDim2.new(1, -26, 0, 16), currentThemeColor, Enum.Font.GothamBold)
+	local fpsLabel = makeInfoText(perfCard, "FPS   --", 14, UDim2.new(0, 14, 0, 34), UDim2.new(0.48, -14, 0, 25), currentTextColor, Enum.Font.GothamBold)
+	local pingLabel = makeInfoText(perfCard, "PING   -- ms", 14, UDim2.new(0.52, 0, 0, 34), UDim2.new(0.46, -12, 0, 25), currentTextColor, Enum.Font.GothamBold)
+
+	local changelogCard = makeInfoCard(infoPage, 118, 4)
+	makeInfoText(changelogCard, "NOVIDADES  •  AETHERIS HUB", 10, UDim2.new(0, 13, 0, 9), UDim2.new(1, -26, 0, 17), currentThemeColor, Enum.Font.GothamBold)
+	makeInfoText(changelogCard, "✦  Interface renovada e painel mais organizado", 10, UDim2.new(0, 13, 0, 34), UDim2.new(1, -24, 0, 17), currentTextColor)
+	makeInfoText(changelogCard, "✦  Aba Info com perfil e dados em tempo real", 10, UDim2.new(0, 13, 0, 57), UDim2.new(1, -24, 0, 17), currentTextColor)
+	makeInfoText(changelogCard, "✦  Tema dinâmico, efeitos e partículas aprimorados", 10, UDim2.new(0, 13, 0, 80), UDim2.new(1, -24, 0, 17), currentTextColor)
+	makeInfoText(infoPage, "Os dados de FPS e ping são estimativas locais e podem variar.", 9, UDim2.new(0, 4, 0, 0), UDim2.new(1, -12, 0, 18), Color3.fromRGB(145, 145, 165))
+
+	local fpsFrames, fpsElapsed = 0, 0
+	RunService.RenderStepped:Connect(function(dt)
+		fpsFrames += 1
+		fpsElapsed += dt
+		if fpsElapsed >= 1 then
+			fpsLabel.Text = "FPS   " .. tostring(math.floor(fpsFrames / fpsElapsed + 0.5))
+			fpsFrames, fpsElapsed = 0, 0
+			local count = #Players:GetPlayers()
+			playerCount.Text = "Jogadores neste servidor: " .. tostring(count)
+			local pingText = "--"
+			pcall(function()
+				local stats = game:GetService("Stats")
+				local network = stats.Network
+				local item = network.ServerStatsItem["Data Ping"]
+				local value = item and item:GetValue()
+				if value then pingText = tostring(math.floor(value + 0.5)) end
+			end)
+			pingLabel.Text = "PING   " .. pingText .. " ms"
+		end
+	end)
+
 	-- ABA PLAYER
 	-----------------------------------------------------------------
 	local playerPage = pages["Player"]
