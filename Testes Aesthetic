@@ -195,27 +195,42 @@ local hideKeybindEnabled = false
 local hideKeybindKey = Enum.KeyCode.RightControl
 
 -----------------------------------------------------------------
--- TELA DE CARREGAMENTO
+-- TELA DE CARREGAMENTO APRIMORADA (LUXUOSA)
 -----------------------------------------------------------------
 local loadWrapper = Instance.new("Frame")
-loadWrapper.Size = UDim2.new(0, 380, 0, 190)
-loadWrapper.Position = UDim2.new(0.5, -190, 0.5, -95)
-loadWrapper.BackgroundColor3 = Color3.fromRGB(10, 10, 16)
-loadWrapper.BackgroundTransparency = 0.2
+loadWrapper.Size = UDim2.new(0, 400, 0, 210)
+loadWrapper.Position = UDim2.new(0.5, -200, 0.5, -105)
+loadWrapper.BackgroundColor3 = Color3.fromRGB(12, 12, 18)
+loadWrapper.BackgroundTransparency = 0.15
 loadWrapper.BorderSizePixel = 0
 loadWrapper.ClipsDescendants = true
 loadWrapper.Parent = screenGui
 
 local loadCorner = Instance.new("UICorner")
-loadCorner.CornerRadius = UDim.new(0, 16)
+loadCorner.CornerRadius = UDim.new(0, 18)
 loadCorner.Parent = loadWrapper
 
 local loadStroke = Instance.new("UIStroke")
 loadStroke.Color = currentThemeColor
-loadStroke.Transparency = 0.2
-loadStroke.Thickness = 2
+loadStroke.Transparency = 0.15
+loadStroke.Thickness = 2.2
 loadStroke.Parent = loadWrapper
 table.insert(themeSections, loadStroke)
+
+-- Anel Gradiente / Brilho de Fundo na Tela de Carregamento
+local loadGlowBg = Instance.new("Frame")
+loadGlowBg.Size = UDim2.new(1, 0, 1, 0)
+loadGlowBg.BackgroundTransparency = 1
+loadGlowBg.Parent = loadWrapper
+
+local loadGradient = Instance.new("UIGradient")
+loadGradient.Transparency = NumberSequence.new({
+	NumberSequenceKeypoint.new(0, 0.4),
+	NumberSequenceKeypoint.new(0.5, 0.85),
+	NumberSequenceKeypoint.new(1, 0.4)
+})
+loadGradient.Rotation = 45
+loadGradient.Parent = loadGlowBg
 
 local loadAccent = Instance.new("Frame")
 loadAccent.Name = "TopAccent"
@@ -232,26 +247,26 @@ accentCorner.Parent = loadAccent
 local loadSubtitle = Instance.new("TextLabel")
 loadSubtitle.Name = "LoadingSubtitle"
 loadSubtitle.Size = UDim2.new(1, 0, 0, 12)
-loadSubtitle.Position = UDim2.new(0, 0, 0, 72)
+loadSubtitle.Position = UDim2.new(0, 0, 0, 78)
 loadSubtitle.BackgroundTransparency = 1
 loadSubtitle.Font = Enum.Font.GothamMedium
-loadSubtitle.Text = "✦  PERSONALIZANDO SUA EXPERIÊNCIA  ✦"
+loadSubtitle.Text = "✦  INICIALIZANDO SISTEMA QUÂNTICO  ✦"
 loadSubtitle.TextColor3 = currentThemeColor
-loadSubtitle.TextSize = 8
+loadSubtitle.TextSize = 8.5
 loadSubtitle.TextTransparency = 1
 loadSubtitle.Parent = loadWrapper
 table.insert(headerSubtitles, loadSubtitle)
 
 local loadingParticles = {}
-for i = 1, 12 do
+for i = 1, 16 do
     local spark = Instance.new("Frame")
-    local size = math.random(2, 4)
+    local size = math.random(2, 5)
     spark.Size = UDim2.new(0, size, 0, size)
     spark.Position = UDim2.new(math.random(), 0, math.random(), 0)
     spark.BackgroundColor3 = currentThemeColor
-    spark.BackgroundTransparency = 0.45
+    spark.BackgroundTransparency = 0.35
     spark.BorderSizePixel = 0
-    spark.ZIndex = 1
+    spark.ZIndex = 2
     spark.Parent = loadWrapper
     local sparkCorner = Instance.new("UICorner")
     sparkCorner.CornerRadius = UDim.new(1, 0)
@@ -259,30 +274,32 @@ for i = 1, 12 do
     table.insert(themeParticles, spark)
     table.insert(loadingParticles, spark)
 end
+
 task.spawn(function()
     while loadWrapper.Parent do
         for _, spark in ipairs(loadingParticles) do
             if spark.Parent then
-                TweenService:Create(spark, TweenInfo.new(2.4, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                TweenService:Create(spark, TweenInfo.new(2.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
                     Position = UDim2.new(math.random(), 0, math.random(), 0),
-                    BackgroundTransparency = math.random(25, 75) / 100
+                    BackgroundTransparency = math.random(20, 80) / 100
                 }):Play()
             end
         end
-        task.wait(1.2)
+        task.wait(1.1)
     end
 end)
 
 local sciFiRing = Instance.new("Frame")
-sciFiRing.Size = UDim2.new(0, 60, 0, 60)
-sciFiRing.Position = UDim2.new(0.5, -30, 0, 18)
+sciFiRing.Size = UDim2.new(0, 64, 0, 64)
+sciFiRing.Position = UDim2.new(0.5, -32, 0, 14)
 sciFiRing.BackgroundTransparency = 1
+sciFiRing.ZIndex = 3
 sciFiRing.Parent = loadWrapper
 
 local ringStroke = Instance.new("UIStroke")
 ringStroke.Color = currentThemeColor
-ringStroke.Transparency = 0.4
-ringStroke.Thickness = 1.8
+ringStroke.Transparency = 0.25
+ringStroke.Thickness = 2
 ringStroke.Parent = sciFiRing
 table.insert(themeSections, ringStroke)
 
@@ -291,57 +308,58 @@ ringCorner.CornerRadius = UDim.new(1, 0)
 ringCorner.Parent = sciFiRing
 
 local loadIcon = Instance.new("TextLabel")
-loadIcon.Size = UDim2.new(0, 46, 0, 46)
-loadIcon.Position = UDim2.new(0.5, -23, 0, 25)
+loadIcon.Size = UDim2.new(0, 50, 0, 50)
+loadIcon.Position = UDim2.new(0.5, -25, 0, 21)
 loadIcon.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
 loadIcon.Font = Enum.Font.GothamBold
 loadIcon.Text = "⚡"
 loadIcon.TextColor3 = currentThemeColor
-loadIcon.TextSize = 22
+loadIcon.TextSize = 24
 loadIcon.TextTransparency = 1
+loadIcon.ZIndex = 4
 loadIcon.Parent = loadWrapper
 
 local iconCorner = Instance.new("UICorner")
-iconCorner.CornerRadius = UDim.new(0, 12)
+iconCorner.CornerRadius = UDim.new(0, 14)
 iconCorner.Parent = loadIcon
 
 local loadTitle = Instance.new("TextLabel")
-loadTitle.Size = UDim2.new(1, 0, 0, 20)
-loadTitle.Position = UDim2.new(0, 0, 0, 84)
+loadTitle.Size = UDim2.new(1, 0, 0, 22)
+loadTitle.Position = UDim2.new(0, 0, 0, 93)
 loadTitle.BackgroundTransparency = 1
 loadTitle.Font = Enum.Font.GothamBold
 loadTitle.Text = "AETHERIS HUB V2"
 loadTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-loadTitle.TextSize = 16
+loadTitle.TextSize = 17
 loadTitle.TextTransparency = 1
 loadTitle.Parent = loadWrapper
 
 local loadStatus = Instance.new("TextLabel")
 loadStatus.Size = UDim2.new(1, 0, 0, 14)
-loadStatus.Position = UDim2.new(0, 0, 0, 106)
+loadStatus.Position = UDim2.new(0, 0, 0, 119)
 loadStatus.BackgroundTransparency = 1
 loadStatus.Font = Enum.Font.GothamMedium
-loadStatus.Text = "Sincronizando sistemas quânticos..."
-loadStatus.TextColor3 = Color3.fromRGB(170, 170, 200)
-loadStatus.TextSize = 10
+loadStatus.Text = "Sincronizando banco de dados..."
+loadStatus.TextColor3 = Color3.fromRGB(180, 180, 210)
+loadStatus.TextSize = 10.5
 loadStatus.TextTransparency = 1
 loadStatus.Parent = loadWrapper
 
 local percentLabel = Instance.new("TextLabel")
 percentLabel.Size = UDim2.new(1, 0, 0, 14)
-percentLabel.Position = UDim2.new(0, 0, 0, 132)
+percentLabel.Position = UDim2.new(0, 0, 0, 147)
 percentLabel.BackgroundTransparency = 1
 percentLabel.Font = Enum.Font.GothamBold
 percentLabel.Text = "0%"
 percentLabel.TextColor3 = currentThemeColor
-percentLabel.TextSize = 12
+percentLabel.TextSize = 13
 percentLabel.TextTransparency = 1
 percentLabel.Parent = loadWrapper
 
 local loadBarBg = Instance.new("Frame")
-loadBarBg.Size = UDim2.new(0, 300, 0, 6)
-loadBarBg.Position = UDim2.new(0.5, -150, 0, 156)
-loadBarBg.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
+loadBarBg.Size = UDim2.new(0, 320, 0, 7)
+loadBarBg.Position = UDim2.new(0.5, -160, 0, 175)
+loadBarBg.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
 loadBarBg.BorderSizePixel = 0
 loadBarBg.Parent = loadWrapper
 
@@ -363,14 +381,14 @@ loadBarFillCorner.Parent = loadBarFill
 TweenService:Create(loadIcon, TweenInfo.new(0.5, Enum.EasingStyle.Back), {TextTransparency = 0}):Play()
 TweenService:Create(loadTitle, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
 TweenService:Create(loadSubtitle, TweenInfo.new(0.65), {TextTransparency = 0}):Play()
-TweenService:Create(loadAccent, TweenInfo.new(0.8, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0.62, 0, 0, 3), Position = UDim2.new(0.19, 0, 0, 0)}):Play()
+TweenService:Create(loadAccent, TweenInfo.new(0.8, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0.68, 0, 0, 3), Position = UDim2.new(0.16, 0, 0, 0)}):Play()
 TweenService:Create(loadStatus, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
 TweenService:Create(percentLabel, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
 
 local ringConn
 ringConn = RunService.RenderStepped:Connect(function(dt)
 	if sciFiRing and sciFiRing.Parent then
-		sciFiRing.Rotation = sciFiRing.Rotation + (dt * 90)
+		sciFiRing.Rotation = sciFiRing.Rotation + (dt * 110)
 	else
 		if ringConn then ringConn:Disconnect() end
 	end
@@ -378,9 +396,9 @@ end)
 
 task.spawn(function()
 	local steps = {
-		{progress = 0.25, text = "Carregando módulos do Blox Fruits..."},
-		{progress = 0.55, text = "Injetando ESP, AimLock e Auto Collect..."},
-		{progress = 0.85, text = "Otimizando partículas e shaders..."},
+		{progress = 0.25, text = "Carregando módulos avançados do Blox Fruits..."},
+		{progress = 0.55, text = "Calibrando sistemas de ESP, AimLock e Coleta..."},
+		{progress = 0.85, text = "Otimizando renderização e shaders visuais..."},
 		{progress = 1.00, text = "Inicialização concluída com sucesso!"}
 	}
 	
@@ -404,6 +422,7 @@ task.spawn(function()
 	TweenService:Create(loadWrapper, fadeOut, {BackgroundTransparency = 1}):Play()
 	TweenService:Create(loadIcon, fadeOut, {TextTransparency = 1}):Play()
 	TweenService:Create(loadTitle, fadeOut, {TextTransparency = 1}):Play()
+	TweenService:Create(loadSubtitle, fadeOut, {TextTransparency = 1}):Play()
 	TweenService:Create(loadStatus, fadeOut, {TextTransparency = 1}):Play()
 	TweenService:Create(percentLabel, fadeOut, {TextTransparency = 1}):Play()
 	TweenService:Create(loadBarBg, fadeOut, {BackgroundTransparency = 1}):Play()
@@ -528,7 +547,6 @@ function showMainPanel()
 	floatStroke.Parent = floatingBtn
 	table.insert(themeSections, floatStroke)
 
-	-- Contorno frontal explícito para garantir que a borda fique nítida e visível.
 	local visibleBorder = Instance.new("Frame")
 	visibleBorder.Name = "VisibleThemeBorder"
 	visibleBorder.Size = UDim2.new(1, 0, 1, 0)
@@ -572,7 +590,6 @@ function showMainPanel()
 	floatLetterStroke.Parent = floatLetter
 	table.insert(themeSections, floatLetterStroke)
 
-	-- Halo pulsante sutil ao redor do ícone.
 	local floatGlow = Instance.new("UIStroke")
 	floatGlow.Name = "SoftGlow"
 	floatGlow.Color = currentThemeColor
@@ -581,7 +598,6 @@ function showMainPanel()
 	floatGlow.Parent = floatingBtn
 	table.insert(themeSections, floatGlow)
 
-	-- Pequenas partículas luminosas que orbitam dentro do botão.
 	local floatParticles = {}
 	for i = 1, 4 do
 		local particle = Instance.new("Frame")
@@ -1645,7 +1661,7 @@ function showMainPanel()
 	end
 
 	-----------------------------------------------------------------
-	-- ABA INFO: perfil, sessão, desempenho e novidades
+	-- ABA INFO (1ª ABA): Perfil, Sessão, Desempenho e Novidades
 	-----------------------------------------------------------------
 	local infoPage = pages["Info"]
 	local function makeInfoCard(parent, height, order)
@@ -1667,6 +1683,7 @@ function showMainPanel()
 		table.insert(themeSections, stroke)
 		return card
 	end
+
 	local function makeInfoText(parent, text, size, position, dimensions, color, font)
 		local label = Instance.new("TextLabel")
 		label.BackgroundTransparency = 1
@@ -1705,9 +1722,11 @@ function showMainPanel()
 	avatarStroke.Transparency = 0.12
 	avatarStroke.Parent = avatar
 	table.insert(themeSections, avatarStroke)
+
 	makeInfoText(infoHeader, "SEJA BEM-VINDO(A)", 9, UDim2.new(0, 105, 0, 19), UDim2.new(1, -120, 0, 16), currentThemeColor, Enum.Font.GothamBold)
 	makeInfoText(infoHeader, player.DisplayName or player.Name, 19, UDim2.new(0, 105, 0, 37), UDim2.new(1, -120, 0, 25), currentTextColor, Enum.Font.GothamBold)
 	makeInfoText(infoHeader, "@" .. player.Name .. "  •  ID " .. tostring(player.UserId), 10, UDim2.new(0, 105, 0, 66), UDim2.new(1, -120, 0, 18), Color3.fromRGB(175, 175, 195))
+	
 	task.spawn(function()
 		local ok, image = pcall(function()
 			return Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
@@ -1718,21 +1737,23 @@ function showMainPanel()
 	local serverCard = makeInfoCard(infoPage, 104, 2)
 	makeInfoText(serverCard, "INFORMAÇÕES DA SESSÃO", 10, UDim2.new(0, 13, 0, 9), UDim2.new(1, -26, 0, 17), currentThemeColor, Enum.Font.GothamBold)
 	local playerCount = makeInfoText(serverCard, "Jogadores neste servidor: --", 11, UDim2.new(0, 13, 0, 34), UDim2.new(0.52, -12, 0, 20), currentTextColor)
-	local jobLabel = makeInfoText(serverCard, "Servidor: " .. (game.JobId ~= "" and string.sub(game.JobId, 1, 12) .. "…" or "Local"), 10, UDim2.new(0.52, 0, 0, 34), UDim2.new(0.46, -10, 0, 20), Color3.fromRGB(185, 185, 205))
+	makeInfoText(serverCard, "Servidor: " .. (game.JobId ~= "" and string.sub(game.JobId, 1, 12) .. "…" or "Local"), 10, UDim2.new(0.52, 0, 0, 34), UDim2.new(0.46, -10, 0, 20), Color3.fromRGB(185, 185, 205))
 	local serverType = game.PrivateServerId ~= "" and "Privado" or "Público"
 	makeInfoText(serverCard, "Place ID: " .. tostring(game.PlaceId) .. "  •  " .. serverType .. "  •  Limite: " .. tostring(Players.MaxPlayers), 10, UDim2.new(0, 13, 0, 62), UDim2.new(1, -26, 0, 17), Color3.fromRGB(185, 185, 205))
 
 	local perfCard = makeInfoCard(infoPage, 84, 3)
-	makeInfoText(perfCard, "DESEMPENHO", 10, UDim2.new(0, 13, 0, 8), UDim2.new(1, -26, 0, 16), currentThemeColor, Enum.Font.GothamBold)
+	makeInfoText(perfCard, "DESEMPENHO DO SISTEMA", 10, UDim2.new(0, 13, 0, 8), UDim2.new(1, -26, 0, 16), currentThemeColor, Enum.Font.GothamBold)
 	local fpsLabel = makeInfoText(perfCard, "FPS   --", 14, UDim2.new(0, 14, 0, 34), UDim2.new(0.48, -14, 0, 25), currentTextColor, Enum.Font.GothamBold)
 	local pingLabel = makeInfoText(perfCard, "PING   -- ms", 14, UDim2.new(0.52, 0, 0, 34), UDim2.new(0.46, -12, 0, 25), currentTextColor, Enum.Font.GothamBold)
 
-	local changelogCard = makeInfoCard(infoPage, 118, 4)
-	makeInfoText(changelogCard, "NOVIDADES  •  AETHERIS HUB", 10, UDim2.new(0, 13, 0, 9), UDim2.new(1, -26, 0, 17), currentThemeColor, Enum.Font.GothamBold)
-	makeInfoText(changelogCard, "✦  Interface renovada e painel mais organizado", 10, UDim2.new(0, 13, 0, 34), UDim2.new(1, -24, 0, 17), currentTextColor)
-	makeInfoText(changelogCard, "✦  Aba Info com perfil e dados em tempo real", 10, UDim2.new(0, 13, 0, 57), UDim2.new(1, -24, 0, 17), currentTextColor)
-	makeInfoText(changelogCard, "✦  Tema dinâmico, efeitos e partículas aprimorados", 10, UDim2.new(0, 13, 0, 80), UDim2.new(1, -24, 0, 17), currentTextColor)
-	local infoFootnote = makeInfoText(infoPage, "FPS e ping são estimativas locais e podem variar.", 9, UDim2.new(0, 4, 0, 0), UDim2.new(1, -12, 0, 18), Color3.fromRGB(145, 145, 165))
+	local changelogCard = makeInfoCard(infoPage, 126, 4)
+	makeInfoText(changelogCard, "NOVIDADES & ATUALIZAÇÕES", 10, UDim2.new(0, 13, 0, 9), UDim2.new(1, -26, 0, 17), currentThemeColor, Enum.Font.GothamBold)
+	makeInfoText(changelogCard, "✦  Aba Info adicionada em destaque com dados em tempo real", 10, UDim2.new(0, 13, 0, 34), UDim2.new(1, -24, 0, 17), currentTextColor)
+	makeInfoText(changelogCard, "✦  Tela de carregamento aprimorada com animações estelares", 10, UDim2.new(0, 13, 0, 57), UDim2.new(1, -24, 0, 17), currentTextColor)
+	makeInfoText(changelogCard, "✦  Chest Collector e Fruit Collector otimizados e blindados", 10, UDim2.new(0, 13, 0, 80), UDim2.new(1, -24, 0, 17), currentTextColor)
+	makeInfoText(changelogCard, "✦  Estilização global fluida e temas dinâmicos expandidos", 10, UDim2.new(0, 13, 0, 103), UDim2.new(1, -24, 0, 17), currentTextColor)
+
+	local infoFootnote = makeInfoText(infoPage, "Aetheris Hub V2 • Desenvolvido para máxima performance e elegância.", 9, UDim2.new(0, 4, 0, 0), UDim2.new(1, -12, 0, 18), Color3.fromRGB(145, 145, 165))
 	infoFootnote.LayoutOrder = 5
 
 	local fpsFrames, fpsElapsed = 0, 0
@@ -1761,6 +1782,7 @@ function showMainPanel()
 		end
 	end)
 
+	-----------------------------------------------------------------
 	-- ABA PLAYER
 	-----------------------------------------------------------------
 	local playerPage = pages["Player"]
@@ -2804,20 +2826,16 @@ function showMainPanel()
 	local fruitList = {}
 	local fruitCache = {}
 
-	-- VERIFICA SE A FRUTA ESTÁ COM ALGUÉM (NA MÃO, BACKPACK OU INVENTÁRIO DE JOGADORES)
 	local function isHeldByPlayer(tool)
 		local parent = tool.Parent
 		if not parent or parent == workspace then return false end
 		
-		-- Se o parent for o personagem de algum player
 		if Players:GetPlayerFromCharacter(parent) then return true end
 		
-		-- Se estiver no inventário (Backpack) de um jogador
 		if parent.Name == "Backpack" and parent.Parent and parent.Parent:IsA("Player") then
 			return true
 		end
 		
-		-- Checa ascendentes (caso esteja em algum container interno de player)
 		local ancestor = parent
 		while ancestor and ancestor ~= workspace do
 			if ancestor:IsA("Model") and ancestor:FindFirstChildOfClass("Humanoid") then
@@ -2985,7 +3003,6 @@ function showMainPanel()
 			local i = ((lastFruitIdx - 1 + offset) % count) + 1
 			local fruit = fruitCache[i]
 
-			-- VALIDA SE EXISTE, ESTÁ SOLTA NO MAPA E NÃO ESTÁ NA MÃO DE NINGUÉM
 			if fruit and fruit.Parent and not isHeldByPlayer(fruit) then
 				local lastHandle = handled[fruit]
 				if not lastHandle or (now - lastHandle) >= 3 then
