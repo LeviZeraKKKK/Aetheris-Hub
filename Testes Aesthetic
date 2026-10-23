@@ -475,34 +475,38 @@ function showMainPanel()
 	dbCorner.CornerRadius = UDim.new(1, 0)
 	dbCorner.Parent = dragBar
 
-	local particleContainer = Instance.new("Folder")
+	local particleContainer = Instance.new("Frame")
 	particleContainer.Name = "ThemeParticles"
+	particleContainer.Size = UDim2.new(1, 0, 1, 0)
+	particleContainer.Position = UDim2.new(0, 0, 0, 0)
+	particleContainer.BackgroundTransparency = 1
+	particleContainer.BorderSizePixel = 0
+	particleContainer.ClipsDescendants = true
+	particleContainer.Active = false
 	particleContainer.Parent = mainPanel
 
-		local panelParticles = {}
-		local particleColumns = 4
-		local particleRows = 3
-		for i = 1, particleColumns * particleRows do
-			local column = (i - 1) % particleColumns
-			local row = math.floor((i - 1) / particleColumns)
-			local p = Instance.new("Frame")
-			p.Name = "UniformThemeParticle"
-			p.Size = UDim2.new(0, 3, 0, 3)
-			p.Position = UDim2.new((column + 0.5) / particleColumns, 0, (row + 0.5) / particleRows, 0)
-			p.BackgroundColor3 = currentThemeColor
-			p.BackgroundTransparency = 0.76
-			p.BorderSizePixel = 0
-			p.Parent = particleContainer
-			table.insert(themeParticles, p)
-			table.insert(panelParticles, p)
-			local corner = Instance.new("UICorner")
-			corner.CornerRadius = UDim.new(1, 0)
-			corner.Parent = p
-			TweenService:Create(p, TweenInfo.new(2.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true, (i - 1) * 0.08), {
-				BackgroundTransparency = 0.88
-			}):Play()
-		end
-
+	local particleColumns = 4
+	local particleRows = 3
+	for i = 1, particleColumns * particleRows do
+		local column = (i - 1) % particleColumns
+		local row = math.floor((i - 1) / particleColumns)
+		local p = Instance.new("Frame")
+		p.Name = "UniformThemeParticle"
+		p.Size = UDim2.new(0, 4, 0, 4)
+		p.Position = UDim2.new((column + 0.5) / particleColumns, 0, (row + 0.5) / particleRows, 0)
+		p.BackgroundColor3 = currentThemeColor
+		p.BackgroundTransparency = 0.48
+		p.BorderSizePixel = 0
+		p.ZIndex = 1
+		p.Parent = particleContainer
+		table.insert(themeParticles, p)
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(1, 0)
+		corner.Parent = p
+		TweenService:Create(p, TweenInfo.new(2.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true, (i - 1) * 0.08), {
+			BackgroundTransparency = 0.70
+		}):Play()
+	end
 	local interactionBlocker = Instance.new("TextButton")
 	interactionBlocker.Size = UDim2.new(1, 0, 1, 0)
 	interactionBlocker.BackgroundTransparency = 1
