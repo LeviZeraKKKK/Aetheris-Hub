@@ -1725,17 +1725,17 @@ function showMainPanel()
 		return label
 	end
 
-	local infoHeader = makeInfoCard(infoPage, 108, 1)
+	local infoHeader = makeInfoCard(infoPage, 96, 1)
 	local avatar = Instance.new("ImageLabel")
 	avatar.Name = "PlayerAvatar"
-	avatar.Size = UDim2.new(0, 76, 0, 76)
-	avatar.Position = UDim2.new(0, 15, 0.5, -38)
+	avatar.Size = UDim2.new(0, 64, 0, 64)
+	avatar.Position = UDim2.new(0, 14, 0.5, -32)
 	avatar.BackgroundColor3 = Color3.fromRGB(38, 38, 52)
 	avatar.BorderSizePixel = 0
 	avatar.Image = ""
 	avatar.Parent = infoHeader
 	local avatarCorner = Instance.new("UICorner")
-	avatarCorner.CornerRadius = UDim.new(0, 18)
+	avatarCorner.CornerRadius = UDim.new(0, 16)
 	avatarCorner.Parent = avatar
 	local avatarStroke = Instance.new("UIStroke")
 	avatarStroke.Color = currentThemeColor
@@ -1744,9 +1744,9 @@ function showMainPanel()
 	avatarStroke.Parent = avatar
 	table.insert(themeSections, avatarStroke)
 
-	makeInfoText(infoHeader, "SEJA BEM-VINDO(A)", 9, UDim2.new(0, 105, 0, 19), UDim2.new(1, -120, 0, 16), currentThemeColor, Enum.Font.GothamBold)
-	makeInfoText(infoHeader, player.DisplayName or player.Name, 19, UDim2.new(0, 105, 0, 37), UDim2.new(1, -120, 0, 25), currentTextColor, Enum.Font.GothamBold)
-	makeInfoText(infoHeader, "@" .. player.Name .. "  •  ID " .. tostring(player.UserId), 10, UDim2.new(0, 105, 0, 66), UDim2.new(1, -120, 0, 18), Color3.fromRGB(175, 175, 195))
+	makeInfoText(infoHeader, "PERFIL DO JOGADOR", 9, UDim2.new(0, 92, 0, 15), UDim2.new(1, -106, 0, 14), currentThemeColor, Enum.Font.GothamBold)
+	makeInfoText(infoHeader, player.DisplayName or player.Name, 18, UDim2.new(0, 92, 0, 33), UDim2.new(1, -106, 0, 24), currentTextColor, Enum.Font.GothamBold)
+	makeInfoText(infoHeader, "@" .. player.Name .. "  •  ID " .. tostring(player.UserId), 9, UDim2.new(0, 92, 0, 61), UDim2.new(1, -106, 0, 16), Color3.fromRGB(175, 175, 195))
 	
 	task.spawn(function()
 		local ok, image = pcall(function()
@@ -1755,24 +1755,69 @@ function showMainPanel()
 		if ok and avatar.Parent then avatar.Image = image end
 	end)
 
-	local serverCard = makeInfoCard(infoPage, 104, 2)
-	makeInfoText(serverCard, "INFORMAÇÕES DA SESSÃO", 10, UDim2.new(0, 13, 0, 9), UDim2.new(1, -26, 0, 17), currentThemeColor, Enum.Font.GothamBold)
-	local playerCount = makeInfoText(serverCard, "Jogadores neste servidor: --", 11, UDim2.new(0, 13, 0, 34), UDim2.new(0.52, -12, 0, 20), currentTextColor)
-	makeInfoText(serverCard, "Servidor: " .. (game.JobId ~= "" and string.sub(game.JobId, 1, 12) .. "…" or "Local"), 10, UDim2.new(0.52, 0, 0, 34), UDim2.new(0.46, -10, 0, 20), Color3.fromRGB(185, 185, 205))
+	-- Grade de métricas em duas colunas para leitura rápida de dashboard.
+	local metricsGrid = Instance.new("Frame")
+	metricsGrid.Name = "DashboardMetrics"
+	metricsGrid.Size = UDim2.new(1, -8, 0, 142)
+	metricsGrid.BackgroundTransparency = 1
+	metricsGrid.LayoutOrder = 2
+	metricsGrid.Parent = infoPage
+
+	local metricsLayout = Instance.new("UIGridLayout")
+	metricsLayout.CellSize = UDim2.new(0.5, -4, 0, 67)
+	metricsLayout.CellPadding = UDim2.new(0, 8, 0, 8)
+	metricsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	metricsLayout.Parent = metricsGrid
+
+	local function makeMetricCard(title, initialValue, order, accentColor)
+	local card = Instance.new("Frame")
+	card.Name = title:gsub("%s+", "") .. "Metric"
+	card.BackgroundColor3 = Color3.fromRGB(26, 26, 36)
+	card.BackgroundTransparency = 0.16
+	card.BorderSizePixel = 0
+	card.LayoutOrder = order
+	card.Parent = metricsGrid
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 9)
+	corner.Parent = card
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = currentThemeColor
+	stroke.Transparency = 0.78
+	stroke.Thickness = 1
+	stroke.Parent = card
+	table.insert(themeSections, stroke)
+	local cap = Instance.new("Frame")
+	cap.Size = UDim2.new(0, 3, 0, 28)
+	cap.Position = UDim2.new(0, 0, 0.5, -14)
+	cap.BackgroundColor3 = accentColor or currentThemeColor
+	cap.BorderSizePixel = 0
+	cap.Parent = card
+	table.insert(themeSliders, cap)
+	local capCorner = Instance.new("UICorner")
+	capCorner.CornerRadius = UDim.new(1, 0)
+	capCorner.Parent = cap
+	makeInfoText(card, title:upper(), 8, UDim2.new(0, 11, 0, 10), UDim2.new(1, -18, 0, 13), Color3.fromRGB(165, 165, 185), Enum.Font.GothamBold)
+	local value = makeInfoText(card, initialValue, 16, UDim2.new(0, 11, 0, 29), UDim2.new(1, -18, 0, 25), currentTextColor, Enum.Font.GothamBold)
+	return value
+	end
+
+	local fpsLabel = makeMetricCard("FPS", "--", 1)
+	local pingLabel = makeMetricCard("Ping", "-- ms", 2)
+	local playerCount = makeMetricCard("Jogadores", "-- / " .. tostring(Players.MaxPlayers), 3)
+	local placeMetric = makeMetricCard("Experiência", tostring(game.PlaceId), 4)
+
+	local serverCard = makeInfoCard(infoPage, 72, 3)
+	makeInfoText(serverCard, "SESSÃO ATUAL", 9, UDim2.new(0, 13, 0, 8), UDim2.new(1, -26, 0, 15), currentThemeColor, Enum.Font.GothamBold)
 	local serverType = game.PrivateServerId ~= "" and "Privado" or "Público"
-	makeInfoText(serverCard, "Place ID: " .. tostring(game.PlaceId) .. "  •  " .. serverType .. "  •  Limite: " .. tostring(Players.MaxPlayers), 10, UDim2.new(0, 13, 0, 62), UDim2.new(1, -26, 0, 17), Color3.fromRGB(185, 185, 205))
+	makeInfoText(serverCard, "Servidor  " .. (game.JobId ~= "" and string.sub(game.JobId, 1, 12) .. "…" or "Local"), 10, UDim2.new(0, 13, 0, 31), UDim2.new(0.58, -14, 0, 18), currentTextColor)
+	makeInfoText(serverCard, "Acesso  " .. serverType, 10, UDim2.new(0.58, 0, 0, 31), UDim2.new(0.4, -10, 0, 18), Color3.fromRGB(185, 185, 205))
+	makeInfoText(serverCard, "Limite de jogadores: " .. tostring(Players.MaxPlayers), 9, UDim2.new(0, 13, 0, 51), UDim2.new(1, -26, 0, 14), Color3.fromRGB(160, 160, 180))
 
-	local perfCard = makeInfoCard(infoPage, 84, 3)
-	makeInfoText(perfCard, "DESEMPENHO DO SISTEMA", 10, UDim2.new(0, 13, 0, 8), UDim2.new(1, -26, 0, 16), currentThemeColor, Enum.Font.GothamBold)
-	local fpsLabel = makeInfoText(perfCard, "FPS   --", 14, UDim2.new(0, 14, 0, 34), UDim2.new(0.48, -14, 0, 25), currentTextColor, Enum.Font.GothamBold)
-	local pingLabel = makeInfoText(perfCard, "PING   -- ms", 14, UDim2.new(0.52, 0, 0, 34), UDim2.new(0.46, -12, 0, 25), currentTextColor, Enum.Font.GothamBold)
-
-	local changelogCard = makeInfoCard(infoPage, 126, 4)
-	makeInfoText(changelogCard, "NOVIDADES & ATUALIZAÇÕES", 10, UDim2.new(0, 13, 0, 9), UDim2.new(1, -26, 0, 17), currentThemeColor, Enum.Font.GothamBold)
-	makeInfoText(changelogCard, "✦  Correção completa para evitar attempt to call a nil value", 10, UDim2.new(0, 13, 0, 34), UDim2.new(1, -24, 0, 17), currentTextColor)
-	makeInfoText(changelogCard, "✦  Compatibilidade aprimorada com executores mobile", 10, UDim2.new(0, 13, 0, 57), UDim2.new(1, -24, 0, 17), currentTextColor)
-	makeInfoText(changelogCard, "✦  Chest Collector e Fruit Collector otimizados e blindados", 10, UDim2.new(0, 13, 0, 80), UDim2.new(1, -24, 0, 17), currentTextColor)
-	makeInfoText(changelogCard, "✦  Estilização global fluida e temas dinâmicos", 10, UDim2.new(0, 13, 0, 103), UDim2.new(1, -24, 0, 17), currentTextColor)
+	local changelogCard = makeInfoCard(infoPage, 112, 4)
+	makeInfoText(changelogCard, "NOVIDADES  /  AETHERIS HUB", 9, UDim2.new(0, 13, 0, 8), UDim2.new(1, -26, 0, 16), currentThemeColor, Enum.Font.GothamBold)
+	makeInfoText(changelogCard, "✦  Controles de ESP reunidos e mais claros", 9, UDim2.new(0, 13, 0, 31), UDim2.new(1, -24, 0, 15), currentTextColor)
+	makeInfoText(changelogCard, "✦  Seletor de cor e origem dos tracers", 9, UDim2.new(0, 13, 0, 52), UDim2.new(1, -24, 0, 15), currentTextColor)
+	makeInfoText(changelogCard, "✦  Painel com tema dinâmico e layout refinado", 9, UDim2.new(0, 13, 0, 73), UDim2.new(1, -24, 0, 15), currentTextColor)
 
 	local infoFootnote = makeInfoText(infoPage, "Aetheris Hub V2 • Desenvolvido para máxima performance e elegância.", 9, UDim2.new(0, 4, 0, 0), UDim2.new(1, -12, 0, 18), Color3.fromRGB(145, 145, 165))
 	infoFootnote.LayoutOrder = 5
@@ -1785,7 +1830,8 @@ function showMainPanel()
 			fpsLabel.Text = "FPS   " .. tostring(math.floor(fpsFrames / fpsElapsed + 0.5))
 			fpsFrames, fpsElapsed = 0, 0
 			local count = #Players:GetPlayers()
-			playerCount.Text = "Jogadores neste servidor: " .. tostring(count)
+			playerCount.Text = tostring(count) .. " / " .. tostring(Players.MaxPlayers)
+			placeMetric.Text = tostring(game.PlaceId)
 			local pingText = "--"
 			pcall(function()
 				local stats = game:GetService("Stats")
