@@ -503,7 +503,14 @@ function showMainPanel()
 		local corner = Instance.new("UICorner")
 		corner.CornerRadius = UDim.new(1, 0)
 		corner.Parent = p
-		TweenService:Create(p, TweenInfo.new(2.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true, (i - 1) * 0.08), {
+		local driftX = (column % 2 == 0) and 0.026 or -0.026
+		local driftY = (row % 2 == 0) and 0.024 or -0.024
+		local driftTarget = UDim2.new(
+			(column + 0.5) / particleColumns + driftX, 0,
+			(row + 0.5) / particleRows + driftY, 0
+		)
+		TweenService:Create(p, TweenInfo.new(2.6 + (i % 4) * 0.22, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true, (i - 1) * 0.09), {
+			Position = driftTarget,
 			BackgroundTransparency = 0.70
 		}):Play()
 	end
