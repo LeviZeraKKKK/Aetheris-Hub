@@ -912,17 +912,24 @@ function showMainPanel()
 		tabButton.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 		tabButton.BackgroundTransparency = 0.5
 		tabButton.Font = currentGlobalFont
-		tabButton.Text = tabInfo.Name
-		tabButton.TextColor3 = Color3.fromRGB(180, 180, 180)
-		tabButton.TextSize = 11
-		tabButton.TextXAlignment = Enum.TextXAlignment.Left
+		tabButton.Text = ""
 		tabButton.LayoutOrder = i
 		tabButton.Parent = sidebar
-		table.insert(allTextLabels, tabButton)
 
-		local tabPadding = Instance.new("UIPadding")
-		tabPadding.PaddingLeft = UDim.new(0, 32)
-		tabPadding.Parent = tabButton
+		local tabNameLabel = Instance.new("TextLabel")
+		tabNameLabel.Name = "TabName"
+		tabNameLabel.Size = UDim2.new(1, -38, 1, 0)
+		tabNameLabel.Position = UDim2.new(0, 33, 0, 0)
+		tabNameLabel.BackgroundTransparency = 1
+		tabNameLabel.Font = currentGlobalFont
+		tabNameLabel.Text = tabInfo.Name
+		tabNameLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+		tabNameLabel.TextSize = 11
+		tabNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+		tabNameLabel.TextYAlignment = Enum.TextYAlignment.Center
+		tabNameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+		tabNameLabel.Parent = tabButton
+		table.insert(allTextLabels, tabNameLabel)
 
 		local iconPlate = Instance.new("Frame")
 		iconPlate.Size = UDim2.new(0, 19, 0, 19)
@@ -966,7 +973,7 @@ function showMainPanel()
 		indCorner.Parent = indicator
 		
 		local page = createPage(tabInfo.Name)
-		table.insert(tabButtonsList, {Button = tabButton, Indicator = indicator, Page = page})
+		table.insert(tabButtonsList, {Button = tabButton, Label = tabNameLabel, Indicator = indicator, Page = page})
 
 		tabButton.MouseButton1Click:Connect(function()
 			if activePage == page then return end
@@ -985,11 +992,11 @@ function showMainPanel()
 
 			for _, tData in ipairs(tabButtonsList) do
 				TweenService:Create(tData.Indicator, TweenInfo.new(0.15), {Size = UDim2.new(0, 2, 0, 0)}):Play()
-				TweenService:Create(tData.Button, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(180, 180, 180)}):Play()
+				TweenService:Create(tData.Label, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(180, 180, 180)}):Play()
 			end
 
 			TweenService:Create(indicator, TweenInfo.new(0.15), {Size = UDim2.new(0, 2, 0, 16)}):Play()
-			TweenService:Create(tabButton, TweenInfo.new(0.15), {TextColor3 = currentTextColor}):Play()
+			TweenService:Create(tabNameLabel, TweenInfo.new(0.15), {TextColor3 = currentTextColor}):Play()
 
 			activePage = page
 		end)
@@ -999,7 +1006,7 @@ function showMainPanel()
 			page.Position = UDim2.new(0, 4, 0, 4)
 			activePage = page
 			indicator.Size = UDim2.new(0, 2, 0, 16)
-			tabButton.TextColor3 = currentTextColor
+			tabNameLabel.TextColor3 = currentTextColor
 		end
 	end
 
