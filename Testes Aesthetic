@@ -1259,7 +1259,7 @@ function showMainPanel()
 		return colorBtn
 	end
 
-	local function addEspToggleWithColor(parent, name, defaultColor, colorCallback, toggleCallback)
+	local function addEspToggleWithColor(parent, name, defaultColor, colorCallback, toggleCallback, modeCallback, modeText)
 		local toggleFrame = Instance.new("Frame")
 		toggleFrame.Size = UDim2.new(1, 0, 0, 26)
 		toggleFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
@@ -1281,7 +1281,7 @@ function showMainPanel()
 		ledCorner.Parent = ledIndicator
 
 		local label = Instance.new("TextLabel")
-		label.Size = UDim2.new(1, -85, 1, 0)
+		label.Size = UDim2.new(1, modeCallback and -145 or -85, 1, 0)
 		label.Position = UDim2.new(0, 20, 0, 0)
 		label.BackgroundTransparency = 1
 		label.Font = currentGlobalFont
@@ -1326,6 +1326,29 @@ function showMainPanel()
 		local cBtnCorner = Instance.new("UICorner")
 		cBtnCorner.CornerRadius = UDim.new(0, 3)
 		cBtnCorner.Parent = colorBtn
+
+		-- Botão opcional para escolher a origem, alinhado ao lado do seletor de cor.
+		if modeCallback then
+			local modeBtn = Instance.new("TextButton")
+			modeBtn.Name = "TracerOriginButton"
+			modeBtn.Size = UDim2.new(0, 52, 0, 16)
+			modeBtn.Position = UDim2.new(1, -114, 0.5, -8)
+			modeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+			modeBtn.Font = currentGlobalFont
+			modeBtn.Text = modeText or "Bottom"
+			modeBtn.TextColor3 = currentTextColor
+			modeBtn.TextSize = 9
+			modeBtn.AutoButtonColor = true
+			modeBtn.Parent = toggleFrame
+			table.insert(allTextLabels, modeBtn)
+			local modeCorner = Instance.new("UICorner")
+			modeCorner.CornerRadius = UDim.new(0, 4)
+			modeCorner.Parent = modeBtn
+			modeBtn.MouseButton1Click:Connect(function()
+				local nextText = modeCallback()
+				if nextText then modeBtn.Text = tostring(nextText) end
+			end)
+		end
 
 		local modal = Instance.new("Frame")
 		modal.Size = UDim2.new(0, 150, 0, 130)
@@ -2022,112 +2045,27 @@ function showMainPanel()
 
 	addEspToggleWithColor(secEspPlayers, "Box ESP", _G_ColorBox, function(c) _G_ColorBox = c end, function(s) _G_EspBox = s end)
 	
-	local tracerToggleFrame = Instance.new("Frame")
-	tracerToggleFrame.Size = UDim2.new(1, 0, 0, 26)
-	tracerToggleFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-	tracerToggleFrame.BackgroundTransparency = 0.5
-	tracerToggleFrame.Parent = secEspPlayers
+	-- Usa o mesmo componente dos outros ESPs: toggle e seletor colorido na mesma linha.
+		addEspToggleWithColor(secEspPlayers, "Tracers / Line ESP", _G_ColorLine,
+			function(color) _G_ColorLine = color end,
+			function(state) _G_EspLine = state end,
+			function()
+				if _G_TracerOrigin == "Bottom" then
+					_G_TracerOrigin = "Center"
+				elseif _G_TracerOrigin == "Center" then
+					_G_TracerOrigin = "Top"
+				else
+					_G_TracerOrigin = "Bottom"
+				end
+				return _G_TracerOrigin
+			end,
+			_G_TracerOrigin)
 
-	local ttfCorner = Instance.new("UICorner")
-	ttfCorner.CornerRadius = UDim.new(0, 5)
-	ttfCorner.Parent = tracerToggleFrame
-
-	local tracerLed = Instance.new("Frame")
-	tracerLed.Size = UDim2.new(0, 6, 0, 6)
-	tracerLed.Position = UDim2.new(0, 8, 0.5, -3)
-	tracerLed.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
-	tracerLed.Parent = tracerToggleFrame
-
-	local tracerLedCorner = Instance.new("UICorner")
-	tracerLedCorner.CornerRadius = UDim.new(1, 0)
-	tracerLedCorner.Parent = tracerLed
-
-	local tracerLabel = Instance.new("TextLabel")
-	tracerLabel.Size = UDim2.new(1, -150, 1, 0)
-	tracerLabel.Position = UDim2.new(0, 20, 0, 0)
-	tracerLabel.BackgroundTransparency = 1
-	tracerLabel.Font = currentGlobalFont
-	tracerLabel.Text = "Tracers / Line ESP"
-	tracerLabel.TextColor3 = currentTextColor
-	tracerLabel.TextSize = 11
-	tracerLabel.TextXAlignment = Enum.TextXAlignment.Left
-	tracerLabel.Parent = tracerToggleFrame
-	table.insert(allTextLabels, tracerLabel)
-
-	local tracerToggleBtn = Instance.new("TextButton")
-	tracerToggleBtn.Size = UDim2.new(0, 28, 0, 16)
-	tracerToggleBtn.Position = UDim2.new(1, -34, 0.5, -8)
-	tracerToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
-	tracerToggleBtn.Text = ""
-	tracerToggleBtn.Parent = tracerToggleFrame
-
-	local tBtnCorner = Instance.new("UICorner")
-	tBtnCorner.CornerRadius = UDim.new(1, 0)
-	tBtnCorner.Parent = tracerToggleBtn
-
-	local tracerCircle = Instance.new("Frame")
-	tracerCircle.Size = UDim2.new(0, 12, 0, 12)
-	tracerCircle.Position = UDim2.new(0, 2, 0.5, -6)
-	tracerCircle.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-	tracerCircle.Parent = tracerToggleBtn
-
-	local tcCorner = Instance.new("UICorner")
-	tcCorner.CornerRadius = UDim.new(1, 0)
-	tcCorner.Parent = tracerCircle
-
-	local tracerStateRef = {isToggled = false, circle = tracerCircle, button = tracerToggleBtn, led = tracerLed}
-	table.insert(themeToggles, tracerStateRef)
-
-	local tracerPosModeBtn = Instance.new("TextButton")
-	tracerPosModeBtn.Size = UDim2.new(0, 52, 0, 16)
-	tracerPosModeBtn.Position = UDim2.new(1, -114, 0.5, -8)
-	tracerPosModeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
-	tracerPosModeBtn.Font = currentGlobalFont
-	tracerPosModeBtn.Text = _G_TracerOrigin
-	tracerPosModeBtn.TextColor3 = currentTextColor
-	tracerPosModeBtn.TextSize = 9
-	tracerPosModeBtn.Parent = tracerToggleFrame
-	table.insert(allTextLabels, tracerPosModeBtn)
-
-	local tpmCorner = Instance.new("UICorner")
-	tpmCorner.CornerRadius = UDim.new(0, 4)
-	tpmCorner.Parent = tracerPosModeBtn
-
-	tracerPosModeBtn.MouseButton1Click:Connect(function()
-		if _G_TracerOrigin == "Bottom" then
-			_G_TracerOrigin = "Center"
-			tracerPosModeBtn.Text = "Center"
-		elseif _G_TracerOrigin == "Center" then
-			_G_TracerOrigin = "Top"
-			tracerPosModeBtn.Text = "Top"
-		else
-			_G_TracerOrigin = "Bottom"
-			tracerPosModeBtn.Text = "Bottom"
-		end
-	end)
-
-	-- Seletor funcional de cor do ESP Line, usando o mesmo picker das outras opções.
-	addColorPicker(secEspPlayers, "Cor do ESP Line", _G_ColorLine, function(color)
-		_G_ColorLine = color
-	end)
-
-	addEspToggleWithColor(secEspPlayers, "Chams (Highlight)", _G_ColorChams, function(c) _G_ColorChams = c end, function(s) _G_EspChams = s end)
+		addEspToggleWithColor(secEspPlayers, "Chams (Highlight)", _G_ColorChams, function(c) _G_ColorChams = c end, function(s) _G_EspChams = s end)
 	addEspToggleWithColor(secEspPlayers, "Health Bar", _G_ColorHealth, function(c) _G_ColorHealth = c end, function(s) _G_EspHealth = s end)
 	addEspToggleWithColor(secEspPlayers, "Name ESP", _G_ColorName, function(c) _G_ColorName = c end, function(s) _G_EspName = s end)
 	addEspToggleWithColor(secEspPlayers, "Distance ESP", _G_ColorDistance, function(c) _G_ColorDistance = c end, function(s) _G_EspDistance = s end)
 	addEspToggleWithColor(secEspPlayers, "Head Dot ESP", _G_ColorHead, function(c) _G_ColorHead = c end, function(s) _G_EspHead = s end)
-
-	tracerToggleBtn.MouseButton1Click:Connect(function()
-		tracerStateRef.isToggled = not tracerStateRef.isToggled
-		_G_EspLine = tracerStateRef.isToggled
-		local targetPos = tracerStateRef.isToggled and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
-		local targetColor = tracerStateRef.isToggled and currentThemeColor or Color3.fromRGB(50, 50, 70)
-		local targetLedColor = tracerStateRef.isToggled and currentThemeColor or Color3.fromRGB(80, 80, 100)
-		
-		TweenService:Create(tracerCircle, TweenInfo.new(0.18), {Position = targetPos}):Play()
-		TweenService:Create(tracerToggleBtn, TweenInfo.new(0.18), {BackgroundColor3 = targetColor}):Play()
-		TweenService:Create(tracerLed, TweenInfo.new(0.18), {BackgroundColor3 = targetLedColor}):Play()
-	end)
 
 	local secEspEnemies = createSection(visualPage, "ESP Inimigos (NPC)", "👾")
 	addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state end, false)
