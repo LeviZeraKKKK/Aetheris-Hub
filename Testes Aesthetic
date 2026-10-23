@@ -34,6 +34,7 @@ local panelTransparencyValue = 0.2
 local themeToggles = {}
 local themeSections = {}
 local themeTexts = {}
+local themeImages = {}
 local themeSliders = {}
 local themeParticles = {}
 local tabIndicators = {}
@@ -59,6 +60,12 @@ local function updateGlobalTheme(newColor)
 	for _, themedText in pairs(themeTexts) do
 		if themedText and themedText.Parent then
 			themedText.TextColor3 = newColor
+		end
+	end
+
+	for _, themedImage in pairs(themeImages) do
+		if themedImage and themedImage.Parent then
+			themedImage.ImageColor3 = newColor
 		end
 	end
 
@@ -885,14 +892,15 @@ function showMainPanel()
 		return page
 	end
 
+	-- Imagens Lucide publicadas na biblioteca oficial do Roblox; recortes individuais de 48x48.
 	local tabs = {
-		{Name = "Info", Icon = "i"},
-		{Name = "Player", Icon = "P"},
-		{Name = "Aim Lock", Icon = "◎"},
-		{Name = "Visual", Icon = "◇"},
-		{Name = "Farming", Icon = "F"},
-		{Name = "Fruta", Icon = "✦"},
-		{Name = "Config", Icon = "≡"}
+		{Name = "Info", Image = "rbxassetid://16898613509", Offset = Vector2.new(612, 869)},
+		{Name = "Player", Image = "rbxassetid://16898613044", Offset = Vector2.new(0, 869)},
+		{Name = "Aim Lock", Image = "rbxassetid://16898613044", Offset = Vector2.new(453, 869)},
+		{Name = "Visual", Image = "rbxassetid://16898613353", Offset = Vector2.new(771, 563)},
+		{Name = "Farming", Image = "rbxassetid://16898613777", Offset = Vector2.new(918, 306)},
+		{Name = "Fruta", Image = "rbxassetid://16898612629", Offset = Vector2.new(563, 869)},
+		{Name = "Config", Image = "rbxassetid://16898613777", Offset = Vector2.new(771, 257)}
 	}
 
 	local activePage = nil
@@ -927,17 +935,18 @@ function showMainPanel()
 		iconPlateCorner.CornerRadius = UDim.new(0, 5)
 		iconPlateCorner.Parent = iconPlate
 
-		local tabIcon = Instance.new("TextLabel")
-		tabIcon.Name = "TabSymbol"
-		tabIcon.Size = UDim2.new(1, 0, 1, 0)
+		local tabIcon = Instance.new("ImageLabel")
+		tabIcon.Name = "TabImageIcon"
+		tabIcon.Size = UDim2.new(0, 14, 0, 14)
+		tabIcon.Position = UDim2.new(0.5, -7, 0.5, -7)
 		tabIcon.BackgroundTransparency = 1
-		tabIcon.Font = Enum.Font.GothamBold
-		tabIcon.Text = tabInfo.Icon
-		tabIcon.TextColor3 = currentThemeColor
-		tabIcon.TextSize = 11
-		tabIcon.TextXAlignment = Enum.TextXAlignment.Center
+		tabIcon.Image = tabInfo.Image
+		tabIcon.ImageRectOffset = tabInfo.Offset
+		tabIcon.ImageRectSize = Vector2.new(48, 48)
+		tabIcon.ImageColor3 = currentThemeColor
+		tabIcon.ScaleType = Enum.ScaleType.Fit
 		tabIcon.Parent = iconPlate
-		table.insert(themeTexts, tabIcon)
+		table.insert(themeImages, tabIcon)
 
 		local btnCorner = Instance.new("UICorner")
 		btnCorner.CornerRadius = UDim.new(0, 5)
