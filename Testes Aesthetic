@@ -931,28 +931,18 @@ function showMainPanel()
 		tabNameLabel.Parent = tabButton
 		table.insert(allTextLabels, tabNameLabel)
 
-		local iconPlate = Instance.new("Frame")
-		iconPlate.Size = UDim2.new(0, 19, 0, 19)
-		iconPlate.Position = UDim2.new(0, 6, 0.5, -9.5)
-		iconPlate.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-		iconPlate.BackgroundTransparency = 0.18
-		iconPlate.BorderSizePixel = 0
-		iconPlate.Parent = tabButton
-		local iconPlateCorner = Instance.new("UICorner")
-		iconPlateCorner.CornerRadius = UDim.new(0, 5)
-		iconPlateCorner.Parent = iconPlate
-
 		local tabIcon = Instance.new("ImageLabel")
 		tabIcon.Name = "TabImageIcon"
-		tabIcon.Size = UDim2.new(0, 14, 0, 14)
-		tabIcon.Position = UDim2.new(0.5, -7, 0.5, -7)
+		tabIcon.Size = UDim2.new(0, 16, 0, 16)
+		tabIcon.Position = UDim2.new(0, 7, 0.5, -8)
 		tabIcon.BackgroundTransparency = 1
+		tabIcon.BorderSizePixel = 0
 		tabIcon.Image = tabInfo.Image
 		tabIcon.ImageRectOffset = tabInfo.Offset
 		tabIcon.ImageRectSize = Vector2.new(48, 48)
 		tabIcon.ImageColor3 = currentThemeColor
 		tabIcon.ScaleType = Enum.ScaleType.Fit
-		tabIcon.Parent = iconPlate
+		tabIcon.Parent = tabButton
 		table.insert(themeImages, tabIcon)
 
 		local btnCorner = Instance.new("UICorner")
