@@ -813,27 +813,29 @@ function showMainPanel()
 		end
 	end
 
-	local function createControlButton(text, callback)
-		local btn = Instance.new("TextButton")
-		btn.Size = UDim2.new(0, 20, 0, 20)
-		btn.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
-		btn.BackgroundTransparency = 0.3
-		btn.Font = currentGlobalFont
-		btn.Text = text
-		btn.TextColor3 = Color3.fromRGB(200, 200, 200)
-		btn.TextSize = 10
-		btn.Parent = controlsContainer
+		local function createControlButton(text, callback, color, order)
+			local btn = Instance.new("TextButton")
+			btn.Name = text .. "ControlButton"
+			btn.Size = UDim2.new(0, 12, 0, 12)
+			btn.BackgroundColor3 = color
+			btn.BackgroundTransparency = 0
+			btn.BorderSizePixel = 0
+			btn.Font = currentGlobalFont
+			btn.Text = ""
+			btn.LayoutOrder = order
+			btn.Parent = controlsContainer
 
-		local corner = Instance.new("UICorner")
-		corner.CornerRadius = UDim.new(0, 5)
-		corner.Parent = btn
+			local corner = Instance.new("UICorner")
+			corner.CornerRadius = UDim.new(1, 0)
+			corner.Parent = btn
 
 		btn.MouseButton1Click:Connect(callback)
 		return btn
 	end
 
-	createControlButton("X", function() screenGui:Destroy() end)
-	createControlButton("-", toggleMinimizePanel)
+		-- Ordem invertida: minimizar à esquerda e fechar à direita.
+		createControlButton("Minimize", toggleMinimizePanel, Color3.fromRGB(255, 196, 61), 1)
+		createControlButton("Close", function() screenGui:Destroy() end, Color3.fromRGB(245, 75, 75), 2)
 
 	floatingBtn.MouseButton1Click:Connect(toggleMinimizePanel)
 
