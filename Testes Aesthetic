@@ -241,13 +241,16 @@ accentCorner.Parent = loadAccent
 
 -- Partículas discretas ficam na camada de fundo, atrás dos textos.
 local loadingParticles = {}
-for i = 1, 7 do
+local loadingColumns = 4
+local loadingRows = 2
+for i = 1, loadingColumns * loadingRows do
+    local column = (i - 1) % loadingColumns
+    local row = math.floor((i - 1) / loadingColumns)
     local particle = Instance.new("Frame")
-    local size = (i % 3 == 0) and 3 or 2
-    particle.Size = UDim2.new(0, size, 0, size)
-    particle.Position = UDim2.new(math.random(8, 92) / 100, 0, math.random(12, 88) / 100, 0)
+    particle.Size = UDim2.new(0, 3, 0, 3)
+    particle.Position = UDim2.new((column + 0.5) / loadingColumns, 0, (row == 0) and 0.18 or 0.82, 0)
     particle.BackgroundColor3 = currentThemeColor
-    particle.BackgroundTransparency = 0.72
+    particle.BackgroundTransparency = 0.78
     particle.BorderSizePixel = 0
     particle.ZIndex = 1
     particle.Parent = loadWrapper
@@ -256,21 +259,11 @@ for i = 1, 7 do
     particleCorner.Parent = particle
     table.insert(themeParticles, particle)
     table.insert(loadingParticles, particle)
-end
 
-task.spawn(function()
-    while loadWrapper.Parent do
-        for _, particle in ipairs(loadingParticles) do
-            if particle.Parent then
-                TweenService:Create(particle, TweenInfo.new(2.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-                    Position = UDim2.new(math.random(8, 92) / 100, 0, math.random(12, 88) / 100, 0),
-                    BackgroundTransparency = math.random(58, 82) / 100
-                }):Play()
-            end
-        end
-        task.wait(1.4)
-    end
-end)
+    TweenService:Create(particle, TweenInfo.new(2.4, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true, (i - 1) * 0.12), {
+        BackgroundTransparency = 0.64
+    }):Play()
+end
 
 -- Ícone central com aro lento e sutil.
 local sciFiRing = Instance.new("Frame")
@@ -392,21 +385,27 @@ end)
 
 task.spawn(function()
     local steps = {
-        {progress = 0.28, text = "Carregando componentes..."},
-        {progress = 0.56, text = "Organizando módulos..."},
-        {progress = 0.82, text = "Finalizando ajustes visuais..."},
+        {progress = 0.20, text = "Carregando recursos..."},
+        {progress = 0.40, text = "Preparando componentes..."},
+        {progress = 0.60, text = "Organizando a interface..."},
+        {progress = 0.80, text = "Aplicando o tema..."},
         {progress = 1.00, text = "Tudo pronto!"}
     }
-    local tweenTime = 0.38
+    local tweenTime = 0.48
+    local currentPercent = 0
     for _, step in ipairs(steps) do
         loadStatus.Text = step.text
         TweenService:Create(loadBarFill, TweenInfo.new(tweenTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
             Size = UDim2.new(step.progress, 0, 1, 0)
         }):Play()
-        percentLabel.Text = tostring(math.floor(step.progress * 100)) .. "%"
-        task.wait(tweenTime + 0.08)
+        local targetPercent = math.floor(step.progress * 100)
+        local percentStepDelay = tweenTime / math.max(targetPercent - currentPercent, 1)
+        for percent = currentPercent + 1, targetPercent do
+            percentLabel.Text = tostring(percent) .. "%"
+            task.wait(percentStepDelay)
+        end
+        currentPercent = targetPercent
     end
-
     if ringConn then ringConn:Disconnect() end
     task.wait(0.18)
     local fadeOut = TweenInfo.new(0.32, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
@@ -480,33 +479,29 @@ function showMainPanel()
 	particleContainer.Name = "ThemeParticles"
 	particleContainer.Parent = mainPanel
 
-	for i = 1, 12 do
-		task.spawn(function()
+		local panelParticles = {}
+		local particleColumns = 4
+		local particleRows = 3
+		for i = 1, particleColumns * particleRows do
+			local column = (i - 1) % particleColumns
+			local row = math.floor((i - 1) / particleColumns)
 			local p = Instance.new("Frame")
-			p.Size = UDim2.new(0, math.random(3, 5), 0, math.random(3, 5))
-			p.Position = UDim2.new(math.random(), 0, math.random(), 0)
+			p.Name = "UniformThemeParticle"
+			p.Size = UDim2.new(0, 3, 0, 3)
+			p.Position = UDim2.new((column + 0.5) / particleColumns, 0, (row + 0.5) / particleRows, 0)
 			p.BackgroundColor3 = currentThemeColor
-			p.BackgroundTransparency = 0.4
+			p.BackgroundTransparency = 0.76
 			p.BorderSizePixel = 0
 			p.Parent = particleContainer
 			table.insert(themeParticles, p)
-
+			table.insert(panelParticles, p)
 			local corner = Instance.new("UICorner")
 			corner.CornerRadius = UDim.new(1, 0)
 			corner.Parent = p
-
-			while mainPanel and mainPanel.Parent do
-				local targetX = math.random()
-				local targetY = math.random()
-				local tInfo = TweenInfo.new(math.random(6, 12), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
-				TweenService:Create(p, tInfo, {
-					Position = UDim2.new(targetX, 0, targetY, 0),
-					BackgroundTransparency = math.random(2, 8) / 10
-				}):Play()
-				task.wait(math.random(6, 12))
-			end
-		end)
-	end
+			TweenService:Create(p, TweenInfo.new(2.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true, (i - 1) * 0.08), {
+				BackgroundTransparency = 0.88
+			}):Play()
+		end
 
 	local interactionBlocker = Instance.new("TextButton")
 	interactionBlocker.Size = UDim2.new(1, 0, 1, 0)
