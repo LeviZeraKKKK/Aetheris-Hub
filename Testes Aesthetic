@@ -53,7 +53,7 @@ local function updateGlobalTheme(newColor)
 	end
 
 	for _, secStroke in pairs(themeSections) do
-		if secStroke and secStroke.Parent then secStroke.Color = newColor end
+		secStroke.Color = newColor
 	end
 
 	for _, themedText in pairs(themeTexts) do
@@ -63,19 +63,19 @@ local function updateGlobalTheme(newColor)
 	end
 
 	for _, fill in pairs(themeSliders) do
-		if fill and fill.Parent then fill.BackgroundColor3 = newColor end
+		fill.BackgroundColor3 = newColor
 	end
 
 	for _, line in pairs(resizeSymbolsLines) do
-		if line and line.Parent then line.BackgroundColor3 = newColor end
+		line.BackgroundColor3 = newColor
 	end
 
 	for _, subLabel in pairs(headerSubtitles) do
-		if subLabel and subLabel.Parent then subLabel.TextColor3 = newColor end
+		subLabel.TextColor3 = newColor
 	end
 
 	for _, ind in pairs(tabIndicators) do
-		if ind and ind.Parent then ind.BackgroundColor3 = newColor end
+		ind.BackgroundColor3 = newColor
 	end
 
 	for _, part in pairs(themeParticles) do
@@ -153,6 +153,7 @@ local _G_FovThickness = 1
 local _G_FovTransparency = 0.7
 local _G_ColorFov = Color3.fromRGB(138, 43, 226)
 
+-- Blinda a inicialização do Drawing para evitar erros de attempt to call nil value
 local fovCircleDrawing = nil
 pcall(function()
 	if Drawing and typeof(Drawing.new) == "function" then
@@ -1061,7 +1062,7 @@ function showMainPanel()
 		table.insert(allTextLabels, label)
 
 		local colorBtn = Instance.new("TextButton")
-		colorBtn.Size = UDim2.new(0, 18, 0, 14)
+		colorBtn.Size = UDim2.new(0, 20, 0, 14)
 		colorBtn.Position = UDim2.new(1, -26, 0.5, -7)
 		colorBtn.BackgroundColor3 = defaultColor
 		colorBtn.Text = ""
@@ -1745,7 +1746,7 @@ function showMainPanel()
 
 	local changelogCard = makeInfoCard(infoPage, 126, 4)
 	makeInfoText(changelogCard, "NOVIDADES & ATUALIZAÇÕES", 10, UDim2.new(0, 13, 0, 9), UDim2.new(1, -26, 0, 17), currentThemeColor, Enum.Font.GothamBold)
-	makeInfoText(changelogCard, "✦  Tracer Line integrado com seletor de cor customizado", 10, UDim2.new(0, 13, 0, 34), UDim2.new(1, -24, 0, 17), currentTextColor)
+	makeInfoText(changelogCard, "✦  Correção completa para evitar attempt to call a nil value", 10, UDim2.new(0, 13, 0, 34), UDim2.new(1, -24, 0, 17), currentTextColor)
 	makeInfoText(changelogCard, "✦  Compatibilidade aprimorada com executores mobile", 10, UDim2.new(0, 13, 0, 57), UDim2.new(1, -24, 0, 17), currentTextColor)
 	makeInfoText(changelogCard, "✦  Chest Collector e Fruit Collector otimizados e blindados", 10, UDim2.new(0, 13, 0, 80), UDim2.new(1, -24, 0, 17), currentTextColor)
 	makeInfoText(changelogCard, "✦  Estilização global fluida e temas dinâmicos", 10, UDim2.new(0, 13, 0, 103), UDim2.new(1, -24, 0, 17), currentTextColor)
@@ -2021,7 +2022,6 @@ function showMainPanel()
 
 	addEspToggleWithColor(secEspPlayers, "Box ESP", _G_ColorBox, function(c) _G_ColorBox = c end, function(s) _G_EspBox = s end)
 	
-	-- TRACERS / LINE ESP
 	local tracerToggleFrame = Instance.new("Frame")
 	tracerToggleFrame.Size = UDim2.new(1, 0, 0, 26)
 	tracerToggleFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
@@ -2106,180 +2106,10 @@ function showMainPanel()
 		end
 	end)
 
-	local tracerColorBtn = Instance.new("TextButton")
-	tracerColorBtn.Size = UDim2.new(0, 18, 0, 14)
-	tracerColorBtn.Position = UDim2.new(1, -58, 0.5, -7)
-	tracerColorBtn.BackgroundColor3 = _G_ColorLine
-	tracerColorBtn.Text = ""
-	tracerColorBtn.Parent = tracerToggleFrame
-
-	local tCbCorner = Instance.new("UICorner")
-	tCbCorner.CornerRadius = UDim.new(0, 3)
-	tCbCorner.Parent = tracerColorBtn
-
-	local tracerModal = Instance.new("Frame")
-	tracerModal.Size = UDim2.new(0, 150, 0, 130)
-	tracerModal.Position = UDim2.new(0, -130, 1, 4)
-	tracerModal.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
-	tracerModal.BorderSizePixel = 0
-	tracerModal.Visible = false
-	tracerModal.ZIndex = 50
-	tracerModal.Parent = tracerColorBtn
-
-	local tmCorner = Instance.new("UICorner")
-	tmCorner.CornerRadius = UDim.new(0, 6)
-	tmCorner.Parent = tracerModal
-
-	local tmStroke = Instance.new("UIStroke")
-	tmStroke.Color = Color3.fromRGB(60, 60, 80)
-	tmStroke.Parent = tracerModal
-
-	local tracerCanvas = Instance.new("Frame")
-	tracerCanvas.Size = UDim2.new(0, 108, 0, 92)
-	tracerCanvas.Position = UDim2.new(0, 6, 0, 6)
-	tracerCanvas.BackgroundColor3 = Color3.fromHSV(_G_ColorLine:ToHSV())
-	tracerCanvas.BorderSizePixel = 0
-	tracerCanvas.ZIndex = 51
-	tracerCanvas.Parent = tracerModal
-
-	local tcnCorner = Instance.new("UICorner")
-	tcnCorner.CornerRadius = UDim.new(0, 4)
-	tcnCorner.Parent = tracerCanvas
-
-	local twgf = Instance.new("Frame")
-	twgf.Size = UDim2.new(1, 0, 1, 0)
-	twgf.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	twgf.BorderSizePixel = 0
-	twgf.ZIndex = 52
-	twgf.Parent = tracerCanvas
-	local twgfCorner = Instance.new("UICorner")
-	twgfCorner.CornerRadius = UDim.new(0, 4)
-	twgfCorner.Parent = twgf
-	local twg = Instance.new("UIGradient")
-	twg.Rotation = 0
-	twg.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1)})
-	twg.Parent = twgf
-
-	local tbgf = Instance.new("Frame")
-	tbgf.Size = UDim2.new(1, 0, 1, 0)
-	tbgf.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-	tbgf.BorderSizePixel = 0
-	tbgf.ZIndex = 53
-	tbgf.Parent = tracerCanvas
-	local tbgfCorner = Instance.new("UICorner")
-	tbgfCorner.CornerRadius = UDim.new(0, 4)
-	tbgfCorner.Parent = tbgf
-	local tbg = Instance.new("UIGradient")
-	tbg.Rotation = 90
-	tbg.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0)})
-	tbg.Parent = tbgf
-
-	local tCur = Instance.new("Frame")
-	tCur.Size = UDim2.new(0, 7, 0, 7)
-	tCur.AnchorPoint = Vector2.new(0.5, 0.5)
-	tCur.Position = UDim2.new(1, 0, 0, 0)
-	tCur.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	tCur.ZIndex = 54
-	tCur.Parent = tracerCanvas
-	local tCurCorner = Instance.new("UICorner")
-	tCurCorner.CornerRadius = UDim.new(1, 0)
-	tCurCorner.Parent = tCur
-
-	local tHueBar = Instance.new("Frame")
-	tHueBar.Size = UDim2.new(0, 14, 0, 92)
-	tHueBar.Position = UDim2.new(0, 122, 0, 6)
-	tHueBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	tHueBar.BorderSizePixel = 0
-	tHueBar.ZIndex = 51
-	tHueBar.Parent = tracerModal
-	local thCorner = Instance.new("UICorner")
-	thCorner.CornerRadius = UDim.new(0, 4)
-	thCorner.Parent = tHueBar
-	local tuifig = Instance.new("UIGradient")
-	tuifig.Rotation = 90
-	tuifig.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
-		ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 255, 0)),
-		ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 255, 0)),
-		ColorSequenceKeypoint.new(0.50, Color3.fromRGB(0, 255, 255)),
-		ColorSequenceKeypoint.new(0.67, Color3.fromRGB(0, 0, 255)),
-		ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 0, 255)),
-		ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 0, 0))
-	})
-	tuifig.Parent = tHueBar
-
-	local tHuePicker = Instance.new("Frame")
-	tHuePicker.Size = UDim2.new(1, 0, 0, 3)
-	tHuePicker.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	tHuePicker.ZIndex = 54
-	tHuePicker.Parent = tHueBar
-
-	local tH, tS, tV = _G_ColorLine:ToHSV()
-	local function updateTracerColor()
-		local col = Color3.fromHSV(tH, tS, tV)
-		tracerCanvas.BackgroundColor3 = Color3.fromHSV(tH, 1, 1)
-		tracerColorBtn.BackgroundColor3 = col
-		_G_ColorLine = col
-	end
-
-	tracerColorBtn.MouseButton1Click:Connect(function()
-		tracerModal.Visible = not tracerModal.Visible
+	-- Seletor funcional de cor do ESP Line, usando o mesmo picker das outras opções.
+	addColorPicker(secEspPlayers, "Cor do ESP Line", _G_ColorLine, function(color)
+		_G_ColorLine = color
 	end)
-
-	local draggingTHue = false
-	tHueBar.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			draggingTHue = true
-			if activePage then activePage.ScrollingEnabled = false end
-			interactionBlocker.Visible = true
-		end
-	end)
-	UserInputService.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			if draggingTHue then
-				draggingTHue = false
-				if activePage then activePage.ScrollingEnabled = true end
-				interactionBlocker.Visible = false
-			end
-		end
-	end)
-	UserInputService.InputChanged:Connect(function(input)
-		if draggingTHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-			local y = math.clamp((input.Position.Y - tHueBar.AbsolutePosition.Y) / tHueBar.AbsoluteSize.Y, 0, 1)
-			tHuePicker.Position = UDim2.new(0, 0, y, -1)
-			tH = y
-			updateTracerColor()
-		end
-	end)
-
-	local draggingTCanvas = false
-	tracerCanvas.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			draggingTCanvas = true
-			if activePage then activePage.ScrollingEnabled = false end
-			interactionBlocker.Visible = true
-		end
-	end)
-	UserInputService.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			if draggingTCanvas then
-				draggingTCanvas = false
-				if activePage then activePage.ScrollingEnabled = true end
-				interactionBlocker.Visible = false
-			end
-		end
-	end)
-	UserInputService.InputChanged:Connect(function(input)
-		if draggingTCanvas and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-			local x = math.clamp((input.Position.X - tracerCanvas.AbsolutePosition.X) / tracerCanvas.AbsoluteSize.X, 0, 1)
-			local y = math.clamp((input.Position.Y - tracerCanvas.AbsolutePosition.Y) / tracerCanvas.AbsoluteSize.Y, 0, 1)
-			tCur.Position = UDim2.new(x, 0, y, 0)
-			tS = x
-			tV = 1 - y
-			updateTracerColor()
-		end
-	end)
-	updateTracerColor()
 
 	addEspToggleWithColor(secEspPlayers, "Chams (Highlight)", _G_ColorChams, function(c) _G_ColorChams = c end, function(s) _G_EspChams = s end)
 	addEspToggleWithColor(secEspPlayers, "Health Bar", _G_ColorHealth, function(c) _G_ColorHealth = c end, function(s) _G_EspHealth = s end)
@@ -3587,6 +3417,7 @@ RunService.RenderStepped:Connect(function()
 		end
 	end
 
+	-- LÓGICA COMPLETA DE ENERGIA/STAMINA INFINITA RESTAURADA
 	if _G_EnergyEnabled and char then
 		if char:GetAttribute("Energy") then char:SetAttribute("Energy", 999999) end
 		if char:GetAttribute("Stamina") then char:SetAttribute("Stamina", 999999) end
@@ -3656,7 +3487,7 @@ RunService.RenderStepped:Connect(function()
 					pcall(function()
 						local head = tChar:FindFirstChild("Head")
 
-						if _G_EspBox and onScreen and cache.Box then
+						if _G_EspBox and onScreen then
 							local headPos = head and camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0)) or pos
 							local legPos = camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3, 0))
 							local height = math.abs(headPos.Y - legPos.Y)
@@ -3667,11 +3498,11 @@ RunService.RenderStepped:Connect(function()
 							cache.Box.Color = _G_ColorBox
 							cache.Box.Thickness = 1
 							cache.Box.Visible = true
-						elseif cache.Box then
+						else
 							cache.Box.Visible = false
 						end
 
-						if _G_EspLine and onScreen and cache.Line then
+						if _G_EspLine and onScreen then
 							local originY = camera.ViewportSize.Y
 							if _G_TracerOrigin == "Top" then
 								originY = 0
@@ -3686,7 +3517,7 @@ RunService.RenderStepped:Connect(function()
 							cache.Line.Color = _G_ColorLine
 							cache.Line.Thickness = 1
 							cache.Line.Visible = true
-						elseif cache.Line then
+						else
 							cache.Line.Visible = false
 						end
 
@@ -3704,7 +3535,7 @@ RunService.RenderStepped:Connect(function()
 							highlight.Enabled = false
 						end
 
-						if _G_EspHealth and onScreen and cache.HealthBarBg and cache.HealthBarFill then
+						if _G_EspHealth and onScreen then
 							local hum = tChar.Humanoid
 							local headPos = head and camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0)) or pos
 							local legPos = camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3, 0))
@@ -3725,12 +3556,12 @@ RunService.RenderStepped:Connect(function()
 							cache.HealthBarFill.Color = _G_ColorHealth
 							cache.HealthBarFill.Filled = true
 							cache.HealthBarFill.Visible = true
-						elseif cache.HealthBarBg and cache.HealthBarFill then
+						else
 							cache.HealthBarBg.Visible = false
 							cache.HealthBarFill.Visible = false
 						end
 
-						if _G_EspName and onScreen and hrp and cache.NameText then
+						if _G_EspName and onScreen and hrp then
 							cache.NameText.Text = targetPlayer.Name
 							cache.NameText.Size = 12
 							cache.NameText.Center = true
@@ -3738,11 +3569,11 @@ RunService.RenderStepped:Connect(function()
 							cache.NameText.Color = _G_ColorName
 							cache.NameText.Position = Vector2.new(pos.X, pos.Y - 35)
 							cache.NameText.Visible = true
-						elseif cache.NameText then
+						else
 							cache.NameText.Visible = false
 						end
 
-						if _G_EspDistance and onScreen and cache.DistText then
+						if _G_EspDistance and onScreen then
 							local dist = math.floor((camera.CFrame.Position - hrp.Position).Magnitude)
 							cache.DistText.Text = "[" .. dist .. "m]"
 							cache.DistText.Size = 11
@@ -3751,18 +3582,18 @@ RunService.RenderStepped:Connect(function()
 							cache.DistText.Color = _G_ColorDistance
 							cache.DistText.Position = Vector2.new(pos.X, pos.Y + 25)
 							cache.DistText.Visible = true
-						elseif cache.DistText then
+						else
 							cache.DistText.Visible = false
 						end
 
-						if _G_EspHead and head and onScreen and cache.HeadDot then
+						if _G_EspHead and head and onScreen then
 							local headPos = camera:WorldToViewportPoint(head.Position)
 							cache.HeadDot.Radius = 4
 							cache.HeadDot.Position = Vector2.new(headPos.X, headPos.Y)
 							cache.HeadDot.Color = _G_ColorHead
 							cache.HeadDot.Filled = true
 							cache.HeadDot.Visible = true
-						elseif cache.HeadDot then
+						else
 							cache.HeadDot.Visible = false
 						end
 					end)
@@ -3770,13 +3601,13 @@ RunService.RenderStepped:Connect(function()
 			else
 				if espDrawings[targetPlayer] then
 					pcall(function()
-						if espDrawings[targetPlayer].Box then espDrawings[targetPlayer].Box.Visible = false end
-						if espDrawings[targetPlayer].Line then espDrawings[targetPlayer].Line.Visible = false end
-						if espDrawings[targetPlayer].NameText then espDrawings[targetPlayer].NameText.Visible = false end
-						if espDrawings[targetPlayer].DistText then espDrawings[targetPlayer].DistText.Visible = false end
-						if espDrawings[targetPlayer].HeadDot then espDrawings[targetPlayer].HeadDot.Visible = false end
-						if espDrawings[targetPlayer].HealthBarBg then espDrawings[targetPlayer].HealthBarBg.Visible = false end
-						if espDrawings[targetPlayer].HealthBarFill then espDrawings[targetPlayer].HealthBarFill.Visible = false end
+						espDrawings[targetPlayer].Box.Visible = false
+						espDrawings[targetPlayer].Line.Visible = false
+						espDrawings[targetPlayer].NameText.Visible = false
+						espDrawings[targetPlayer].DistText.Visible = false
+						espDrawings[targetPlayer].HeadDot.Visible = false
+						espDrawings[targetPlayer].HealthBarBg.Visible = false
+						espDrawings[targetPlayer].HealthBarFill.Visible = false
 					end)
 				end
 				local hl = tChar and tChar:FindFirstChild("AetherisHighlight")
