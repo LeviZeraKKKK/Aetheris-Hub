@@ -819,35 +819,9 @@ function showMainPanel()
 	versionBadgeText.Parent = versionBadge
 	table.insert(themeTexts, versionBadgeText)
 
-	local onlineGroup = Instance.new("Frame")
-	onlineGroup.Name = "OnlineStatus"
-	onlineGroup.Size = UDim2.new(0, 54, 0, 16)
-	onlineGroup.Position = UDim2.new(1, -174, 0, 8)
-	onlineGroup.BackgroundTransparency = 1
-	onlineGroup.Parent = mainPanel
-	local onlineDot = Instance.new("Frame")
-	onlineDot.Size = UDim2.new(0, 5, 0, 5)
-	onlineDot.Position = UDim2.new(0, 1, 0.5, -2.5)
-	onlineDot.BackgroundColor3 = Color3.fromRGB(74, 210, 125)
-	onlineDot.BorderSizePixel = 0
-	onlineDot.Parent = onlineGroup
-	local onlineDotCorner = Instance.new("UICorner")
-	onlineDotCorner.CornerRadius = UDim.new(1, 0)
-	onlineDotCorner.Parent = onlineDot
-	local onlineLabel = Instance.new("TextLabel")
-	onlineLabel.Size = UDim2.new(1, -10, 1, 0)
-	onlineLabel.Position = UDim2.new(0, 9, 0, 0)
-	onlineLabel.BackgroundTransparency = 1
-	onlineLabel.Font = Enum.Font.GothamMedium
-	onlineLabel.Text = "Online"
-	onlineLabel.TextColor3 = Color3.fromRGB(96, 220, 140)
-	onlineLabel.TextSize = 8
-	onlineLabel.TextXAlignment = Enum.TextXAlignment.Left
-	onlineLabel.TextYAlignment = Enum.TextYAlignment.Center
-	onlineLabel.Parent = onlineGroup
-
 	local searchButton = Instance.new("TextButton")
-	searchButton.Name = "HeaderSearchButton"
+	searchButton.Name = "HeaderSearchButton"	
+	searchButton.ZIndex = 52
 	searchButton.Size = UDim2.new(0, 22, 0, 22)
 	searchButton.Position = UDim2.new(1, -104, 0, 8)
 	searchButton.BackgroundColor3 = Color3.fromRGB(32, 32, 44)
@@ -867,6 +841,7 @@ function showMainPanel()
 	table.insert(themeSections, searchButtonStroke)
 	local searchLens = Instance.new("Frame")
 	searchLens.Size = UDim2.new(0, 9, 0, 9)
+	searchLens.ZIndex = 53
 	searchLens.Position = UDim2.new(0, 5, 0, 4)
 	searchLens.BackgroundTransparency = 1
 	searchLens.BorderSizePixel = 0
@@ -881,12 +856,105 @@ function showMainPanel()
 	table.insert(themeSections, searchLensStroke)
 	local searchHandle = Instance.new("Frame")
 	searchHandle.Size = UDim2.new(0, 6, 0, 1.5)
+	searchHandle.ZIndex = 53
 	searchHandle.Position = UDim2.new(0, 13, 0, 13)
 	searchHandle.Rotation = 45
 	searchHandle.BackgroundColor3 = currentThemeColor
 	searchHandle.BorderSizePixel = 0
 	searchHandle.Parent = searchButton
 	table.insert(resizeSymbolsLines, searchHandle)
+
+	local searchField = Instance.new("TextBox")
+	searchField.Name = "HeaderSearchField"
+	searchField.Size = UDim2.new(1, -122, 0, 22)
+	searchField.Position = UDim2.new(0, 10, 0, 8)
+	searchField.BackgroundColor3 = Color3.fromRGB(24, 24, 34)
+	searchField.BackgroundTransparency = 0.08
+	searchField.BorderSizePixel = 0
+	searchField.ClearTextOnFocus = false
+	searchField.Font = currentGlobalFont
+	searchField.PlaceholderText = "Buscar opções..."
+	searchField.PlaceholderColor3 = Color3.fromRGB(145, 145, 160)
+	searchField.Text = ""
+	searchField.TextColor3 = currentTextColor
+	searchField.TextSize = 9
+	searchField.TextXAlignment = Enum.TextXAlignment.Left
+	searchField.Visible = false
+	searchField.ZIndex = 50
+	searchField.Parent = mainPanel
+	local searchFieldCorner = Instance.new("UICorner")
+	searchFieldCorner.CornerRadius = UDim.new(0, 6)
+	searchFieldCorner.Parent = searchField
+	local searchFieldStroke = Instance.new("UIStroke")
+	searchFieldStroke.Color = currentThemeColor
+	searchFieldStroke.Transparency = 0.65
+	searchFieldStroke.Thickness = 1
+	searchFieldStroke.Parent = searchField
+	table.insert(themeSections, searchFieldStroke)
+	local searchFieldPadding = Instance.new("UIPadding")
+	searchFieldPadding.PaddingLeft = UDim.new(0, 9)
+	searchFieldPadding.Parent = searchField
+
+	local searchResults = Instance.new("ScrollingFrame")
+	searchResults.Name = "HeaderSearchResults"
+	searchResults.Size = UDim2.new(1, -20, 0, 148)
+	searchResults.Position = UDim2.new(0, 10, 0, 34)
+	searchResults.BackgroundColor3 = Color3.fromRGB(20, 20, 29)
+	searchResults.BackgroundTransparency = 0.04
+	searchResults.BorderSizePixel = 0
+	searchResults.CanvasSize = UDim2.new(0, 0, 0, 0)
+	searchResults.ScrollBarThickness = 3
+	searchResults.ScrollBarImageColor3 = currentThemeColor
+	searchResults.ScrollingDirection = Enum.ScrollingDirection.Y
+	searchResults.Visible = false
+	searchResults.ZIndex = 50
+	searchResults.Parent = mainPanel
+	local searchResultsCorner = Instance.new("UICorner")
+	searchResultsCorner.CornerRadius = UDim.new(0, 7)
+	searchResultsCorner.Parent = searchResults
+	local searchResultsStroke = Instance.new("UIStroke")
+	searchResultsStroke.Color = currentThemeColor
+	searchResultsStroke.Transparency = 0.55
+	searchResultsStroke.Thickness = 1
+	searchResultsStroke.Parent = searchResults
+	table.insert(themeSections, searchResultsStroke)
+	local searchResultsPadding = Instance.new("UIPadding")
+	searchResultsPadding.PaddingTop = UDim.new(0, 4)
+	searchResultsPadding.PaddingBottom = UDim.new(0, 4)
+	searchResultsPadding.PaddingLeft = UDim.new(0, 4)
+	searchResultsPadding.PaddingRight = UDim.new(0, 4)
+	searchResultsPadding.Parent = searchResults
+	local searchResultsLayout = Instance.new("UIListLayout")
+	searchResultsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	searchResultsLayout.Padding = UDim.new(0, 3)
+	searchResultsLayout.Parent = searchResults
+	searchResultsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+		searchResults.CanvasSize = UDim2.new(0, 0, 0, searchResultsLayout.AbsoluteContentSize.Y + 8)
+	end)
+
+	local searchIsOpen = false
+	local function setSearchOpen(state)
+		searchIsOpen = state
+		searchField.Visible = state
+		searchResults.Visible = false
+		if state then
+			titleLabel.Visible = false
+			subTitleLabel.Visible = false
+			versionBadge.Visible = false
+			task.defer(function()
+				if searchIsOpen and searchField.Parent then searchField:CaptureFocus() end
+			end)
+		else
+			if searchField:IsFocused() then searchField:ReleaseFocus() end
+			searchField.Text = ""
+			titleLabel.Visible = true
+			subTitleLabel.Visible = true
+			versionBadge.Visible = true
+		end
+	end
+	searchButton.MouseButton1Click:Connect(function()
+		setSearchOpen(not searchIsOpen)
+	end)
 
 	local controlsContainer = Instance.new("Frame")
 	controlsContainer.Size = UDim2.new(0, 70, 0, 26)
@@ -3273,6 +3341,105 @@ function showMainPanel()
 		TweenService:Create(kbToggleBtn, TweenInfo.new(0.18), {BackgroundColor3 = targetColor}):Play()
 		TweenService:Create(kbLed, TweenInfo.new(0.18), {BackgroundColor3 = targetLedColor}):Play()
 	end)
+
+	local function locateSearchPage(searchObject)
+		local node = searchObject
+		while node do
+			for pageName, pageObject in pairs(pages) do
+				if node == pageObject then return pageName, pageObject end
+			end
+			node = node.Parent
+		end
+		return nil, nil
+	end
+
+	local function clearSearchResultRows()
+		for _, child in ipairs(searchResults:GetChildren()) do
+			if child:IsA("TextButton") or child.Name == "SearchEmptyState" then
+				child:Destroy()
+			end
+		end
+	end
+
+	local function openSearchResult(pageName, pageObject, targetObject)
+		for _, otherPage in pairs(pages) do
+			otherPage.Visible = (otherPage == pageObject)
+		end
+		pageObject.Position = UDim2.new(0, 4, 0, 4)
+		for _, tabData in ipairs(tabButtonsList) do
+			local selected = tabData.Page == pageObject
+			tabData.Indicator.Size = selected and UDim2.new(0, 2, 0, 16) or UDim2.new(0, 2, 0, 0)
+			tabData.Label.TextColor3 = selected and currentTextColor or Color3.fromRGB(180, 180, 180)
+		end
+		activePage = pageObject
+		task.wait()
+		if targetObject and targetObject.Parent then
+			local contentY = targetObject.AbsolutePosition.Y - pageObject.AbsolutePosition.Y + pageObject.CanvasPosition.Y
+			pageObject.CanvasPosition = Vector2.new(0, math.max(contentY - 18, 0))
+		end
+		setSearchOpen(false)
+	end
+
+	local function refreshSearchResults()
+		clearSearchResultRows()
+		local query = string.lower(string.gsub(searchField.Text, "^%s*(.-)%s*$", "%1"))
+		searchResults.CanvasPosition = Vector2.new(0, 0)
+		if query == "" then
+			searchResults.Visible = false
+			return
+		end
+		searchResults.Visible = true
+		local matchCount = 0
+		for _, textObject in ipairs(allTextLabels) do
+			if matchCount >= 10 then break end
+			if textObject and textObject.Parent and (textObject:IsA("TextLabel") or textObject:IsA("TextButton") or textObject:IsA("TextBox")) then
+				local labelText = tostring(textObject.Text or "")
+				local pageName, pageObject = locateSearchPage(textObject)
+				if pageObject and labelText ~= "" and string.find(string.lower(labelText), query, 1, true) then
+					matchCount = matchCount + 1
+					local targetObject = textObject.Parent
+					local resultButton = Instance.new("TextButton")
+					resultButton.Name = "SearchResult" .. tostring(matchCount)
+					resultButton.Size = UDim2.new(1, -4, 0, 27)
+					resultButton.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+					resultButton.BackgroundTransparency = 0.28
+					resultButton.BorderSizePixel = 0
+					resultButton.Font = currentGlobalFont
+					resultButton.Text = pageName .. "  /  " .. labelText
+					resultButton.TextColor3 = currentTextColor
+					resultButton.TextSize = 9
+					resultButton.TextTruncate = Enum.TextTruncate.AtEnd
+					resultButton.TextXAlignment = Enum.TextXAlignment.Left
+					resultButton.LayoutOrder = matchCount
+					resultButton.ZIndex = 51
+					resultButton.Parent = searchResults
+					local resultPadding = Instance.new("UIPadding")
+					resultPadding.PaddingLeft = UDim.new(0, 8)
+					resultPadding.Parent = resultButton
+					local resultCorner = Instance.new("UICorner")
+					resultCorner.CornerRadius = UDim.new(0, 5)
+					resultCorner.Parent = resultButton
+					resultButton.MouseButton1Click:Connect(function()
+						openSearchResult(pageName, pageObject, targetObject)
+					end)
+				end
+			end
+		end
+		if matchCount == 0 then
+			local emptyState = Instance.new("TextLabel")
+			emptyState.Name = "SearchEmptyState"
+			emptyState.Size = UDim2.new(1, -4, 0, 28)
+			emptyState.BackgroundTransparency = 1
+			emptyState.Font = currentGlobalFont
+			emptyState.Text = "Nenhuma opção encontrada"
+			emptyState.TextColor3 = Color3.fromRGB(165, 165, 180)
+			emptyState.TextSize = 9
+			emptyState.TextXAlignment = Enum.TextXAlignment.Center
+			emptyState.ZIndex = 51
+			emptyState.Parent = searchResults
+		end
+	end
+	searchField:GetPropertyChangedSignal("Text"):Connect(refreshSearchResults)
 
 	TweenService:Create(mainPanel, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
 		Size = currentPanelSize
