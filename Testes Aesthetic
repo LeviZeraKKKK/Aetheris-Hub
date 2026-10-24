@@ -791,6 +791,103 @@ function showMainPanel()
 	subTitleLabel.Parent = mainPanel
 	table.insert(headerSubtitles, subTitleLabel)
 
+	local versionBadge = Instance.new("Frame")
+	versionBadge.Name = "VersionBadge"
+	versionBadge.Size = UDim2.new(0, 24, 0, 14)
+	versionBadge.Position = UDim2.new(0, 112, 0, 8)
+	versionBadge.BackgroundColor3 = currentThemeColor
+	versionBadge.BackgroundTransparency = 0.84
+	versionBadge.BorderSizePixel = 0
+	versionBadge.Parent = mainPanel
+	local versionBadgeCorner = Instance.new("UICorner")
+	versionBadgeCorner.CornerRadius = UDim.new(0, 4)
+	versionBadgeCorner.Parent = versionBadge
+	local versionBadgeStroke = Instance.new("UIStroke")
+	versionBadgeStroke.Color = currentThemeColor
+	versionBadgeStroke.Transparency = 0.45
+	versionBadgeStroke.Thickness = 1
+	versionBadgeStroke.Parent = versionBadge
+	table.insert(themeSections, versionBadgeStroke)
+	local versionBadgeText = Instance.new("TextLabel")
+	versionBadgeText.Size = UDim2.new(1, 0, 1, 0)
+	versionBadgeText.BackgroundTransparency = 1
+	versionBadgeText.Font = Enum.Font.GothamBold
+	versionBadgeText.Text = "V1"
+	versionBadgeText.TextColor3 = currentThemeColor
+	versionBadgeText.TextSize = 8
+	versionBadgeText.TextXAlignment = Enum.TextXAlignment.Center
+	versionBadgeText.Parent = versionBadge
+	table.insert(themeTexts, versionBadgeText)
+
+	local onlineGroup = Instance.new("Frame")
+	onlineGroup.Name = "OnlineStatus"
+	onlineGroup.Size = UDim2.new(0, 54, 0, 16)
+	onlineGroup.Position = UDim2.new(1, -174, 0, 8)
+	onlineGroup.BackgroundTransparency = 1
+	onlineGroup.Parent = mainPanel
+	local onlineDot = Instance.new("Frame")
+	onlineDot.Size = UDim2.new(0, 5, 0, 5)
+	onlineDot.Position = UDim2.new(0, 1, 0.5, -2.5)
+	onlineDot.BackgroundColor3 = Color3.fromRGB(74, 210, 125)
+	onlineDot.BorderSizePixel = 0
+	onlineDot.Parent = onlineGroup
+	local onlineDotCorner = Instance.new("UICorner")
+	onlineDotCorner.CornerRadius = UDim.new(1, 0)
+	onlineDotCorner.Parent = onlineDot
+	local onlineLabel = Instance.new("TextLabel")
+	onlineLabel.Size = UDim2.new(1, -10, 1, 0)
+	onlineLabel.Position = UDim2.new(0, 9, 0, 0)
+	onlineLabel.BackgroundTransparency = 1
+	onlineLabel.Font = Enum.Font.GothamMedium
+	onlineLabel.Text = "Online"
+	onlineLabel.TextColor3 = Color3.fromRGB(96, 220, 140)
+	onlineLabel.TextSize = 8
+	onlineLabel.TextXAlignment = Enum.TextXAlignment.Left
+	onlineLabel.TextYAlignment = Enum.TextYAlignment.Center
+	onlineLabel.Parent = onlineGroup
+
+	local searchButton = Instance.new("TextButton")
+	searchButton.Name = "HeaderSearchButton"
+	searchButton.Size = UDim2.new(0, 22, 0, 22)
+	searchButton.Position = UDim2.new(1, -104, 0, 8)
+	searchButton.BackgroundColor3 = Color3.fromRGB(32, 32, 44)
+	searchButton.BackgroundTransparency = 0.22
+	searchButton.BorderSizePixel = 0
+	searchButton.AutoButtonColor = true
+	searchButton.Text = ""
+	searchButton.Parent = mainPanel
+	local searchButtonCorner = Instance.new("UICorner")
+	searchButtonCorner.CornerRadius = UDim.new(0, 6)
+	searchButtonCorner.Parent = searchButton
+	local searchButtonStroke = Instance.new("UIStroke")
+	searchButtonStroke.Color = currentThemeColor
+	searchButtonStroke.Transparency = 0.72
+	searchButtonStroke.Thickness = 1
+	searchButtonStroke.Parent = searchButton
+	table.insert(themeSections, searchButtonStroke)
+	local searchLens = Instance.new("Frame")
+	searchLens.Size = UDim2.new(0, 9, 0, 9)
+	searchLens.Position = UDim2.new(0, 5, 0, 4)
+	searchLens.BackgroundTransparency = 1
+	searchLens.BorderSizePixel = 0
+	searchLens.Parent = searchButton
+	local searchLensCorner = Instance.new("UICorner")
+	searchLensCorner.CornerRadius = UDim.new(1, 0)
+	searchLensCorner.Parent = searchLens
+	local searchLensStroke = Instance.new("UIStroke")
+	searchLensStroke.Color = currentThemeColor
+	searchLensStroke.Thickness = 1.4
+	searchLensStroke.Parent = searchLens
+	table.insert(themeSections, searchLensStroke)
+	local searchHandle = Instance.new("Frame")
+	searchHandle.Size = UDim2.new(0, 6, 0, 1.5)
+	searchHandle.Position = UDim2.new(0, 13, 0, 13)
+	searchHandle.Rotation = 45
+	searchHandle.BackgroundColor3 = currentThemeColor
+	searchHandle.BorderSizePixel = 0
+	searchHandle.Parent = searchButton
+	table.insert(resizeSymbolsLines, searchHandle)
+
 	local controlsContainer = Instance.new("Frame")
 	controlsContainer.Size = UDim2.new(0, 70, 0, 26)
 	controlsContainer.Position = UDim2.new(1, -76, 0, 8)
