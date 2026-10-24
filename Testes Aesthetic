@@ -241,14 +241,16 @@ accentCorner.Parent = loadAccent
 
 -- Partículas discretas ficam na camada de fundo, atrás dos textos.
 local loadingParticles = {}
-local loadingColumns = 4
-local loadingRows = 2
+local loadingColumns = 5
+local loadingRows = 4
 for i = 1, loadingColumns * loadingRows do
     local column = (i - 1) % loadingColumns
     local row = math.floor((i - 1) / loadingColumns)
+    local baseX = (column + 0.5) / loadingColumns
+    local baseY = (row + 0.5) / loadingRows
     local particle = Instance.new("Frame")
     particle.Size = UDim2.new(0, 3, 0, 3)
-    particle.Position = UDim2.new((column + 0.5) / loadingColumns, 0, (row == 0) and 0.18 or 0.82, 0)
+    particle.Position = UDim2.new(baseX, 0, baseY, 0)
     particle.BackgroundColor3 = currentThemeColor
     particle.BackgroundTransparency = 0.78
     particle.BorderSizePixel = 0
@@ -260,8 +262,11 @@ for i = 1, loadingColumns * loadingRows do
     table.insert(themeParticles, particle)
     table.insert(loadingParticles, particle)
 
-    TweenService:Create(particle, TweenInfo.new(2.4, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true, (i - 1) * 0.12), {
-        BackgroundTransparency = 0.64
+    local driftX = (column % 2 == 0) and 0.018 or -0.018
+    local driftY = (row % 2 == 0) and 0.035 or -0.035
+    TweenService:Create(particle, TweenInfo.new(2.0 + (i % 5) * 0.24, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true, (i - 1) * 0.07), {
+        Position = UDim2.new(baseX + driftX, 0, baseY + driftY, 0),
+        BackgroundTransparency = 0.54
     }):Play()
 end
 
@@ -485,15 +490,17 @@ function showMainPanel()
 	particleContainer.Active = false
 	particleContainer.Parent = mainPanel
 
-	local particleColumns = 4
-	local particleRows = 3
+	local particleColumns = 6
+	local particleRows = 5
 	for i = 1, particleColumns * particleRows do
 		local column = (i - 1) % particleColumns
 		local row = math.floor((i - 1) / particleColumns)
+		local baseX = 0.06 + column * 0.105
+		local baseY = 0.08 + row * 0.16
 		local p = Instance.new("Frame")
 		p.Name = "UniformThemeParticle"
 		p.Size = UDim2.new(0, 4, 0, 4)
-		p.Position = UDim2.new((column + 0.5) / particleColumns, 0, (row + 0.5) / particleRows, 0)
+		p.Position = UDim2.new(baseX, 0, baseY, 0)
 		p.BackgroundColor3 = currentThemeColor
 		p.BackgroundTransparency = 0.48
 		p.BorderSizePixel = 0
@@ -503,11 +510,11 @@ function showMainPanel()
 		local corner = Instance.new("UICorner")
 		corner.CornerRadius = UDim.new(1, 0)
 		corner.Parent = p
-		local driftX = (column % 2 == 0) and 0.026 or -0.026
-		local driftY = (row % 2 == 0) and 0.024 or -0.024
+		local driftX = (column % 2 == 0) and 0.016 or -0.016
+		local driftY = (row % 2 == 0) and 0.022 or -0.022
 		local driftTarget = UDim2.new(
-			(column + 0.5) / particleColumns + driftX, 0,
-			(row + 0.5) / particleRows + driftY, 0
+			baseX + driftX, 0,
+			baseY + driftY, 0
 		)
 		TweenService:Create(p, TweenInfo.new(2.6 + (i % 4) * 0.22, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true, (i - 1) * 0.09), {
 			Position = driftTarget,
