@@ -3098,7 +3098,7 @@ function showMainPanel()
 			return priceA < priceB
 		end)
 
-		local parts = table.create(#onSale)
+		local parts = {}
 		for i, fruit in ipairs(onSale) do
 			parts[i] = tostring(fruit.Name) .. ":" .. tostring(getFruitShopPrice(fruit.Name, fruit)) .. ":" .. tostring(fruit.HasPermanent == true)
 		end
@@ -3153,16 +3153,24 @@ function showMainPanel()
 		fruitShopFetchBusy[isAdvanced] = true
 		task.spawn(function()
 			local fruits, fetchError
-			if type(fruitShopStateUtil) ~= "table" or not fruitShopStateUtil.CommRemoteFunc then
+			if type(fruitShopStateUtil) ~= "table" then
 				fetchError = "módulo da loja indisponível"
 			else
+				local remote = fruitShopStateUtil.CommRemoteFunc
 				local ok, result = pcall(function()
-					return fruitShopStateUtil.CommRemoteFunc:InvokeServer("GetFruits", isAdvanced)
+					if typeof(remote) == "Instance" and remote:IsA("RemoteFunction") then
+						return remote:InvokeServer("GetFruits", isAdvanced)
+					end
+					local invokeServer = type(remote) == "table" and remote.InvokeServer or nil
+					if type(invokeServer) ~= "function" then
+						error("CommRemoteFunc.InvokeServer indisponível")
+					end
+					return invokeServer(remote, "GetFruits", isAdvanced)
 				end)
 				if ok and type(result) == "table" then
 					fruits = result
 				else
-					fetchError = ok and "resposta inválida da loja" or tostring(result)
+					fetchError = tostring(result)
 				end
 			end
 			fruitShopFetchBusy[isAdvanced] = false
@@ -3223,7 +3231,7 @@ function showMainPanel()
 	end)
 
 	local function updateFruitShopTimers()
-		local now = DateTime.now().UnixTimestamp
+		local now = os.time()
 		local normalTime = 14400 - (now % 14400)
 		local advancedTime = 7200 - (now % 7200)
 		local normalText = formatFruitShopTime(normalTime)
