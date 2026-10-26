@@ -2850,7 +2850,7 @@ function showMainPanel()
 	-- ABA FRUTA
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
-	local secFrutaAction = createSection(frutaPage, "Automação", "⚡")
+	local secFrutaAction = createSection(frutaPage, "Automatização", "⚡")
 	local secFrutaEsp = createSection(frutaPage, "Fruit ESP", "👁️")
 
 	local fruitConfig = {
@@ -3070,6 +3070,136 @@ function showMainPanel()
 			table.clear(handled)
 		end
 	end, false)
+
+	local fruitRollState = {
+		Auto = false,
+		Delay = 5.0,
+		Spinning = false,
+		LastResult = nil,
+	}
+	local gachaRemoteFunction = nil
+	local autoRollGeneration = 0
+	local fruitRollBoxName = "ZiolesGacha"
+
+	local function ensureGachaRemote()
+		if gachaRemoteFunction then return true end
+		local loaded, remoteOrError = pcall(function()
+			local modules = ReplicatedStorage:WaitForChild("Modules", 10)
+			if not modules then error("Modules não encontrado") end
+			local netModule = modules:WaitForChild("Net", 10)
+			if not netModule or not netModule:IsA("ModuleScript") then error("Módulo Net não encontrado") end
+			local net = require(netModule)
+			if type(net) ~= "table" or type(net.RemoteFunction) ~= "function" then error("API Net incompatível") end
+			local remote = net:RemoteFunction("GachaNetworkRF")
+			if not remote then error("GachaNetworkRF indisponível") end
+			return remote
+		end)
+		if not loaded or not remoteOrError then
+			return false, tostring(remoteOrError)
+		end
+		gachaRemoteFunction = remoteOrError
+		return true
+	end
+
+	local function performFruitRoll()
+		if fruitRollState.Spinning then return false, "Uma roletagem já está em andamento" end
+		fruitRollState.Spinning = true
+		local succeeded = false
+		local resultMessage = "Falha na roletagem"
+
+		local character = player.Character
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		if not humanoid or humanoid.Health <= 0 then
+			resultMessage = "Personagem indisponível ou morto"
+		else
+			local remoteReady, remoteError = ensureGachaRemote()
+			if not remoteReady then
+				resultMessage = "Remote indisponível: " .. tostring(remoteError)
+			else
+				local invoked, response, errorInfo = pcall(function()
+					return gachaRemoteFunction:InvokeServer({
+						Context = "Purchase",
+						BoxName = fruitRollBoxName,
+					})
+				end)
+				if not invoked then
+					resultMessage = tostring(response)
+				elseif response then
+					resultMessage = "Roletagem concluída"
+					succeeded = true
+				else
+					local message = (type(errorInfo) == "table" and errorInfo.ErrorMessage)
+						or (type(response) == "table" and response.ErrorMessage)
+						or errorInfo or "Compra recusada"
+					resultMessage = tostring(message)
+				end
+			end
+		end
+
+		fruitRollState.Spinning = false
+		fruitRollState.LastResult = resultMessage
+		return succeeded, resultMessage
+	end
+
+	local function setAutoFruitRoll(state)
+		fruitRollState.Auto = state
+		autoRollGeneration += 1
+		local thisGeneration = autoRollGeneration
+		if state then
+			task.spawn(function()
+				while fruitRollState.Auto and autoRollGeneration == thisGeneration do
+					local succeeded = performFruitRoll()
+					local waitDuration = succeeded and fruitRollState.Delay or math.max(fruitRollState.Delay, 10)
+					local endTime = os.clock() + waitDuration
+					repeat
+						task.wait(0.1)
+					until os.clock() >= endTime or not fruitRollState.Auto or autoRollGeneration ~= thisGeneration
+				end
+			end)
+		end
+	end
+
+	addToggle(secFrutaAction, "Auto Roletar Frutas", function(state)
+		setAutoFruitRoll(state)
+	end, false)
+
+	local rollOnceButton = Instance.new("TextButton")
+	rollOnceButton.Name = "RollFruitOnceButton"
+	rollOnceButton.Size = UDim2.new(1, 0, 0, 27)
+	rollOnceButton.BackgroundColor3 = Color3.fromRGB(42, 42, 58)
+	rollOnceButton.BackgroundTransparency = 0.22
+	rollOnceButton.BorderSizePixel = 0
+	rollOnceButton.AutoButtonColor = true
+	rollOnceButton.Font = currentGlobalFont
+	rollOnceButton.Text = "Roletar fruta (1x)"
+	rollOnceButton.TextColor3 = currentTextColor
+	rollOnceButton.TextSize = 10
+	rollOnceButton.Parent = secFrutaAction
+	table.insert(allTextLabels, rollOnceButton)
+	local rollOnceCorner = Instance.new("UICorner")
+	rollOnceCorner.CornerRadius = UDim.new(0, 5)
+	rollOnceCorner.Parent = rollOnceButton
+	local rollOnceStroke = Instance.new("UIStroke")
+	rollOnceStroke.Color = currentThemeColor
+	rollOnceStroke.Transparency = 0.58
+	rollOnceStroke.Thickness = 1
+	rollOnceStroke.Parent = rollOnceButton
+	table.insert(themeSections, rollOnceStroke)
+	local rollOnceBusy = false
+	rollOnceButton.MouseButton1Click:Connect(function()
+		if rollOnceBusy or fruitRollState.Spinning then return end
+		rollOnceBusy = true
+		rollOnceButton.Text = "Roletando..."
+		task.spawn(function()
+			local succeeded, resultMessage = performFruitRoll()
+			if rollOnceButton.Parent then
+				rollOnceButton.Text = succeeded and "Roletagem concluída" or "Não foi possível roletar"
+			end
+			task.wait(1.5)
+			if rollOnceButton.Parent then rollOnceButton.Text = "Roletar fruta (1x)" end
+			rollOnceBusy = false
+		end)
+	end)
 
 	addToggle(secFrutaEsp, "Ativar Fruit ESP", function(state)
 		fruitEspMasterEnabled = state
