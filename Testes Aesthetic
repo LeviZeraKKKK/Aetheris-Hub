@@ -3078,6 +3078,15 @@ function showMainPanel()
 		LastResult = nil,
 	}
 	local gachaRemoteFunction = nil
+	local rollStatusLabel = nil
+	local function setFruitRollStatus(message, color)
+		if rollStatusLabel and rollStatusLabel.Parent then
+			local cleanMessage = string.gsub(tostring(message or ""), "[%c]+", " ")
+			if #cleanMessage > 150 then cleanMessage = string.sub(cleanMessage, 1, 147) .. "..." end
+			rollStatusLabel.Text = cleanMessage
+			rollStatusLabel.TextColor3 = color
+		end
+	end
 	local autoRollGeneration = 0
 	local fruitRollBoxName = "ZiolesGacha"
 
@@ -3104,6 +3113,7 @@ function showMainPanel()
 	local function performFruitRoll()
 		if fruitRollState.Spinning then return false, "Uma roletagem já está em andamento" end
 		fruitRollState.Spinning = true
+		setFruitRollStatus("Status: tentando roletar...", Color3.fromRGB(230, 190, 100))
 		local succeeded = false
 		local resultMessage = "Falha na roletagem"
 
@@ -3138,6 +3148,9 @@ function showMainPanel()
 
 		fruitRollState.Spinning = false
 		fruitRollState.LastResult = resultMessage
+		local statusPrefix = succeeded and "Sucesso: " or "Falha: "
+		local statusColor = succeeded and Color3.fromRGB(105, 220, 145) or Color3.fromRGB(255, 125, 125)
+		setFruitRollStatus(statusPrefix .. tostring(resultMessage), statusColor)
 		return succeeded, resultMessage
 	end
 
@@ -3165,26 +3178,75 @@ function showMainPanel()
 
 	local rollOnceButton = Instance.new("TextButton")
 	rollOnceButton.Name = "RollFruitOnceButton"
-	rollOnceButton.Size = UDim2.new(1, 0, 0, 27)
-	rollOnceButton.BackgroundColor3 = Color3.fromRGB(42, 42, 58)
-	rollOnceButton.BackgroundTransparency = 0.22
+	rollOnceButton.Size = UDim2.new(1, 0, 0, 28)
+	rollOnceButton.BackgroundColor3 = Color3.fromRGB(46, 46, 60)
+	rollOnceButton.BackgroundTransparency = 0.12
 	rollOnceButton.BorderSizePixel = 0
 	rollOnceButton.AutoButtonColor = true
 	rollOnceButton.Font = currentGlobalFont
-	rollOnceButton.Text = "Roletar fruta (1x)"
+	rollOnceButton.Text = "Roletar fruta"
 	rollOnceButton.TextColor3 = currentTextColor
-	rollOnceButton.TextSize = 10
+	rollOnceButton.TextSize = 11
+	rollOnceButton.TextXAlignment = Enum.TextXAlignment.Left
+	rollOnceButton.TextTruncate = Enum.TextTruncate.AtEnd
 	rollOnceButton.Parent = secFrutaAction
 	table.insert(allTextLabels, rollOnceButton)
+	local rollOncePadding = Instance.new("UIPadding")
+	rollOncePadding.PaddingLeft = UDim.new(0, 10)
+	rollOncePadding.PaddingRight = UDim.new(0, 25)
+	rollOncePadding.Parent = rollOnceButton
 	local rollOnceCorner = Instance.new("UICorner")
 	rollOnceCorner.CornerRadius = UDim.new(0, 5)
 	rollOnceCorner.Parent = rollOnceButton
 	local rollOnceStroke = Instance.new("UIStroke")
 	rollOnceStroke.Color = currentThemeColor
-	rollOnceStroke.Transparency = 0.58
+	rollOnceStroke.Transparency = 0.76
 	rollOnceStroke.Thickness = 1
 	rollOnceStroke.Parent = rollOnceButton
 	table.insert(themeSections, rollOnceStroke)
+	local rollOnceArrow = Instance.new("TextLabel")
+	rollOnceArrow.Name = "RollFruitArrow"
+	rollOnceArrow.Size = UDim2.new(0, 14, 0, 18)
+	rollOnceArrow.Position = UDim2.new(1, -19, 0.5, -9)
+	rollOnceArrow.BackgroundTransparency = 1
+	rollOnceArrow.Font = Enum.Font.GothamMedium
+	rollOnceArrow.Text = "›"
+	rollOnceArrow.TextColor3 = currentThemeColor
+	rollOnceArrow.TextSize = 15
+	rollOnceArrow.TextXAlignment = Enum.TextXAlignment.Center
+	rollOnceArrow.TextYAlignment = Enum.TextYAlignment.Center
+	rollOnceArrow.ZIndex = rollOnceButton.ZIndex + 1
+	rollOnceArrow.Parent = rollOnceButton
+	table.insert(themeTexts, rollOnceArrow)
+
+	rollStatusLabel = Instance.new("TextLabel")
+	rollStatusLabel.Name = "FruitRollStatus"
+	rollStatusLabel.Size = UDim2.new(1, 0, 0, 34)
+	rollStatusLabel.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+	rollStatusLabel.BackgroundTransparency = 0.48
+	rollStatusLabel.BorderSizePixel = 0
+	rollStatusLabel.Font = currentGlobalFont
+	rollStatusLabel.Text = "Status: aguardando roletagem"
+	rollStatusLabel.TextColor3 = Color3.fromRGB(180, 180, 195)
+	rollStatusLabel.TextSize = 9
+	rollStatusLabel.TextWrapped = true
+	rollStatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+	rollStatusLabel.TextYAlignment = Enum.TextYAlignment.Center
+	rollStatusLabel.Parent = secFrutaAction
+	local rollStatusPadding = Instance.new("UIPadding")
+	rollStatusPadding.PaddingLeft = UDim.new(0, 8)
+	rollStatusPadding.PaddingRight = UDim.new(0, 8)
+	rollStatusPadding.Parent = rollStatusLabel
+	local rollStatusCorner = Instance.new("UICorner")
+	rollStatusCorner.CornerRadius = UDim.new(0, 5)
+	rollStatusCorner.Parent = rollStatusLabel
+	local rollStatusStroke = Instance.new("UIStroke")
+	rollStatusStroke.Color = currentThemeColor
+	rollStatusStroke.Transparency = 0.72
+	rollStatusStroke.Thickness = 1
+	rollStatusStroke.Parent = rollStatusLabel
+	table.insert(themeSections, rollStatusStroke)
+
 	local rollOnceBusy = false
 	rollOnceButton.MouseButton1Click:Connect(function()
 		if rollOnceBusy or fruitRollState.Spinning then return end
@@ -3193,10 +3255,10 @@ function showMainPanel()
 		task.spawn(function()
 			local succeeded, resultMessage = performFruitRoll()
 			if rollOnceButton.Parent then
-				rollOnceButton.Text = succeeded and "Roletagem concluída" or "Não foi possível roletar"
+				rollOnceButton.Text = succeeded and "Concluído" or "Falhou"
 			end
 			task.wait(1.5)
-			if rollOnceButton.Parent then rollOnceButton.Text = "Roletar fruta (1x)" end
+			if rollOnceButton.Parent then rollOnceButton.Text = "Roletar fruta" end
 			rollOnceBusy = false
 		end)
 	end)
