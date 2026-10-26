@@ -2850,6 +2850,421 @@ function showMainPanel()
 	-- ABA FRUTA
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
+	local secFruitShop = createSection(frutaPage, "Loja de Frutas", "🛒")
+
+	local shopPanel = Instance.new("Frame")
+	shopPanel.Name = "FruitShopOverview"
+	shopPanel.Size = UDim2.new(1, 0, 0, 256)
+	shopPanel.BackgroundTransparency = 1
+	shopPanel.Parent = secFruitShop
+
+	local shopBeliLabel = Instance.new("TextLabel")
+	shopBeliLabel.Size = UDim2.new(0, 100, 0, 19)
+	shopBeliLabel.Position = UDim2.new(0, 2, 0, 0)
+	shopBeliLabel.BackgroundTransparency = 1
+	shopBeliLabel.Font = currentGlobalFont
+	shopBeliLabel.Text = "Beli: --"
+	shopBeliLabel.TextColor3 = Color3.fromRGB(255, 220, 115)
+	shopBeliLabel.TextSize = 10
+	shopBeliLabel.TextXAlignment = Enum.TextXAlignment.Left
+	shopBeliLabel.Parent = shopPanel
+	table.insert(allTextLabels, shopBeliLabel)
+
+	local shopStatusLabel = Instance.new("TextLabel")
+	shopStatusLabel.Size = UDim2.new(1, -130, 0, 19)
+	shopStatusLabel.Position = UDim2.new(0, 92, 0, 0)
+	shopStatusLabel.BackgroundTransparency = 1
+	shopStatusLabel.Font = currentGlobalFont
+	shopStatusLabel.Text = "Carregando dados da loja..."
+	shopStatusLabel.TextColor3 = Color3.fromRGB(175, 185, 205)
+	shopStatusLabel.TextSize = 9
+	shopStatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+	shopStatusLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	shopStatusLabel.Parent = shopPanel
+
+	local shopRefreshButton = Instance.new("TextButton")
+	shopRefreshButton.Name = "RefreshFruitShop"
+	shopRefreshButton.Size = UDim2.new(0, 22, 0, 19)
+	shopRefreshButton.Position = UDim2.new(1, -22, 0, 0)
+	shopRefreshButton.BackgroundColor3 = Color3.fromRGB(42, 42, 58)
+	shopRefreshButton.BackgroundTransparency = 0.12
+	shopRefreshButton.BorderSizePixel = 0
+	shopRefreshButton.Font = currentGlobalFont
+	shopRefreshButton.Text = "↻"
+	shopRefreshButton.TextColor3 = currentThemeColor
+	shopRefreshButton.TextSize = 13
+	shopRefreshButton.Parent = shopPanel
+	local shopRefreshCorner = Instance.new("UICorner")
+	shopRefreshCorner.CornerRadius = UDim.new(0, 4)
+	shopRefreshCorner.Parent = shopRefreshButton
+	table.insert(themeTexts, shopRefreshButton)
+
+	local fruitShopColumns = {}
+	local fruitShopStateUtil = nil
+	local fruitShopCatalog = nil
+	local fruitShopFetchBusy = { [false] = false, [true] = false }
+	local fruitShopFetchInterval = 30
+	local fruitShopRefreshElapsed = 0
+	local fruitShopLastNormalTimer = nil
+	local fruitShopLastAdvancedTimer = nil
+	local fruitShopBeliValue = nil
+	local fruitShopBeliConnection = nil
+
+	local function formatFruitShopNumber(value)
+		local n = tonumber(value) or 0
+		if n >= 1e9 then return string.format("%.1fB", n / 1e9) end
+		if n >= 1e6 then return string.format("%.1fM", n / 1e6) end
+		if n >= 1e3 then return string.format("%.1fK", n / 1e3) end
+		return tostring(math.floor(n))
+	end
+
+	local function formatFruitShopTime(seconds)
+		local total = math.max(0, math.floor(seconds))
+		return string.format("%02d:%02d:%02d", math.floor(total / 3600), math.floor((total % 3600) / 60), total % 60)
+	end
+
+	local function getFruitShopBeli()
+		if fruitShopBeliValue and fruitShopBeliValue.Parent then
+			return tonumber(fruitShopBeliValue.Value) or 0
+		end
+		return 0
+	end
+
+	local function setFruitShopStatus(text, isError)
+		if not shopStatusLabel.Parent then return end
+		local safeText = string.gsub(tostring(text or ""), "[%c]+", " ")
+		shopStatusLabel.Text = safeText
+		shopStatusLabel.TextColor3 = isError and Color3.fromRGB(255, 135, 135) or Color3.fromRGB(175, 185, 205)
+	end
+
+	local function getFruitShopPrice(name, entry)
+		local directPrice = entry and tonumber(entry.Price)
+		if directPrice then return directPrice end
+		local catalogEntry = fruitShopCatalog and fruitShopCatalog[name]
+		return (catalogEntry and tonumber(catalogEntry.Price)) or 0
+	end
+
+	local function createFruitShopColumn(isAdvanced, xScale, titleText, titleColor)
+		local column = Instance.new("Frame")
+		column.Name = isAdvanced and "AdvancedFruitStock" or "NormalFruitStock"
+		column.Size = UDim2.new(0.5, -3, 0, 230)
+		column.Position = UDim2.new(xScale, xScale == 0 and 0 or 3, 0, 24)
+		column.BackgroundColor3 = Color3.fromRGB(31, 31, 42)
+		column.BackgroundTransparency = 0.28
+		column.BorderSizePixel = 0
+		column.Parent = shopPanel
+		local columnCorner = Instance.new("UICorner")
+		columnCorner.CornerRadius = UDim.new(0, 6)
+		columnCorner.Parent = column
+		local columnStroke = Instance.new("UIStroke")
+		columnStroke.Color = currentThemeColor
+		columnStroke.Transparency = 0.78
+		columnStroke.Thickness = 1
+		columnStroke.Parent = column
+		table.insert(themeSections, columnStroke)
+
+		local title = Instance.new("TextLabel")
+		title.Size = UDim2.new(1, -8, 0, 17)
+		title.Position = UDim2.new(0, 5, 0, 3)
+		title.BackgroundTransparency = 1
+		title.Font = currentGlobalFont
+		title.Text = titleText
+		title.TextColor3 = titleColor
+		title.TextSize = 10
+		title.TextXAlignment = Enum.TextXAlignment.Left
+		title.TextTruncate = Enum.TextTruncate.AtEnd
+		title.Parent = column
+		table.insert(allTextLabels, title)
+
+		local timerCard = Instance.new("Frame")
+		timerCard.Size = UDim2.new(1, -10, 0, 31)
+		timerCard.Position = UDim2.new(0, 5, 0, 21)
+		timerCard.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+		timerCard.BackgroundTransparency = 0.08
+		timerCard.BorderSizePixel = 0
+		timerCard.Parent = column
+		local timerCorner = Instance.new("UICorner")
+		timerCorner.CornerRadius = UDim.new(0, 4)
+		timerCorner.Parent = timerCard
+
+		local timerCaption = Instance.new("TextLabel")
+		timerCaption.Size = UDim2.new(1, 0, 0, 11)
+		timerCaption.Position = UDim2.new(0, 0, 0, 1)
+		timerCaption.BackgroundTransparency = 1
+		timerCaption.Font = currentGlobalFont
+		timerCaption.Text = "REABASTECE EM"
+		timerCaption.TextColor3 = Color3.fromRGB(150, 170, 205)
+		timerCaption.TextSize = 8
+		timerCaption.TextXAlignment = Enum.TextXAlignment.Center
+		timerCaption.Parent = timerCard
+
+		local timerLabel = Instance.new("TextLabel")
+		timerLabel.Size = UDim2.new(1, 0, 0, 17)
+		timerLabel.Position = UDim2.new(0, 0, 0, 12)
+		timerLabel.BackgroundTransparency = 1
+		timerLabel.Font = Enum.Font.GothamBold
+		timerLabel.Text = "00:00:00"
+		timerLabel.TextColor3 = Color3.fromRGB(120, 220, 255)
+		timerLabel.TextSize = 12
+		timerLabel.TextXAlignment = Enum.TextXAlignment.Center
+		timerLabel.Parent = timerCard
+
+		local scroll = Instance.new("ScrollingFrame")
+		scroll.Name = "FruitList"
+		scroll.Size = UDim2.new(1, -8, 0, 168)
+		scroll.Position = UDim2.new(0, 4, 0, 56)
+		scroll.BackgroundTransparency = 1
+		scroll.BorderSizePixel = 0
+		scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+		scroll.ScrollBarThickness = 3
+		scroll.ScrollBarImageColor3 = currentThemeColor
+		scroll.Parent = column
+
+		fruitShopColumns[isAdvanced] = {
+			frame = column,
+			title = title,
+			timer = timerLabel,
+			scroll = scroll,
+			rows = {},
+			fruits = {},
+			signature = "",
+			emptyLabel = nil,
+			label = titleText,
+		}
+	end
+
+	createFruitShopColumn(false, 0, "NORMAL", Color3.fromRGB(125, 220, 155))
+	createFruitShopColumn(true, 0.5, "AVANÇADO", Color3.fromRGB(130, 185, 255))
+
+	local function createFruitShopRow(scroll)
+		local row = Instance.new("Frame")
+		row.Size = UDim2.new(1, -4, 0, 23)
+		row.BorderSizePixel = 0
+		row.Visible = false
+		row.Parent = scroll
+		local rowCorner = Instance.new("UICorner")
+		rowCorner.CornerRadius = UDim.new(0, 4)
+		rowCorner.Parent = row
+
+		local nameLabel = Instance.new("TextLabel")
+		nameLabel.Size = UDim2.new(1, -55, 1, 0)
+		nameLabel.Position = UDim2.new(0, 5, 0, 0)
+		nameLabel.BackgroundTransparency = 1
+		nameLabel.Font = currentGlobalFont
+		nameLabel.TextColor3 = Color3.fromRGB(240, 240, 245)
+		nameLabel.TextSize = 9
+		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+		nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+		nameLabel.Parent = row
+
+		local priceLabel = Instance.new("TextLabel")
+		priceLabel.Size = UDim2.new(0, 48, 1, 0)
+		priceLabel.Position = UDim2.new(1, -51, 0, 0)
+		priceLabel.BackgroundTransparency = 1
+		priceLabel.Font = Enum.Font.GothamBold
+		priceLabel.TextSize = 9
+		priceLabel.TextXAlignment = Enum.TextXAlignment.Right
+		priceLabel.Parent = row
+		return {frame = row, name = nameLabel, price = priceLabel}
+	end
+
+	local function updateFruitShopAffordability()
+		local beli = getFruitShopBeli()
+		shopBeliLabel.Text = "Beli: " .. formatFruitShopNumber(beli)
+		for _, column in pairs(fruitShopColumns) do
+			for i, fruit in ipairs(column.fruits) do
+				local row = column.rows[i]
+				if row and row.frame.Visible then
+					local canAfford = beli >= getFruitShopPrice(fruit.Name, fruit)
+					row.frame.BackgroundColor3 = canAfford and Color3.fromRGB(35, 66, 48) or Color3.fromRGB(69, 40, 43)
+					row.price.TextColor3 = canAfford and Color3.fromRGB(160, 255, 170) or Color3.fromRGB(255, 155, 155)
+				end
+			end
+		end
+	end
+
+	local function renderFruitShopColumn(isAdvanced, fruits)
+		local column = fruitShopColumns[isAdvanced]
+		local onSale = {}
+		for _, fruit in ipairs(fruits) do
+			if type(fruit) == "table" and fruit.OnSale == true and fruit.Name then
+				table.insert(onSale, fruit)
+			end
+		end
+		table.sort(onSale, function(a, b)
+			local priceA = getFruitShopPrice(a.Name, a)
+			local priceB = getFruitShopPrice(b.Name, b)
+			if priceA == priceB then return tostring(a.Name) < tostring(b.Name) end
+			return priceA < priceB
+		end)
+
+		local parts = table.create(#onSale)
+		for i, fruit in ipairs(onSale) do
+			parts[i] = tostring(fruit.Name) .. ":" .. tostring(getFruitShopPrice(fruit.Name, fruit)) .. ":" .. tostring(fruit.HasPermanent == true)
+		end
+		local signature = table.concat(parts, "|")
+		column.fruits = onSale
+		column.title.Text = column.label .. "  •  " .. tostring(#onSale) .. " à venda"
+		if signature == column.signature then
+			updateFruitShopAffordability()
+			return
+		end
+		column.signature = signature
+
+		for i, fruit in ipairs(onSale) do
+			local row = column.rows[i]
+			if not row then
+				row = createFruitShopRow(column.scroll)
+				column.rows[i] = row
+			end
+			row.frame.Visible = true
+			row.frame.Position = UDim2.new(0, 2, 0, (i - 1) * 25)
+			row.name.Text = tostring(fruit.Name) .. (fruit.HasPermanent and "  ★" or "")
+			row.price.Text = formatFruitShopNumber(getFruitShopPrice(fruit.Name, fruit))
+		end
+		for i = #onSale + 1, #column.rows do
+			column.rows[i].frame.Visible = false
+		end
+
+		if #onSale == 0 then
+			if not column.emptyLabel then
+				local empty = Instance.new("TextLabel")
+				empty.Size = UDim2.new(1, -8, 0, 24)
+				empty.Position = UDim2.new(0, 4, 0, 3)
+				empty.BackgroundTransparency = 1
+				empty.Font = currentGlobalFont
+				empty.Text = "Sem frutas à venda"
+				empty.TextColor3 = Color3.fromRGB(155, 155, 175)
+				empty.TextSize = 9
+				empty.TextXAlignment = Enum.TextXAlignment.Center
+				empty.Parent = column.scroll
+				column.emptyLabel = empty
+			end
+			column.emptyLabel.Visible = true
+		elseif column.emptyLabel then
+			column.emptyLabel.Visible = false
+		end
+		column.scroll.CanvasSize = UDim2.new(0, 0, 0, #onSale * 25 + 4)
+		updateFruitShopAffordability()
+	end
+
+	local function fetchFruitShopColumn(isAdvanced)
+		if fruitShopFetchBusy[isAdvanced] then return end
+		fruitShopFetchBusy[isAdvanced] = true
+		task.spawn(function()
+			local fruits, fetchError
+			if type(fruitShopStateUtil) ~= "table" or not fruitShopStateUtil.CommRemoteFunc then
+				fetchError = "módulo da loja indisponível"
+			else
+				local ok, result = pcall(function()
+					return fruitShopStateUtil.CommRemoteFunc:InvokeServer("GetFruits", isAdvanced)
+				end)
+				if ok and type(result) == "table" then
+					fruits = result
+				else
+					fetchError = ok and "resposta inválida da loja" or tostring(result)
+				end
+			end
+			fruitShopFetchBusy[isAdvanced] = false
+			if not screenGui.Parent then return end
+			if fruits then
+				renderFruitShopColumn(isAdvanced, fruits)
+				setFruitShopStatus("Estoque atualizado", false)
+			else
+				setFruitShopStatus((isAdvanced and "Avançado: " or "Normal: ") .. tostring(fetchError), true)
+			end
+		end)
+	end
+
+	local function refreshFruitShop()
+		fruitShopRefreshElapsed = 0
+		setFruitShopStatus("Atualizando estoque...", false)
+		fetchFruitShopColumn(false)
+		fetchFruitShopColumn(true)
+	end
+
+	shopRefreshButton.MouseButton1Click:Connect(refreshFruitShop)
+
+	task.spawn(function()
+		local moduleLoaded, stateUtil = pcall(function()
+			local controllers = ReplicatedStorage:WaitForChild("Controllers", 10)
+			local ui = controllers and controllers:WaitForChild("UI", 10)
+			local fruitShop = ui and ui:WaitForChild("FruitShop", 10)
+			local moduleScript = fruitShop and fruitShop:WaitForChild("StateUtil", 10)
+			if not moduleScript or not moduleScript:IsA("ModuleScript") then error("StateUtil não encontrado") end
+			return require(moduleScript)
+		end)
+		if moduleLoaded then
+			fruitShopStateUtil = stateUtil
+		else
+			setFruitShopStatus("Não foi possível carregar a loja: " .. tostring(stateUtil), true)
+		end
+
+		local dataLoaded, catalog = pcall(function()
+			local controllers = ReplicatedStorage:WaitForChild("Controllers", 10)
+			local ui = controllers and controllers:WaitForChild("UI", 10)
+			local fruitShop = ui and ui:WaitForChild("FruitShop", 10)
+			local moduleScript = fruitShop and fruitShop:WaitForChild("Data", 10)
+			if not moduleScript or not moduleScript:IsA("ModuleScript") then error("Data não encontrado") end
+			return require(moduleScript)
+		end)
+		if dataLoaded and type(catalog) == "table" then fruitShopCatalog = catalog end
+		if moduleLoaded and frutaPage.Visible then refreshFruitShop() end
+	end)
+
+	task.spawn(function()
+		local dataFolder = player:FindFirstChild("Data") or player:WaitForChild("Data", 10)
+		local beliValue = dataFolder and (dataFolder:FindFirstChild("Beli") or dataFolder:WaitForChild("Beli", 10))
+		if beliValue and (beliValue:IsA("IntValue") or beliValue:IsA("NumberValue")) then
+			fruitShopBeliValue = beliValue
+			shopBeliLabel.Text = "Beli: " .. formatFruitShopNumber(getFruitShopBeli())
+			fruitShopBeliConnection = beliValue:GetPropertyChangedSignal("Value"):Connect(updateFruitShopAffordability)
+		end
+	end)
+
+	local function updateFruitShopTimers()
+		local now = DateTime.now().UnixTimestamp
+		local normalTime = 14400 - (now % 14400)
+		local advancedTime = 7200 - (now % 7200)
+		local normalText = formatFruitShopTime(normalTime)
+		local advancedText = formatFruitShopTime(advancedTime)
+		local normalColumn = fruitShopColumns[false]
+		local advancedColumn = fruitShopColumns[true]
+		if normalColumn.timer.Text ~= normalText then
+			normalColumn.timer.Text = normalText
+			normalColumn.timer.TextColor3 = normalTime < 300 and Color3.fromRGB(255, 185, 90) or Color3.fromRGB(120, 220, 255)
+		end
+		if advancedColumn.timer.Text ~= advancedText then
+			advancedColumn.timer.Text = advancedText
+			advancedColumn.timer.TextColor3 = advancedTime < 300 and Color3.fromRGB(255, 185, 90) or Color3.fromRGB(120, 220, 255)
+		end
+		if fruitShopLastNormalTimer and normalTime > fruitShopLastNormalTimer + 5 then fetchFruitShopColumn(false) end
+		if fruitShopLastAdvancedTimer and advancedTime > fruitShopLastAdvancedTimer + 5 then fetchFruitShopColumn(true) end
+		fruitShopLastNormalTimer = normalTime
+		fruitShopLastAdvancedTimer = advancedTime
+	end
+
+	frutaPage:GetPropertyChangedSignal("Visible"):Connect(function()
+		if frutaPage.Visible then refreshFruitShop() end
+	end)
+
+	task.spawn(function()
+		while screenGui.Parent do
+			task.wait(1)
+			if not frutaPage.Visible then continue end
+			updateFruitShopTimers()
+			fruitShopRefreshElapsed += 1
+			if fruitShopRefreshElapsed >= fruitShopFetchInterval then refreshFruitShop() end
+		end
+	end)
+
+	screenGui.AncestryChanged:Connect(function(_, parent)
+		if parent == nil and fruitShopBeliConnection then
+			fruitShopBeliConnection:Disconnect()
+			fruitShopBeliConnection = nil
+		end
+	end)
+
 	local secFrutaAction = createSection(frutaPage, "Automatização", "⚡")
 	local secFrutaEsp = createSection(frutaPage, "Fruit ESP", "👁️")
 
