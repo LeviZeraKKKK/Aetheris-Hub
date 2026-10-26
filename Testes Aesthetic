@@ -2852,7 +2852,6 @@ function showMainPanel()
 	local frutaPage = pages["Fruta"]
 local secFruitShop = createSection(frutaPage, "Loja de Frutas", "🍎")
 
--- Módulos com proteção total (nil-safe)
 local ShopStateUtil
 do
 	local ok, r = pcall(function()
@@ -2873,7 +2872,10 @@ local shopPriceCache = {}
 local function shopGetPrice(name, entry)
 	if entry and entry.Price then return entry.Price end
 	if shopPriceCache[name] ~= nil then return shopPriceCache[name] end
-	local p = (ShopFruitData and ShopFruitData[name] and ShopFruitData[name].Price) or 0
+	local p = 0
+	if ShopFruitData and ShopFruitData[name] and ShopFruitData[name].Price then
+		p = ShopFruitData[name].Price
+	end
 	shopPriceCache[name] = p
 	return p
 end
@@ -2892,15 +2894,7 @@ local function shopFmtTime(s)
 		math.floor(s/3600), math.floor((s%3600)/60), s%60)
 end
 
--- Beli cache (espera Data/Beli sem travar)
 local shopBeliVal
-task.spawn(function()
-	local data = player:FindFirstChild("Data") or player:WaitForChild("Data", 10)
-	if data then
-		shopBeliVal = data:FindFirstChild("Beli") or data:WaitForChild("Beli", 5)
-	end
-end)
-
 local function shopGetBeli()
 	if shopBeliVal and shopBeliVal:IsA("IntValue") then
 		return shopBeliVal.Value
@@ -2908,7 +2902,6 @@ local function shopGetBeli()
 	return 0
 end
 
--- Fetch nil-safe
 local function shopFetch(advanced)
 	if not ShopStateUtil then return {} end
 	local comm = ShopStateUtil.CommRemoteFunc
@@ -2920,14 +2913,15 @@ local function shopFetch(advanced)
 	return res
 end
 
--- Wrapper: só considera visível se toda a hierarquia estiver visível
 local function shopIsVisible()
-	local obj = secFruitShop
-	while obj and obj ~= screenGui do
-		if obj:IsA("GuiObject") and not obj.Visible then return false end
-		obj = obj.Parent
-	end
-	return screenGui.Parent ~= nil
+	if not screenGui.Parent then return false end
+	if not frutaPage or not frutaPage.Visible then return false end
+	if not mainPanel.Visible then return false end
+	return true
+end
+
+local function shopSetText(lbl, txt)
+	if lbl and lbl.Parent and lbl.Text ~= txt then lbl.Text = txt end
 end
 
 -- ============ LAYOUT ============
@@ -2947,7 +2941,6 @@ shopCardStroke.Thickness = 1
 shopCardStroke.Parent = shopCard
 table.insert(themeSections, shopCardStroke)
 
--- Header row (Beli + refresh)
 local shopHeaderRow = Instance.new("Frame")
 shopHeaderRow.Size = UDim2.new(1, -8, 0, 22)
 shopHeaderRow.Position = UDim2.new(0, 4, 0, 4)
@@ -2962,7 +2955,7 @@ shopBeliLbl.TextColor3 = Color3.fromRGB(255, 220, 100)
 shopBeliLbl.Font = currentGlobalFont
 shopBeliLbl.TextSize = 10
 shopBeliLbl.TextXAlignment = Enum.TextXAlignment.Left
-shopBeliLbl.Text = "💰 Aguardando dados..."
+shopBeliLbl.Text = "Beli: carregando..."
 shopBeliLbl.Parent = shopHeaderRow
 table.insert(allTextLabels, shopBeliLbl)
 
@@ -2972,7 +2965,7 @@ shopRefreshBtn.Position = UDim2.new(1, -68, 0, 0)
 shopRefreshBtn.BackgroundColor3 = currentThemeColor
 shopRefreshBtn.BackgroundTransparency = 0.15
 shopRefreshBtn.Font = currentGlobalFont
-shopRefreshBtn.Text = "🔄 Atualizar"
+shopRefreshBtn.Text = "Atualizar"
 shopRefreshBtn.TextColor3 = Color3.new(1, 1, 1)
 shopRefreshBtn.TextSize = 9
 shopRefreshBtn.Parent = shopHeaderRow
@@ -2981,7 +2974,6 @@ local shopRefreshCorner = Instance.new("UICorner")
 shopRefreshCorner.CornerRadius = UDim.new(0, 4)
 shopRefreshCorner.Parent = shopRefreshBtn
 
--- Colunas
 local shopColsFrame = Instance.new("Frame")
 shopColsFrame.Size = UDim2.new(1, -8, 0, 182)
 shopColsFrame.Position = UDim2.new(0, 4, 0, 30)
@@ -3026,10 +3018,6 @@ local function shopCreateRow(scroll)
 	priceLbl.Parent = row
 
 	return { row = row, name = nameLbl, price = priceLbl }
-end
-
-local function shopSetText(lbl, txt)
-	if lbl.Text ~= txt then lbl.Text = txt end
 end
 
 local function shopCreateColumn(parent, index, labelText, color)
@@ -3103,7 +3091,6 @@ local function shopCreateColumn(parent, index, labelText, color)
 	return {
 		scroll = scroll,
 		cdTime = cdTime,
-		cdBox = cdBox,
 		pool = {},
 		lastSig = "",
 		lastTimeText = "",
@@ -3112,13 +3099,14 @@ local function shopCreateColumn(parent, index, labelText, color)
 	}
 end
 
-local shopColN = shopCreateColumn(shopColsFrame, 1, "🟢 Normal", Color3.fromRGB(120, 220, 150))
-local shopColA = shopCreateColumn(shopColsFrame, 2, "🔵 Avançado", Color3.fromRGB(120, 180, 255))
+local shopColN = shopCreateColumn(shopColsFrame, 1, "Normal", Color3.fromRGB(120, 220, 150))
+local shopColA = shopCreateColumn(shopColsFrame, 2, "Avancado", Color3.fromRGB(120, 180, 255))
 
 local function shopRender(colData, fruits, beli)
-	local scroll = colData.scroll
+	if not colData or not colData.scroll or not colData.scroll.Parent then return end
+
 	local onSale = {}
-	for _, f in ipairs(fruits) do
+	for _, f in ipairs(fruits or {}) do
 		if f.OnSale == true then table.insert(onSale, f) end
 	end
 	table.sort(onSale, function(a, b)
@@ -3126,10 +3114,10 @@ local function shopRender(colData, fruits, beli)
 	end)
 	colData.lastFruits = onSale
 
-	local parts = table.create(#onSale)
+	local parts = {}
 	for i, f in ipairs(onSale) do
 		local p = shopGetPrice(f.Name, f)
-		parts[i] = f.Name .. ":" .. p .. ":" .. tostring(beli >= p)
+		parts[i] = f.Name .. ":" .. tostring(p) .. ":" .. tostring(beli >= p)
 	end
 	local sig = table.concat(parts, "|")
 	if sig == colData.lastSig then return end
@@ -3144,13 +3132,13 @@ local function shopRender(colData, fruits, beli)
 		local canAfford = beli >= price
 		local entry = pool[i]
 		if not entry then
-			entry = shopCreateRow(scroll)
+			entry = shopCreateRow(colData.scroll)
 			pool[i] = entry
 		end
 		entry.row.Visible = true
 		entry.row.Position = UDim2.new(0, 2, 0, (i - 1) * SHOP_ROW_STEP)
 		entry.row.BackgroundColor3 = canAfford and SHOP_COLOR_OK_BG or SHOP_COLOR_NO_BG
-		shopSetText(entry.name, f.Name .. (f.HasPermanent and " ⭐" or ""))
+		shopSetText(entry.name, f.Name .. (f.HasPermanent and " *" or ""))
 		entry.price.TextColor3 = canAfford and SHOP_COLOR_POK or SHOP_COLOR_PNO
 		shopSetText(entry.price, shopFmt(price))
 	end
@@ -3169,7 +3157,7 @@ local function shopRender(colData, fruits, beli)
 			l.Font = currentGlobalFont
 			l.TextSize = 9
 			l.Text = "(vazio)"
-			l.Parent = scroll
+			l.Parent = colData.scroll
 			colData.emptyLbl = l
 		end
 		colData.emptyLbl.Visible = true
@@ -3177,10 +3165,9 @@ local function shopRender(colData, fruits, beli)
 		colData.emptyLbl.Visible = false
 	end
 
-	scroll.CanvasSize = UDim2.new(0, 0, 0, count * SHOP_ROW_STEP + 4)
+	colData.scroll.CanvasSize = UDim2.new(0, 0, 0, count * SHOP_ROW_STEP + 4)
 end
 
--- Fetch com guard
 local shopFetching = { [false] = false, [true] = false }
 local function shopFetchColumn(advanced)
 	if shopFetching[advanced] then return end
@@ -3188,94 +3175,103 @@ local function shopFetchColumn(advanced)
 	task.spawn(function()
 		local fruits = shopFetch(advanced)
 		if shopCard.Parent then
-			local beli = shopGetBeli()
-			shopRender(advanced and shopColA or shopColN, fruits, beli)
+			pcall(function()
+				local beli = shopGetBeli()
+				shopRender(advanced and shopColA or shopColN, fruits, beli)
+			end)
 		end
 		shopFetching[advanced] = false
 	end)
 end
 
 local function shopRefreshAll()
-	shopSetText(shopBeliLbl, "💰 " .. shopFmt(shopGetBeli()))
+	pcall(function()
+		shopSetText(shopBeliLbl, "Beli: " .. shopFmt(shopGetBeli()))
+	end)
 	shopFetchColumn(false)
 	shopFetchColumn(true)
 end
 
 shopRefreshBtn.MouseButton1Click:Connect(function()
-	shopColN.lastSig = ""
-	shopColA.lastSig = ""
-	shopRefreshAll()
-end)
-
--- Atualização de cores em tempo real quando o Beli muda
-task.spawn(function()
-	local v = shopBeliVal
-	if not v then
-		local data = player:FindFirstChild("Data") or player:WaitForChild("Data", 10)
-		if data then v = data:FindFirstChild("Beli") or data:WaitForChild("Beli", 5) end
-		shopBeliVal = v
-	end
-	if not v then return end
-	v:GetPropertyChangedSignal("Value"):Connect(function()
-		if not shopCard.Parent then return end
-		-- Força re-render só das cores via signature reset
+	pcall(function()
 		shopColN.lastSig = ""
 		shopColA.lastSig = ""
-		shopSetText(shopBeliLbl, "💰 " .. shopFmt(shopGetBeli()))
-		local beli = shopGetBeli()
-		shopRender(shopColN, shopColN.lastFruits, beli)
-		shopRender(shopColA, shopColA.lastFruits, beli)
+		shopRefreshAll()
 	end)
 end)
 
--- Loop único 1Hz (pausa quando não visível)
+-- Beli monitor (mais defensivo)
+task.spawn(function()
+	task.wait(0.5)
+	if not shopBeliVal then
+		local data = player:FindFirstChild("Data")
+		if data then
+			shopBeliVal = data:FindFirstChild("Beli")
+		end
+	end
+	if not shopBeliVal then return end
+	pcall(function()
+		shopBeliVal:GetPropertyChangedSignal("Value"):Connect(function()
+			if not shopCard.Parent then return end
+			pcall(function()
+				shopColN.lastSig = ""
+				shopColA.lastSig = ""
+				shopSetText(shopBeliLbl, "Beli: " .. shopFmt(shopGetBeli()))
+				local beli = shopGetBeli()
+				shopRender(shopColN, shopColN.lastFruits, beli)
+				shopRender(shopColA, shopColA.lastFruits, beli)
+			end)
+		end)
+	end)
+end)
+
+-- Loop principal (pausa quando oculto, sem "continue")
 local shopLastN, shopLastA = 0, 0
 local shopSafetyTimer = 0
 task.spawn(function()
 	while screenGui.Parent ~= nil and shopCard.Parent ~= nil do
 		task.wait(1)
-		if not shopIsVisible() then continue end
+		if shopIsVisible() then
+			pcall(function()
+				local now = os.time()
+				local tN = 14400 - (now % 14400)
+				local tA = 7200 - (now % 7200)
 
-		local now = DateTime.now().UnixTimestamp
-		local tN = 14400 - (now % 14400)
-		local tA = 7200 - (now % 7200)
+				local strN = shopFmtTime(tN)
+				if strN ~= shopColN.lastTimeText then
+					shopColN.lastTimeText = strN
+					shopColN.cdTime.Text = strN
+					shopColN.cdTime.TextColor3 = tN < 300
+						and Color3.fromRGB(255, 180, 80)
+						or Color3.fromRGB(120, 230, 255)
+				end
 
-		local strN = shopFmtTime(tN)
-		if strN ~= shopColN.lastTimeText then
-			shopColN.lastTimeText = strN
-			shopColN.cdTime.Text = strN
-			shopColN.cdTime.TextColor3 = tN < 300
-				and Color3.fromRGB(255, 180, 80)
-				or Color3.fromRGB(120, 230, 255)
-		end
+				local strA = shopFmtTime(tA)
+				if strA ~= shopColA.lastTimeText then
+					shopColA.lastTimeText = strA
+					shopColA.cdTime.Text = strA
+					shopColA.cdTime.TextColor3 = tA < 300
+						and Color3.fromRGB(255, 180, 80)
+						or Color3.fromRGB(120, 230, 255)
+				end
 
-		local strA = shopFmtTime(tA)
-		if strA ~= shopColA.lastTimeText then
-			shopColA.lastTimeText = strA
-			shopColA.cdTime.Text = strA
-			shopColA.cdTime.TextColor3 = tA < 300
-				and Color3.fromRGB(255, 180, 80)
-				or Color3.fromRGB(120, 230, 255)
-		end
+				shopSetText(shopBeliLbl, "Beli: " .. shopFmt(shopGetBeli()))
 
-		shopSetText(shopBeliLbl, "💰 " .. shopFmt(shopGetBeli()))
+				if shopLastN > 0 and tN > shopLastN + 5 then shopFetchColumn(false) end
+				if shopLastA > 0 and tA > shopLastA + 5 then shopFetchColumn(true) end
+				shopLastN, shopLastA = tN, tA
 
-		-- Restock detection
-		if shopLastN > 0 and tN > shopLastN + 5 then shopFetchColumn(false) end
-		if shopLastA > 0 and tA > shopLastA + 5 then shopFetchColumn(true) end
-		shopLastN, shopLastA = tN, tA
-
-		-- Safety refresh 60s
-		shopSafetyTimer = shopSafetyTimer + 1
-		if shopSafetyTimer >= 60 then
-			shopSafetyTimer = 0
-			shopFetchColumn(false)
-			shopFetchColumn(true)
+				shopSafetyTimer = shopSafetyTimer + 1
+				if shopSafetyTimer >= 60 then
+					shopSafetyTimer = 0
+					shopFetchColumn(false)
+					shopFetchColumn(true)
+				end
+			end)
 		end
 	end
 end)
 
--- Fetch inicial
 task.spawn(function()
 	task.wait(0.5)
 	if shopCard.Parent then shopRefreshAll() end
