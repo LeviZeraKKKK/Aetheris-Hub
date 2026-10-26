@@ -2851,12 +2851,38 @@ function showMainPanel()
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
 	local secFruitShop = createSection(frutaPage, "Loja de Frutas", "🛒")
+	if secFruitShop.Parent then secFruitShop.Parent.LayoutOrder = -10 end
 
+	-- Card principal da loja: fica no topo da aba Fruta e reúne saldo, status,
+	-- tempo de reposição e listas Normal/Avançado em um único bloco visual.
 	local shopPanel = Instance.new("Frame")
 	shopPanel.Name = "FruitShopOverview"
 	shopPanel.Size = UDim2.new(1, 0, 0, 256)
-	shopPanel.BackgroundTransparency = 1
+	shopPanel.BackgroundColor3 = Color3.fromRGB(19, 20, 29)
+	shopPanel.BackgroundTransparency = 0.08
+	shopPanel.BorderSizePixel = 0
+	shopPanel.ClipsDescendants = true
 	shopPanel.Parent = secFruitShop
+
+	local shopPanelCorner = Instance.new("UICorner")
+	shopPanelCorner.CornerRadius = UDim.new(0, 8)
+	shopPanelCorner.Parent = shopPanel
+	local shopPanelStroke = Instance.new("UIStroke")
+	shopPanelStroke.Color = currentThemeColor
+	shopPanelStroke.Thickness = 1
+	shopPanelStroke.Transparency = 0.62
+	shopPanelStroke.Parent = shopPanel
+	table.insert(themeSections, shopPanelStroke)
+
+	local shopDivider = Instance.new("Frame")
+	shopDivider.Name = "ShopHeaderDivider"
+	shopDivider.Size = UDim2.new(1, -12, 0, 1)
+	shopDivider.Position = UDim2.new(0, 6, 0, 21)
+	shopDivider.BackgroundColor3 = currentThemeColor
+	shopDivider.BackgroundTransparency = 0.72
+	shopDivider.BorderSizePixel = 0
+	shopDivider.Parent = shopPanel
+	table.insert(themeSliders, shopDivider)
 
 	local shopBeliLabel = Instance.new("TextLabel")
 	shopBeliLabel.Size = UDim2.new(0, 100, 0, 19)
