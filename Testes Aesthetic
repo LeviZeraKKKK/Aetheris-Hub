@@ -1,5 +1,6 @@
 -- Serviços necessários
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -130,6 +131,190 @@ local _G_JumpPowerValue = 50
 local _G_NoclipEnabled = false
 local _G_FullbrightEnabled = false
 local _G_EnergyEnabled = false
+local _G_InfiniteKenEnabled = false
+local _G_InfiniteAirJumpsEnabled = false
+
+local activeObservationInstance = nil
+local originalObservationRadius = nil
+local observationRoot = nil
+local lastObservationPosition = Vector3.zero
+
+local function bindObservationInstance(instance)
+	if not instance then return end
+	if activeObservationInstance ~= instance then
+		activeObservationInstance = instance
+		originalObservationRadius = instance.radius
+	end
+	if _G_InfiniteKenEnabled then
+		pcall(function() instance.radius = math.huge end)
+	end
+end
+
+local function setInfiniteObservationEnabled(state)
+	_G_InfiniteKenEnabled = state
+	if activeObservationInstance then
+		pcall(function()
+			if state then
+				activeObservationInstance.radius = math.huge
+			else
+				activeObservationInstance.radius = originalObservationRadius
+			end
+		end)
+	end
+end
+
+local function updateObservationRoot()
+	local character = player.Character
+	observationRoot = character and character:FindFirstChild("HumanoidRootPart") or nil
+	if observationRoot then lastObservationPosition = observationRoot.Position end
+end
+
+updateObservationRoot()
+player.CharacterAdded:Connect(function()
+	task.defer(updateObservationRoot)
+	task.wait(1)
+	updateObservationRoot()
+end)
+
+task.spawn(function()
+	local moduleScript = ReplicatedStorage:WaitForChild("ObservationManager", 10)
+	if not moduleScript or not moduleScript:IsA("ModuleScript") then
+		warn("[Aetheris] ObservationManager não encontrado em ReplicatedStorage")
+		return
+	end
+
+	local loaded, ObservationManager = pcall(function()
+		return require(moduleScript)
+	end)
+	if not loaded or type(ObservationManager) ~= "table" then
+		warn("[Aetheris] Não foi possível carregar ObservationManager")
+		return
+	end
+
+	local oldNew = ObservationManager.new
+	if type(oldNew) == "function" then
+		ObservationManager.new = function(...)
+			local instance = oldNew(...)
+			if type(instance) == "table" then bindObservationInstance(instance) end
+			return instance
+		end
+	end
+
+	local oldObserve = ObservationManager.observe
+	if type(oldObserve) == "function" then
+		ObservationManager.observe = function(self, ...)
+			if type(self) == "table" then bindObservationInstance(self) end
+			if _G_InfiniteKenEnabled and self then
+				pcall(function() self.radius = math.huge end)
+			end
+			return oldObserve(self, ...)
+		end
+	end
+end)
+
+task.spawn(function()
+	while true do
+		task.wait(1)
+		if not _G_InfiniteKenEnabled then continue end
+
+		local instance = activeObservationInstance
+		if not instance or not instance.active then continue end
+		pcall(function() instance.radius = math.huge end)
+
+		if not observationRoot or not observationRoot.Parent then
+			updateObservationRoot()
+			if not observationRoot then continue end
+		end
+
+		local position = observationRoot.Position
+		local delta = position - lastObservationPosition
+		if delta:Dot(delta) > 225 then
+			lastObservationPosition = position
+			pcall(function() instance:refresh() end)
+		end
+	end
+end)
+
+local infiniteJumpConnection = nil
+local airJumpAttributeSnapshots = setmetatable({}, {__mode = "k"})
+local airJumpStatSnapshots = setmetatable({}, {__mode = "k"})
+local airJumpAttributeTargets = {
+	AirJumps = 999,
+	SkyjumpBoost = 999,
+	AirJumpCost = 0
+}
+
+local function applyInfiniteAirJumps()
+	local character = player.Character
+	if character then
+		local snapshot = airJumpAttributeSnapshots[character]
+		if not snapshot then
+			snapshot = {values = {}, captured = {}}
+			airJumpAttributeSnapshots[character] = snapshot
+		end
+		for attributeName, targetValue in pairs(airJumpAttributeTargets) do
+			local currentValue = character:GetAttribute(attributeName)
+			if currentValue ~= nil then
+				if not snapshot.captured[attributeName] then
+					snapshot.values[attributeName] = currentValue
+					snapshot.captured[attributeName] = true
+				end
+				if currentValue ~= targetValue then
+					character:SetAttribute(attributeName, targetValue)
+				end
+			end
+		end
+	end
+
+	local statContainer = player:FindFirstChild("Stats") or player:FindFirstChild("Data")
+	local airJumpStat = statContainer and (statContainer:FindFirstChild("AirJumps") or statContainer:FindFirstChild("SkyjumpBoost"))
+	if airJumpStat and (airJumpStat:IsA("IntValue") or airJumpStat:IsA("NumberValue")) then
+		if airJumpStatSnapshots[airJumpStat] == nil then
+			airJumpStatSnapshots[airJumpStat] = airJumpStat.Value
+		end
+		if airJumpStat.Value ~= 999 then airJumpStat.Value = 999 end
+	end
+end
+
+local function restoreInfiniteAirJumpValues()
+	for character, snapshot in pairs(airJumpAttributeSnapshots) do
+		if character then
+			for attributeName, wasCaptured in pairs(snapshot.captured) do
+				if wasCaptured then
+					pcall(function() character:SetAttribute(attributeName, snapshot.values[attributeName]) end)
+				end
+			end
+		end
+		airJumpAttributeSnapshots[character] = nil
+	end
+	for statObject, originalValue in pairs(airJumpStatSnapshots) do
+		if statObject then
+			pcall(function()
+				if statObject.Parent then statObject.Value = originalValue end
+			end)
+		end
+		airJumpStatSnapshots[statObject] = nil
+	end
+end
+
+local function setInfiniteAirJumpsEnabled(state)
+	_G_InfiniteAirJumpsEnabled = state
+	if state then
+		if not infiniteJumpConnection then
+			infiniteJumpConnection = RunService.Heartbeat:Connect(function()
+				if not _G_InfiniteAirJumpsEnabled then return end
+				pcall(applyInfiniteAirJumps)
+			end)
+		end
+		pcall(applyInfiniteAirJumps)
+	else
+		if infiniteJumpConnection then
+			infiniteJumpConnection:Disconnect()
+			infiniteJumpConnection = nil
+		end
+		restoreInfiniteAirJumpValues()
+	end
+end
 
 local travelling = false
 local selectedIsland = nil
@@ -1926,6 +2111,12 @@ function showMainPanel()
 	local secFisico = createSection(playerPage, "Habilidades Físicas", "⚙️")
 	addToggle(secFisico, "Noclip (Atravessar Paredes)", function(state) _G_NoclipEnabled = state end, false)
 	addToggle(secFisico, "Energia Infinita", function(state) _G_EnergyEnabled = state end, false)
+	addToggle(secFisico, "Observação range [INF]", function(state)
+		setInfiniteObservationEnabled(state)
+	end, false)
+	addToggle(secFisico, "Pulo Infinito", function(state)
+		setInfiniteAirJumpsEnabled(state)
+	end, false)
 
 	local secTravel = createSection(playerPage, "Viajar para Ilhas", "🏝️")
 
