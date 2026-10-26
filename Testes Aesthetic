@@ -15,6 +15,9 @@ local map = workspace:WaitForChild("Map", 5) or workspace
 if playerGui:FindFirstChild("AetherisHub") then
 	playerGui.AetherisHub:Destroy()
 end
+if playerGui:FindFirstChild("_FV_SG") then
+	playerGui._FV_SG:Destroy()
+end
 
 -- ScreenGui Principal
 local screenGui = Instance.new("ScreenGui")
@@ -179,17 +182,13 @@ end)
 task.spawn(function()
 	local moduleScript = ReplicatedStorage:WaitForChild("ObservationManager", 10)
 	if not moduleScript or not moduleScript:IsA("ModuleScript") then
-		warn("[Aetheris] ObservationManager não encontrado em ReplicatedStorage")
 		return
 	end
 
 	local loaded, ObservationManager = pcall(function()
 		return require(moduleScript)
 	end)
-	if not loaded or type(ObservationManager) ~= "table" then
-		warn("[Aetheris] Não foi possível carregar ObservationManager")
-		return
-	end
+	if not loaded or type(ObservationManager) ~= "table" then return end
 
 	local oldNew = ObservationManager.new
 	if type(oldNew) == "function" then
@@ -345,7 +344,6 @@ local _G_FovThickness = 1
 local _G_FovTransparency = 0.7
 local _G_ColorFov = Color3.fromRGB(138, 43, 226)
 
--- Blinda a inicialização do Drawing para evitar erros de attempt to call nil value
 local fovCircleDrawing = nil
 pcall(function()
 	if Drawing and typeof(Drawing.new) == "function" then
@@ -388,7 +386,7 @@ local hideKeybindEnabled = false
 local hideKeybindKey = Enum.KeyCode.RightControl
 
 -----------------------------------------------------------------
--- TELA DE CARREGAMENTO: SIMPLES, ORGANIZADA E RESPONSIVA
+-- TELA DE CARREGAMENTO
 -----------------------------------------------------------------
 local loadWrapper = Instance.new("Frame")
 loadWrapper.Name = "LoadingCard"
@@ -411,7 +409,6 @@ loadStroke.Thickness = 1.5
 loadStroke.Parent = loadWrapper
 table.insert(themeSections, loadStroke)
 
--- Linha superior animada: primeiro destaque visual, sem competir com o conteúdo.
 local loadAccent = Instance.new("Frame")
 loadAccent.Name = "LoadingAccent"
 loadAccent.Size = UDim2.new(0.18, 0, 0, 2)
@@ -424,15 +421,12 @@ local accentCorner = Instance.new("UICorner")
 accentCorner.CornerRadius = UDim.new(1, 0)
 accentCorner.Parent = loadAccent
 
--- Partículas discretas ficam na camada de fundo, atrás dos textos.
 local loadingParticles = {}
-local loadingColumns = 5
-local loadingRows = 4
-for i = 1, loadingColumns * loadingRows do
-    local column = (i - 1) % loadingColumns
-    local row = math.floor((i - 1) / loadingColumns)
-    local baseX = (column + 0.5) / loadingColumns + (math.random(0, 100) / 100 - 0.5) * 0.07
-    local baseY = (row + 0.5) / loadingRows + (math.random(0, 100) / 100 - 0.5) * 0.12
+for i = 1, 20 do
+    local column = (i - 1) % 5
+    local row = math.floor((i - 1) / 5)
+    local baseX = (column + 0.5) / 5 + (math.random(0, 100) / 100 - 0.5) * 0.07
+    local baseY = (row + 0.5) / 4 + (math.random(0, 100) / 100 - 0.5) * 0.12
     local particle = Instance.new("Frame")
     local particleSize = math.random(2, 4)
     particle.Size = UDim2.new(0, particleSize, 0, particleSize)
@@ -447,16 +441,8 @@ for i = 1, loadingColumns * loadingRows do
     particleCorner.Parent = particle
     table.insert(themeParticles, particle)
     table.insert(loadingParticles, particle)
-
-    local driftX = (math.random(0, 100) / 100 - 0.5) * 0.05
-    local driftY = (math.random(0, 100) / 100 - 0.5) * 0.08
-    TweenService:Create(particle, TweenInfo.new(2.0 + (i % 5) * 0.24, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true, (i - 1) * 0.07), {
-        Position = UDim2.new(baseX + driftX, 0, baseY + driftY, 0),
-        BackgroundTransparency = 0.54
-    }):Play()
 end
 
--- Ícone central com aro lento e sutil.
 local sciFiRing = Instance.new("Frame")
 sciFiRing.Size = UDim2.new(0, 42, 0, 42)
 sciFiRing.Position = UDim2.new(0.5, -21, 0, 14)
@@ -676,11 +662,9 @@ function showMainPanel()
 	particleContainer.Active = false
 	particleContainer.Parent = mainPanel
 
-	local particleColumns = 6
-	local particleRows = 5
-	for i = 1, particleColumns * particleRows do
-		local column = (i - 1) % particleColumns
-		local row = math.floor((i - 1) / particleColumns)
+	for i = 1, 30 do
+		local column = (i - 1) % 6
+		local row = math.floor((i - 1) / 6)
 		local baseX = math.clamp(0.06 + column * 0.105 + (math.random(0, 100) / 100 - 0.5) * 0.07, 0.03, 0.68)
 		local baseY = math.clamp(0.08 + row * 0.16 + (math.random(0, 100) / 100 - 0.5) * 0.12, 0.03, 0.82)
 		local p = Instance.new("Frame")
@@ -709,6 +693,7 @@ function showMainPanel()
 			BackgroundTransparency = math.min(particleTransparency + 0.20, 0.84)
 		}):Play()
 	end
+
 	local interactionBlocker = Instance.new("TextButton")
 	interactionBlocker.Size = UDim2.new(1, 0, 1, 0)
 	interactionBlocker.BackgroundTransparency = 1
@@ -1035,29 +1020,28 @@ function showMainPanel()
 		end
 	end
 
-		local function createControlButton(text, callback, color, order)
-			local btn = Instance.new("TextButton")
-			btn.Name = text .. "ControlButton"
-			btn.Size = UDim2.new(0, 12, 0, 12)
-			btn.BackgroundColor3 = color
-			btn.BackgroundTransparency = 0
-			btn.BorderSizePixel = 0
-			btn.Font = currentGlobalFont
-			btn.Text = ""
-			btn.LayoutOrder = order
-			btn.Parent = controlsContainer
+	local function createControlButton(text, callback, color, order)
+		local btn = Instance.new("TextButton")
+		btn.Name = text .. "ControlButton"
+		btn.Size = UDim2.new(0, 12, 0, 12)
+		btn.BackgroundColor3 = color
+		btn.BackgroundTransparency = 0
+		btn.BorderSizePixel = 0
+		btn.Font = currentGlobalFont
+		btn.Text = ""
+		btn.LayoutOrder = order
+		btn.Parent = controlsContainer
 
-			local corner = Instance.new("UICorner")
-			corner.CornerRadius = UDim.new(1, 0)
-			corner.Parent = btn
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(1, 0)
+		corner.Parent = btn
 
 		btn.MouseButton1Click:Connect(callback)
 		return btn
 	end
 
-		-- Ordem invertida: minimizar à esquerda e fechar à direita.
-		createControlButton("Minimize", toggleMinimizePanel, Color3.fromRGB(255, 196, 61), 1)
-		createControlButton("Close", function() screenGui:Destroy() end, Color3.fromRGB(245, 75, 75), 2)
+	createControlButton("Minimize", toggleMinimizePanel, Color3.fromRGB(255, 196, 61), 1)
+	createControlButton("Close", function() screenGui:Destroy() end, Color3.fromRGB(245, 75, 75), 2)
 
 	floatingBtn.MouseButton1Click:Connect(toggleMinimizePanel)
 
@@ -1121,7 +1105,6 @@ function showMainPanel()
 		return page
 	end
 
-	-- Imagens Lucide publicadas na biblioteca oficial do Roblox; recortes individuais de 48x48.
 	local tabs = {
 		{Name = "Info", Image = "rbxassetid://16898613509", Offset = Vector2.new(612, 869)},
 		{Name = "Player", Image = "rbxassetid://16898613044", Offset = Vector2.new(0, 869)},
@@ -1577,7 +1560,6 @@ function showMainPanel()
 		cBtnCorner.CornerRadius = UDim.new(0, 3)
 		cBtnCorner.Parent = colorBtn
 
-		-- Botão opcional para escolher a origem, alinhado ao lado do seletor de cor.
 		if modeCallback then
 			local modeBtn = Instance.new("TextButton")
 			modeBtn.Name = "TracerOriginButton"
@@ -2005,7 +1987,6 @@ function showMainPanel()
 		if ok and avatar.Parent then avatar.Image = image end
 	end)
 
-	-- Grade de métricas em duas colunas para leitura rápida de dashboard.
 	local metricsGrid = Instance.new("Frame")
 	metricsGrid.Name = "DashboardMetrics"
 	metricsGrid.Size = UDim2.new(1, -8, 0, 142)
@@ -2020,35 +2001,35 @@ function showMainPanel()
 	metricsLayout.Parent = metricsGrid
 
 	local function makeMetricCard(title, initialValue, order, accentColor)
-	local card = Instance.new("Frame")
-	card.Name = title:gsub("%s+", "") .. "Metric"
-	card.BackgroundColor3 = Color3.fromRGB(26, 26, 36)
-	card.BackgroundTransparency = 0.16
-	card.BorderSizePixel = 0
-	card.LayoutOrder = order
-	card.Parent = metricsGrid
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 9)
-	corner.Parent = card
-	local stroke = Instance.new("UIStroke")
-	stroke.Color = currentThemeColor
-	stroke.Transparency = 0.78
-	stroke.Thickness = 1
-	stroke.Parent = card
-	table.insert(themeSections, stroke)
-	local cap = Instance.new("Frame")
-	cap.Size = UDim2.new(0, 3, 0, 28)
-	cap.Position = UDim2.new(0, 0, 0.5, -14)
-	cap.BackgroundColor3 = accentColor or currentThemeColor
-	cap.BorderSizePixel = 0
-	cap.Parent = card
-	table.insert(themeSliders, cap)
-	local capCorner = Instance.new("UICorner")
-	capCorner.CornerRadius = UDim.new(1, 0)
-	capCorner.Parent = cap
-	makeInfoText(card, title:upper(), 8, UDim2.new(0, 11, 0, 10), UDim2.new(1, -18, 0, 13), Color3.fromRGB(165, 165, 185), Enum.Font.GothamBold)
-	local value = makeInfoText(card, initialValue, 16, UDim2.new(0, 11, 0, 29), UDim2.new(1, -18, 0, 25), currentTextColor, Enum.Font.GothamBold)
-	return value
+		local card = Instance.new("Frame")
+		card.Name = title:gsub("%s+", "") .. "Metric"
+		card.BackgroundColor3 = Color3.fromRGB(26, 26, 36)
+		card.BackgroundTransparency = 0.16
+		card.BorderSizePixel = 0
+		card.LayoutOrder = order
+		card.Parent = metricsGrid
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 9)
+		corner.Parent = card
+		local stroke = Instance.new("UIStroke")
+		stroke.Color = currentThemeColor
+		stroke.Transparency = 0.78
+		stroke.Thickness = 1
+		stroke.Parent = card
+		table.insert(themeSections, stroke)
+		local cap = Instance.new("Frame")
+		cap.Size = UDim2.new(0, 3, 0, 28)
+		cap.Position = UDim2.new(0, 0, 0.5, -14)
+		cap.BackgroundColor3 = accentColor or currentThemeColor
+		cap.BorderSizePixel = 0
+		cap.Parent = card
+		table.insert(themeSliders, cap)
+		local capCorner = Instance.new("UICorner")
+		capCorner.CornerRadius = UDim.new(1, 0)
+		capCorner.Parent = cap
+		makeInfoText(card, title:upper(), 8, UDim2.new(0, 11, 0, 10), UDim2.new(1, -18, 0, 13), Color3.fromRGB(165, 165, 185), Enum.Font.GothamBold)
+		local value = makeInfoText(card, initialValue, 16, UDim2.new(0, 11, 0, 29), UDim2.new(1, -18, 0, 25), currentTextColor, Enum.Font.GothamBold)
+		return value
 	end
 
 	local fpsLabel = makeMetricCard("FPS", "--", 1)
@@ -2065,7 +2046,7 @@ function showMainPanel()
 
 	local changelogCard = makeInfoCard(infoPage, 112, 4)
 	makeInfoText(changelogCard, "NOVIDADES  /  AETHERIS HUB", 9, UDim2.new(0, 13, 0, 8), UDim2.new(1, -26, 0, 16), currentThemeColor, Enum.Font.GothamBold)
-	makeInfoText(changelogCard, "✦  Controles de ESP reunidos e mais claros", 9, UDim2.new(0, 13, 0, 31), UDim2.new(1, -24, 0, 15), currentTextColor)
+	makeInfoText(changelogCard, "✦  Fruit Dealer Viewer integrado na aba Fruta", 9, UDim2.new(0, 13, 0, 31), UDim2.new(1, -24, 0, 15), currentTextColor)
 	makeInfoText(changelogCard, "✦  Seletor de cor e origem dos tracers", 9, UDim2.new(0, 13, 0, 52), UDim2.new(1, -24, 0, 15), currentTextColor)
 	makeInfoText(changelogCard, "✦  Painel com tema dinâmico e layout refinado", 9, UDim2.new(0, 13, 0, 73), UDim2.new(1, -24, 0, 15), currentTextColor)
 
@@ -2347,23 +2328,22 @@ function showMainPanel()
 
 	addEspToggleWithColor(secEspPlayers, "Box ESP", _G_ColorBox, function(c) _G_ColorBox = c end, function(s) _G_EspBox = s end)
 	
-	-- Usa o mesmo componente dos outros ESPs: toggle e seletor colorido na mesma linha.
-		addEspToggleWithColor(secEspPlayers, "Tracers / Line ESP", _G_ColorLine,
-			function(color) _G_ColorLine = color end,
-			function(state) _G_EspLine = state end,
-			function()
-				if _G_TracerOrigin == "Bottom" then
-					_G_TracerOrigin = "Center"
-				elseif _G_TracerOrigin == "Center" then
-					_G_TracerOrigin = "Top"
-				else
-					_G_TracerOrigin = "Bottom"
-				end
-				return _G_TracerOrigin
-			end,
-			_G_TracerOrigin)
+	addEspToggleWithColor(secEspPlayers, "Tracers / Line ESP", _G_ColorLine,
+		function(color) _G_ColorLine = color end,
+		function(state) _G_EspLine = state end,
+		function()
+			if _G_TracerOrigin == "Bottom" then
+				_G_TracerOrigin = "Center"
+			elseif _G_TracerOrigin == "Center" then
+				_G_TracerOrigin = "Top"
+			else
+				_G_TracerOrigin = "Bottom"
+			end
+			return _G_TracerOrigin
+		end,
+		_G_TracerOrigin)
 
-		addEspToggleWithColor(secEspPlayers, "Chams (Highlight)", _G_ColorChams, function(c) _G_ColorChams = c end, function(s) _G_EspChams = s end)
+	addEspToggleWithColor(secEspPlayers, "Chams (Highlight)", _G_ColorChams, function(c) _G_ColorChams = c end, function(s) _G_EspChams = s end)
 	addEspToggleWithColor(secEspPlayers, "Health Bar", _G_ColorHealth, function(c) _G_ColorHealth = c end, function(s) _G_EspHealth = s end)
 	addEspToggleWithColor(secEspPlayers, "Name ESP", _G_ColorName, function(c) _G_ColorName = c end, function(s) _G_EspName = s end)
 	addEspToggleWithColor(secEspPlayers, "Distance ESP", _G_ColorDistance, function(c) _G_ColorDistance = c end, function(s) _G_EspDistance = s end)
@@ -2847,432 +2827,320 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- ABA FRUTA
+	-- ABA FRUTA (Com Fruit Dealer Viewer integrado no topo)
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
-	local secFruitShop = createSection(frutaPage, "Loja de Frutas", "🛒")
 
-	local shopPanel = Instance.new("Frame")
-	shopPanel.Name = "FruitShopOverview"
-	shopPanel.Size = UDim2.new(1, 0, 0, 256)
-	shopPanel.BackgroundTransparency = 1
-	shopPanel.Parent = secFruitShop
+	-- Seção exclusiva para o Fruit Dealer Viewer Integrado
+	local secDealerViewer = createSection(frutaPage, "Loja de Frutas (Dealer)", "🍎")
 
-	local shopBeliLabel = Instance.new("TextLabel")
-	shopBeliLabel.Size = UDim2.new(0, 100, 0, 19)
-	shopBeliLabel.Position = UDim2.new(0, 2, 0, 0)
-	shopBeliLabel.BackgroundTransparency = 1
-	shopBeliLabel.Font = currentGlobalFont
-	shopBeliLabel.Text = "Beli: --"
-	shopBeliLabel.TextColor3 = Color3.fromRGB(255, 220, 115)
-	shopBeliLabel.TextSize = 10
-	shopBeliLabel.TextXAlignment = Enum.TextXAlignment.Left
-	shopBeliLabel.Parent = shopPanel
-	table.insert(allTextLabels, shopBeliLabel)
+	-- Layout do viewer adaptado para encaixar perfeitamente na seção
+	local dealerFrame = Instance.new("Frame")
+	dealerFrame.Size = UDim2.new(1, 0, 0, 260)
+	dealerFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
+	dealerFrame.BackgroundTransparency = 0.2
+	dealerFrame.BorderSizePixel = 0
+	dealerFrame.Parent = secDealerViewer
 
-	local shopStatusLabel = Instance.new("TextLabel")
-	shopStatusLabel.Size = UDim2.new(1, -130, 0, 19)
-	shopStatusLabel.Position = UDim2.new(0, 92, 0, 0)
-	shopStatusLabel.BackgroundTransparency = 1
-	shopStatusLabel.Font = currentGlobalFont
-	shopStatusLabel.Text = "Carregando dados da loja..."
-	shopStatusLabel.TextColor3 = Color3.fromRGB(175, 185, 205)
-	shopStatusLabel.TextSize = 9
-	shopStatusLabel.TextXAlignment = Enum.TextXAlignment.Left
-	shopStatusLabel.TextTruncate = Enum.TextTruncate.AtEnd
-	shopStatusLabel.Parent = shopPanel
+	local dfCorner = Instance.new("UICorner")
+	dfCorner.CornerRadius = UDim.new(0, 6)
+	dfCorner.Parent = dealerFrame
+	local dfStroke = Instance.new("UIStroke")
+	dfStroke.Color = Color3.fromRGB(90, 90, 130)
+	dfStroke.Thickness = 1.2
+	dfStroke.Parent = dealerFrame
 
-	local shopRefreshButton = Instance.new("TextButton")
-	shopRefreshButton.Name = "RefreshFruitShop"
-	shopRefreshButton.Size = UDim2.new(0, 22, 0, 19)
-	shopRefreshButton.Position = UDim2.new(1, -22, 0, 0)
-	shopRefreshButton.BackgroundColor3 = Color3.fromRGB(42, 42, 58)
-	shopRefreshButton.BackgroundTransparency = 0.12
-	shopRefreshButton.BorderSizePixel = 0
-	shopRefreshButton.Font = currentGlobalFont
-	shopRefreshButton.Text = "↻"
-	shopRefreshButton.TextColor3 = currentThemeColor
-	shopRefreshButton.TextSize = 13
-	shopRefreshButton.Parent = shopPanel
-	local shopRefreshCorner = Instance.new("UICorner")
-	shopRefreshCorner.CornerRadius = UDim.new(0, 4)
-	shopRefreshCorner.Parent = shopRefreshButton
-	table.insert(themeTexts, shopRefreshButton)
+	local beliLbl = Instance.new("TextLabel")
+	beliLbl.Size = UDim2.new(1, -50, 0, 18)
+	beliLbl.Position = UDim2.new(0, 8, 0, 6)
+	beliLbl.BackgroundTransparency = 1
+	beliLbl.TextColor3 = Color3.fromRGB(255, 220, 100)
+	beliLbl.Font = Enum.Font.GothamBold
+	beliLbl.TextSize = 11
+	beliLbl.TextXAlignment = Enum.TextXAlignment.Left
+	beliLbl.Text = "💰 ..."
+	beliLbl.Parent = dealerFrame
 
-	local fruitShopColumns = {}
-	local fruitShopStateUtil = nil
-	local fruitShopCatalog = nil
-	local fruitShopFetchBusy = { [false] = false, [true] = false }
-	local fruitShopFetchInterval = 30
-	local fruitShopRefreshElapsed = 0
-	local fruitShopLastNormalTimer = nil
-	local fruitShopLastAdvancedTimer = nil
-	local fruitShopBeliValue = nil
-	local fruitShopBeliConnection = nil
+	local refreshB = Instance.new("TextButton")
+	refreshB.Size = UDim2.new(0, 24, 0, 24)
+	refreshB.Position = UDim2.new(1, -28, 0, 4)
+	refreshB.BackgroundColor3 = Color3.fromRGB(70, 120, 200)
+	refreshB.Text = "🔄"
+	refreshB.TextColor3 = Color3.new(1,1,1)
+	refreshB.Font = Enum.Font.GothamBold
+	refreshB.TextSize = 11
+	refreshB.Parent = dealerFrame
+	Instance.new("UICorner", refreshB).CornerRadius = UDim.new(0, 6)
 
-	local function formatFruitShopNumber(value)
-		local n = tonumber(value) or 0
-		if n >= 1e9 then return string.format("%.1fB", n / 1e9) end
-		if n >= 1e6 then return string.format("%.1fM", n / 1e6) end
-		if n >= 1e3 then return string.format("%.1fK", n / 1e3) end
+	-- Estado e requisição do Dealer
+	local StateUtil
+	pcall(function() StateUtil = require(ReplicatedStorage.Controllers.UI.FruitShop.StateUtil) end)
+
+	local FruitData
+	pcall(function() FruitData = require(ReplicatedStorage.Controllers.UI.FruitShop.Data) end)
+
+	local dVal = player:FindFirstChild("Data")
+	local beliValRef = dVal and dVal:FindFirstChild("Beli")
+
+	local priceCache = {}
+	local function getPrice(name, entry)
+		if entry and entry.Price then return entry.Price end
+		local c = priceCache[name]
+		if c then return c end
+		local p = (FruitData and FruitData[name] and FruitData[name].Price) or 0
+		priceCache[name] = p
+		return p
+	end
+
+	local function fmt(n)
+		n = tonumber(n) or 0
+		if n >= 1e9 then return string.format("%.1fB", n/1e9) end
+		if n >= 1e6 then return string.format("%.1fM", n/1e6) end
+		if n >= 1e3 then return string.format("%.1fK", n/1e3) end
 		return tostring(math.floor(n))
 	end
 
-	local function formatFruitShopTime(seconds)
-		local total = math.max(0, math.floor(seconds))
-		return string.format("%02d:%02d:%02d", math.floor(total / 3600), math.floor((total % 3600) / 60), total % 60)
+	local function getBeli()
+		return (beliValRef and beliValRef:IsA("IntValue")) and beliValRef.Value or 0
 	end
 
-	local function getFruitShopBeli()
-		if fruitShopBeliValue and fruitShopBeliValue.Parent then
-			return tonumber(fruitShopBeliValue.Value) or 0
-		end
-		return 0
+	local function fmtTime(s)
+		s = math.max(0, math.floor(s))
+		return string.format("%02d:%02d:%02d", math.floor(s/3600), math.floor((s%3600)/60), s%60)
 	end
 
-	local function setFruitShopStatus(text, isError)
-		if not shopStatusLabel.Parent then return end
-		local safeText = string.gsub(tostring(text or ""), "[%c]+", " ")
-		shopStatusLabel.Text = safeText
-		shopStatusLabel.TextColor3 = isError and Color3.fromRGB(255, 135, 135) or Color3.fromRGB(175, 185, 205)
+	local function fetchDealer(advanced)
+		if not StateUtil or not StateUtil.CommRemoteFunc then return {} end
+		local ok, res = pcall(function()
+			return StateUtil.CommRemoteFunc:InvokeServer("GetFruits", advanced)
+		end)
+		if not ok or type(res) ~= "table" then return {} end
+		return res
 	end
 
-	local function getFruitShopPrice(name, entry)
-		local directPrice = entry and tonumber(entry.Price)
-		if directPrice then return directPrice end
-		local catalogEntry = fruitShopCatalog and fruitShopCatalog[name]
-		return (catalogEntry and tonumber(catalogEntry.Price)) or 0
-	end
+	local colW = 168
+	local colH = 210
+	local columns = {}
 
-	local function createFruitShopColumn(isAdvanced, xScale, titleText, titleColor)
-		local column = Instance.new("Frame")
-		column.Name = isAdvanced and "AdvancedFruitStock" or "NormalFruitStock"
-		column.Size = UDim2.new(0.5, -3, 0, 230)
-		column.Position = UDim2.new(xScale, xScale == 0 and 0 or 3, 0, 24)
-		column.BackgroundColor3 = Color3.fromRGB(31, 31, 42)
-		column.BackgroundTransparency = 0.28
-		column.BorderSizePixel = 0
-		column.Parent = shopPanel
-		local columnCorner = Instance.new("UICorner")
-		columnCorner.CornerRadius = UDim.new(0, 6)
-		columnCorner.Parent = column
-		local columnStroke = Instance.new("UIStroke")
-		columnStroke.Color = currentThemeColor
-		columnStroke.Transparency = 0.78
-		columnStroke.Thickness = 1
-		columnStroke.Parent = column
-		table.insert(themeSections, columnStroke)
+	local function makeDealerColumn(advanced, xOffset, labelText, color)
+		local col = Instance.new("Frame")
+		col.Size = UDim2.new(0, colW, 0, colH)
+		col.Position = UDim2.new(0, xOffset, 0, 32)
+		col.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
+		col.Parent = dealerFrame
+		Instance.new("UICorner", col).CornerRadius = UDim.new(0, 6)
 
-		local title = Instance.new("TextLabel")
-		title.Size = UDim2.new(1, -8, 0, 17)
-		title.Position = UDim2.new(0, 5, 0, 3)
-		title.BackgroundTransparency = 1
-		title.Font = currentGlobalFont
-		title.Text = titleText
-		title.TextColor3 = titleColor
-		title.TextSize = 10
-		title.TextXAlignment = Enum.TextXAlignment.Left
-		title.TextTruncate = Enum.TextTruncate.AtEnd
-		title.Parent = column
-		table.insert(allTextLabels, title)
+		local colTitle = Instance.new("TextLabel")
+		colTitle.Size = UDim2.new(1, -8, 0, 16)
+		colTitle.Position = UDim2.new(0, 4, 0, 3)
+		colTitle.BackgroundTransparency = 1
+		colTitle.TextColor3 = color
+		colTitle.Font = Enum.Font.GothamBold
+		colTitle.TextSize = 10
+		colTitle.TextXAlignment = Enum.TextXAlignment.Left
+		colTitle.Text = labelText
+		colTitle.Parent = col
 
-		local timerCard = Instance.new("Frame")
-		timerCard.Size = UDim2.new(1, -10, 0, 31)
-		timerCard.Position = UDim2.new(0, 5, 0, 21)
-		timerCard.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
-		timerCard.BackgroundTransparency = 0.08
-		timerCard.BorderSizePixel = 0
-		timerCard.Parent = column
-		local timerCorner = Instance.new("UICorner")
-		timerCorner.CornerRadius = UDim.new(0, 4)
-		timerCorner.Parent = timerCard
+		local cdBox = Instance.new("Frame")
+		cdBox.Size = UDim2.new(1, -8, 0, 28)
+		cdBox.Position = UDim2.new(0, 4, 0, 20)
+		cdBox.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+		cdBox.BorderSizePixel = 0
+		cdBox.Parent = col
+		Instance.new("UICorner", cdBox).CornerRadius = UDim.new(0, 4)
 
-		local timerCaption = Instance.new("TextLabel")
-		timerCaption.Size = UDim2.new(1, 0, 0, 11)
-		timerCaption.Position = UDim2.new(0, 0, 0, 1)
-		timerCaption.BackgroundTransparency = 1
-		timerCaption.Font = currentGlobalFont
-		timerCaption.Text = "REABASTECE EM"
-		timerCaption.TextColor3 = Color3.fromRGB(150, 170, 205)
-		timerCaption.TextSize = 8
-		timerCaption.TextXAlignment = Enum.TextXAlignment.Center
-		timerCaption.Parent = timerCard
+		local cdLabel = Instance.new("TextLabel")
+		cdLabel.Size = UDim2.new(1, 0, 0, 10)
+		cdLabel.Position = UDim2.new(0, 0, 0, 1)
+		cdLabel.BackgroundTransparency = 1
+		cdLabel.TextColor3 = Color3.fromRGB(160, 180, 220)
+		cdLabel.Font = Enum.Font.Gotham
+		cdLabel.TextSize = 8
+		cdLabel.Text = "ATUALIZA EM"
+		cdLabel.Parent = cdBox
 
-		local timerLabel = Instance.new("TextLabel")
-		timerLabel.Size = UDim2.new(1, 0, 0, 17)
-		timerLabel.Position = UDim2.new(0, 0, 0, 12)
-		timerLabel.BackgroundTransparency = 1
-		timerLabel.Font = Enum.Font.GothamBold
-		timerLabel.Text = "00:00:00"
-		timerLabel.TextColor3 = Color3.fromRGB(120, 220, 255)
-		timerLabel.TextSize = 12
-		timerLabel.TextXAlignment = Enum.TextXAlignment.Center
-		timerLabel.Parent = timerCard
+		local cdTime = Instance.new("TextLabel")
+		cdTime.Size = UDim2.new(1, 0, 0, 15)
+		cdTime.Position = UDim2.new(0, 0, 0, 11)
+		cdTime.BackgroundTransparency = 1
+		cdTime.TextColor3 = Color3.fromRGB(120, 230, 255)
+		cdTime.Font = Enum.Font.GothamBold
+		cdTime.TextSize = 12
+		cdTime.Text = "00:00:00"
+		cdTime.Parent = cdBox
 
 		local scroll = Instance.new("ScrollingFrame")
-		scroll.Name = "FruitList"
-		scroll.Size = UDim2.new(1, -8, 0, 168)
-		scroll.Position = UDim2.new(0, 4, 0, 56)
+		scroll.Size = UDim2.new(1, -6, 0, colH - 54)
+		scroll.Position = UDim2.new(0, 3, 0, 52)
 		scroll.BackgroundTransparency = 1
 		scroll.BorderSizePixel = 0
-		scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+		scroll.CanvasSize = UDim2.new()
 		scroll.ScrollBarThickness = 3
-		scroll.ScrollBarImageColor3 = currentThemeColor
-		scroll.Parent = column
+		scroll.Parent = col
 
-		fruitShopColumns[isAdvanced] = {
-			frame = column,
-			title = title,
-			timer = timerLabel,
+		columns[advanced] = {
 			scroll = scroll,
-			rows = {},
-			fruits = {},
-			signature = "",
-			emptyLabel = nil,
-			label = titleText,
+			cdTime = cdTime,
+			pool = {},
+			lastSig = "",
+			lastTimeText = "",
+			lastFruits = {},
 		}
 	end
 
-	createFruitShopColumn(false, 0, "NORMAL", Color3.fromRGB(125, 220, 155))
-	createFruitShopColumn(true, 0.5, "AVANÇADO", Color3.fromRGB(130, 185, 255))
+	makeDealerColumn(false, 6, "🟢 Normal", Color3.fromRGB(120, 220, 150))
+	makeDealerColumn(true, 182, "🔵 Avançado", Color3.fromRGB(120, 180, 255))
 
-	local function createFruitShopRow(scroll)
+	local ROW_H = 24
+	local ROW_STEP = 26
+
+	local function createDealerRow(scroll)
 		local row = Instance.new("Frame")
-		row.Size = UDim2.new(1, -4, 0, 23)
+		row.Size = UDim2.new(1, -4, 0, ROW_H)
 		row.BorderSizePixel = 0
 		row.Visible = false
 		row.Parent = scroll
-		local rowCorner = Instance.new("UICorner")
-		rowCorner.CornerRadius = UDim.new(0, 4)
-		rowCorner.Parent = row
+		Instance.new("UICorner", row).CornerRadius = UDim.new(0, 4)
 
-		local nameLabel = Instance.new("TextLabel")
-		nameLabel.Size = UDim2.new(1, -55, 1, 0)
-		nameLabel.Position = UDim2.new(0, 5, 0, 0)
-		nameLabel.BackgroundTransparency = 1
-		nameLabel.Font = currentGlobalFont
-		nameLabel.TextColor3 = Color3.fromRGB(240, 240, 245)
-		nameLabel.TextSize = 9
-		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-		nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
-		nameLabel.Parent = row
+		local nameLbl = Instance.new("TextLabel")
+		nameLbl.Size = UDim2.new(1, -60, 1, 0)
+		nameLbl.Position = UDim2.new(0, 4, 0, 0)
+		nameLbl.BackgroundTransparency = 1
+		nameLbl.TextColor3 = Color3.new(1,1,1)
+		nameLbl.Font = Enum.Font.GothamBold
+		nameLbl.TextSize = 10
+		nameLbl.TextXAlignment = Enum.TextXAlignment.Left
+		nameLbl.TextTruncate = Enum.TextTruncate.AtEnd
+		nameLbl.Parent = row
 
-		local priceLabel = Instance.new("TextLabel")
-		priceLabel.Size = UDim2.new(0, 48, 1, 0)
-		priceLabel.Position = UDim2.new(1, -51, 0, 0)
-		priceLabel.BackgroundTransparency = 1
-		priceLabel.Font = Enum.Font.GothamBold
-		priceLabel.TextSize = 9
-		priceLabel.TextXAlignment = Enum.TextXAlignment.Right
-		priceLabel.Parent = row
-		return {frame = row, name = nameLabel, price = priceLabel}
+		local priceLbl = Instance.new("TextLabel")
+		priceLbl.Size = UDim2.new(0, 54, 1, 0)
+		priceLbl.Position = UDim2.new(1, -56, 0, 0)
+		priceLbl.BackgroundTransparency = 1
+		priceLbl.Font = Enum.Font.GothamBold
+		priceLbl.TextSize = 9
+		priceLbl.TextXAlignment = Enum.TextXAlignment.Right
+		priceLbl.Parent = row
+
+		return { row = row, name = nameLbl, price = priceLbl }
 	end
 
-	local function updateFruitShopAffordability()
-		local beli = getFruitShopBeli()
-		shopBeliLabel.Text = "Beli: " .. formatFruitShopNumber(beli)
-		for _, column in pairs(fruitShopColumns) do
-			for i, fruit in ipairs(column.fruits) do
-				local row = column.rows[i]
-				if row and row.frame.Visible then
-					local canAfford = beli >= getFruitShopPrice(fruit.Name, fruit)
-					row.frame.BackgroundColor3 = canAfford and Color3.fromRGB(35, 66, 48) or Color3.fromRGB(69, 40, 43)
-					row.price.TextColor3 = canAfford and Color3.fromRGB(160, 255, 170) or Color3.fromRGB(255, 155, 155)
-				end
-			end
-		end
-	end
+	local COLOR_OK = Color3.fromRGB(40, 70, 50)
+	local COLOR_NO = Color3.fromRGB(70, 40, 40)
+	local COLOR_POK = Color3.fromRGB(150, 255, 150)
+	local COLOR_PNO = Color3.fromRGB(255, 150, 150)
 
-	local function renderFruitShopColumn(isAdvanced, fruits)
-		local column = fruitShopColumns[isAdvanced]
+	local function renderDealerList(advanced, fruits)
+		local col = columns[advanced]
+		if not col then return end
+		local scroll = col.scroll
+
 		local onSale = {}
-		for _, fruit in ipairs(fruits) do
-			if type(fruit) == "table" and fruit.OnSale == true and fruit.Name then
-				table.insert(onSale, fruit)
-			end
+		for _, f in ipairs(fruits) do
+			if f.OnSale == true then table.insert(onSale, f) end
 		end
-		table.sort(onSale, function(a, b)
-			local priceA = getFruitShopPrice(a.Name, a)
-			local priceB = getFruitShopPrice(b.Name, b)
-			if priceA == priceB then return tostring(a.Name) < tostring(b.Name) end
-			return priceA < priceB
+		table.sort(onSale, function(a,b)
+			return getPrice(a.Name, a) < getPrice(b.Name, b)
 		end)
 
-		local parts = {}
-		for i, fruit in ipairs(onSale) do
-			parts[i] = tostring(fruit.Name) .. ":" .. tostring(getFruitShopPrice(fruit.Name, fruit)) .. ":" .. tostring(fruit.HasPermanent == true)
-		end
-		local signature = table.concat(parts, "|")
-		column.fruits = onSale
-		column.title.Text = column.label .. "  •  " .. tostring(#onSale) .. " à venda"
-		if signature == column.signature then
-			updateFruitShopAffordability()
-			return
-		end
-		column.signature = signature
+		col.lastFruits = onSale
 
-		for i, fruit in ipairs(onSale) do
-			local row = column.rows[i]
-			if not row then
-				row = createFruitShopRow(column.scroll)
-				column.rows[i] = row
-			end
-			row.frame.Visible = true
-			row.frame.Position = UDim2.new(0, 2, 0, (i - 1) * 25)
-			row.name.Text = tostring(fruit.Name) .. (fruit.HasPermanent and "  ★" or "")
-			row.price.Text = formatFruitShopNumber(getFruitShopPrice(fruit.Name, fruit))
+		local parts = table.create(#onSale)
+		for i, f in ipairs(onSale) do
+			parts[i] = f.Name .. ":" .. getPrice(f.Name, f)
 		end
-		for i = #onSale + 1, #column.rows do
-			column.rows[i].frame.Visible = false
+		local sig = table.concat(parts, "|")
+		if sig == col.lastSig then return end
+		col.lastSig = sig
+
+		local beli = getBeli()
+		local pool = col.pool
+		local count = #onSale
+
+		for i = 1, count do
+			local f = onSale[i]
+			local price = getPrice(f.Name, f)
+			local canAfford = beli >= price
+
+			local entry = pool[i]
+			if not entry then
+				entry = createDealerRow(scroll)
+				pool[i] = entry
+			end
+			entry.row.Visible = true
+			entry.row.Position = UDim2.new(0, 2, 0, (i-1) * ROW_STEP)
+			entry.row.BackgroundColor3 = canAfford and COLOR_OK or COLOR_NO
+			entry.name.Text = f.Name .. (f.HasPermanent and " ⭐" or "")
+			entry.price.TextColor3 = canAfford and COLOR_POK or COLOR_PNO
+			entry.price.Text = fmt(price)
 		end
 
-		if #onSale == 0 then
-			if not column.emptyLabel then
-				local empty = Instance.new("TextLabel")
-				empty.Size = UDim2.new(1, -8, 0, 24)
-				empty.Position = UDim2.new(0, 4, 0, 3)
-				empty.BackgroundTransparency = 1
-				empty.Font = currentGlobalFont
-				empty.Text = "Sem frutas à venda"
-				empty.TextColor3 = Color3.fromRGB(155, 155, 175)
-				empty.TextSize = 9
-				empty.TextXAlignment = Enum.TextXAlignment.Center
-				empty.Parent = column.scroll
-				column.emptyLabel = empty
-			end
-			column.emptyLabel.Visible = true
-		elseif column.emptyLabel then
-			column.emptyLabel.Visible = false
+		for i = count + 1, #pool do
+			if pool[i].row.Visible then pool[i].row.Visible = false end
 		end
-		column.scroll.CanvasSize = UDim2.new(0, 0, 0, #onSale * 25 + 4)
-		updateFruitShopAffordability()
+
+		scroll.CanvasSize = UDim2.new(0, 0, 0, count * ROW_STEP + 4)
 	end
 
-	local function fetchFruitShopColumn(isAdvanced)
-		if fruitShopFetchBusy[isAdvanced] then return end
-		fruitShopFetchBusy[isAdvanced] = true
+	local fetching = { [false] = false, [true] = false }
+	local function fetchDealerColumn(advanced)
+		if fetching[advanced] then return end
+		fetching[advanced] = true
 		task.spawn(function()
-			local fruits, fetchError
-			if type(fruitShopStateUtil) ~= "table" then
-				fetchError = "módulo da loja indisponível"
-			else
-				local remote = fruitShopStateUtil.CommRemoteFunc
-				local ok, result = pcall(function()
-					if typeof(remote) == "Instance" and remote:IsA("RemoteFunction") then
-						return remote:InvokeServer("GetFruits", isAdvanced)
-					end
-					local invokeServer = type(remote) == "table" and remote.InvokeServer or nil
-					if type(invokeServer) ~= "function" then
-						error("CommRemoteFunc.InvokeServer indisponível")
-					end
-					return invokeServer(remote, "GetFruits", isAdvanced)
-				end)
-				if ok and type(result) == "table" then
-					fruits = result
-				else
-					fetchError = tostring(result)
-				end
+			local fruits = fetchDealer(advanced)
+			if screenGui.Parent then
+				renderDealerList(advanced, fruits)
 			end
-			fruitShopFetchBusy[isAdvanced] = false
-			if not screenGui.Parent then return end
-			if fruits then
-				renderFruitShopColumn(isAdvanced, fruits)
-				setFruitShopStatus("Estoque atualizado", false)
-			else
-				setFruitShopStatus((isAdvanced and "Avançado: " or "Normal: ") .. tostring(fetchError), true)
-			end
+			fetching[advanced] = false
 		end)
 	end
 
-	local function refreshFruitShop()
-		fruitShopRefreshElapsed = 0
-		setFruitShopStatus("Atualizando estoque...", false)
-		fetchFruitShopColumn(false)
-		fetchFruitShopColumn(true)
+	local function refreshDealerAll()
+		local b = getBeli()
+		beliLbl.Text = "💰 " .. fmt(b)
+		fetchDealerColumn(false)
+		fetchDealerColumn(true)
 	end
 
-	shopRefreshButton.MouseButton1Click:Connect(refreshFruitShop)
+	refreshDealerAll()
 
-	task.spawn(function()
-		local moduleLoaded, stateUtil = pcall(function()
-			local controllers = ReplicatedStorage:WaitForChild("Controllers", 10)
-			local ui = controllers and controllers:WaitForChild("UI", 10)
-			local fruitShop = ui and ui:WaitForChild("FruitShop", 10)
-			local moduleScript = fruitShop and fruitShop:WaitForChild("StateUtil", 10)
-			if not moduleScript or not moduleScript:IsA("ModuleScript") then error("StateUtil não encontrado") end
-			return require(moduleScript)
+	refreshB.MouseButton1Click:Connect(refreshDealerAll)
+
+	if beliValRef then
+		beliValRef:GetPropertyChangedSignal("Value"):Connect(function()
+			local b = getBeli()
+			beliLbl.Text = "💰 " .. fmt(b)
 		end)
-		if moduleLoaded then
-			fruitShopStateUtil = stateUtil
-		else
-			setFruitShopStatus("Não foi possível carregar a loja: " .. tostring(stateUtil), true)
-		end
-
-		local dataLoaded, catalog = pcall(function()
-			local controllers = ReplicatedStorage:WaitForChild("Controllers", 10)
-			local ui = controllers and controllers:WaitForChild("UI", 10)
-			local fruitShop = ui and ui:WaitForChild("FruitShop", 10)
-			local moduleScript = fruitShop and fruitShop:WaitForChild("Data", 10)
-			if not moduleScript or not moduleScript:IsA("ModuleScript") then error("Data não encontrado") end
-			return require(moduleScript)
-		end)
-		if dataLoaded and type(catalog) == "table" then fruitShopCatalog = catalog end
-		if moduleLoaded and frutaPage.Visible then refreshFruitShop() end
-	end)
-
-	task.spawn(function()
-		local dataFolder = player:FindFirstChild("Data") or player:WaitForChild("Data", 10)
-		local beliValue = dataFolder and (dataFolder:FindFirstChild("Beli") or dataFolder:WaitForChild("Beli", 10))
-		if beliValue and (beliValue:IsA("IntValue") or beliValue:IsA("NumberValue")) then
-			fruitShopBeliValue = beliValue
-			shopBeliLabel.Text = "Beli: " .. formatFruitShopNumber(getFruitShopBeli())
-			fruitShopBeliConnection = beliValue:GetPropertyChangedSignal("Value"):Connect(updateFruitShopAffordability)
-		end
-	end)
-
-	local function updateFruitShopTimers()
-		local now = os.time()
-		local normalTime = 14400 - (now % 14400)
-		local advancedTime = 7200 - (now % 7200)
-		local normalText = formatFruitShopTime(normalTime)
-		local advancedText = formatFruitShopTime(advancedTime)
-		local normalColumn = fruitShopColumns[false]
-		local advancedColumn = fruitShopColumns[true]
-		if normalColumn.timer.Text ~= normalText then
-			normalColumn.timer.Text = normalText
-			normalColumn.timer.TextColor3 = normalTime < 300 and Color3.fromRGB(255, 185, 90) or Color3.fromRGB(120, 220, 255)
-		end
-		if advancedColumn.timer.Text ~= advancedText then
-			advancedColumn.timer.Text = advancedText
-			advancedColumn.timer.TextColor3 = advancedTime < 300 and Color3.fromRGB(255, 185, 90) or Color3.fromRGB(120, 220, 255)
-		end
-		if fruitShopLastNormalTimer and normalTime > fruitShopLastNormalTimer + 5 then fetchFruitShopColumn(false) end
-		if fruitShopLastAdvancedTimer and advancedTime > fruitShopLastAdvancedTimer + 5 then fetchFruitShopColumn(true) end
-		fruitShopLastNormalTimer = normalTime
-		fruitShopLastAdvancedTimer = advancedTime
 	end
-
-	frutaPage:GetPropertyChangedSignal("Visible"):Connect(function()
-		if frutaPage.Visible then refreshFruitShop() end
-	end)
 
 	task.spawn(function()
 		while screenGui.Parent do
 			task.wait(1)
-			if not frutaPage.Visible then continue end
-			updateFruitShopTimers()
-			fruitShopRefreshElapsed += 1
-			if fruitShopRefreshElapsed >= fruitShopFetchInterval then refreshFruitShop() end
+			local now = DateTime.now().UnixTimestamp
+			local tN = 14400 - (now % 14400)
+			local tA = 7200  - (now % 7200)
+
+			local colN = columns[false]
+			local colA = columns[true]
+
+			if colN then
+				local strN = fmtTime(tN)
+				if strN ~= colN.lastTimeText then
+					colN.lastTimeText = strN
+					colN.cdTime.Text = strN
+				end
+			end
+			if colA then
+				local strA = fmtTime(tA)
+				if strA ~= colA.lastTimeText then
+					colA.lastTimeText = strA
+					colA.cdTime.Text = strA
+				end
+			end
 		end
 	end)
 
-	screenGui.AncestryChanged:Connect(function(_, parent)
-		if parent == nil and fruitShopBeliConnection then
-			fruitShopBeliConnection:Disconnect()
-			fruitShopBeliConnection = nil
-		end
-	end)
-
+	-- Seções normais da Aba Fruta
 	local secFrutaAction = createSection(frutaPage, "Automatização", "⚡")
 	local secFrutaEsp = createSection(frutaPage, "Fruit ESP", "👁️")
 
@@ -3511,7 +3379,7 @@ function showMainPanel()
 		end
 	end
 	local autoRollGeneration = 0
-	local fruitRollBoxName = "ZiolesGacha"
+	local fruitRollBoxName = "Cousin"
 
 	local function ensureGachaRemote()
 		if gachaRemoteFunction then return true end
@@ -3550,6 +3418,12 @@ function showMainPanel()
 				resultMessage = "Remote indisponível: " .. tostring(remoteError)
 			else
 				local invoked, response, errorInfo = pcall(function()
+					gachaRemoteFunction:InvokeServer({
+						Context = "Check",
+						BoxName = fruitRollBoxName,
+						SpokeNPC = true
+					})
+					task.wait(0.05)
 					return gachaRemoteFunction:InvokeServer({
 						Context = "Purchase",
 						BoxName = fruitRollBoxName,
@@ -4126,7 +4000,7 @@ task.spawn(function()
 end)
 
 -----------------------------------------------------------------
--- RENDER LOOP (BLINDADO COM PCALL PARA DRAWINGS)
+-- RENDER LOOP
 -----------------------------------------------------------------
 local espDrawings = {}
 
@@ -4143,114 +4017,6 @@ Players.PlayerRemoving:Connect(function(leavingPlayer)
 	end
 	selectedManualTargets[leavingPlayer] = nil
 end)
-
-local function getAdvancedTarget()
-	local bestTarget = nil
-	local bestScore = math.huge
-	local myChar = player.Character
-
-	if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return nil end
-	
-	if _G_FilterHoldingItem then
-		local holdingTool = false
-		for _, item in ipairs(myChar:GetChildren()) do
-			if item:IsA("Tool") then holdingTool = true; break end
-		end
-		if not holdingTool then return nil end
-	end
-
-	local myPos = myChar.HumanoidRootPart.Position
-	local screenCenter = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
-
-	if _G_LockOnPlayers then
-		for _, p in ipairs(Players:GetPlayers()) do
-			if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Head") then
-				local hum = p.Character:FindFirstChild("Humanoid")
-				if hum and hum.Health > 0 then
-					local hrp = p.Character.HumanoidRootPart
-					local dist = (hrp.Position - myPos).Magnitude
-
-					if not _G_FilterDistanceEnabled or dist <= _G_FilterDistanceMax then
-						local screenPos, onScreen = camera:WorldToViewportPoint(hrp.Position)
-						if onScreen then
-							local screenDist = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Magnitude
-							
-							if not _G_FovVisible or screenDist <= _G_FovRadius then
-								local score = dist
-								if _G_FilterClosest then score = dist end
-								if _G_FilterLowestHP then score = hum.Health end
-								if _G_FilterCrosshair then score = screenDist end
-
-								if score < bestScore then
-									bestScore = score
-									bestTarget = p.Character.Head
-								end
-							end
-						end
-					end
-				end
-			end
-		end
-	end
-
-	if _G_LockOnEnemies and ENEMIES then
-		for _, enemyModel in ipairs(ENEMIES:GetChildren()) do
-			if enemyModel:IsA("Model") then
-				local hum = enemyModel:FindFirstChildOfClass("Humanoid")
-				local head = enemyModel:FindFirstChild("Head") or getEnemyRoot(enemyModel)
-				if hum and hum.Health > 0 and head then
-					local dist = (head.Position - myPos).Magnitude
-
-					if not _G_FilterDistanceEnabled or dist <= _G_FilterDistanceMax then
-						local screenPos, onScreen = camera:WorldToViewportPoint(head.Position)
-						if onScreen then
-							local screenDist = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Magnitude
-
-							if not _G_FovVisible or screenDist <= _G_FovRadius then
-								local score = dist
-								if _G_FilterClosest then score = dist end
-								if _G_FilterLowestHP then score = hum.Health end
-								if _G_FilterCrosshair then score = screenDist end
-
-								if score < bestScore then
-									bestScore = score
-									bestTarget = head
-								end
-							end
-						end
-					end
-				end
-			end
-		end
-	end
-
-	return bestTarget
-end
-
-local function getManualTarget()
-	local bestTarget = nil
-	local shortestDist = math.huge
-	local myChar = player.Character
-
-	if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return nil end
-	local myPos = myChar.HumanoidRootPart.Position
-
-	for p, isSelected in pairs(selectedManualTargets) do
-		if isSelected and p and p.Character and p.Character:FindFirstChild("Head") then
-			local hum = p.Character:FindFirstChild("Humanoid")
-			if hum and hum.Health > 0 then
-				local headPos = p.Character.Head.Position
-				local dist = (headPos - myPos).Magnitude
-				if dist < shortestDist then
-					shortestDist = dist
-					bestTarget = p.Character.Head
-				end
-			end
-		end
-	end
-
-	return bestTarget
-end
 
 RunService.RenderStepped:Connect(function()
 	local char = player.Character
@@ -4272,7 +4038,6 @@ RunService.RenderStepped:Connect(function()
 		end
 	end
 
-	-- LÓGICA COMPLETA DE ENERGIA/STAMINA INFINITA RESTAURADA
 	if _G_EnergyEnabled and char then
 		if char:GetAttribute("Energy") then char:SetAttribute("Energy", 999999) end
 		if char:GetAttribute("Stamina") then char:SetAttribute("Stamina", 999999) end
@@ -4299,19 +4064,6 @@ RunService.RenderStepped:Connect(function()
 		end)
 	elseif fovCircleDrawing then
 		pcall(function() fovCircleDrawing.Visible = false end)
-	end
-
-	if isLockOnEnabled then
-		local targetHeadToLock = nil
-		if lockOnMode == "Nearest" then
-			targetHeadToLock = getAdvancedTarget()
-		elseif lockOnMode == "Manual" then
-			targetHeadToLock = getManualTarget()
-		end
-
-		if targetHeadToLock and targetHeadToLock:IsA("BasePart") then
-			camera.CFrame = CFrame.new(camera.CFrame.Position, targetHeadToLock.Position)
-		end
 	end
 
 	for _, targetPlayer in pairs(Players:GetPlayers()) do
