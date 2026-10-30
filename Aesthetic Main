@@ -2065,9 +2065,9 @@ function showMainPanel()
 
 	local changelogCard = makeInfoCard(infoPage, 112, 4)
 	makeInfoText(changelogCard, "NOVIDADES  /  AETHERIS HUB", 9, UDim2.new(0, 13, 0, 8), UDim2.new(1, -26, 0, 16), currentThemeColor, Enum.Font.GothamBold)
-	makeInfoText(changelogCard, "✦  Controles de ESP reunidos e mais claros", 9, UDim2.new(0, 13, 0, 31), UDim2.new(1, -24, 0, 15), currentTextColor)
-	makeInfoText(changelogCard, "✦  Seletor de cor e origem dos tracers", 9, UDim2.new(0, 13, 0, 52), UDim2.new(1, -24, 0, 15), currentTextColor)
-	makeInfoText(changelogCard, "✦  Painel com tema dinâmico e layout refinado", 9, UDim2.new(0, 13, 0, 73), UDim2.new(1, -24, 0, 15), currentTextColor)
+	makeInfoText(changelogCard, "•  Adicionado Observação range [INF]", 9, UDim2.new(0, 13, 0, 31), UDim2.new(1, -24, 0, 15), currentTextColor)
+	makeInfoText(changelogCard, "•  Adicionado Pulos Infinitos", 9, UDim2.new(0, 13, 0, 52), UDim2.new(1, -24, 0, 15), currentTextColor)
+	makeInfoText(changelogCard, "•  Adicionado sistema de Auto Roletar Frutas (com botão incluso)", 9, UDim2.new(0, 13, 0, 73), UDim2.new(1, -24, 0, 15), currentTextColor)
 
 	local infoFootnote = makeInfoText(infoPage, "Aetheris Hub V2 • Desenvolvido para máxima performance e elegância.", 9, UDim2.new(0, 4, 0, 0), UDim2.new(1, -12, 0, 18), Color3.fromRGB(145, 145, 165))
 	infoFootnote.LayoutOrder = 5
