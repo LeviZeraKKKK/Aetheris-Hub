@@ -2850,27 +2850,26 @@ function showMainPanel()
 	-- ABA FRUTA
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
-	local secFruitInfo = createSection(frutaPage, "PAINEL DE INFORMAÇÕES", "◈")
-	if secFruitInfo.Parent then secFruitInfo.Parent.LayoutOrder = -10 end
 
-	-- Apenas a moldura vazia, sem textos, dados ou funções internas.
-	local fruitInfoEmptyPanel = Instance.new("Frame")
-	fruitInfoEmptyPanel.Name = "FruitInformationPanel"
-	fruitInfoEmptyPanel.Size = UDim2.new(1, 0, 0, 54)
-	fruitInfoEmptyPanel.BackgroundColor3 = Color3.fromRGB(19, 20, 29)
-	fruitInfoEmptyPanel.BackgroundTransparency = 0.12
-	fruitInfoEmptyPanel.BorderSizePixel = 0
-	fruitInfoEmptyPanel.Parent = secFruitInfo
+	-- Cartão no padrão visual das métricas da aba Info, em tamanho maior.
+	local fruitInfoPanel = makeInfoCard(frutaPage, 112, -1)
+	fruitInfoPanel.Name = "FruitInformationPanel"
 
-	local fruitInfoCorner = Instance.new("UICorner")
-	fruitInfoCorner.CornerRadius = UDim.new(0, 7)
-	fruitInfoCorner.Parent = fruitInfoEmptyPanel
-	local fruitInfoStroke = Instance.new("UIStroke")
-	fruitInfoStroke.Color = currentThemeColor
-	fruitInfoStroke.Thickness = 1
-	fruitInfoStroke.Transparency = 0.65
-	fruitInfoStroke.Parent = fruitInfoEmptyPanel
-	table.insert(themeSections, fruitInfoStroke)
+	local fruitInfoAccent = Instance.new("Frame")
+	fruitInfoAccent.Size = UDim2.new(0, 3, 0, 38)
+	fruitInfoAccent.Position = UDim2.new(0, 0, 0.5, -19)
+	fruitInfoAccent.BackgroundColor3 = currentThemeColor
+	fruitInfoAccent.BorderSizePixel = 0
+	fruitInfoAccent.Parent = fruitInfoPanel
+	table.insert(themeSliders, fruitInfoAccent)
+	local fruitInfoAccentCorner = Instance.new("UICorner")
+	fruitInfoAccentCorner.CornerRadius = UDim.new(1, 0)
+	fruitInfoAccentCorner.Parent = fruitInfoAccent
+
+	-- O título é o único elemento de conteúdo; o restante do cartão fica vazio.
+	makeInfoText(fruitInfoPanel, "PAINEL DE INFORMAÇÕES", 11,
+		UDim2.new(0, 14, 0, 14), UDim2.new(1, -28, 0, 18),
+		currentThemeColor, Enum.Font.GothamBold)
 
 	local secFrutaAction = createSection(frutaPage, "Automatização", "⚡")
 	local secFrutaEsp = createSection(frutaPage, "Fruit ESP", "👁️")
