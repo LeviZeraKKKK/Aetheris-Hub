@@ -1,5 +1,6 @@
 -- Serviços necessários
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -130,6 +131,190 @@ local _G_JumpPowerValue = 50
 local _G_NoclipEnabled = false
 local _G_FullbrightEnabled = false
 local _G_EnergyEnabled = false
+local _G_InfiniteKenEnabled = false
+local _G_InfiniteAirJumpsEnabled = false
+
+local activeObservationInstance = nil
+local originalObservationRadius = nil
+local observationRoot = nil
+local lastObservationPosition = Vector3.zero
+
+local function bindObservationInstance(instance)
+	if not instance then return end
+	if activeObservationInstance ~= instance then
+		activeObservationInstance = instance
+		originalObservationRadius = instance.radius
+	end
+	if _G_InfiniteKenEnabled then
+		pcall(function() instance.radius = math.huge end)
+	end
+end
+
+local function setInfiniteObservationEnabled(state)
+	_G_InfiniteKenEnabled = state
+	if activeObservationInstance then
+		pcall(function()
+			if state then
+				activeObservationInstance.radius = math.huge
+			else
+				activeObservationInstance.radius = originalObservationRadius
+			end
+		end)
+	end
+end
+
+local function updateObservationRoot()
+	local character = player.Character
+	observationRoot = character and character:FindFirstChild("HumanoidRootPart") or nil
+	if observationRoot then lastObservationPosition = observationRoot.Position end
+end
+
+updateObservationRoot()
+player.CharacterAdded:Connect(function()
+	task.defer(updateObservationRoot)
+	task.wait(1)
+	updateObservationRoot()
+end)
+
+task.spawn(function()
+	local moduleScript = ReplicatedStorage:WaitForChild("ObservationManager", 10)
+	if not moduleScript or not moduleScript:IsA("ModuleScript") then
+		warn("[Aetheris] ObservationManager não encontrado em ReplicatedStorage")
+		return
+	end
+
+	local loaded, ObservationManager = pcall(function()
+		return require(moduleScript)
+	end)
+	if not loaded or type(ObservationManager) ~= "table" then
+		warn("[Aetheris] Não foi possível carregar ObservationManager")
+		return
+	end
+
+	local oldNew = ObservationManager.new
+	if type(oldNew) == "function" then
+		ObservationManager.new = function(...)
+			local instance = oldNew(...)
+			if type(instance) == "table" then bindObservationInstance(instance) end
+			return instance
+		end
+	end
+
+	local oldObserve = ObservationManager.observe
+	if type(oldObserve) == "function" then
+		ObservationManager.observe = function(self, ...)
+			if type(self) == "table" then bindObservationInstance(self) end
+			if _G_InfiniteKenEnabled and self then
+				pcall(function() self.radius = math.huge end)
+			end
+			return oldObserve(self, ...)
+		end
+	end
+end)
+
+task.spawn(function()
+	while true do
+		task.wait(1)
+		if not _G_InfiniteKenEnabled then continue end
+
+		local instance = activeObservationInstance
+		if not instance or not instance.active then continue end
+		pcall(function() instance.radius = math.huge end)
+
+		if not observationRoot or not observationRoot.Parent then
+			updateObservationRoot()
+			if not observationRoot then continue end
+		end
+
+		local position = observationRoot.Position
+		local delta = position - lastObservationPosition
+		if delta:Dot(delta) > 225 then
+			lastObservationPosition = position
+			pcall(function() instance:refresh() end)
+		end
+	end
+end)
+
+local infiniteJumpConnection = nil
+local airJumpAttributeSnapshots = setmetatable({}, {__mode = "k"})
+local airJumpStatSnapshots = setmetatable({}, {__mode = "k"})
+local airJumpAttributeTargets = {
+	AirJumps = 999,
+	SkyjumpBoost = 999,
+	AirJumpCost = 0
+}
+
+local function applyInfiniteAirJumps()
+	local character = player.Character
+	if character then
+		local snapshot = airJumpAttributeSnapshots[character]
+		if not snapshot then
+			snapshot = {values = {}, captured = {}}
+			airJumpAttributeSnapshots[character] = snapshot
+		end
+		for attributeName, targetValue in pairs(airJumpAttributeTargets) do
+			local currentValue = character:GetAttribute(attributeName)
+			if currentValue ~= nil then
+				if not snapshot.captured[attributeName] then
+					snapshot.values[attributeName] = currentValue
+					snapshot.captured[attributeName] = true
+				end
+				if currentValue ~= targetValue then
+					character:SetAttribute(attributeName, targetValue)
+				end
+			end
+		end
+	end
+
+	local statContainer = player:FindFirstChild("Stats") or player:FindFirstChild("Data")
+	local airJumpStat = statContainer and (statContainer:FindFirstChild("AirJumps") or statContainer:FindFirstChild("SkyjumpBoost"))
+	if airJumpStat and (airJumpStat:IsA("IntValue") or airJumpStat:IsA("NumberValue")) then
+		if airJumpStatSnapshots[airJumpStat] == nil then
+			airJumpStatSnapshots[airJumpStat] = airJumpStat.Value
+		end
+		if airJumpStat.Value ~= 999 then airJumpStat.Value = 999 end
+	end
+end
+
+local function restoreInfiniteAirJumpValues()
+	for character, snapshot in pairs(airJumpAttributeSnapshots) do
+		if character then
+			for attributeName, wasCaptured in pairs(snapshot.captured) do
+				if wasCaptured then
+					pcall(function() character:SetAttribute(attributeName, snapshot.values[attributeName]) end)
+				end
+			end
+		end
+		airJumpAttributeSnapshots[character] = nil
+	end
+	for statObject, originalValue in pairs(airJumpStatSnapshots) do
+		if statObject then
+			pcall(function()
+				if statObject.Parent then statObject.Value = originalValue end
+			end)
+		end
+		airJumpStatSnapshots[statObject] = nil
+	end
+end
+
+local function setInfiniteAirJumpsEnabled(state)
+	_G_InfiniteAirJumpsEnabled = state
+	if state then
+		if not infiniteJumpConnection then
+			infiniteJumpConnection = RunService.Heartbeat:Connect(function()
+				if not _G_InfiniteAirJumpsEnabled then return end
+				pcall(applyInfiniteAirJumps)
+			end)
+		end
+		pcall(applyInfiniteAirJumps)
+	else
+		if infiniteJumpConnection then
+			infiniteJumpConnection:Disconnect()
+			infiniteJumpConnection = nil
+		end
+		restoreInfiniteAirJumpValues()
+	end
+end
 
 local travelling = false
 local selectedIsland = nil
@@ -1926,6 +2111,12 @@ function showMainPanel()
 	local secFisico = createSection(playerPage, "Habilidades Físicas", "⚙️")
 	addToggle(secFisico, "Noclip (Atravessar Paredes)", function(state) _G_NoclipEnabled = state end, false)
 	addToggle(secFisico, "Energia Infinita", function(state) _G_EnergyEnabled = state end, false)
+	addToggle(secFisico, "Observação range [INF]", function(state)
+		setInfiniteObservationEnabled(state)
+	end, false)
+	addToggle(secFisico, "Pulo Infinito", function(state)
+		setInfiniteAirJumpsEnabled(state)
+	end, false)
 
 	local secTravel = createSection(playerPage, "Viajar para Ilhas", "🏝️")
 
@@ -2659,7 +2850,7 @@ function showMainPanel()
 	-- ABA FRUTA
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
-	local secFrutaAction = createSection(frutaPage, "Automação", "⚡")
+	local secFrutaAction = createSection(frutaPage, "Automatização", "⚡")
 	local secFrutaEsp = createSection(frutaPage, "Fruit ESP", "👁️")
 
 	local fruitConfig = {
@@ -2879,6 +3070,198 @@ function showMainPanel()
 			table.clear(handled)
 		end
 	end, false)
+
+	local fruitRollState = {
+		Auto = false,
+		Delay = 5.0,
+		Spinning = false,
+		LastResult = nil,
+	}
+	local gachaRemoteFunction = nil
+	local rollStatusLabel = nil
+	local function setFruitRollStatus(message, color)
+		if rollStatusLabel and rollStatusLabel.Parent then
+			local cleanMessage = string.gsub(tostring(message or ""), "[%c]+", " ")
+			if #cleanMessage > 150 then cleanMessage = string.sub(cleanMessage, 1, 147) .. "..." end
+			rollStatusLabel.Text = cleanMessage
+			rollStatusLabel.TextColor3 = color
+		end
+	end
+	local autoRollGeneration = 0
+	local fruitRollBoxName = "ZiolesGacha"
+
+	local function ensureGachaRemote()
+		if gachaRemoteFunction then return true end
+		local loaded, remoteOrError = pcall(function()
+			local modules = ReplicatedStorage:WaitForChild("Modules", 10)
+			if not modules then error("Modules não encontrado") end
+			local netModule = modules:WaitForChild("Net", 10)
+			if not netModule or not netModule:IsA("ModuleScript") then error("Módulo Net não encontrado") end
+			local net = require(netModule)
+			if type(net) ~= "table" or type(net.RemoteFunction) ~= "function" then error("API Net incompatível") end
+			local remote = net:RemoteFunction("GachaNetworkRF")
+			if not remote then error("GachaNetworkRF indisponível") end
+			return remote
+		end)
+		if not loaded or not remoteOrError then
+			return false, tostring(remoteOrError)
+		end
+		gachaRemoteFunction = remoteOrError
+		return true
+	end
+
+	local function performFruitRoll()
+		if fruitRollState.Spinning then return false, "Uma roletagem já está em andamento" end
+		fruitRollState.Spinning = true
+		setFruitRollStatus("Status: tentando roletar...", Color3.fromRGB(230, 190, 100))
+		local succeeded = false
+		local resultMessage = "Falha na roletagem"
+
+		local character = player.Character
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		if not humanoid or humanoid.Health <= 0 then
+			resultMessage = "Personagem indisponível ou morto"
+		else
+			local remoteReady, remoteError = ensureGachaRemote()
+			if not remoteReady then
+				resultMessage = "Remote indisponível: " .. tostring(remoteError)
+			else
+				local invoked, response, errorInfo = pcall(function()
+					return gachaRemoteFunction:InvokeServer({
+						Context = "Purchase",
+						BoxName = fruitRollBoxName,
+					})
+				end)
+				if not invoked then
+					resultMessage = tostring(response)
+				elseif response then
+					resultMessage = "Roletagem concluída"
+					succeeded = true
+				else
+					local message = (type(errorInfo) == "table" and errorInfo.ErrorMessage)
+						or (type(response) == "table" and response.ErrorMessage)
+						or errorInfo or "Compra recusada"
+					resultMessage = tostring(message)
+				end
+			end
+		end
+
+		fruitRollState.Spinning = false
+		fruitRollState.LastResult = resultMessage
+		local statusPrefix = succeeded and "Sucesso: " or "Falha: "
+		local statusColor = succeeded and Color3.fromRGB(105, 220, 145) or Color3.fromRGB(255, 125, 125)
+		setFruitRollStatus(statusPrefix .. tostring(resultMessage), statusColor)
+		return succeeded, resultMessage
+	end
+
+	local function setAutoFruitRoll(state)
+		fruitRollState.Auto = state
+		autoRollGeneration += 1
+		local thisGeneration = autoRollGeneration
+		if state then
+			task.spawn(function()
+				while fruitRollState.Auto and autoRollGeneration == thisGeneration do
+					local succeeded = performFruitRoll()
+					local waitDuration = succeeded and fruitRollState.Delay or math.max(fruitRollState.Delay, 10)
+					local endTime = os.clock() + waitDuration
+					repeat
+						task.wait(0.1)
+					until os.clock() >= endTime or not fruitRollState.Auto or autoRollGeneration ~= thisGeneration
+				end
+			end)
+		end
+	end
+
+	addToggle(secFrutaAction, "Auto Roletar Frutas", function(state)
+		setAutoFruitRoll(state)
+	end, false)
+
+	local rollOnceButton = Instance.new("TextButton")
+	rollOnceButton.Name = "RollFruitOnceButton"
+	rollOnceButton.Size = UDim2.new(1, 0, 0, 28)
+	rollOnceButton.BackgroundColor3 = Color3.fromRGB(46, 46, 60)
+	rollOnceButton.BackgroundTransparency = 0.12
+	rollOnceButton.BorderSizePixel = 0
+	rollOnceButton.AutoButtonColor = true
+	rollOnceButton.Font = currentGlobalFont
+	rollOnceButton.Text = "Roletar fruta"
+	rollOnceButton.TextColor3 = currentTextColor
+	rollOnceButton.TextSize = 11
+	rollOnceButton.TextXAlignment = Enum.TextXAlignment.Left
+	rollOnceButton.TextTruncate = Enum.TextTruncate.AtEnd
+	rollOnceButton.Parent = secFrutaAction
+	table.insert(allTextLabels, rollOnceButton)
+	local rollOncePadding = Instance.new("UIPadding")
+	rollOncePadding.PaddingLeft = UDim.new(0, 10)
+	rollOncePadding.PaddingRight = UDim.new(0, 25)
+	rollOncePadding.Parent = rollOnceButton
+	local rollOnceCorner = Instance.new("UICorner")
+	rollOnceCorner.CornerRadius = UDim.new(0, 5)
+	rollOnceCorner.Parent = rollOnceButton
+	local rollOnceStroke = Instance.new("UIStroke")
+	rollOnceStroke.Color = currentThemeColor
+	rollOnceStroke.Transparency = 0.76
+	rollOnceStroke.Thickness = 1
+	rollOnceStroke.Parent = rollOnceButton
+	table.insert(themeSections, rollOnceStroke)
+	local rollOnceArrow = Instance.new("TextLabel")
+	rollOnceArrow.Name = "RollFruitArrow"
+	rollOnceArrow.Size = UDim2.new(0, 14, 0, 18)
+	rollOnceArrow.Position = UDim2.new(1, -19, 0.5, -9)
+	rollOnceArrow.BackgroundTransparency = 1
+	rollOnceArrow.Font = Enum.Font.GothamMedium
+	rollOnceArrow.Text = "›"
+	rollOnceArrow.TextColor3 = currentThemeColor
+	rollOnceArrow.TextSize = 15
+	rollOnceArrow.TextXAlignment = Enum.TextXAlignment.Center
+	rollOnceArrow.TextYAlignment = Enum.TextYAlignment.Center
+	rollOnceArrow.ZIndex = rollOnceButton.ZIndex + 1
+	rollOnceArrow.Parent = rollOnceButton
+	table.insert(themeTexts, rollOnceArrow)
+
+	rollStatusLabel = Instance.new("TextLabel")
+	rollStatusLabel.Name = "FruitRollStatus"
+	rollStatusLabel.Size = UDim2.new(1, 0, 0, 34)
+	rollStatusLabel.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+	rollStatusLabel.BackgroundTransparency = 0.48
+	rollStatusLabel.BorderSizePixel = 0
+	rollStatusLabel.Font = currentGlobalFont
+	rollStatusLabel.Text = "Status: aguardando roletagem"
+	rollStatusLabel.TextColor3 = Color3.fromRGB(180, 180, 195)
+	rollStatusLabel.TextSize = 9
+	rollStatusLabel.TextWrapped = true
+	rollStatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+	rollStatusLabel.TextYAlignment = Enum.TextYAlignment.Center
+	rollStatusLabel.Parent = secFrutaAction
+	local rollStatusPadding = Instance.new("UIPadding")
+	rollStatusPadding.PaddingLeft = UDim.new(0, 8)
+	rollStatusPadding.PaddingRight = UDim.new(0, 8)
+	rollStatusPadding.Parent = rollStatusLabel
+	local rollStatusCorner = Instance.new("UICorner")
+	rollStatusCorner.CornerRadius = UDim.new(0, 5)
+	rollStatusCorner.Parent = rollStatusLabel
+	local rollStatusStroke = Instance.new("UIStroke")
+	rollStatusStroke.Color = currentThemeColor
+	rollStatusStroke.Transparency = 0.72
+	rollStatusStroke.Thickness = 1
+	rollStatusStroke.Parent = rollStatusLabel
+	table.insert(themeSections, rollStatusStroke)
+
+	local rollOnceBusy = false
+	rollOnceButton.MouseButton1Click:Connect(function()
+		if rollOnceBusy or fruitRollState.Spinning then return end
+		rollOnceBusy = true
+		rollOnceButton.Text = "Roletando..."
+		task.spawn(function()
+			local succeeded, resultMessage = performFruitRoll()
+			if rollOnceButton.Parent then
+				rollOnceButton.Text = succeeded and "Concluído" or "Falhou"
+			end
+			task.wait(1.5)
+			if rollOnceButton.Parent then rollOnceButton.Text = "Roletar fruta" end
+			rollOnceBusy = false
+		end)
+	end)
 
 	addToggle(secFrutaEsp, "Ativar Fruit ESP", function(state)
 		fruitEspMasterEnabled = state
