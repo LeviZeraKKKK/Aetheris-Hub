@@ -2851,9 +2851,26 @@ function showMainPanel()
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
 
-	-- Cartão no padrão visual das métricas da aba Info, em tamanho maior.
-	local fruitInfoPanel = makeInfoCard(frutaPage, 112, -1)
+	-- Cartão maior no padrão visual das métricas, criado diretamente.
+	local fruitInfoPanel = Instance.new("Frame")
 	fruitInfoPanel.Name = "FruitInformationPanel"
+	fruitInfoPanel.Size = UDim2.new(1, -8, 0, 112)
+	fruitInfoPanel.BackgroundColor3 = Color3.fromRGB(26, 26, 36)
+	fruitInfoPanel.BackgroundTransparency = 0.22
+	fruitInfoPanel.BorderSizePixel = 0
+	fruitInfoPanel.LayoutOrder = -1
+	fruitInfoPanel.Parent = frutaPage
+
+	local fruitInfoCorner = Instance.new("UICorner")
+	fruitInfoCorner.CornerRadius = UDim.new(0, 10)
+	fruitInfoCorner.Parent = fruitInfoPanel
+
+	local fruitInfoStroke = Instance.new("UIStroke")
+	fruitInfoStroke.Color = currentThemeColor
+	fruitInfoStroke.Transparency = 0.68
+	fruitInfoStroke.Thickness = 1
+	fruitInfoStroke.Parent = fruitInfoPanel
+	table.insert(themeSections, fruitInfoStroke)
 
 	local fruitInfoAccent = Instance.new("Frame")
 	fruitInfoAccent.Size = UDim2.new(0, 3, 0, 38)
@@ -2862,14 +2879,26 @@ function showMainPanel()
 	fruitInfoAccent.BorderSizePixel = 0
 	fruitInfoAccent.Parent = fruitInfoPanel
 	table.insert(themeSliders, fruitInfoAccent)
+
 	local fruitInfoAccentCorner = Instance.new("UICorner")
 	fruitInfoAccentCorner.CornerRadius = UDim.new(1, 0)
 	fruitInfoAccentCorner.Parent = fruitInfoAccent
 
-	-- O título é o único elemento de conteúdo; o restante do cartão fica vazio.
-	makeInfoText(fruitInfoPanel, "PAINEL DE INFORMAÇÕES", 11,
-		UDim2.new(0, 14, 0, 14), UDim2.new(1, -28, 0, 18),
-		currentThemeColor, Enum.Font.GothamBold)
+	local fruitInfoTitle = Instance.new("TextLabel")
+	fruitInfoTitle.Name = "Title"
+	fruitInfoTitle.BackgroundTransparency = 1
+	fruitInfoTitle.Position = UDim2.new(0, 14, 0, 14)
+	fruitInfoTitle.Size = UDim2.new(1, -28, 0, 18)
+	fruitInfoTitle.Font = Enum.Font.GothamBold
+	fruitInfoTitle.Text = "PAINEL DE INFORMAÇÕES"
+	fruitInfoTitle.TextColor3 = currentThemeColor
+	fruitInfoTitle.TextSize = 11
+	fruitInfoTitle.TextXAlignment = Enum.TextXAlignment.Left
+	fruitInfoTitle.TextYAlignment = Enum.TextYAlignment.Center
+	fruitInfoTitle.TextTruncate = Enum.TextTruncate.AtEnd
+	fruitInfoTitle.Parent = fruitInfoPanel
+	table.insert(allTextLabels, fruitInfoTitle)
+	table.insert(themeTexts, fruitInfoTitle)
 
 	local secFrutaAction = createSection(frutaPage, "Automatização", "⚡")
 	local secFrutaEsp = createSection(frutaPage, "Fruit ESP", "👁️")
