@@ -2850,6 +2850,28 @@ function showMainPanel()
 	-- ABA FRUTA
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
+	local secFruitInfo = createSection(frutaPage, "PAINEL DE INFORMAÇÕES", "◈")
+	if secFruitInfo.Parent then secFruitInfo.Parent.LayoutOrder = -10 end
+
+	-- Apenas a moldura vazia, sem textos, dados ou funções internas.
+	local fruitInfoEmptyPanel = Instance.new("Frame")
+	fruitInfoEmptyPanel.Name = "FruitInformationPanel"
+	fruitInfoEmptyPanel.Size = UDim2.new(1, 0, 0, 54)
+	fruitInfoEmptyPanel.BackgroundColor3 = Color3.fromRGB(19, 20, 29)
+	fruitInfoEmptyPanel.BackgroundTransparency = 0.12
+	fruitInfoEmptyPanel.BorderSizePixel = 0
+	fruitInfoEmptyPanel.Parent = secFruitInfo
+
+	local fruitInfoCorner = Instance.new("UICorner")
+	fruitInfoCorner.CornerRadius = UDim.new(0, 7)
+	fruitInfoCorner.Parent = fruitInfoEmptyPanel
+	local fruitInfoStroke = Instance.new("UIStroke")
+	fruitInfoStroke.Color = currentThemeColor
+	fruitInfoStroke.Thickness = 1
+	fruitInfoStroke.Transparency = 0.65
+	fruitInfoStroke.Parent = fruitInfoEmptyPanel
+	table.insert(themeSections, fruitInfoStroke)
+
 	local secFrutaAction = createSection(frutaPage, "Automatização", "⚡")
 	local secFrutaEsp = createSection(frutaPage, "Fruit ESP", "👁️")
 
