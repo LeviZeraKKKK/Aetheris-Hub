@@ -2850,56 +2850,6 @@ function showMainPanel()
 	-- ABA FRUTA
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
-
-	-- Cartão maior no padrão visual das métricas, criado diretamente.
-	local fruitInfoPanel = Instance.new("Frame")
-	fruitInfoPanel.Name = "FruitInformationPanel"
-	fruitInfoPanel.Size = UDim2.new(1, -8, 0, 112)
-	fruitInfoPanel.BackgroundColor3 = Color3.fromRGB(26, 26, 36)
-	fruitInfoPanel.BackgroundTransparency = 0.22
-	fruitInfoPanel.BorderSizePixel = 0
-	fruitInfoPanel.LayoutOrder = -1
-	fruitInfoPanel.Parent = frutaPage
-
-	local fruitInfoCorner = Instance.new("UICorner")
-	fruitInfoCorner.CornerRadius = UDim.new(0, 10)
-	fruitInfoCorner.Parent = fruitInfoPanel
-
-	local fruitInfoStroke = Instance.new("UIStroke")
-	fruitInfoStroke.Color = currentThemeColor
-	fruitInfoStroke.Transparency = 0.68
-	fruitInfoStroke.Thickness = 1
-	fruitInfoStroke.Parent = fruitInfoPanel
-	table.insert(themeSections, fruitInfoStroke)
-
-	local fruitInfoAccent = Instance.new("Frame")
-	fruitInfoAccent.Size = UDim2.new(0, 3, 0, 38)
-	fruitInfoAccent.Position = UDim2.new(0, 0, 0.5, -19)
-	fruitInfoAccent.BackgroundColor3 = currentThemeColor
-	fruitInfoAccent.BorderSizePixel = 0
-	fruitInfoAccent.Parent = fruitInfoPanel
-	table.insert(themeSliders, fruitInfoAccent)
-
-	local fruitInfoAccentCorner = Instance.new("UICorner")
-	fruitInfoAccentCorner.CornerRadius = UDim.new(1, 0)
-	fruitInfoAccentCorner.Parent = fruitInfoAccent
-
-	local fruitInfoTitle = Instance.new("TextLabel")
-	fruitInfoTitle.Name = "Title"
-	fruitInfoTitle.BackgroundTransparency = 1
-	fruitInfoTitle.Position = UDim2.new(0, 14, 0, 14)
-	fruitInfoTitle.Size = UDim2.new(1, -28, 0, 18)
-	fruitInfoTitle.Font = Enum.Font.GothamBold
-	fruitInfoTitle.Text = "PAINEL DE INFORMAÇÕES"
-	fruitInfoTitle.TextColor3 = currentThemeColor
-	fruitInfoTitle.TextSize = 11
-	fruitInfoTitle.TextXAlignment = Enum.TextXAlignment.Left
-	fruitInfoTitle.TextYAlignment = Enum.TextYAlignment.Center
-	fruitInfoTitle.TextTruncate = Enum.TextTruncate.AtEnd
-	fruitInfoTitle.Parent = fruitInfoPanel
-	table.insert(allTextLabels, fruitInfoTitle)
-	table.insert(themeTexts, fruitInfoTitle)
-
 	local secFrutaAction = createSection(frutaPage, "Automatização", "⚡")
 	local secFrutaEsp = createSection(frutaPage, "Fruit ESP", "👁️")
 
@@ -3313,6 +3263,473 @@ function showMainPanel()
 		end)
 	end)
 
+	-- Botão do topo da aba Fruta, com o mesmo acabamento do botão de roletagem.
+	local fruitInfoButton = Instance.new("TextButton")
+	fruitInfoButton.Name = "OpenFruitInformationButton"
+	fruitInfoButton.Size = UDim2.new(1, -8, 0, 28)
+	fruitInfoButton.BackgroundColor3 = Color3.fromRGB(46, 46, 60)
+	fruitInfoButton.BackgroundTransparency = 0.12
+	fruitInfoButton.BorderSizePixel = 0
+	fruitInfoButton.AutoButtonColor = true
+	fruitInfoButton.Font = currentGlobalFont
+	fruitInfoButton.Text = "Informações da loja"
+	fruitInfoButton.TextColor3 = currentTextColor
+	fruitInfoButton.TextSize = 11
+	fruitInfoButton.TextXAlignment = Enum.TextXAlignment.Left
+	fruitInfoButton.TextTruncate = Enum.TextTruncate.AtEnd
+	fruitInfoButton.LayoutOrder = -10
+	fruitInfoButton.Parent = frutaPage
+	table.insert(allTextLabels, fruitInfoButton)
+	local fruitInfoButtonPadding = Instance.new("UIPadding")
+	fruitInfoButtonPadding.PaddingLeft = UDim.new(0, 10)
+	fruitInfoButtonPadding.PaddingRight = UDim.new(0, 25)
+	fruitInfoButtonPadding.Parent = fruitInfoButton
+	local fruitInfoButtonCorner = Instance.new("UICorner")
+	fruitInfoButtonCorner.CornerRadius = UDim.new(0, 5)
+	fruitInfoButtonCorner.Parent = fruitInfoButton
+	local fruitInfoButtonStroke = Instance.new("UIStroke")
+	fruitInfoButtonStroke.Color = currentThemeColor
+	fruitInfoButtonStroke.Transparency = 0.76
+	fruitInfoButtonStroke.Thickness = 1
+	fruitInfoButtonStroke.Parent = fruitInfoButton
+	table.insert(themeSections, fruitInfoButtonStroke)
+	local fruitInfoButtonArrow = Instance.new("TextLabel")
+	fruitInfoButtonArrow.Name = "OpenFruitInformationArrow"
+	fruitInfoButtonArrow.Size = UDim2.new(0, 14, 0, 18)
+	fruitInfoButtonArrow.Position = UDim2.new(1, -19, 0.5, -9)
+	fruitInfoButtonArrow.BackgroundTransparency = 1
+	fruitInfoButtonArrow.Font = Enum.Font.GothamMedium
+	fruitInfoButtonArrow.Text = "›"
+	fruitInfoButtonArrow.TextColor3 = currentThemeColor
+	fruitInfoButtonArrow.TextSize = 15
+	fruitInfoButtonArrow.TextXAlignment = Enum.TextXAlignment.Center
+	fruitInfoButtonArrow.TextYAlignment = Enum.TextYAlignment.Center
+	fruitInfoButtonArrow.Parent = fruitInfoButton
+	table.insert(themeTexts, fruitInfoButtonArrow)
+
+	-- Popup fica dentro do ScreenGui existente; não cria outra GUI flutuante.
+	local fruitPopupWidth = isMobile and 340 or 370
+	local fruitPopupHeight = isMobile and 270 or 326
+	local fruitInfoPopup = Instance.new("Frame")
+	fruitInfoPopup.Name = "FruitInformationPopup"
+	fruitInfoPopup.Size = UDim2.new(0, fruitPopupWidth, 0, fruitPopupHeight)
+	fruitInfoPopup.AnchorPoint = Vector2.new(0.5, 0.5)
+	fruitInfoPopup.Position = UDim2.new(0.5, 0, 0.5, 0)
+	fruitInfoPopup.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
+	fruitInfoPopup.BackgroundTransparency = 0.04
+	fruitInfoPopup.BorderSizePixel = 0
+	fruitInfoPopup.Visible = false
+	fruitInfoPopup.ZIndex = 50
+	fruitInfoPopup.Parent = screenGui
+	local fruitPopupCorner = Instance.new("UICorner")
+	fruitPopupCorner.CornerRadius = UDim.new(0, 10)
+	fruitPopupCorner.Parent = fruitInfoPopup
+	local fruitPopupStroke = Instance.new("UIStroke")
+	fruitPopupStroke.Color = currentThemeColor
+	fruitPopupStroke.Thickness = 1.5
+	fruitPopupStroke.Transparency = 0.22
+	fruitPopupStroke.Parent = fruitInfoPopup
+	table.insert(themeSections, fruitPopupStroke)
+
+	local fruitPopupTitle = Instance.new("TextLabel")
+	fruitPopupTitle.Name = "Title"
+	fruitPopupTitle.Size = UDim2.new(1, -92, 0, 18)
+	fruitPopupTitle.Position = UDim2.new(0, 10, 0, 6)
+	fruitPopupTitle.BackgroundTransparency = 1
+	fruitPopupTitle.Font = currentGlobalFont
+	fruitPopupTitle.Text = "PAINEL DE INFORMAÇÕES"
+	fruitPopupTitle.TextColor3 = currentThemeColor
+	fruitPopupTitle.TextSize = 10
+	fruitPopupTitle.TextXAlignment = Enum.TextXAlignment.Left
+	fruitPopupTitle.TextTruncate = Enum.TextTruncate.AtEnd
+	fruitPopupTitle.ZIndex = 51
+	fruitPopupTitle.Parent = fruitInfoPopup
+	table.insert(allTextLabels, fruitPopupTitle)
+	table.insert(themeTexts, fruitPopupTitle)
+
+	local fruitPopupBeli = Instance.new("TextLabel")
+	fruitPopupBeli.Name = "BeliBalance"
+	fruitPopupBeli.Size = UDim2.new(1, -90, 0, 16)
+	fruitPopupBeli.Position = UDim2.new(0, 10, 0, 24)
+	fruitPopupBeli.BackgroundTransparency = 1
+	fruitPopupBeli.Font = currentGlobalFont
+	fruitPopupBeli.Text = "Beli: --"
+	fruitPopupBeli.TextColor3 = Color3.fromRGB(255, 220, 100)
+	fruitPopupBeli.TextSize = 9
+	fruitPopupBeli.TextXAlignment = Enum.TextXAlignment.Left
+	fruitPopupBeli.ZIndex = 51
+	fruitPopupBeli.Parent = fruitInfoPopup
+	table.insert(allTextLabels, fruitPopupBeli)
+
+	local fruitPopupRefresh = Instance.new("TextButton")
+	fruitPopupRefresh.Name = "Refresh"
+	fruitPopupRefresh.Size = UDim2.new(0, 25, 0, 25)
+	fruitPopupRefresh.Position = UDim2.new(1, -60, 0, 6)
+	fruitPopupRefresh.BackgroundColor3 = Color3.fromRGB(46, 46, 60)
+	fruitPopupRefresh.BorderSizePixel = 0
+	fruitPopupRefresh.Text = "↻"
+	fruitPopupRefresh.TextColor3 = currentThemeColor
+	fruitPopupRefresh.Font = currentGlobalFont
+	fruitPopupRefresh.TextSize = 14
+	fruitPopupRefresh.ZIndex = 51
+	fruitPopupRefresh.Parent = fruitInfoPopup
+	local fruitPopupRefreshCorner = Instance.new("UICorner")
+	fruitPopupRefreshCorner.CornerRadius = UDim.new(0, 5)
+	fruitPopupRefreshCorner.Parent = fruitPopupRefresh
+	table.insert(allTextLabels, fruitPopupRefresh)
+	table.insert(themeTexts, fruitPopupRefresh)
+
+	local fruitPopupClose = Instance.new("TextButton")
+	fruitPopupClose.Name = "Close"
+	fruitPopupClose.Size = UDim2.new(0, 25, 0, 25)
+	fruitPopupClose.Position = UDim2.new(1, -30, 0, 6)
+	fruitPopupClose.BackgroundColor3 = Color3.fromRGB(190, 58, 65)
+	fruitPopupClose.BorderSizePixel = 0
+	fruitPopupClose.Text = "X"
+	fruitPopupClose.TextColor3 = Color3.new(1, 1, 1)
+	fruitPopupClose.Font = Enum.Font.GothamBold
+	fruitPopupClose.TextSize = 11
+	fruitPopupClose.ZIndex = 51
+	fruitPopupClose.Parent = fruitInfoPopup
+	local fruitPopupCloseCorner = Instance.new("UICorner")
+	fruitPopupCloseCorner.CornerRadius = UDim.new(1, 0)
+	fruitPopupCloseCorner.Parent = fruitPopupClose
+	table.insert(allTextLabels, fruitPopupClose)
+
+	local fruitPopupColumns = {}
+	local fruitPopupGap = 6
+	local fruitPopupColumnWidth = (fruitPopupWidth - fruitPopupGap * 3) / 2
+	local fruitPopupColumnHeight = fruitPopupHeight - 54
+	local function createFruitPopupColumn(isAdvanced, xOffset, title, accent)
+		local column = Instance.new("Frame")
+		column.Name = isAdvanced and "AdvancedColumn" or "NormalColumn"
+		column.Size = UDim2.new(0, fruitPopupColumnWidth, 0, fruitPopupColumnHeight)
+		column.Position = UDim2.new(0, xOffset, 0, 46)
+		column.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
+		column.BorderSizePixel = 0
+		column.ZIndex = 51
+		column.Parent = fruitInfoPopup
+		local columnCorner = Instance.new("UICorner")
+		columnCorner.CornerRadius = UDim.new(0, 6)
+		columnCorner.Parent = column
+
+		local heading = Instance.new("TextLabel")
+		heading.Size = UDim2.new(1, -8, 0, 16)
+		heading.Position = UDim2.new(0, 4, 0, 2)
+		heading.BackgroundTransparency = 1
+		heading.Font = currentGlobalFont
+		heading.Text = title
+		heading.TextColor3 = accent
+		heading.TextSize = 10
+		heading.TextXAlignment = Enum.TextXAlignment.Left
+		heading.ZIndex = 52
+		heading.Parent = column
+		table.insert(allTextLabels, heading)
+
+		local timerBox = Instance.new("Frame")
+		timerBox.Size = UDim2.new(1, -8, 0, 30)
+		timerBox.Position = UDim2.new(0, 4, 0, 19)
+		timerBox.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+		timerBox.BorderSizePixel = 0
+		timerBox.ZIndex = 52
+		timerBox.Parent = column
+		local timerCorner = Instance.new("UICorner")
+		timerCorner.CornerRadius = UDim.new(0, 4)
+		timerCorner.Parent = timerBox
+		local timerCaption = Instance.new("TextLabel")
+		timerCaption.Size = UDim2.new(1, 0, 0, 11)
+		timerCaption.Position = UDim2.new(0, 0, 0, 1)
+		timerCaption.BackgroundTransparency = 1
+		timerCaption.Font = currentGlobalFont
+		timerCaption.Text = "REABASTECE EM"
+		timerCaption.TextColor3 = Color3.fromRGB(160, 180, 220)
+		timerCaption.TextSize = 8
+		timerCaption.ZIndex = 53
+		timerCaption.Parent = timerBox
+		table.insert(allTextLabels, timerCaption)
+		local timerValue = Instance.new("TextLabel")
+		timerValue.Size = UDim2.new(1, 0, 0, 17)
+		timerValue.Position = UDim2.new(0, 0, 0, 12)
+		timerValue.BackgroundTransparency = 1
+		timerValue.Font = Enum.Font.GothamBold
+		timerValue.Text = "00:00:00"
+		timerValue.TextColor3 = Color3.fromRGB(120, 230, 255)
+		timerValue.TextSize = 12
+		timerValue.ZIndex = 53
+		timerValue.Parent = timerBox
+		table.insert(allTextLabels, timerValue)
+
+		local list = Instance.new("ScrollingFrame")
+		list.Name = "StockList"
+		list.Size = UDim2.new(1, -6, 1, -55)
+		list.Position = UDim2.new(0, 3, 0, 52)
+		list.BackgroundTransparency = 1
+		list.BorderSizePixel = 0
+		list.CanvasSize = UDim2.new(0, 0, 0, 0)
+		list.ScrollBarThickness = 3
+		list.ScrollBarImageColor3 = currentThemeColor
+		list.ZIndex = 52
+		list.Parent = column
+
+		local state = {frame = column, timer = timerValue, list = list, rows = {}, empty = nil, lastFruits = {}}
+		fruitPopupColumns[isAdvanced] = state
+		return state
+	end
+	createFruitPopupColumn(false, fruitPopupGap, "NORMAL", Color3.fromRGB(120, 220, 150))
+	createFruitPopupColumn(true, fruitPopupGap * 2 + fruitPopupColumnWidth, "AVANÇADO", Color3.fromRGB(120, 180, 255))
+
+	local fruitShopStateUtil = nil
+	local fruitShopData = nil
+	local fruitPopupFetching = {[false] = false, [true] = false}
+	local function loadFruitShopModules()
+		if not fruitShopStateUtil then
+			local ok, result = pcall(function()
+				local controllers = ReplicatedStorage:WaitForChild("Controllers", 8)
+				if not controllers then error("Controllers não encontrado") end
+				local ui = controllers:WaitForChild("UI", 8)
+				if not ui then error("UI da loja não encontrado") end
+				local shop = ui:WaitForChild("FruitShop", 8)
+				if not shop then error("FruitShop não encontrado") end
+				local moduleScript = shop:WaitForChild("StateUtil", 8)
+				if not moduleScript or not moduleScript:IsA("ModuleScript") then error("StateUtil inválido") end
+				return require(moduleScript)
+			end)
+			if ok and type(result) == "table" then fruitShopStateUtil = result end
+		end
+		if not fruitShopData then
+			pcall(function()
+				local controllers = ReplicatedStorage:FindFirstChild("Controllers")
+				local ui = controllers and controllers:FindFirstChild("UI")
+				local shop = ui and ui:FindFirstChild("FruitShop")
+				local dataModule = shop and shop:FindFirstChild("Data")
+				if dataModule and dataModule:IsA("ModuleScript") then
+					local ok, result = pcall(require, dataModule)
+					if ok and type(result) == "table" then fruitShopData = result end
+				end
+			end)
+		end
+		return fruitShopStateUtil
+	end
+
+	local function getFruitShopPrice(fruit)
+		if type(fruit) ~= "table" then return nil end
+		local price = tonumber(fruit.Price)
+		if price then return price end
+		if fruitShopData and type(fruit.Name) == "string" then
+			local item = fruitShopData[fruit.Name]
+			if type(item) == "table" then return tonumber(item.Price) end
+		end
+		return nil
+	end
+
+	local function formatFruitMoney(value)
+		value = tonumber(value)
+		if not value then return "--" end
+		if value >= 1000000000 then return string.format("%.1fB", value / 1000000000) end
+		if value >= 1000000 then return string.format("%.1fM", value / 1000000) end
+		if value >= 1000 then return string.format("%.1fK", value / 1000) end
+		return tostring(math.floor(value))
+	end
+
+	local function getFruitBeli()
+		local data = player:FindFirstChild("Data")
+		local beli = data and data:FindFirstChild("Beli")
+		if beli and (beli:IsA("IntValue") or beli:IsA("NumberValue")) then return beli.Value end
+		return nil
+	end
+
+	local function updateFruitBeliLabel()
+		local beli = getFruitBeli()
+		fruitPopupBeli.Text = "Beli: " .. (beli and formatFruitMoney(beli) or "--")
+	end
+
+	local function createFruitStockRow(list)
+		local row = Instance.new("Frame")
+		row.Size = UDim2.new(1, -4, 0, 25)
+		row.BorderSizePixel = 0
+		row.Visible = false
+		row.ZIndex = 53
+		row.Parent = list
+		local rowCorner = Instance.new("UICorner")
+		rowCorner.CornerRadius = UDim.new(0, 4)
+		rowCorner.Parent = row
+		local nameLabel = Instance.new("TextLabel")
+		nameLabel.Size = UDim2.new(1, -66, 1, 0)
+		nameLabel.Position = UDim2.new(0, 4, 0, 0)
+		nameLabel.BackgroundTransparency = 1
+		nameLabel.Font = currentGlobalFont
+		nameLabel.TextColor3 = Color3.new(1, 1, 1)
+		nameLabel.TextSize = 9
+		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+		nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+		nameLabel.ZIndex = 54
+		nameLabel.Parent = row
+		table.insert(allTextLabels, nameLabel)
+		local priceLabel = Instance.new("TextLabel")
+		priceLabel.Size = UDim2.new(0, 58, 1, 0)
+		priceLabel.Position = UDim2.new(1, -62, 0, 0)
+		priceLabel.BackgroundTransparency = 1
+		priceLabel.Font = Enum.Font.GothamBold
+		priceLabel.TextSize = 9
+		priceLabel.TextXAlignment = Enum.TextXAlignment.Right
+		priceLabel.ZIndex = 54
+		priceLabel.Parent = row
+		table.insert(allTextLabels, priceLabel)
+		return {row = row, name = nameLabel, price = priceLabel}
+	end
+
+	local function renderFruitStock(isAdvanced, fruits)
+		local column = fruitPopupColumns[isAdvanced]
+		local stocked = {}
+		for _, fruit in ipairs(fruits) do
+			if type(fruit) == "table" and fruit.OnSale == true and type(fruit.Name) == "string" then
+				table.insert(stocked, fruit)
+			end
+		end
+		table.sort(stocked, function(a, b)
+			return (getFruitShopPrice(a) or math.huge) < (getFruitShopPrice(b) or math.huge)
+		end)
+		column.lastFruits = stocked
+		local beli = getFruitBeli() or 0
+		for index, fruit in ipairs(stocked) do
+			local rowData = column.rows[index]
+			if not rowData then
+				rowData = createFruitStockRow(column.list)
+				column.rows[index] = rowData
+			end
+			local price = getFruitShopPrice(fruit)
+			rowData.row.Visible = true
+			rowData.row.Position = UDim2.new(0, 2, 0, (index - 1) * 28)
+			local canAfford = price and beli >= price
+			rowData.row.BackgroundColor3 = canAfford and Color3.fromRGB(40, 70, 50) or Color3.fromRGB(70, 40, 40)
+			rowData.name.Text = fruit.Name .. (fruit.HasPermanent and " ⭐" or "")
+			rowData.price.Text = formatFruitMoney(price)
+			rowData.price.TextColor3 = canAfford and Color3.fromRGB(150, 255, 150) or Color3.fromRGB(255, 150, 150)
+		end
+		for index = #stocked + 1, #column.rows do
+			column.rows[index].row.Visible = false
+		end
+		if #stocked == 0 then
+			if not column.empty then
+				local empty = Instance.new("TextLabel")
+				empty.Size = UDim2.new(1, -6, 0, 18)
+				empty.Position = UDim2.new(0, 3, 0, 2)
+				empty.BackgroundTransparency = 1
+				empty.Font = currentGlobalFont
+				empty.TextColor3 = Color3.fromRGB(150, 150, 180)
+				empty.TextSize = 9
+				empty.Text = "(vazio)"
+				empty.ZIndex = 53
+				empty.Parent = column.list
+				column.empty = empty
+				table.insert(allTextLabels, empty)
+			end
+			column.empty.Text = "(vazio)"
+			column.empty.Visible = true
+		elseif column.empty then
+			column.empty.Visible = false
+		end
+		column.list.CanvasSize = UDim2.new(0, 0, 0, #stocked * 28 + 4)
+	end
+
+	local function fetchFruitStock(isAdvanced)
+		local stateUtil = loadFruitShopModules()
+		if not stateUtil then return nil end
+		local ok, result = pcall(function()
+			local remote = stateUtil.CommRemoteFunc
+			if not remote then error("Remote de estoque indisponível") end
+			local invokeServer = remote.InvokeServer
+			if type(invokeServer) ~= "function" then error("InvokeServer indisponível") end
+			return invokeServer(remote, "GetFruits", isAdvanced)
+		end)
+		if ok and type(result) == "table" then return result end
+		return nil
+	end
+
+	local function fetchFruitPopupColumn(isAdvanced)
+		if fruitPopupFetching[isAdvanced] then return end
+		fruitPopupFetching[isAdvanced] = true
+		task.spawn(function()
+			local ok, result = pcall(fetchFruitStock, isAdvanced)
+			if fruitInfoPopup.Parent and fruitInfoPopup.Visible then
+				if ok and type(result) == "table" then
+					local rendered = pcall(renderFruitStock, isAdvanced, result)
+					if not rendered then
+						local column = fruitPopupColumns[isAdvanced]
+						if column.empty then column.empty.Text = "Não foi possível mostrar os dados"; column.empty.Visible = true end
+					end
+				else
+					local column = fruitPopupColumns[isAdvanced]
+					if column.empty then
+						column.empty.Text = "Dados indisponíveis"
+						column.empty.Visible = true
+					else
+						local empty = Instance.new("TextLabel")
+						empty.Size = UDim2.new(1, -6, 0, 18)
+						empty.Position = UDim2.new(0, 3, 0, 2)
+						empty.BackgroundTransparency = 1
+						empty.Font = currentGlobalFont
+						empty.TextColor3 = Color3.fromRGB(180, 150, 150)
+						empty.TextSize = 9
+						empty.Text = "Dados indisponíveis"
+						empty.ZIndex = 53
+						empty.Parent = fruitPopupColumns[isAdvanced].list
+						fruitPopupColumns[isAdvanced].empty = empty
+						table.insert(allTextLabels, empty)
+					end
+				end
+			end
+			fruitPopupFetching[isAdvanced] = false
+		end)
+	end
+
+	local function refreshFruitPopup()
+		updateFruitBeliLabel()
+		fetchFruitPopupColumn(false)
+		fetchFruitPopupColumn(true)
+	end
+
+	local function updateFruitRestockTimers()
+		local now = os.time()
+		local normalLeft = 14400 - (now % 14400)
+		local advancedLeft = 7200 - (now % 7200)
+		local function formatClock(seconds)
+			local hours = math.floor(seconds / 3600)
+			local minutes = math.floor((seconds % 3600) / 60)
+			local secs = seconds % 60
+			return string.format("%02d:%02d:%02d", hours, minutes, secs)
+		end
+		fruitPopupColumns[false].timer.Text = formatClock(normalLeft)
+		fruitPopupColumns[true].timer.Text = formatClock(advancedLeft)
+	end
+
+	fruitInfoButton.MouseButton1Click:Connect(function()
+		fruitInfoPopup.Visible = true
+		updateFruitRestockTimers()
+		refreshFruitPopup()
+	end)
+	fruitPopupClose.MouseButton1Click:Connect(function()
+		fruitInfoPopup.Visible = false
+	end)
+	fruitPopupRefresh.MouseButton1Click:Connect(refreshFruitPopup)
+
+	local fruitPopupSeconds = 0
+	task.spawn(function()
+		while screenGui.Parent do
+			task.wait(1)
+			if fruitInfoPopup.Visible then
+				updateFruitRestockTimers()
+				updateFruitBeliLabel()
+				fruitPopupSeconds = fruitPopupSeconds + 1
+				if fruitPopupSeconds >= 30 then
+					fruitPopupSeconds = 0
+					refreshFruitPopup()
+				end
+			else
+				fruitPopupSeconds = 0
+			end
+		end
+	end)
 	addToggle(secFrutaEsp, "Ativar Fruit ESP", function(state)
 		fruitEspMasterEnabled = state
 		if not state then
