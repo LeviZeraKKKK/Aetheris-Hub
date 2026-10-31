@@ -4284,7 +4284,7 @@ local colTop = 57
 local colH = PH - colTop - 9
 local columns = {}
 
-local function makeColumn(adv, x, label, accent)
+local function makeColumn(adv, x, label, accent, interval)
     local col = Instance.new("Frame")
     col.Name = adv and "AdvancedStock" or "NormalStock"
     col.Size = UDim2.new(0, colW, 0, colH)
@@ -4300,7 +4300,7 @@ local function makeColumn(adv, x, label, accent)
     colStroke.Transparency = 0.82
 
     local head = Instance.new("Frame")
-    head.Size = UDim2.new(1, -12, 0, 28)
+    head.Size = UDim2.new(1, -12, 0, 42)
     head.Position = UDim2.new(0, 6, 0, 5)
     head.BackgroundColor3 = Color3.fromRGB(31, 35, 49)
     head.BorderSizePixel = 0
@@ -4310,7 +4310,7 @@ local function makeColumn(adv, x, label, accent)
 
     local dot = Instance.new("Frame")
     dot.Size = UDim2.new(0, 6, 0, 6)
-    dot.Position = UDim2.new(0, 9, 0.5, -3)
+    dot.Position = UDim2.new(0, 9, 0, 5)
     dot.BackgroundColor3 = accent
     dot.BorderSizePixel = 0
     dot.ZIndex = 13
@@ -4318,7 +4318,7 @@ local function makeColumn(adv, x, label, accent)
     Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
 
     local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(1, -80, 1, 0)
+    lbl.Size = UDim2.new(1, -80, 0, 17)
     lbl.Position = UDim2.new(0, 21, 0, 0)
     lbl.BackgroundTransparency = 1
     lbl.TextColor3 = accent
@@ -4331,7 +4331,7 @@ local function makeColumn(adv, x, label, accent)
     table.insert(allTextLabels, lbl)
 
     local priceHeading = Instance.new("TextLabel")
-    priceHeading.Size = UDim2.new(0, 48, 1, 0)
+    priceHeading.Size = UDim2.new(0, 48, 0, 17)
     priceHeading.Position = UDim2.new(1, -54, 0, 0)
     priceHeading.BackgroundTransparency = 1
     priceHeading.TextColor3 = Color3.fromRGB(157, 163, 181)
@@ -4343,10 +4343,24 @@ local function makeColumn(adv, x, label, accent)
     priceHeading.Parent = head
     table.insert(allTextLabels, priceHeading)
 
+    local timerLabel = Instance.new("TextLabel")
+    timerLabel.Name = "StockRefreshCountdown"
+    timerLabel.Size = UDim2.new(1, -16, 0, 14)
+    timerLabel.Position = UDim2.new(0, 8, 0, 21)
+    timerLabel.BackgroundTransparency = 1
+    timerLabel.TextColor3 = Color3.fromRGB(145, 153, 173)
+    timerLabel.Font = currentGlobalFont
+    timerLabel.TextSize = 8
+    timerLabel.TextXAlignment = Enum.TextXAlignment.Left
+    timerLabel.Text = "Atualiza em --:--:--"
+    timerLabel.ZIndex = 13
+    timerLabel.Parent = head
+    table.insert(allTextLabels, timerLabel)
+
     local sc = Instance.new("ScrollingFrame")
     sc.Name = "FruitList"
-    sc.Size = UDim2.new(1, -10, 1, -42)
-    sc.Position = UDim2.new(0, 5, 0, 37)
+    sc.Size = UDim2.new(1, -10, 1, -57)
+    sc.Position = UDim2.new(0, 5, 0, 52)
     sc.BackgroundTransparency = 1
     sc.BorderSizePixel = 0
     sc.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -4361,12 +4375,15 @@ local function makeColumn(adv, x, label, accent)
         accent = accent,
         hasLoaded = false,
         emptyLbl = nil,
-        lastStock = {}
+        lastStock = {},
+        interval = interval,
+        timer = timerLabel,
+        lastCycle = nil
     }
 end
 
-makeColumn(false, colGap, "NORMAL", Color3.fromRGB(120, 220, 150))
-makeColumn(true, colGap * 2 + colW, "AVANÇADO", Color3.fromRGB(120, 180, 255))
+makeColumn(false, colGap, "NORMAL", Color3.fromRGB(120, 220, 150), 14400)
+makeColumn(true, colGap * 2 + colW, "AVANÇADO", Color3.fromRGB(120, 180, 255), 7200)
 
 -- ============ LINHAS DE FRUTAS E PREÇOS ============
 local ROW_STEP = 30
@@ -4453,7 +4470,18 @@ local function render(adv, fruits)
         end
     end
     table.sort(stock, function(a, b)
-        return string.lower(a.Name) < string.lower(b.Name)
+        local priceA = getFruitPrice(a)
+        local priceB = getFruitPrice(b)
+        if priceA == nil and priceB == nil then
+            return string.lower(a.Name) < string.lower(b.Name)
+        elseif priceA == nil then
+            return false
+        elseif priceB == nil then
+            return true
+        elseif priceA == priceB then
+            return string.lower(a.Name) < string.lower(b.Name)
+        end
+        return priceA < priceB
     end)
     col.lastStock = stock
 
@@ -4503,6 +4531,14 @@ local function fetch(adv)
     return nil
 end
 
+local function formatCountdown(seconds)
+    seconds = math.max(0, math.floor(tonumber(seconds) or 0))
+    local hours = math.floor(seconds / 3600)
+    local minutes = math.floor((seconds % 3600) / 60)
+    local remainder = seconds % 60
+    return string.format("%02d:%02d:%02d", hours, minutes, remainder)
+end
+
 local function fetchCol(adv)
     if fetching[adv] then return end
     fetching[adv] = true
@@ -4519,6 +4555,19 @@ local function fetchCol(adv)
         end
         fetching[adv] = false
     end)
+end
+
+local function updateRefreshCountdown(now)
+    now = tonumber(now) or os.time()
+    for adv, col in pairs(columns) do
+        local cycle = math.floor(now / col.interval)
+        if col.lastCycle ~= nil and cycle ~= col.lastCycle then
+            fetchCol(adv)
+        end
+        col.lastCycle = cycle
+        local remaining = col.interval - (now % col.interval)
+        col.timer.Text = "Atualiza em " .. formatCountdown(remaining)
+    end
 end
 
 local function updatePriceColors()
@@ -4571,13 +4620,24 @@ panel:GetPropertyChangedSignal("Visible"):Connect(function()
     if panel.Visible then
         viewScale.Scale = 0.94
         TweenService:Create(viewScale, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+        updateRefreshCountdown(os.time())
         refreshAll()
     else
         viewScale.Scale = 0.94
     end
 end)
 
--- Atualização discreta em segundo plano enquanto o popup estiver aberto.
+-- Contagem regressiva visível e atualização automática quando cada ciclo reinicia.
+task.spawn(function()
+    while sg.Parent do
+        task.wait(1)
+        if panel.Visible then
+            updateRefreshCountdown(os.time())
+        end
+    end
+end)
+
+-- Atualização periódica discreta entre os ciclos de estoque.
 task.spawn(function()
     while sg.Parent do
         task.wait(30)
