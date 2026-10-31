@@ -2475,87 +2475,15 @@ function showMainPanel()
 	addToggle(secFilters, "Mais Perto da Mira (Crosshair)", function(state) _G_FilterCrosshair = state end, false)
 	addToggle(secFilters, "Apenas se EU Estiver com Item", function(state) _G_FilterHoldingItem = state end, false)
 
-	local playerDropdownRow = Instance.new("Frame")
-	playerDropdownRow.Name = "PlayerDropdownRow"
-	playerDropdownRow.Size = UDim2.new(1, 0, 0, 26)
-	playerDropdownRow.BackgroundTransparency = 1
-	playerDropdownRow.BorderSizePixel = 0
-	playerDropdownRow.Parent = secCombat
-
-	local playerDropdownButton = Instance.new("TextButton")
-	playerDropdownButton.Name = "PlayerDropdownButton"
-	playerDropdownButton.Size = UDim2.new(1, -62, 0, 26)
-	playerDropdownButton.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-	playerDropdownButton.BackgroundTransparency = 0.5
-	playerDropdownButton.BorderSizePixel = 0
-	playerDropdownButton.AutoButtonColor = true
-	playerDropdownButton.Text = ""
-	playerDropdownButton.Parent = playerDropdownRow
-	Instance.new("UICorner", playerDropdownButton).CornerRadius = UDim.new(0, 5)
-	local dropdownStroke = Instance.new("UIStroke", playerDropdownButton)
-	dropdownStroke.Color = currentThemeColor
-	dropdownStroke.Transparency = 0.55
-	dropdownStroke.Thickness = 1
-	table.insert(themeSections, dropdownStroke)
-
-	local dropdownPlayerIcon = Instance.new("ImageLabel")
-	dropdownPlayerIcon.Name = "PlayersImageIcon"
-	dropdownPlayerIcon.Size = UDim2.new(0, 13, 0, 13)
-	dropdownPlayerIcon.Position = UDim2.new(0, 8, 0.5, -6.5)
-	dropdownPlayerIcon.BackgroundTransparency = 1
-	dropdownPlayerIcon.Image = "rbxassetid://16898613869"
-	dropdownPlayerIcon.ImageRectOffset = Vector2.new(563, 967)
-	dropdownPlayerIcon.ImageRectSize = Vector2.new(48, 48)
-	dropdownPlayerIcon.ImageColor3 = currentThemeColor
-	dropdownPlayerIcon.ScaleType = Enum.ScaleType.Fit
-	dropdownPlayerIcon.Parent = playerDropdownButton
-	table.insert(themeImages, dropdownPlayerIcon)
-
-	local playerDropdownLabel = Instance.new("TextLabel")
-	playerDropdownLabel.Name = "PlayerDropdownLabel"
-	playerDropdownLabel.Size = UDim2.new(1, -57, 1, 0)
-	playerDropdownLabel.Position = UDim2.new(0, 28, 0, 0)
-	playerDropdownLabel.BackgroundTransparency = 1
-	playerDropdownLabel.Font = currentGlobalFont
-	playerDropdownLabel.Text = "Selecionar jogadores (0)"
-	playerDropdownLabel.TextColor3 = currentTextColor
-	playerDropdownLabel.TextSize = 10
-	playerDropdownLabel.TextXAlignment = Enum.TextXAlignment.Left
-	playerDropdownLabel.TextTruncate = Enum.TextTruncate.AtEnd
-	playerDropdownLabel.Parent = playerDropdownButton
-	table.insert(allTextLabels, playerDropdownLabel)
-
-	local dropdownArrowButton = Instance.new("TextButton")
-	dropdownArrowButton.Name = "PlayerDropdownArrowButton"
-	dropdownArrowButton.Size = UDim2.new(0, 26, 0, 26)
-	dropdownArrowButton.Position = UDim2.new(1, -57, 0, 0)
-	dropdownArrowButton.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-	dropdownArrowButton.BackgroundTransparency = 0.5
-	dropdownArrowButton.BorderSizePixel = 0
-	dropdownArrowButton.AutoButtonColor = true
-	dropdownArrowButton.Font = currentGlobalFont
-	dropdownArrowButton.Text = "⌄"
-	dropdownArrowButton.TextColor3 = currentThemeColor
-	dropdownArrowButton.TextSize = 18
-	dropdownArrowButton.Parent = playerDropdownRow
-	Instance.new("UICorner", dropdownArrowButton).CornerRadius = UDim.new(0, 5)
-	local arrowStroke = Instance.new("UIStroke", dropdownArrowButton)
-	arrowStroke.Color = currentThemeColor
-	arrowStroke.Transparency = 0.55
-	arrowStroke.Thickness = 1
-	table.insert(themeSections, arrowStroke)
-	table.insert(allTextLabels, dropdownArrowButton)
-
-	local refreshBtn = Instance.new("ImageButton")
+	local refreshBtn = Instance.new("TextButton")
 	refreshBtn.Name = "RefreshPlayerListButton"
-	refreshBtn.Size = UDim2.new(0, 26, 0, 26)
-	refreshBtn.Position = UDim2.new(1, -26, 0, 0)
+	refreshBtn.Size = UDim2.new(1, 0, 0, 26)
 	refreshBtn.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
 	refreshBtn.BackgroundTransparency = 0.5
 	refreshBtn.BorderSizePixel = 0
 	refreshBtn.AutoButtonColor = true
-	refreshBtn.Image = ""
-	refreshBtn.Parent = playerDropdownRow
+	refreshBtn.Text = ""
+	refreshBtn.Parent = secCombat
 	Instance.new("UICorner", refreshBtn).CornerRadius = UDim.new(0, 5)
 	local refreshStroke = Instance.new("UIStroke", refreshBtn)
 	refreshStroke.Color = currentThemeColor
@@ -2566,8 +2494,7 @@ function showMainPanel()
 	local refreshIcon = Instance.new("ImageLabel")
 	refreshIcon.Name = "RefreshImageIcon"
 	refreshIcon.Size = UDim2.new(0, 13, 0, 13)
-	refreshIcon.AnchorPoint = Vector2.new(0.5, 0.5)
-	refreshIcon.Position = UDim2.new(0.5, 0, 0.5, 0)
+	refreshIcon.Position = UDim2.new(0, 8, 0.5, -6.5)
 	refreshIcon.BackgroundTransparency = 1
 	refreshIcon.Image = "rbxassetid://16898613699"
 	refreshIcon.ImageRectOffset = Vector2.new(404, 869)
@@ -2577,15 +2504,28 @@ function showMainPanel()
 	refreshIcon.Parent = refreshBtn
 	table.insert(themeImages, refreshIcon)
 
+	local refreshLabel = Instance.new("TextLabel")
+	refreshLabel.Name = "RefreshPlayerListLabel"
+	refreshLabel.Size = UDim2.new(1, -32, 1, 0)
+	refreshLabel.Position = UDim2.new(0, 28, 0, 0)
+	refreshLabel.BackgroundTransparency = 1
+	refreshLabel.Font = currentGlobalFont
+	refreshLabel.Text = "Atualizar lista de jogadores"
+	refreshLabel.TextColor3 = currentTextColor
+	refreshLabel.TextSize = 11
+	refreshLabel.TextXAlignment = Enum.TextXAlignment.Left
+	refreshLabel.Parent = refreshBtn
+	table.insert(allTextLabels, refreshLabel)
+
 	local scrollList = Instance.new("ScrollingFrame")
-	scrollList.Name = "ManualTargetDropdownList"
+	scrollList.Name = "ManualTargetList"
 	scrollList.Size = UDim2.new(1, 0, 0, 130)
 	scrollList.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
 	scrollList.BackgroundTransparency = 0.5
 	scrollList.BorderSizePixel = 0
 	scrollList.CanvasSize = UDim2.new(0, 0, 0, 0)
 	scrollList.ScrollBarThickness = 3
-	scrollList.Visible = false
+	scrollList.Visible = true
 	scrollList.Parent = secCombat
 	local slCorner = Instance.new("UICorner", scrollList)
 	slCorner.CornerRadius = UDim.new(0, 5)
@@ -2638,20 +2578,8 @@ function showMainPanel()
 
 		scrollList.CanvasSize = UDim2.new(0, 0, 0, count * 28)
 
-		local selectedCount = 0
-		for target, selected in pairs(selectedManualTargets) do
-			if selected and target and target.Parent == Players then
-				selectedCount = selectedCount + 1
-			end
-		end
-		playerDropdownLabel.Text = "Selecionar jogadores (" .. tostring(selectedCount) .. ")"
 	end
 
-	dropdownArrowButton.MouseButton1Click:Connect(function()
-		scrollList.Visible = not scrollList.Visible
-		dropdownArrowButton.Text = scrollList.Visible and "⌃" or "⌄"
-		if scrollList.Visible then updateServerList() end
-	end)
 	refreshBtn.MouseButton1Click:Connect(updateServerList)
 	Players.PlayerAdded:Connect(updateServerList)
 	Players.PlayerRemoving:Connect(function(leavingPlayer)
