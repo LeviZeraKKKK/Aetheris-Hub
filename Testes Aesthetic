@@ -2475,112 +2475,34 @@ function showMainPanel()
 	addToggle(secFilters, "Mais Perto da Mira (Crosshair)", function(state) _G_FilterCrosshair = state end, false)
 	addToggle(secFilters, "Apenas se EU Estiver com Item", function(state) _G_FilterHoldingItem = state end, false)
 
-	local playerDropdownRow = Instance.new("Frame")
-	playerDropdownRow.Name = "PlayerDropdownRow"
-	playerDropdownRow.Size = UDim2.new(1, 0, 0, 26)
-	playerDropdownRow.BackgroundTransparency = 1
-	playerDropdownRow.BorderSizePixel = 0
-	playerDropdownRow.Parent = secCombat
-
-	local playerDropdownButton = Instance.new("TextButton")
-	playerDropdownButton.Name = "PlayerDropdownButton"
-	playerDropdownButton.Size = UDim2.new(1, -31, 0, 26)
-	playerDropdownButton.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-	playerDropdownButton.BackgroundTransparency = 0.5
-	playerDropdownButton.BorderSizePixel = 0
-	playerDropdownButton.AutoButtonColor = true
-	playerDropdownButton.Text = ""
-	playerDropdownButton.Parent = playerDropdownRow
-	Instance.new("UICorner", playerDropdownButton).CornerRadius = UDim.new(0, 5)
-	local dropdownStroke = Instance.new("UIStroke", playerDropdownButton)
-	dropdownStroke.Color = currentThemeColor
-	dropdownStroke.Transparency = 0.55
-	dropdownStroke.Thickness = 1
-	table.insert(themeSections, dropdownStroke)
-
-	local dropdownPlayerIcon = Instance.new("ImageLabel")
-	dropdownPlayerIcon.Name = "PlayersImageIcon"
-	dropdownPlayerIcon.Size = UDim2.new(0, 13, 0, 13)
-	dropdownPlayerIcon.Position = UDim2.new(0, 8, 0.5, -6.5)
-	dropdownPlayerIcon.BackgroundTransparency = 1
-	dropdownPlayerIcon.Image = "rbxassetid://16898613869"
-	dropdownPlayerIcon.ImageRectOffset = Vector2.new(563, 967)
-	dropdownPlayerIcon.ImageRectSize = Vector2.new(48, 48)
-	dropdownPlayerIcon.ImageColor3 = currentThemeColor
-	dropdownPlayerIcon.ScaleType = Enum.ScaleType.Fit
-	dropdownPlayerIcon.Parent = playerDropdownButton
-	table.insert(themeImages, dropdownPlayerIcon)
-
-	local playerDropdownLabel = Instance.new("TextLabel")
-	playerDropdownLabel.Name = "PlayerDropdownLabel"
-	playerDropdownLabel.Size = UDim2.new(1, -57, 1, 0)
-	playerDropdownLabel.Position = UDim2.new(0, 28, 0, 0)
-	playerDropdownLabel.BackgroundTransparency = 1
-	playerDropdownLabel.Font = currentGlobalFont
-	playerDropdownLabel.Text = "Selecionar jogadores (0)"
-	playerDropdownLabel.TextColor3 = currentTextColor
-	playerDropdownLabel.TextSize = 10
-	playerDropdownLabel.TextXAlignment = Enum.TextXAlignment.Left
-	playerDropdownLabel.TextTruncate = Enum.TextTruncate.AtEnd
-	playerDropdownLabel.Parent = playerDropdownButton
-	table.insert(allTextLabels, playerDropdownLabel)
-
-	local dropdownChevron = Instance.new("ImageLabel")
-	dropdownChevron.Name = "DropdownChevron"
-	dropdownChevron.Size = UDim2.new(0, 11, 0, 11)
-	dropdownChevron.Position = UDim2.new(1, -18, 0.5, -5.5)
-	dropdownChevron.BackgroundTransparency = 1
-	dropdownChevron.Image = "rbxassetid://16898612819"
-	dropdownChevron.ImageRectOffset = Vector2.new(196, 918)
-	dropdownChevron.ImageRectSize = Vector2.new(48, 48)
-	dropdownChevron.ImageColor3 = currentTextColor
-	dropdownChevron.ScaleType = Enum.ScaleType.Fit
-	dropdownChevron.Parent = playerDropdownButton
-	table.insert(themeImages, dropdownChevron)
-
-	local refreshBtn = Instance.new("ImageButton")
-	refreshBtn.Name = "RefreshPlayerListButton"
-	refreshBtn.Size = UDim2.new(0, 26, 0, 26)
-	refreshBtn.Position = UDim2.new(1, -26, 0, 0)
+	local refreshBtn = Instance.new("TextButton")
+	refreshBtn.Size = UDim2.new(1, 0, 0, 26)
 	refreshBtn.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
 	refreshBtn.BackgroundTransparency = 0.5
-	refreshBtn.BorderSizePixel = 0
-	refreshBtn.AutoButtonColor = true
-	refreshBtn.Image = ""
-	refreshBtn.Parent = playerDropdownRow
-	Instance.new("UICorner", refreshBtn).CornerRadius = UDim.new(0, 5)
-	local refreshStroke = Instance.new("UIStroke", refreshBtn)
-	refreshStroke.Color = currentThemeColor
-	refreshStroke.Transparency = 0.55
-	refreshStroke.Thickness = 1
-	table.insert(themeSections, refreshStroke)
+	refreshBtn.Font = currentGlobalFont
+	refreshBtn.Text = "  🔄 Atualizar Lista de Jogadores"
+	refreshBtn.TextColor3 = currentTextColor
+	refreshBtn.TextSize = 11
+	refreshBtn.TextXAlignment = Enum.TextXAlignment.Left
+	refreshBtn.Parent = secCombat
+	table.insert(allTextLabels, refreshBtn)
 
-	local refreshIcon = Instance.new("ImageLabel")
-	refreshIcon.Name = "RefreshImageIcon"
-	refreshIcon.Size = UDim2.new(0, 13, 0, 13)
-	refreshIcon.AnchorPoint = Vector2.new(0.5, 0.5)
-	refreshIcon.Position = UDim2.new(0.5, 0, 0.5, 0)
-	refreshIcon.BackgroundTransparency = 1
-	refreshIcon.Image = "rbxassetid://16898613699"
-	refreshIcon.ImageRectOffset = Vector2.new(404, 869)
-	refreshIcon.ImageRectSize = Vector2.new(48, 48)
-	refreshIcon.ImageColor3 = currentThemeColor
-	refreshIcon.ScaleType = Enum.ScaleType.Fit
-	refreshIcon.Parent = refreshBtn
-	table.insert(themeImages, refreshIcon)
+	local rbCorner = Instance.new("UICorner")
+	rbCorner.CornerRadius = UDim.new(0, 5)
+	rbCorner.Parent = refreshBtn
 
 	local scrollList = Instance.new("ScrollingFrame")
-	scrollList.Name = "ManualTargetDropdownList"
 	scrollList.Size = UDim2.new(1, 0, 0, 130)
 	scrollList.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
 	scrollList.BackgroundTransparency = 0.5
 	scrollList.BorderSizePixel = 0
 	scrollList.CanvasSize = UDim2.new(0, 0, 0, 0)
 	scrollList.ScrollBarThickness = 3
-	scrollList.Visible = false
 	scrollList.Parent = secCombat
-	local slCorner = Instance.new("UICorner", scrollList)
+
+	local slCorner = Instance.new("UICorner")
 	slCorner.CornerRadius = UDim.new(0, 5)
+	slCorner.Parent = scrollList
 
 	local scrollListLayout = Instance.new("UIListLayout")
 	scrollListLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -2629,21 +2551,8 @@ function showMainPanel()
 		end
 
 		scrollList.CanvasSize = UDim2.new(0, 0, 0, count * 28)
-
-		local selectedCount = 0
-		for target, selected in pairs(selectedManualTargets) do
-			if selected and target and target.Parent == Players then
-				selectedCount = selectedCount + 1
-			end
-		end
-		playerDropdownLabel.Text = "Selecionar jogadores (" .. tostring(selectedCount) .. ")"
 	end
 
-	playerDropdownButton.MouseButton1Click:Connect(function()
-		scrollList.Visible = not scrollList.Visible
-		dropdownChevron.Rotation = scrollList.Visible and 180 or 0
-		if scrollList.Visible then updateServerList() end
-	end)
 	refreshBtn.MouseButton1Click:Connect(updateServerList)
 	Players.PlayerAdded:Connect(updateServerList)
 	Players.PlayerRemoving:Connect(function(leavingPlayer)
@@ -4819,7 +4728,7 @@ task.spawn(function()
     btnStroke.Transparency = 0.28
     table.insert(themeSections, btnStroke)
 
-    -- Ícone: fruta preenchida no centro e olho pequeno no canto superior esquerdo.
+    -- Ícone minimalista: fruta preenchida na cor do tema e olho levemente deslocado à direita.
     local iconCanvas = Instance.new("Frame")
     iconCanvas.Name = "EyeFruitIcon"
     iconCanvas.Size = UDim2.new(0, 24, 0, 24)
@@ -4844,62 +4753,44 @@ task.spawn(function()
     eyeIcon.Parent = iconCanvas
     table.insert(themeImages, eyeIcon)
 
-    -- Silhueta preenchida da fruta; sem aro circular ao redor.
-    local fruitBody = Instance.new("Frame")
-    fruitBody.Name = "FruitFillBody"
-    fruitBody.Size = UDim2.new(0, 9, 0, 8)
-    fruitBody.AnchorPoint = Vector2.new(0.5, 0.5)
-    fruitBody.Position = UDim2.new(0.5, 0, 0.5, 2)
-    fruitBody.BackgroundColor3 = Color3.fromRGB(255, 92, 105)
-    fruitBody.BorderSizePixel = 0
-    fruitBody.ZIndex = 63
-    fruitBody.Parent = iconCanvas
-    Instance.new("UICorner", fruitBody).CornerRadius = UDim.new(1, 0)
+    -- Fruta preenchida, sem aro externo; as partes acompanham a cor escolhida no tema.
+    local function createThemedFruitPart(name, width, height, x, y, rotation, cornerRadius)
+        local part = Instance.new("Frame")
+        part.Name = name
+        part.Size = UDim2.new(0, width, 0, height)
+        part.Position = UDim2.new(0, x, 0, y)
+        part.Rotation = rotation or 0
+        part.BackgroundColor3 = currentThemeColor
+        part.BorderSizePixel = 0
+        part.ZIndex = 63
+        part.Parent = iconCanvas
+        Instance.new("UICorner", part).CornerRadius = UDim.new(0, cornerRadius or math.floor(math.min(width, height) / 2))
+        table.insert(themeSliders, part)
+        return part
+    end
 
-    local fruitLobeLeft = Instance.new("Frame")
-    fruitLobeLeft.Name = "FruitFillLeftLobe"
-    fruitLobeLeft.Size = UDim2.new(0, 5, 0, 5)
-    fruitLobeLeft.Position = UDim2.new(0, 7, 0, 8)
-    fruitLobeLeft.BackgroundColor3 = Color3.fromRGB(255, 92, 105)
-    fruitLobeLeft.BorderSizePixel = 0
-    fruitLobeLeft.ZIndex = 63
-    fruitLobeLeft.Parent = iconCanvas
-    Instance.new("UICorner", fruitLobeLeft).CornerRadius = UDim.new(1, 0)
+    -- Corpo e lóbulos dão um preenchimento sólido sem desenhar um círculo ao redor.
+    createThemedFruitPart("FruitFillBody", 10, 8, 7, 10, 0, 4)
+    createThemedFruitPart("FruitFillLeftLobe", 5, 5, 8, 8, 0, 3)
+    createThemedFruitPart("FruitFillRightLobe", 5, 5, 11, 8, 0, 3)
+    createThemedFruitPart("FruitStem", 2, 3, 11, 6, 0, 1)
+    createThemedFruitPart("FruitLeaf", 4, 2, 13, 7, -30, 1)
 
-    local fruitLobeRight = Instance.new("Frame")
-    fruitLobeRight.Name = "FruitFillRightLobe"
-    fruitLobeRight.Size = UDim2.new(0, 5, 0, 5)
-    fruitLobeRight.Position = UDim2.new(0, 12, 0, 8)
-    fruitLobeRight.BackgroundColor3 = Color3.fromRGB(255, 92, 105)
-    fruitLobeRight.BorderSizePixel = 0
-    fruitLobeRight.ZIndex = 63
-    fruitLobeRight.Parent = iconCanvas
-    Instance.new("UICorner", fruitLobeRight).CornerRadius = UDim.new(1, 0)
-
-    local fruitLeaf = Instance.new("Frame")
-    fruitLeaf.Name = "FruitLeafFill"
-    fruitLeaf.Size = UDim2.new(0, 4, 0, 2)
-    fruitLeaf.Position = UDim2.new(0, 12, 0, 6)
-    fruitLeaf.Rotation = -30
-    fruitLeaf.BackgroundColor3 = Color3.fromRGB(120, 220, 145)
-    fruitLeaf.BorderSizePixel = 0
-    fruitLeaf.ZIndex = 64
-    fruitLeaf.Parent = iconCanvas
-    Instance.new("UICorner", fruitLeaf).CornerRadius = UDim.new(1, 0)
-
+    -- Recorte da maçã por cima do preenchimento, também ligado ao tema.
     local fruitIcon = Instance.new("ImageLabel")
     fruitIcon.Name = "FruitMark"
-    fruitIcon.Size = UDim2.new(0, 12, 0, 12)
+    fruitIcon.Size = UDim2.new(0, 14, 0, 14)
     fruitIcon.AnchorPoint = Vector2.new(0.5, 0.5)
     fruitIcon.Position = UDim2.new(0.5, 0, 0.5, 1)
     fruitIcon.BackgroundTransparency = 1
     fruitIcon.Image = "rbxassetid://16898612629"
     fruitIcon.ImageRectOffset = Vector2.new(563, 869)
     fruitIcon.ImageRectSize = Vector2.new(48, 48)
-    fruitIcon.ImageColor3 = Color3.fromRGB(126, 38, 52)
+    fruitIcon.ImageColor3 = currentThemeColor
     fruitIcon.ScaleType = Enum.ScaleType.Fit
     fruitIcon.ZIndex = 65
     fruitIcon.Parent = iconCanvas
+    table.insert(themeImages, fruitIcon)
 
     btn.MouseEnter:Connect(function()
         TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = 0, Size = UDim2.new(0, 26, 0, 26)}):Play()
