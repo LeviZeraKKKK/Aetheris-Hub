@@ -4719,8 +4719,8 @@ task.spawn(function()
 
     local eyeIcon = Instance.new("ImageLabel")
     eyeIcon.Name = "EyeMark"
-    eyeIcon.Size = UDim2.new(0, 14, 0, 9)
-    eyeIcon.Position = UDim2.new(0, 5, 0, 1)
+    eyeIcon.Size = UDim2.new(0, 12, 0, 8)
+    eyeIcon.Position = UDim2.new(0, 1, 0, 1)
     eyeIcon.BackgroundTransparency = 1
     eyeIcon.Image = "rbxassetid://16898613353"
     eyeIcon.ImageRectOffset = Vector2.new(771, 563)
@@ -4746,15 +4746,15 @@ task.spawn(function()
     end
 
     -- Cabo, borda superior, laterais e base do carrinho.
-    makeCartLine("CartHandle", 6, 1.2, 3, 10, 48)
-    makeCartLine("CartRim", 11, 1.2, 8, 10, 0)
-    makeCartLine("CartLeftSide", 7, 1.2, 7, 12, 68)
-    makeCartLine("CartRightSide", 7, 1.2, 16, 12, -68)
-    makeCartLine("CartBase", 8, 1.2, 10, 17, 0)
+    makeCartLine("CartHandle", 5, 1, 4, 9, 48)
+    makeCartLine("CartRim", 9, 1, 8, 10, 0)
+    makeCartLine("CartLeftSide", 5, 1, 7, 11, 68)
+    makeCartLine("CartRightSide", 5, 1, 13, 11, -68)
+    makeCartLine("CartBase", 7, 1, 9, 15, 0)
 
     local basket = Instance.new("Frame")
     basket.Name = "CartBasket"
-    basket.Size = UDim2.new(0, 10, 0, 5)
+    basket.Size = UDim2.new(0, 8, 0, 4)
     basket.Position = UDim2.new(0, 9, 0, 12)
     basket.BackgroundTransparency = 1
     basket.BorderSizePixel = 0
@@ -4769,14 +4769,13 @@ task.spawn(function()
 
     -- Frutinhas coloridas no interior do cesto.
     local fruitColors = {
-        Color3.fromRGB(255, 104, 112),
-        Color3.fromRGB(255, 196, 86)
+        Color3.fromRGB(255, 104, 112)
     }
     for index, fruitColor in ipairs(fruitColors) do
         local fruitIcon = Instance.new("ImageLabel")
         fruitIcon.Name = "CartFruit" .. tostring(index)
-        fruitIcon.Size = UDim2.new(0, 5, 0, 5)
-        fruitIcon.Position = UDim2.new(0, 10 + (index - 1) * 5, 0, 12)
+        fruitIcon.Size = UDim2.new(0, 4, 0, 4)
+        fruitIcon.Position = UDim2.new(0, 11, 0, 12)
         fruitIcon.BackgroundTransparency = 1
         fruitIcon.Image = "rbxassetid://16898612629"
         fruitIcon.ImageRectOffset = Vector2.new(563, 869)
@@ -4787,11 +4786,11 @@ task.spawn(function()
         fruitIcon.Parent = iconCanvas
     end
 
-    for index, x in ipairs({10, 17}) do
+    for index, x in ipairs({10, 16}) do
         local wheel = Instance.new("Frame")
         wheel.Name = "CartWheel" .. tostring(index)
-        wheel.Size = UDim2.new(0, 3, 0, 3)
-        wheel.Position = UDim2.new(0, x, 0, 19)
+        wheel.Size = UDim2.new(0, 2, 0, 2)
+        wheel.Position = UDim2.new(0, x, 0, 17)
         wheel.BackgroundColor3 = currentThemeColor
         wheel.BorderSizePixel = 0
         wheel.ZIndex = 63
