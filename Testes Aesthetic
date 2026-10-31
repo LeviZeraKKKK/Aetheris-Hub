@@ -4706,7 +4706,7 @@ task.spawn(function()
     btnStroke.Transparency = 0.28
     table.insert(themeSections, btnStroke)
 
-    -- Ícone composto: olho acima do carrinho, com duas frutas visíveis no cesto.
+    -- Carrinho como símbolo principal; o olho aparece como pequeno selo de visualização.
     local iconCanvas = Instance.new("Frame")
     iconCanvas.Name = "EyeFruitCartIcon"
     iconCanvas.Size = UDim2.new(0, 24, 0, 24)
@@ -4717,21 +4717,7 @@ task.spawn(function()
     iconCanvas.ZIndex = 61
     iconCanvas.Parent = btn
 
-    local eyeIcon = Instance.new("ImageLabel")
-    eyeIcon.Name = "EyeMark"
-    eyeIcon.Size = UDim2.new(0, 12, 0, 8)
-    eyeIcon.Position = UDim2.new(0, 1, 0, 1)
-    eyeIcon.BackgroundTransparency = 1
-    eyeIcon.Image = "rbxassetid://16898613353"
-    eyeIcon.ImageRectOffset = Vector2.new(771, 563)
-    eyeIcon.ImageRectSize = Vector2.new(48, 48)
-    eyeIcon.ImageColor3 = currentThemeColor
-    eyeIcon.ScaleType = Enum.ScaleType.Fit
-    eyeIcon.ZIndex = 62
-    eyeIcon.Parent = iconCanvas
-    table.insert(themeImages, eyeIcon)
-
-    local function makeCartLine(name, width, height, x, y, rotation)
+    local function makeIconLine(name, width, height, x, y, rotation)
         local line = Instance.new("Frame")
         line.Name = name
         line.Size = UDim2.new(0, width, 0, height)
@@ -4745,51 +4731,54 @@ task.spawn(function()
         return line
     end
 
-    -- Cabo, borda superior, laterais e base do carrinho.
-    makeCartLine("CartHandle", 5, 1, 4, 9, 48)
-    makeCartLine("CartRim", 9, 1, 8, 10, 0)
-    makeCartLine("CartLeftSide", 5, 1, 7, 11, 68)
-    makeCartLine("CartRightSide", 5, 1, 13, 11, -68)
-    makeCartLine("CartBase", 7, 1, 9, 15, 0)
+    -- Cabo e borda superior; o cesto é uma única forma limpa, sem linhas sobrepostas.
+    makeIconLine("CartHandle", 5, 1.2, 1, 6, 52)
+    makeIconLine("CartRim", 14, 1.2, 4, 8, 0)
 
     local basket = Instance.new("Frame")
     basket.Name = "CartBasket"
-    basket.Size = UDim2.new(0, 8, 0, 4)
-    basket.Position = UDim2.new(0, 9, 0, 12)
-    basket.BackgroundTransparency = 1
+    basket.Size = UDim2.new(0, 13, 0, 7)
+    basket.Position = UDim2.new(0, 5, 0, 9)
+    basket.BackgroundColor3 = Color3.fromRGB(36, 40, 54)
+    basket.BackgroundTransparency = 0.18
     basket.BorderSizePixel = 0
     basket.ZIndex = 62
     basket.Parent = iconCanvas
     Instance.new("UICorner", basket).CornerRadius = UDim.new(0, 2)
     local basketStroke = Instance.new("UIStroke", basket)
     basketStroke.Color = currentThemeColor
-    basketStroke.Thickness = 0.8
-    basketStroke.Transparency = 0.15
+    basketStroke.Thickness = 1.1
+    basketStroke.Transparency = 0.08
     table.insert(themeSections, basketStroke)
 
-    -- Frutinhas coloridas no interior do cesto.
-    local fruitColors = {
-        Color3.fromRGB(255, 104, 112)
-    }
-    for index, fruitColor in ipairs(fruitColors) do
-        local fruitIcon = Instance.new("ImageLabel")
-        fruitIcon.Name = "CartFruit" .. tostring(index)
-        fruitIcon.Size = UDim2.new(0, 4, 0, 4)
-        fruitIcon.Position = UDim2.new(0, 11, 0, 12)
-        fruitIcon.BackgroundTransparency = 1
-        fruitIcon.Image = "rbxassetid://16898612629"
-        fruitIcon.ImageRectOffset = Vector2.new(563, 869)
-        fruitIcon.ImageRectSize = Vector2.new(48, 48)
-        fruitIcon.ImageColor3 = fruitColor
-        fruitIcon.ScaleType = Enum.ScaleType.Fit
-        fruitIcon.ZIndex = 63
-        fruitIcon.Parent = iconCanvas
-    end
+    -- Uma fruta centralizada no cesto, com uma pequena folha verde.
+    local fruitIcon = Instance.new("ImageLabel")
+    fruitIcon.Name = "CartFruit"
+    fruitIcon.Size = UDim2.new(0, 7, 0, 6)
+    fruitIcon.Position = UDim2.new(0, 8, 0, 9)
+    fruitIcon.BackgroundTransparency = 1
+    fruitIcon.Image = "rbxassetid://16898612629"
+    fruitIcon.ImageRectOffset = Vector2.new(563, 869)
+    fruitIcon.ImageRectSize = Vector2.new(48, 48)
+    fruitIcon.ImageColor3 = Color3.fromRGB(255, 104, 112)
+    fruitIcon.ScaleType = Enum.ScaleType.Fit
+    fruitIcon.ZIndex = 64
+    fruitIcon.Parent = iconCanvas
 
-    for index, x in ipairs({10, 16}) do
+    local leaf = Instance.new("Frame")
+    leaf.Name = "FruitLeaf"
+    leaf.Size = UDim2.new(0, 3, 0, 1.2)
+    leaf.Position = UDim2.new(0, 13, 0, 9)
+    leaf.Rotation = -32
+    leaf.BackgroundColor3 = Color3.fromRGB(126, 220, 145)
+    leaf.BorderSizePixel = 0
+    leaf.ZIndex = 65
+    leaf.Parent = iconCanvas
+
+    for index, x in ipairs({6, 16}) do
         local wheel = Instance.new("Frame")
         wheel.Name = "CartWheel" .. tostring(index)
-        wheel.Size = UDim2.new(0, 2, 0, 2)
+        wheel.Size = UDim2.new(0, 3, 0, 3)
         wheel.Position = UDim2.new(0, x, 0, 17)
         wheel.BackgroundColor3 = currentThemeColor
         wheel.BorderSizePixel = 0
@@ -4798,6 +4787,36 @@ task.spawn(function()
         Instance.new("UICorner", wheel).CornerRadius = UDim.new(1, 0)
         table.insert(themeSliders, wheel)
     end
+
+    -- O selo de olho fica no canto superior, separado do cesto para manter a leitura clara.
+    local eyeBadge = Instance.new("Frame")
+    eyeBadge.Name = "EyeBadge"
+    eyeBadge.Size = UDim2.new(0, 9, 0, 9)
+    eyeBadge.Position = UDim2.new(0, 15, 0, 0)
+    eyeBadge.BackgroundColor3 = Color3.fromRGB(29, 32, 45)
+    eyeBadge.BorderSizePixel = 0
+    eyeBadge.ZIndex = 65
+    eyeBadge.Parent = iconCanvas
+    Instance.new("UICorner", eyeBadge).CornerRadius = UDim.new(1, 0)
+    local eyeBadgeStroke = Instance.new("UIStroke", eyeBadge)
+    eyeBadgeStroke.Color = currentThemeColor
+    eyeBadgeStroke.Thickness = 1
+    eyeBadgeStroke.Transparency = 0.08
+    table.insert(themeSections, eyeBadgeStroke)
+
+    local eyeIcon = Instance.new("ImageLabel")
+    eyeIcon.Name = "EyeMark"
+    eyeIcon.Size = UDim2.new(0, 7, 0, 5)
+    eyeIcon.Position = UDim2.new(0, 1, 0, 2)
+    eyeIcon.BackgroundTransparency = 1
+    eyeIcon.Image = "rbxassetid://16898613353"
+    eyeIcon.ImageRectOffset = Vector2.new(771, 563)
+    eyeIcon.ImageRectSize = Vector2.new(48, 48)
+    eyeIcon.ImageColor3 = currentThemeColor
+    eyeIcon.ScaleType = Enum.ScaleType.Fit
+    eyeIcon.ZIndex = 66
+    eyeIcon.Parent = eyeBadge
+    table.insert(themeImages, eyeIcon)
 
     btn.MouseEnter:Connect(function()
         TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = 0, Size = UDim2.new(0, 26, 0, 26)}):Play()
