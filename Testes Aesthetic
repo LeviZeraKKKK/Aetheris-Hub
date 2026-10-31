@@ -2484,7 +2484,7 @@ function showMainPanel()
 
 	local playerDropdownButton = Instance.new("TextButton")
 	playerDropdownButton.Name = "PlayerDropdownButton"
-	playerDropdownButton.Size = UDim2.new(1, -31, 0, 26)
+	playerDropdownButton.Size = UDim2.new(1, -62, 0, 26)
 	playerDropdownButton.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
 	playerDropdownButton.BackgroundTransparency = 0.5
 	playerDropdownButton.BorderSizePixel = 0
@@ -2525,18 +2525,26 @@ function showMainPanel()
 	playerDropdownLabel.Parent = playerDropdownButton
 	table.insert(allTextLabels, playerDropdownLabel)
 
-	local dropdownChevron = Instance.new("ImageLabel")
-	dropdownChevron.Name = "DropdownChevron"
-	dropdownChevron.Size = UDim2.new(0, 11, 0, 11)
-	dropdownChevron.Position = UDim2.new(1, -18, 0.5, -5.5)
-	dropdownChevron.BackgroundTransparency = 1
-	dropdownChevron.Image = "rbxassetid://16898612819"
-	dropdownChevron.ImageRectOffset = Vector2.new(196, 918)
-	dropdownChevron.ImageRectSize = Vector2.new(48, 48)
-	dropdownChevron.ImageColor3 = currentTextColor
-	dropdownChevron.ScaleType = Enum.ScaleType.Fit
-	dropdownChevron.Parent = playerDropdownButton
-	table.insert(themeImages, dropdownChevron)
+	local dropdownArrowButton = Instance.new("TextButton")
+	dropdownArrowButton.Name = "PlayerDropdownArrowButton"
+	dropdownArrowButton.Size = UDim2.new(0, 26, 0, 26)
+	dropdownArrowButton.Position = UDim2.new(1, -57, 0, 0)
+	dropdownArrowButton.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+	dropdownArrowButton.BackgroundTransparency = 0.5
+	dropdownArrowButton.BorderSizePixel = 0
+	dropdownArrowButton.AutoButtonColor = true
+	dropdownArrowButton.Font = currentGlobalFont
+	dropdownArrowButton.Text = "⌄"
+	dropdownArrowButton.TextColor3 = currentThemeColor
+	dropdownArrowButton.TextSize = 18
+	dropdownArrowButton.Parent = playerDropdownRow
+	Instance.new("UICorner", dropdownArrowButton).CornerRadius = UDim.new(0, 5)
+	local arrowStroke = Instance.new("UIStroke", dropdownArrowButton)
+	arrowStroke.Color = currentThemeColor
+	arrowStroke.Transparency = 0.55
+	arrowStroke.Thickness = 1
+	table.insert(themeSections, arrowStroke)
+	table.insert(allTextLabels, dropdownArrowButton)
 
 	local refreshBtn = Instance.new("ImageButton")
 	refreshBtn.Name = "RefreshPlayerListButton"
@@ -2639,9 +2647,9 @@ function showMainPanel()
 		playerDropdownLabel.Text = "Selecionar jogadores (" .. tostring(selectedCount) .. ")"
 	end
 
-	playerDropdownButton.MouseButton1Click:Connect(function()
+	dropdownArrowButton.MouseButton1Click:Connect(function()
 		scrollList.Visible = not scrollList.Visible
-		dropdownChevron.Rotation = scrollList.Visible and 180 or 0
+		dropdownArrowButton.Text = scrollList.Visible and "⌃" or "⌄"
 		if scrollList.Visible then updateServerList() end
 	end)
 	refreshBtn.MouseButton1Click:Connect(updateServerList)
