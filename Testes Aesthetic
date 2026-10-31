@@ -4275,20 +4275,17 @@ UIS.InputChanged:Connect(function(i)
     end
 end)
 
--- Botão no header (espera o loading sumir e acha o painel certo)
+-- Botão no header (fundo transparente + ícone/borda na cor do tema)
 task.spawn(function()
     local hub = PG:WaitForChild("AetherisHub", 30)
     if not hub then return end
-
-    -- Espera a tela de carregamento sair
     while hub:FindFirstChild("LoadingCard") do task.wait(0.1) end
     task.wait(0.2)
 
-    -- Acha o painel principal pelo botão "Close" (só o painel real tem)
     local mainPanel
     for _, d in ipairs(hub:GetDescendants()) do
         if d:IsA("TextButton") and d.Name == "CloseControlButton" then
-            mainPanel = d.Parent.Parent  -- controlsContainer -> mainPanel
+            mainPanel = d.Parent.Parent
             break
         end
     end
@@ -4298,31 +4295,44 @@ task.spawn(function()
     btn.Name = "FruitShopButton"
     btn.Size = UDim2.new(0, 22, 0, 22)
     btn.Position = UDim2.new(1, -104, 0, 9)
-    btn.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
-    btn.BackgroundTransparency = 0.05
+    btn.BackgroundColor3 = currentThemeColor
+    btn.BackgroundTransparency = 1        -- 🟢 fundo 100% transparente
     btn.AutoButtonColor = false
     btn.Image = "rbxassetid://16898612629"
     btn.ImageRectOffset = Vector2.new(563, 869)
     btn.ImageRectSize = Vector2.new(48, 48)
-    btn.ImageColor3 = Color3.new(1, 1, 1)
+    btn.ImageColor3 = currentThemeColor
     btn.ScaleType = Enum.ScaleType.Fit
     btn.ZIndex = 60
     btn.Parent = mainPanel
 
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+
     local st = Instance.new("UIStroke", btn)
-    st.Thickness = 1.2; st.Color = Color3.new(1,1,1); st.Transparency = 0.45
+    st.Thickness = 1.5
+    st.Color = currentThemeColor
+    st.Transparency = 0.15
+
+    -- 🔁 registra para atualizar sozinho quando o tema mudar
+    table.insert(themeImages, btn)
+    table.insert(themeSections, st)
 
     btn.MouseEnter:Connect(function()
         TweenService:Create(btn, TweenInfo.new(0.15), {
-            BackgroundTransparency = 0, Size = UDim2.new(0, 24, 0, 24),
+            Size = UDim2.new(0, 24, 0, 24),
             Position = UDim2.new(1, -105, 0, 8)
+        }):Play()
+        TweenService:Create(st, TweenInfo.new(0.15), {
+            Thickness = 2, Transparency = 0
         }):Play()
     end)
     btn.MouseLeave:Connect(function()
         TweenService:Create(btn, TweenInfo.new(0.15), {
-            BackgroundTransparency = 0.05, Size = UDim2.new(0, 22, 0, 22),
+            Size = UDim2.new(0, 22, 0, 22),
             Position = UDim2.new(1, -104, 0, 9)
+        }):Play()
+        TweenService:Create(st, TweenInfo.new(0.15), {
+            Thickness = 1.5, Transparency = 0.15
         }):Play()
     end)
 
