@@ -1132,13 +1132,22 @@ function showMainPanel()
 		{Name = "Config", Image = "rbxassetid://16898613777", Offset = Vector2.new(771, 257)}
 	}
 
-	-- Sprites variados para que os cabeçalhos das sections não repitam a sequência das abas.
+	-- Ícones Lucide individuais por significado; todos são recortes dos atlas oficiais de 48px.
 	local sectionIcons = {
-		Movement = tabs[1], Physical = tabs[4], Travel = tabs[2],
-		EspPlayers = tabs[3], EspEnemies = tabs[5], World = tabs[7],
-		Combat = tabs[6], Filters = tabs[1], FarmAutomation = tabs[4],
-		FruitAutomation = tabs[5], FruitEsp = tabs[2], Theme = tabs[3],
-		TextConfig = tabs[7], Keybind = tabs[6]
+		Movement = {Image = "rbxassetid://16898613353", Offset = Vector2.new(918, 710)}, -- footprints
+		Physical = {Image = "rbxassetid://16898613777", Offset = Vector2.new(771, 257)}, -- settings
+		Travel = {Image = "rbxassetid://16898613869", Offset = Vector2.new(820, 612)}, -- tree-palm
+		EspPlayers = {Image = "rbxassetid://16898613699", Offset = Vector2.new(869, 759)}, -- scan-eye
+		EspEnemies = {Image = "rbxassetid://16898612819", Offset = Vector2.new(869, 98)}, -- bot
+		World = {Image = "rbxassetid://16898613509", Offset = Vector2.new(771, 563)}, -- globe
+		Combat = {Image = "rbxassetid://16898613777", Offset = Vector2.new(967, 759)}, -- swords
+		Filters = {Image = "rbxassetid://16898613869", Offset = Vector2.new(514, 771)}, -- target
+		FarmAutomation = {Image = "rbxassetid://16898613869", Offset = Vector2.new(918, 906)}, -- zap
+		FruitAutomation = {Image = "rbxassetid://16898612629", Offset = Vector2.new(563, 869)}, -- apple
+		FruitEsp = {Image = "rbxassetid://16898613353", Offset = Vector2.new(771, 563)}, -- eye
+		Theme = {Image = "rbxassetid://16898613777", Offset = Vector2.new(771, 257)}, -- settings
+		TextConfig = {Image = "rbxassetid://16898613869", Offset = Vector2.new(967, 257)}, -- type
+		Keybind = {Image = "rbxassetid://16898613509", Offset = Vector2.new(453, 820)} -- keyboard
 	}
 
 	local activePage = nil
@@ -1259,8 +1268,8 @@ function showMainPanel()
 		local iconInfo = (type(iconSymbol) == "table" and iconSymbol) or tabs[1]
 		local iconLabel = Instance.new("ImageLabel")
 		iconLabel.Name = "SectionImageIcon"
-		iconLabel.Size = UDim2.new(0, 18, 0, 18)
-		iconLabel.Position = UDim2.new(0, 9, 0, 4)
+		iconLabel.Size = UDim2.new(0, 14, 0, 14)
+		iconLabel.Position = UDim2.new(0, 10, 0, 5)
 		iconLabel.BackgroundTransparency = 1
 		iconLabel.BorderSizePixel = 0
 		iconLabel.Image = iconInfo.Image
