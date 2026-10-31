@@ -4103,6 +4103,49 @@ else
     warn("[FV] Não foi possível carregar StateUtil")
 end
 
+local FruitData
+local fruitDataOk, fruitDataResult = pcall(function()
+    local controllers = RS:WaitForChild("Controllers", 8)
+    if not controllers then error("Controllers indisponível") end
+    local ui = controllers:WaitForChild("UI", 8)
+    if not ui then error("UI indisponível") end
+    local fruitShop = ui:WaitForChild("FruitShop", 8)
+    if not fruitShop then error("FruitShop indisponível") end
+    local dataModule = fruitShop:WaitForChild("Data", 8)
+    if not dataModule or not dataModule:IsA("ModuleScript") then error("Data de frutas indisponível") end
+    return require(dataModule)
+end)
+if fruitDataOk and type(fruitDataResult) == "table" then
+    FruitData = fruitDataResult
+end
+
+local beliVal
+local playerData = LP:FindFirstChild("Data")
+beliVal = playerData and playerData:FindFirstChild("Beli") or nil
+
+local function getBeli()
+    local ok, value = pcall(function()
+        return beliVal and tonumber(beliVal.Value) or 0
+    end)
+    return ok and math.max(0, math.floor(value or 0)) or 0
+end
+
+local function formatBeli(value)
+    local number = math.max(0, math.floor(tonumber(value) or 0))
+    local reversed = tostring(number):reverse():gsub("(%d%d%d)", "%1,")
+    return reversed:reverse():gsub("^,", "")
+end
+
+local function getFruitPrice(fruit)
+    if type(fruit) ~= "table" or type(fruit.Name) ~= "string" then return nil end
+    local price = tonumber(fruit.Price)
+    if not price and type(FruitData) == "table" then
+        local fruitInfo = FruitData[fruit.Name]
+        if type(fruitInfo) == "table" then price = tonumber(fruitInfo.Price) end
+    end
+    return price and math.max(0, price) or nil
+end
+
 local old = PG:FindFirstChild("_FV_SG")
 if old then old:Destroy() end
 local sg = Instance.new("ScreenGui")
@@ -4183,11 +4226,11 @@ local subtitle = Instance.new("TextLabel")
 subtitle.Size = UDim2.new(1, -32, 0, 13)
 subtitle.Position = UDim2.new(0, 16, 0, 28)
 subtitle.BackgroundTransparency = 1
-subtitle.TextColor3 = Color3.fromRGB(145, 151, 169)
+subtitle.TextColor3 = Color3.fromRGB(255, 211, 112)
 subtitle.Font = currentGlobalFont
 subtitle.TextSize = 9
 subtitle.TextXAlignment = Enum.TextXAlignment.Left
-subtitle.Text = "Frutas disponíveis agora"
+subtitle.Text = "SEU SALDO  •  " .. formatBeli(getBeli()) .. " Beli"
 subtitle.ZIndex = 12
 subtitle.Parent = panel
 table.insert(allTextLabels, subtitle)
@@ -4275,7 +4318,7 @@ local function makeColumn(adv, x, label, accent)
     Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
 
     local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(1, -27, 1, 0)
+    lbl.Size = UDim2.new(1, -80, 1, 0)
     lbl.Position = UDim2.new(0, 21, 0, 0)
     lbl.BackgroundTransparency = 1
     lbl.TextColor3 = accent
@@ -4286,6 +4329,19 @@ local function makeColumn(adv, x, label, accent)
     lbl.ZIndex = 13
     lbl.Parent = head
     table.insert(allTextLabels, lbl)
+
+    local priceHeading = Instance.new("TextLabel")
+    priceHeading.Size = UDim2.new(0, 48, 1, 0)
+    priceHeading.Position = UDim2.new(1, -54, 0, 0)
+    priceHeading.BackgroundTransparency = 1
+    priceHeading.TextColor3 = Color3.fromRGB(157, 163, 181)
+    priceHeading.Font = Enum.Font.GothamBold
+    priceHeading.TextSize = 8
+    priceHeading.TextXAlignment = Enum.TextXAlignment.Right
+    priceHeading.Text = "PREÇO"
+    priceHeading.ZIndex = 13
+    priceHeading.Parent = head
+    table.insert(allTextLabels, priceHeading)
 
     local sc = Instance.new("ScrollingFrame")
     sc.Name = "FruitList"
@@ -4304,14 +4360,15 @@ local function makeColumn(adv, x, label, accent)
         pool = {},
         accent = accent,
         hasLoaded = false,
-        emptyLbl = nil
+        emptyLbl = nil,
+        lastStock = {}
     }
 end
 
 makeColumn(false, colGap, "NORMAL", Color3.fromRGB(120, 220, 150))
 makeColumn(true, colGap * 2 + colW, "AVANÇADO", Color3.fromRGB(120, 180, 255))
 
--- ============ LINHAS DE FRUTAS (SOMENTE NOMES) ============
+-- ============ LINHAS DE FRUTAS E PREÇOS ============
 local ROW_STEP = 30
 local function createRow(sc, accent)
     local row = Instance.new("Frame")
@@ -4333,7 +4390,7 @@ local function createRow(sc, accent)
     Instance.new("UICorner", marker).CornerRadius = UDim.new(1, 0)
 
     local name = Instance.new("TextLabel")
-    name.Size = UDim2.new(1, -25, 1, 0)
+    name.Size = UDim2.new(1, -84, 1, 0)
     name.Position = UDim2.new(0, 20, 0, 0)
     name.BackgroundTransparency = 1
     name.TextColor3 = Color3.fromRGB(238, 240, 248)
@@ -4344,7 +4401,21 @@ local function createRow(sc, accent)
     name.ZIndex = 14
     name.Parent = row
     table.insert(allTextLabels, name)
-    return {row = row, name = name}
+
+    local priceLabel = Instance.new("TextLabel")
+    priceLabel.Name = "FruitPrice"
+    priceLabel.Size = UDim2.new(0, 58, 1, 0)
+    priceLabel.Position = UDim2.new(1, -62, 0, 0)
+    priceLabel.BackgroundTransparency = 1
+    priceLabel.TextColor3 = Color3.fromRGB(255, 211, 112)
+    priceLabel.Font = currentGlobalFont
+    priceLabel.TextSize = 9
+    priceLabel.TextXAlignment = Enum.TextXAlignment.Right
+    priceLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    priceLabel.ZIndex = 14
+    priceLabel.Parent = row
+    table.insert(allTextLabels, priceLabel)
+    return {row = row, name = name, price = priceLabel}
 end
 
 local function setMessage(col, message)
@@ -4384,6 +4455,7 @@ local function render(adv, fruits)
     table.sort(stock, function(a, b)
         return string.lower(a.Name) < string.lower(b.Name)
     end)
+    col.lastStock = stock
 
     if #stock == 0 then
         setMessage(col, "Nenhuma fruta disponível no momento")
@@ -4398,6 +4470,15 @@ local function render(adv, fruits)
             entry.row.Position = UDim2.new(0, 2, 0, (i - 1) * ROW_STEP)
             entry.row.BackgroundColor3 = (i % 2 == 0) and Color3.fromRGB(31, 35, 49) or Color3.fromRGB(37, 41, 57)
             entry.name.Text = fruit.Name
+            local price = getFruitPrice(fruit)
+            entry.price.Text = price and formatBeli(price) or "N/D"
+            if not price then
+                entry.price.TextColor3 = Color3.fromRGB(155, 160, 176)
+            elseif getBeli() >= price then
+                entry.price.TextColor3 = Color3.fromRGB(145, 235, 164)
+            else
+                entry.price.TextColor3 = Color3.fromRGB(255, 170, 130)
+            end
         end
         for i = #stock + 1, #col.pool do
             col.pool[i].row.Visible = false
@@ -4440,10 +4521,51 @@ local function fetchCol(adv)
     end)
 end
 
+local function updatePriceColors()
+    local balance = getBeli()
+    for _, col in pairs(columns) do
+        for i, entry in ipairs(col.pool) do
+            local fruit = col.lastStock[i]
+            if fruit and entry.row.Visible then
+                local price = getFruitPrice(fruit)
+                if not price then
+                    entry.price.TextColor3 = Color3.fromRGB(155, 160, 176)
+                elseif balance >= price then
+                    entry.price.TextColor3 = Color3.fromRGB(145, 235, 164)
+                else
+                    entry.price.TextColor3 = Color3.fromRGB(255, 170, 130)
+                end
+            end
+        end
+    end
+end
+
+local function updateBalanceDisplay()
+    subtitle.Text = "SEU SALDO  •  " .. formatBeli(getBeli()) .. " Beli"
+    updatePriceColors()
+end
+
 local function refreshAll()
+    updateBalanceDisplay()
     fetchCol(false)
     fetchCol(true)
 end
+
+-- Liga o saldo do jogador com retry para o caso de Data/Beli ainda não existir.
+task.spawn(function()
+    for _ = 1, 60 do
+        if sg.Parent == nil then return end
+        local data = LP:FindFirstChild("Data")
+        local candidate = data and data:FindFirstChild("Beli")
+        if candidate and (candidate:IsA("IntValue") or candidate:IsA("NumberValue")) then
+            beliVal = candidate
+            updateBalanceDisplay()
+            candidate:GetPropertyChangedSignal("Value"):Connect(updateBalanceDisplay)
+            return
+        end
+        task.wait(0.5)
+    end
+end)
 
 panel:GetPropertyChangedSignal("Visible"):Connect(function()
     if panel.Visible then
