@@ -4695,11 +4695,8 @@ task.spawn(function()
     btn.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
     btn.BackgroundTransparency = 0.12
     btn.AutoButtonColor = true
-    btn.Image = "rbxassetid://16898612629"
-    btn.ImageRectOffset = Vector2.new(563, 869)
-    btn.ImageRectSize = Vector2.new(48, 48)
-    btn.ImageColor3 = currentThemeColor
-    btn.ScaleType = Enum.ScaleType.Fit
+    btn.Image = ""
+    btn.ImageTransparency = 1
     btn.ZIndex = 60
     btn.Parent = mainPanel
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
@@ -4707,8 +4704,101 @@ task.spawn(function()
     btnStroke.Thickness = 1.2
     btnStroke.Color = currentThemeColor
     btnStroke.Transparency = 0.28
-    table.insert(themeImages, btn)
     table.insert(themeSections, btnStroke)
+
+    -- Ícone composto: olho acima do carrinho, com duas frutas visíveis no cesto.
+    local iconCanvas = Instance.new("Frame")
+    iconCanvas.Name = "EyeFruitCartIcon"
+    iconCanvas.Size = UDim2.new(0, 24, 0, 24)
+    iconCanvas.AnchorPoint = Vector2.new(0.5, 0.5)
+    iconCanvas.Position = UDim2.new(0.5, 0, 0.5, 0)
+    iconCanvas.BackgroundTransparency = 1
+    iconCanvas.BorderSizePixel = 0
+    iconCanvas.ZIndex = 61
+    iconCanvas.Parent = btn
+
+    local eyeIcon = Instance.new("ImageLabel")
+    eyeIcon.Name = "EyeMark"
+    eyeIcon.Size = UDim2.new(0, 14, 0, 9)
+    eyeIcon.Position = UDim2.new(0, 5, 0, 1)
+    eyeIcon.BackgroundTransparency = 1
+    eyeIcon.Image = "rbxassetid://16898613353"
+    eyeIcon.ImageRectOffset = Vector2.new(771, 563)
+    eyeIcon.ImageRectSize = Vector2.new(48, 48)
+    eyeIcon.ImageColor3 = currentThemeColor
+    eyeIcon.ScaleType = Enum.ScaleType.Fit
+    eyeIcon.ZIndex = 62
+    eyeIcon.Parent = iconCanvas
+    table.insert(themeImages, eyeIcon)
+
+    local function makeCartLine(name, width, height, x, y, rotation)
+        local line = Instance.new("Frame")
+        line.Name = name
+        line.Size = UDim2.new(0, width, 0, height)
+        line.Position = UDim2.new(0, x, 0, y)
+        line.Rotation = rotation or 0
+        line.BackgroundColor3 = currentThemeColor
+        line.BorderSizePixel = 0
+        line.ZIndex = 62
+        line.Parent = iconCanvas
+        table.insert(themeSliders, line)
+        return line
+    end
+
+    -- Cabo, borda superior, laterais e base do carrinho.
+    makeCartLine("CartHandle", 6, 1.2, 3, 10, 48)
+    makeCartLine("CartRim", 11, 1.2, 8, 10, 0)
+    makeCartLine("CartLeftSide", 7, 1.2, 7, 12, 68)
+    makeCartLine("CartRightSide", 7, 1.2, 16, 12, -68)
+    makeCartLine("CartBase", 8, 1.2, 10, 17, 0)
+
+    local basket = Instance.new("Frame")
+    basket.Name = "CartBasket"
+    basket.Size = UDim2.new(0, 10, 0, 5)
+    basket.Position = UDim2.new(0, 9, 0, 12)
+    basket.BackgroundTransparency = 1
+    basket.BorderSizePixel = 0
+    basket.ZIndex = 62
+    basket.Parent = iconCanvas
+    Instance.new("UICorner", basket).CornerRadius = UDim.new(0, 2)
+    local basketStroke = Instance.new("UIStroke", basket)
+    basketStroke.Color = currentThemeColor
+    basketStroke.Thickness = 0.8
+    basketStroke.Transparency = 0.15
+    table.insert(themeSections, basketStroke)
+
+    -- Frutinhas coloridas no interior do cesto.
+    local fruitColors = {
+        Color3.fromRGB(255, 104, 112),
+        Color3.fromRGB(255, 196, 86)
+    }
+    for index, fruitColor in ipairs(fruitColors) do
+        local fruitIcon = Instance.new("ImageLabel")
+        fruitIcon.Name = "CartFruit" .. tostring(index)
+        fruitIcon.Size = UDim2.new(0, 5, 0, 5)
+        fruitIcon.Position = UDim2.new(0, 10 + (index - 1) * 5, 0, 12)
+        fruitIcon.BackgroundTransparency = 1
+        fruitIcon.Image = "rbxassetid://16898612629"
+        fruitIcon.ImageRectOffset = Vector2.new(563, 869)
+        fruitIcon.ImageRectSize = Vector2.new(48, 48)
+        fruitIcon.ImageColor3 = fruitColor
+        fruitIcon.ScaleType = Enum.ScaleType.Fit
+        fruitIcon.ZIndex = 63
+        fruitIcon.Parent = iconCanvas
+    end
+
+    for index, x in ipairs({10, 17}) do
+        local wheel = Instance.new("Frame")
+        wheel.Name = "CartWheel" .. tostring(index)
+        wheel.Size = UDim2.new(0, 3, 0, 3)
+        wheel.Position = UDim2.new(0, x, 0, 19)
+        wheel.BackgroundColor3 = currentThemeColor
+        wheel.BorderSizePixel = 0
+        wheel.ZIndex = 63
+        wheel.Parent = iconCanvas
+        Instance.new("UICorner", wheel).CornerRadius = UDim.new(1, 0)
+        table.insert(themeSliders, wheel)
+    end
 
     btn.MouseEnter:Connect(function()
         TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = 0, Size = UDim2.new(0, 26, 0, 26)}):Play()
