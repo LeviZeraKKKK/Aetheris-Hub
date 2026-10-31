@@ -4079,7 +4079,7 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
---== FRUIT VIEWER ==--
+--== FRUIT VIEWER — dark + beli + countdown ==--
 local RS = game:GetService("ReplicatedStorage")
 local UIS = game:GetService("UserInputService")
 local LP = Players.LocalPlayer
@@ -4097,6 +4097,12 @@ do
     if ok then FruitData = r end
 end
 
+local beliVal
+do
+    local d = LP:FindFirstChild("Data")
+    beliVal = d and d:FindFirstChild("Beli")
+end
+
 local priceCache = {}
 local function getPrice(name, e)
     if e and e.Price then return e.Price end
@@ -4111,6 +4117,11 @@ local function fmt(n)
     if n >= 1e3 then return string.format("%.1fK", n/1e3) end
     return tostring(math.floor(n))
 end
+local function getBeli() return (beliVal and beliVal:IsA("IntValue")) and beliVal.Value or 0 end
+local function fmtTime(s)
+    s = math.max(0, math.floor(s))
+    return string.format("%02d:%02d:%02d", math.floor(s/3600), math.floor((s%3600)/60), s%60)
+end
 local function fetch(a)
     local ok, r = pcall(function() return StateUtil.CommRemoteFunc:InvokeServer("GetFruits", a) end)
     return (ok and type(r) == "table") and r or {}
@@ -4121,87 +4132,165 @@ local sg = Instance.new("ScreenGui")
 sg.Name = "_FV_SG"; sg.ResetOnSpawn = false; sg.DisplayOrder = 1000000
 sg.IgnoreGuiInset = true; sg.Parent = PG
 
-local PW, PH = 360, 280
+-- ============ PAINEL ============
+local PW, PH = 380, 340
 local panel = Instance.new("Frame")
 panel.Size = UDim2.new(0, PW, 0, PH)
 panel.Position = UDim2.new(0.5, -PW/2, 0.5, -PH/2)
-panel.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
-panel.BackgroundTransparency = 0.05; panel.Visible = false; panel.Parent = sg
-Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 10)
+panel.BackgroundColor3 = Color3.fromRGB(8, 8, 14)
+panel.BackgroundTransparency = 0
+panel.Visible = false; panel.Parent = sg
+Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 12)
+
 local ps = Instance.new("UIStroke", panel)
-ps.Color = Color3.fromRGB(90, 90, 130); ps.Thickness = 2
+ps.Color = Color3.fromRGB(60, 55, 100); ps.Thickness = 1.5
+
+local grad = Instance.new("UIGradient")
+grad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(28, 20, 45)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 16))
+}
+grad.Rotation = 90
+grad.Parent = panel
 
 local dragH = Instance.new("TextButton")
-dragH.Size = UDim2.new(1, -60, 0, 32)
+dragH.Size = UDim2.new(1, -80, 0, 54)
 dragH.BackgroundTransparency = 1; dragH.Text = ""; dragH.Parent = panel
 
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -100, 0, 22)
-title.Position = UDim2.new(0, 10, 0, 4); title.BackgroundTransparency = 1
-title.TextColor3 = Color3.new(1,1,1); title.Font = Enum.Font.GothamBold
-title.TextSize = 13; title.TextXAlignment = Enum.TextXAlignment.Left
-title.Text = "🍎 Frutas em Estoque"; title.Parent = panel
+title.Size = UDim2.new(1, -120, 0, 22)
+title.Position = UDim2.new(0, 14, 0, 8)
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.fromRGB(245, 240, 255)
+title.Font = Enum.Font.GothamBold; title.TextSize = 14
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Text = "🍎 Loja de Frutas"; title.Parent = panel
+
+local beliLbl = Instance.new("TextLabel")
+beliLbl.Size = UDim2.new(1, -120, 0, 18)
+beliLbl.Position = UDim2.new(0, 14, 0, 28)
+beliLbl.BackgroundTransparency = 1
+beliLbl.TextColor3 = Color3.fromRGB(255, 210, 80)
+beliLbl.Font = Enum.Font.GothamBold; beliLbl.TextSize = 12
+beliLbl.TextXAlignment = Enum.TextXAlignment.Left
+beliLbl.Text = "💰 ..."; beliLbl.Parent = panel
 
 local refreshB = Instance.new("TextButton")
 refreshB.Size = UDim2.new(0, 26, 0, 26)
-refreshB.Position = UDim2.new(1, -60, 0, 6)
-refreshB.BackgroundColor3 = Color3.fromRGB(70, 120, 200)
+refreshB.Position = UDim2.new(1, -70, 0, 10)
+refreshB.BackgroundColor3 = Color3.fromRGB(60, 100, 180)
 refreshB.Text = "🔄"; refreshB.TextColor3 = Color3.new(1,1,1)
-refreshB.Font = Enum.Font.GothamBold; refreshB.TextSize = 13; refreshB.Parent = panel
-Instance.new("UICorner", refreshB).CornerRadius = UDim.new(0, 6)
+refreshB.Font = Enum.Font.GothamBold; refreshB.TextSize = 13
+refreshB.AutoButtonColor = false; refreshB.Parent = panel
+Instance.new("UICorner", refreshB).CornerRadius = UDim.new(0, 7)
 
 local closeB = Instance.new("TextButton")
 closeB.Size = UDim2.new(0, 26, 0, 26)
-closeB.Position = UDim2.new(1, -30, 0, 6)
-closeB.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+closeB.Position = UDim2.new(1, -38, 0, 10)
+closeB.BackgroundColor3 = Color3.fromRGB(180, 50, 60)
 closeB.Text = "✕"; closeB.TextColor3 = Color3.new(1,1,1)
-closeB.Font = Enum.Font.GothamBold; closeB.TextSize = 12; closeB.Parent = panel
-Instance.new("UICorner", closeB).CornerRadius = UDim.new(1,0)
+closeB.Font = Enum.Font.GothamBold; closeB.TextSize = 12
+closeB.AutoButtonColor = false; closeB.Parent = panel
+Instance.new("UICorner", closeB).CornerRadius = UDim.new(0, 7)
 
-local colGap, colW = 6, (PW - 18) / 2
-local colTop = 34; local colH = PH - colTop - 8
+local sep = Instance.new("Frame")
+sep.Size = UDim2.new(1, -20, 0, 1)
+sep.Position = UDim2.new(0, 10, 0, 52)
+sep.BackgroundColor3 = Color3.fromRGB(50, 45, 80)
+sep.BorderSizePixel = 0; sep.Parent = panel
+
+-- ============ COLUNAS ============
+local colGap = 8
+local colW = (PW - colGap*3) / 2
+local colTop = 60
+local colH = PH - colTop - 10
 local columns = {}
 
-local function makeColumn(adv, x, label, color)
+local function makeColumn(adv, x, label, accent, interval)
     local col = Instance.new("Frame")
     col.Size = UDim2.new(0, colW, 0, colH)
     col.Position = UDim2.new(0, x, 0, colTop)
-    col.BackgroundColor3 = Color3.fromRGB(28, 28, 38); col.Parent = panel
-    Instance.new("UICorner", col).CornerRadius = UDim.new(0, 6)
-    local ct = Instance.new("TextLabel")
-    ct.Size = UDim2.new(1, -8, 0, 16); ct.Position = UDim2.new(0, 4, 0, 2)
-    ct.BackgroundTransparency = 1; ct.TextColor3 = color
-    ct.Font = Enum.Font.GothamBold; ct.TextSize = 11
-    ct.TextXAlignment = Enum.TextXAlignment.Left; ct.Text = label; ct.Parent = col
+    col.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
+    col.Parent = panel
+    Instance.new("UICorner", col).CornerRadius = UDim.new(0, 8)
+    local colStr = Instance.new("UIStroke", col)
+    colStr.Color = accent; colStr.Thickness = 1; colStr.Transparency = 0.65
+
+    local head = Instance.new("Frame")
+    head.Size = UDim2.new(1, 0, 0, 26)
+    head.BackgroundColor3 = Color3.fromRGB(24, 22, 38)
+    head.BorderSizePixel = 0; head.Parent = col
+    Instance.new("UICorner", head).CornerRadius = UDim.new(0, 8)
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -80, 1, 0)
+    lbl.Position = UDim2.new(0, 8, 0, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.TextColor3 = accent
+    lbl.Font = Enum.Font.GothamBold; lbl.TextSize = 11
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Text = label; lbl.Parent = head
+
+    local timer = Instance.new("TextLabel")
+    timer.Size = UDim2.new(0, 70, 1, 0)
+    timer.Position = UDim2.new(1, -72, 0, 0)
+    timer.BackgroundTransparency = 1
+    timer.TextColor3 = Color3.fromRGB(120, 220, 255)
+    timer.Font = Enum.Font.GothamBold; timer.TextSize = 10
+    timer.TextXAlignment = Enum.TextXAlignment.Right
+    timer.Text = "00:00:00"; timer.Parent = head
+
     local sc = Instance.new("ScrollingFrame")
-    sc.Size = UDim2.new(1, -6, 0, colH - 22); sc.Position = UDim2.new(0, 3, 0, 20)
+    sc.Size = UDim2.new(1, -6, 0, colH - 30)
+    sc.Position = UDim2.new(0, 3, 0, 28)
     sc.BackgroundTransparency = 1; sc.BorderSizePixel = 0
-    sc.CanvasSize = UDim2.new(); sc.ScrollBarThickness = 4
-    sc.ScrollBarImageColor3 = Color3.fromRGB(80, 80, 120); sc.Parent = col
-    columns[adv] = {scroll = sc, pool = {}, sig = ""}
+    sc.CanvasSize = UDim2.new(); sc.ScrollBarThickness = 3
+    sc.ScrollBarImageColor3 = accent; sc.Parent = col
+
+    columns[adv] = {
+        scroll = sc, pool = {}, sig = "",
+        timer = timer, interval = interval, lastTick = "",
+        lastFruits = {}
+    }
 end
 
-makeColumn(false, colGap, "🟢 Normal", Color3.fromRGB(120, 220, 150))
-makeColumn(true, colGap*2 + colW, "🔵 Avançado", Color3.fromRGB(120, 180, 255))
+makeColumn(false, colGap, "🟢 Normal", Color3.fromRGB(120, 220, 150), 14400)
+makeColumn(true, colGap*2 + colW, "🔵 Avançado", Color3.fromRGB(120, 180, 255), 7200)
 
-local ROW_STEP = 29
+-- ============ ROWS ============
+local ROW_STEP = 30
 local function createRow(sc)
     local r = Instance.new("Frame")
-    r.Size = UDim2.new(1, -4, 0, 26); r.BorderSizePixel = 0
-    r.BackgroundColor3 = Color3.fromRGB(40, 55, 75); r.Visible = false; r.Parent = sc
-    Instance.new("UICorner", r).CornerRadius = UDim.new(0, 4)
+    r.Size = UDim2.new(1, -4, 0, 27); r.BorderSizePixel = 0
+    r.BackgroundColor3 = Color3.fromRGB(24, 28, 40); r.Visible = false; r.Parent = sc
+    Instance.new("UICorner", r).CornerRadius = UDim.new(0, 5)
     local n = Instance.new("TextLabel")
-    n.Size = UDim2.new(1, -70, 1, 0); n.Position = UDim2.new(0, 4, 0, 0)
-    n.BackgroundTransparency = 1; n.TextColor3 = Color3.new(1,1,1)
+    n.Size = UDim2.new(1, -74, 1, 0); n.Position = UDim2.new(0, 6, 0, 0)
+    n.BackgroundTransparency = 1; n.TextColor3 = Color3.fromRGB(240, 240, 255)
     n.Font = Enum.Font.GothamBold; n.TextSize = 11
     n.TextXAlignment = Enum.TextXAlignment.Left; n.TextTruncate = Enum.TextTruncate.AtEnd
     n.Parent = r
     local p = Instance.new("TextLabel")
-    p.Size = UDim2.new(0, 62, 1, 0); p.Position = UDim2.new(1, -66, 0, 0)
-    p.BackgroundTransparency = 1; p.TextColor3 = Color3.fromRGB(255, 220, 120)
+    p.Size = UDim2.new(0, 64, 1, 0); p.Position = UDim2.new(1, -68, 0, 0)
+    p.BackgroundTransparency = 1; p.TextColor3 = Color3.fromRGB(255, 210, 100)
     p.Font = Enum.Font.GothamBold; p.TextSize = 10
     p.TextXAlignment = Enum.TextXAlignment.Right; p.Parent = r
     return {row = r, name = n, price = p}
+end
+
+local function updateColors()
+    local beli = getBeli()
+    for _, col in pairs(columns) do
+        local fruits = col.lastFruits or {}
+        for i, e in ipairs(col.pool) do
+            local f = fruits[i]
+            if f and e.row.Visible then
+                local ok = beli >= getPrice(f.Name, f)
+                e.row.BackgroundColor3 = ok and Color3.fromRGB(24, 40, 30) or Color3.fromRGB(40, 22, 28)
+                e.price.TextColor3 = ok and Color3.fromRGB(150, 255, 160) or Color3.fromRGB(255, 130, 130)
+            end
+        end
+    end
 end
 
 local function render(adv, fruits)
@@ -4211,25 +4300,52 @@ local function render(adv, fruits)
         if f.OnSale == true then table.insert(stock, f) end
     end
     table.sort(stock, function(a,b) return getPrice(a.Name, a) < getPrice(b.Name, b) end)
+    col.lastFruits = stock
+
     local parts = {}
     for i, f in ipairs(stock) do parts[i] = f.Name .. ":" .. getPrice(f.Name, f) end
     local sig = table.concat(parts, "|")
-    if sig == col.sig then return end
-    col.sig = sig
+
     local pool = col.pool
+    local beli = getBeli()
+
     for i = 1, #stock do
         local f = stock[i]
         if not pool[i] then pool[i] = createRow(col.scroll) end
         local e = pool[i]
         e.row.Visible = true
         e.row.Position = UDim2.new(0, 2, 0, (i-1) * ROW_STEP)
+        local price = getPrice(f.Name, f)
+        local ok = beli >= price
+        e.row.BackgroundColor3 = ok and Color3.fromRGB(24, 40, 30) or Color3.fromRGB(40, 22, 28)
         e.name.Text = f.Name .. (f.HasPermanent and " ⭐" or "")
-        e.price.Text = fmt(getPrice(f.Name, f))
+        e.price.Text = fmt(price)
+        e.price.TextColor3 = ok and Color3.fromRGB(150, 255, 160) or Color3.fromRGB(255, 130, 130)
     end
     for i = #stock + 1, #pool do pool[i].row.Visible = false end
+
+    local empty = col.emptyLbl
+    if #stock == 0 then
+        if not empty then
+            empty = Instance.new("TextLabel")
+            empty.Size = UDim2.new(1, -6, 0, 18)
+            empty.Position = UDim2.new(0, 3, 0, 2)
+            empty.BackgroundTransparency = 1
+            empty.TextColor3 = Color3.fromRGB(120, 120, 150)
+            empty.Font = Enum.Font.Gotham; empty.TextSize = 10
+            empty.Text = "(sem estoque)"; empty.Parent = col.scroll
+            col.emptyLbl = empty
+        end
+        empty.Visible = true
+    elseif empty then
+        empty.Visible = false
+    end
+
     col.scroll.CanvasSize = UDim2.new(0, 0, 0, #stock * ROW_STEP + 4)
+    col.sig = sig
 end
 
+-- ============ FETCH ============
 local fetching = {[false] = false, [true] = false}
 local function fetchCol(adv)
     if fetching[adv] then return end
@@ -4241,14 +4357,54 @@ local function fetchCol(adv)
     end)
 end
 
-local function refresh()
+local function refreshAll()
+    beliLbl.Text = "💰 " .. fmt(getBeli())
     fetchCol(false); fetchCol(true)
 end
 
 panel:GetPropertyChangedSignal("Visible"):Connect(function()
-    if panel.Visible then refresh() end
+    if panel.Visible then refreshAll() end
 end)
 
+-- Beli listener (com retry caso ainda não exista)
+task.spawn(function()
+    local tries = 0
+    while not beliVal and tries < 60 do
+        local d = LP:FindFirstChild("Data")
+        beliVal = d and d:FindFirstChild("Beli")
+        if beliVal then break end
+        tries = tries + 1
+        task.wait(0.5)
+    end
+    if beliVal then
+        beliVal:GetPropertyChangedSignal("Value"):Connect(function()
+            if panel.Visible then
+                beliLbl.Text = "💰 " .. fmt(getBeli())
+                updateColors()
+            end
+        end)
+    end
+end)
+
+-- ============ COUNTDOWN ============
+task.spawn(function()
+    while sg.Parent do
+        task.wait(1)
+        if not panel.Visible then continue end
+        local now = DateTime.now().UnixTimestamp
+        for _, col in pairs(columns) do
+            local t = col.interval - (now % col.interval)
+            local str = fmtTime(t)
+            if str ~= col.lastTick then
+                col.lastTick = str
+                col.timer.Text = str
+                col.timer.TextColor3 = t < 300 and Color3.fromRGB(255, 180, 80) or Color3.fromRGB(120, 220, 255)
+            end
+        end
+    end
+end)
+
+-- Refresh periódico
 task.spawn(function()
     while sg.Parent do
         task.wait(30)
@@ -4256,9 +4412,10 @@ task.spawn(function()
     end
 end)
 
-refreshB.MouseButton1Click:Connect(refresh)
+refreshB.MouseButton1Click:Connect(refreshAll)
 closeB.MouseButton1Click:Connect(function() panel.Visible = false end)
 
+-- ============ DRAG ============
 local dragging, dragStart, startPos = false, nil, nil
 dragH.InputBegan:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
@@ -4275,7 +4432,7 @@ UIS.InputChanged:Connect(function(i)
     end
 end)
 
--- Botão no header (fundo transparente + ícone/borda na cor do tema)
+-- ============ BOTÃO NO HEADER ============
 task.spawn(function()
     local hub = PG:WaitForChild("AetherisHub", 30)
     if not hub then return end
@@ -4296,7 +4453,7 @@ task.spawn(function()
     btn.Size = UDim2.new(0, 22, 0, 22)
     btn.Position = UDim2.new(1, -104, 0, 9)
     btn.BackgroundColor3 = currentThemeColor
-    btn.BackgroundTransparency = 1        -- 🟢 fundo 100% transparente
+    btn.BackgroundTransparency = 1
     btn.AutoButtonColor = false
     btn.Image = "rbxassetid://16898612629"
     btn.ImageRectOffset = Vector2.new(563, 869)
@@ -4307,33 +4464,23 @@ task.spawn(function()
     btn.Parent = mainPanel
 
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-
     local st = Instance.new("UIStroke", btn)
-    st.Thickness = 1.5
-    st.Color = currentThemeColor
-    st.Transparency = 0.15
+    st.Thickness = 1.5; st.Color = currentThemeColor; st.Transparency = 0.15
 
-    -- 🔁 registra para atualizar sozinho quando o tema mudar
     table.insert(themeImages, btn)
     table.insert(themeSections, st)
 
     btn.MouseEnter:Connect(function()
         TweenService:Create(btn, TweenInfo.new(0.15), {
-            Size = UDim2.new(0, 24, 0, 24),
-            Position = UDim2.new(1, -105, 0, 8)
+            Size = UDim2.new(0, 24, 0, 24), Position = UDim2.new(1, -105, 0, 8)
         }):Play()
-        TweenService:Create(st, TweenInfo.new(0.15), {
-            Thickness = 2, Transparency = 0
-        }):Play()
+        TweenService:Create(st, TweenInfo.new(0.15), {Thickness = 2, Transparency = 0}):Play()
     end)
     btn.MouseLeave:Connect(function()
         TweenService:Create(btn, TweenInfo.new(0.15), {
-            Size = UDim2.new(0, 22, 0, 22),
-            Position = UDim2.new(1, -104, 0, 9)
+            Size = UDim2.new(0, 22, 0, 22), Position = UDim2.new(1, -104, 0, 9)
         }):Play()
-        TweenService:Create(st, TweenInfo.new(0.15), {
-            Thickness = 1.5, Transparency = 0.15
-        }):Play()
+        TweenService:Create(st, TweenInfo.new(0.15), {Thickness = 1.5, Transparency = 0.15}):Play()
     end)
 
     btn.MouseButton1Click:Connect(function()
@@ -4342,3 +4489,5 @@ task.spawn(function()
 
     print("[FV] Botão adicionado ao header.")
 end)
+
+print("[FV] Viewer pronto.")
