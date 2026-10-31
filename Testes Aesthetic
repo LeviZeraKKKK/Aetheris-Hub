@@ -1132,9 +1132,13 @@ function showMainPanel()
 		{Name = "Config", Image = "rbxassetid://16898613777", Offset = Vector2.new(771, 257)}
 	}
 
+	-- Sprites variados para que os cabeçalhos das sections não repitam a sequência das abas.
 	local sectionIcons = {
-		Player = tabs[2], AimLock = tabs[3], Visual = tabs[4],
-		Farming = tabs[5], Fruit = tabs[6], Config = tabs[7], Info = tabs[1]
+		Movement = tabs[1], Physical = tabs[4], Travel = tabs[2],
+		EspPlayers = tabs[3], EspEnemies = tabs[5], World = tabs[7],
+		Combat = tabs[6], Filters = tabs[1], FarmAutomation = tabs[4],
+		FruitAutomation = tabs[5], FruitEsp = tabs[2], Theme = tabs[3],
+		TextConfig = tabs[7], Keybind = tabs[6]
 	}
 
 	local activePage = nil
@@ -2110,14 +2114,14 @@ function showMainPanel()
 	-- ABA PLAYER
 	-----------------------------------------------------------------
 	local playerPage = pages["Player"]
-	local secMovimento = createSection(playerPage, "Movimento", sectionIcons.Player)
+	local secMovimento = createSection(playerPage, "Movimento", sectionIcons.Movement)
 	addToggle(secMovimento, "Ativar WalkSpeed", function(state) _G_WalkSpeedEnabled = state end, false)
 	addSlider(secMovimento, "Velocidade", 16, 250, 16, function(val) _G_WalkSpeedValue = val end)
 
 	addToggle(secMovimento, "Ativar JumpPower", function(state) _G_JumpPowerEnabled = state end, false)
 	addSlider(secMovimento, "Força do Pulo", 50, 300, 50, function(val) _G_JumpPowerValue = val end)
 
-	local secFisico = createSection(playerPage, "Habilidades Físicas", sectionIcons.Config)
+	local secFisico = createSection(playerPage, "Habilidades Físicas", sectionIcons.Physical)
 	addToggle(secFisico, "Noclip (Atravessar Paredes)", function(state) _G_NoclipEnabled = state end, false)
 	addToggle(secFisico, "Energia Infinita", function(state) _G_EnergyEnabled = state end, false)
 	addToggle(secFisico, "Observação range [INF]", function(state)
@@ -2127,7 +2131,7 @@ function showMainPanel()
 		setInfiniteAirJumpsEnabled(state)
 	end, false)
 
-	local secTravel = createSection(playerPage, "Viajar para Ilhas", sectionIcons.Info)
+	local secTravel = createSection(playerPage, "Viajar para Ilhas", sectionIcons.Travel)
 
 	local function refreshIslands()
 		local oldName = selectedIsland and selectedIsland.Name
@@ -2351,7 +2355,7 @@ function showMainPanel()
 	-- ABA VISUAL
 	-----------------------------------------------------------------
 	local visualPage = pages["Visual"]
-	local secEspPlayers = createSection(visualPage, "ESP Players", sectionIcons.Visual)
+	local secEspPlayers = createSection(visualPage, "ESP Players", sectionIcons.EspPlayers)
 	addToggle(secEspPlayers, "Ativar ESP Players", function(state) _G_EspMaster = state end, false)
 
 	addEspToggleWithColor(secEspPlayers, "Box ESP", _G_ColorBox, function(c) _G_ColorBox = c end, function(s) _G_EspBox = s end)
@@ -2378,14 +2382,14 @@ function showMainPanel()
 	addEspToggleWithColor(secEspPlayers, "Distance ESP", _G_ColorDistance, function(c) _G_ColorDistance = c end, function(s) _G_EspDistance = s end)
 	addEspToggleWithColor(secEspPlayers, "Head Dot ESP", _G_ColorHead, function(c) _G_ColorHead = c end, function(s) _G_EspHead = s end)
 
-	local secEspEnemies = createSection(visualPage, "ESP Inimigos (NPC)", sectionIcons.AimLock)
+	local secEspEnemies = createSection(visualPage, "ESP Inimigos (NPC)", sectionIcons.EspEnemies)
 	addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state end, false)
 	
 	addEspToggleWithColor(secEspEnemies, "ESP Chams", _G_ColorEnemyChams, function(c) _G_ColorEnemyChams = c end, function(s) _G_EnemyEspChams = s end)
 	addEspToggleWithColor(secEspEnemies, "ESP Nome", _G_ColorEnemyName, function(c) _G_ColorEnemyName = c end, function(s) _G_EnemyEspName = s end)
 	addEspToggleWithColor(secEspEnemies, "ESP Distância", _G_ColorEnemyDist, function(c) _G_ColorEnemyDist = c end, function(s) _G_EnemyEspDistance = s end)
 
-	local secWorld = createSection(visualPage, "Visual do Mapa", sectionIcons.Visual)
+	local secWorld = createSection(visualPage, "Visual do Mapa", sectionIcons.World)
 	addToggle(secWorld, "Fullbright (Remover Escuridão)", function(state)
 		_G_FullbrightEnabled = state
 		Lighting.Brightness = _G_FullbrightEnabled and 2 or 1
@@ -2397,7 +2401,7 @@ function showMainPanel()
 	-- ABA AIM LOCK
 	-----------------------------------------------------------------
 	local aimLockPage = pages["Aim Lock"]
-	local secCombat = createSection(aimLockPage, "Sistema Lock-On", sectionIcons.AimLock)
+	local secCombat = createSection(aimLockPage, "Sistema Lock-On", sectionIcons.Combat)
 
 	addToggle(secCombat, "Ativar Lock-On", function(state)
 		isLockOnEnabled = state
@@ -2448,7 +2452,7 @@ function showMainPanel()
 	msCorner.CornerRadius = UDim.new(0, 4)
 	msCorner.Parent = modeSwitchBtn
 
-	local secFilters = createSection(aimLockPage, "FOV & Filtros de Alvo", sectionIcons.AimLock)
+	local secFilters = createSection(aimLockPage, "FOV & Filtros de Alvo", sectionIcons.Filters)
 	addToggle(secFilters, "Ativar Círculo FOV", function(state) _G_FovVisible = state end, false)
 	addSlider(secFilters, "Raio do FOV", 50, 500, 150, function(val) _G_FovRadius = val end)
 	addSlider(secFilters, "Grossura do FOV", 1, 5, 1, function(val) _G_FovThickness = val end)
@@ -2562,7 +2566,7 @@ function showMainPanel()
 	-- ABA FARMING (CHEST COLLECTOR)
 	-----------------------------------------------------------------
 	local farmingPage = pages["Farming"]
-	local secFarm = createSection(farmingPage, "Automação", sectionIcons.Farming)
+	local secFarm = createSection(farmingPage, "Automação", sectionIcons.FarmAutomation)
 
 	local chestFolder = workspace:WaitForChild("ChestModels", 5) or workspace
 	local mapFolder = workspace:WaitForChild("Map", 5) or workspace
@@ -2859,8 +2863,8 @@ function showMainPanel()
 	-- ABA FRUTA
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
-	local secFrutaAction = createSection(frutaPage, "Automatização", sectionIcons.Fruit)
-	local secFrutaEsp = createSection(frutaPage, "Fruit ESP", sectionIcons.Visual)
+	local secFrutaAction = createSection(frutaPage, "Automatização", sectionIcons.FruitAutomation)
+	local secFrutaEsp = createSection(frutaPage, "Fruit ESP", sectionIcons.FruitEsp)
 
 	local fruitConfig = {
 		MaxDistance  = 2000,
@@ -3381,7 +3385,7 @@ function showMainPanel()
 	-- ABA CONFIG
 	-----------------------------------------------------------------
 	local configPage = pages["Config"]
-	local secConfig = createSection(configPage, "Tema do Hub", sectionIcons.Config)
+	local secConfig = createSection(configPage, "Tema do Hub", sectionIcons.Theme)
 	
 	addColorPicker(secConfig, "Cor Principal do Hub", currentThemeColor, function(color)
 		updateGlobalTheme(color)
@@ -3393,7 +3397,7 @@ function showMainPanel()
 		floatingBtn.BackgroundTransparency = panelTransparencyValue
 	end)
 
-	local secTextConfig = createSection(configPage, "Customização de Textos", sectionIcons.Info)
+	local secTextConfig = createSection(configPage, "Customização de Textos", sectionIcons.TextConfig)
 
 	addColorPicker(secTextConfig, "Cor dos Textos do Hub", currentTextColor, function(color)
 		updateGlobalTextColor(color)
@@ -3497,7 +3501,7 @@ function showMainPanel()
 		end
 	end)
 
-	local secKeybind = createSection(configPage, "Atalhos (PC)", sectionIcons.Player)
+	local secKeybind = createSection(configPage, "Atalhos (PC)", sectionIcons.Keybind)
 	
 	local kbFrame = Instance.new("Frame")
 	kbFrame.Size = UDim2.new(1, 0, 0, 32)
@@ -4728,8 +4732,8 @@ task.spawn(function()
 
     local eyeIcon = Instance.new("ImageLabel")
     eyeIcon.Name = "EyeMark"
-    eyeIcon.Size = UDim2.new(0, 16, 0, 12)
-    eyeIcon.Position = UDim2.new(0, 3, 0, 4)
+    eyeIcon.Size = UDim2.new(0, 9, 0, 7)
+    eyeIcon.Position = UDim2.new(0, 0, 0, 0)
     eyeIcon.BackgroundTransparency = 1
     eyeIcon.Image = "rbxassetid://16898613353"
     eyeIcon.ImageRectOffset = Vector2.new(771, 563)
@@ -4742,8 +4746,9 @@ task.spawn(function()
 
     local fruitBadge = Instance.new("Frame")
     fruitBadge.Name = "FruitBadge"
-    fruitBadge.Size = UDim2.new(0, 10, 0, 10)
-    fruitBadge.Position = UDim2.new(0, 13, 0, 13)
+    fruitBadge.Size = UDim2.new(0, 14, 0, 14)
+    fruitBadge.AnchorPoint = Vector2.new(0.5, 0.5)
+    fruitBadge.Position = UDim2.new(0.5, 0, 0.5, 1)
     fruitBadge.BackgroundColor3 = Color3.fromRGB(32, 35, 49)
     fruitBadge.BorderSizePixel = 0
     fruitBadge.ZIndex = 63
@@ -4757,8 +4762,9 @@ task.spawn(function()
 
     local fruitIcon = Instance.new("ImageLabel")
     fruitIcon.Name = "FruitMark"
-    fruitIcon.Size = UDim2.new(0, 6, 0, 6)
-    fruitIcon.Position = UDim2.new(0, 2, 0, 2)
+    fruitIcon.Size = UDim2.new(0, 10, 0, 10)
+    fruitIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+    fruitIcon.Position = UDim2.new(0.5, 0, 0.5, 0)
     fruitIcon.BackgroundTransparency = 1
     fruitIcon.Image = "rbxassetid://16898612629"
     fruitIcon.ImageRectOffset = Vector2.new(563, 869)
