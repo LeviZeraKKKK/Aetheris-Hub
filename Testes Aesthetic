@@ -1125,7 +1125,7 @@ function showMainPanel()
 	local tabs = {
 		{Name = "Info", Image = "rbxassetid://16898613509", Offset = Vector2.new(612, 869)},
 		{Name = "Player", Image = "rbxassetid://16898613044", Offset = Vector2.new(0, 869)},
-		{Name = "Aim Lock", Image = "rbxassetid://16898613044", Offset = Vector2.new(453, 869)},
+		{Name = "Combate", Image = "rbxassetid://16898613044", Offset = Vector2.new(453, 869)},
 		{Name = "Visual", Image = "rbxassetid://16898613353", Offset = Vector2.new(771, 563)},
 		{Name = "Farming", Image = "rbxassetid://16898613777", Offset = Vector2.new(918, 306)},
 		{Name = "Fruta", Image = "rbxassetid://16898612629", Offset = Vector2.new(563, 869)},
@@ -2407,9 +2407,9 @@ function showMainPanel()
 	end, false)
 
 	-----------------------------------------------------------------
-	-- ABA AIM LOCK
+	-- ABA COMBATE
 	-----------------------------------------------------------------
-	local aimLockPage = pages["Aim Lock"]
+	local aimLockPage = pages["Combate"]
 	local secCombat = createSection(aimLockPage, "Sistema Lock-On", sectionIcons.Combat)
 
 	addToggle(secCombat, "Ativar Lock-On", function(state)
@@ -4715,8 +4715,8 @@ task.spawn(function()
     btn.Size = UDim2.new(0, 24, 0, 24)
     btn.Position = UDim2.new(1, -104, 0, 8)
     btn.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-    btn.BackgroundTransparency = 1
-    btn.AutoButtonColor = false
+    btn.BackgroundTransparency = 0.12
+    btn.AutoButtonColor = true
     btn.Image = ""
     btn.ImageTransparency = 1
     btn.ZIndex = 60
@@ -4728,7 +4728,7 @@ task.spawn(function()
     btnStroke.Transparency = 0.28
     table.insert(themeSections, btnStroke)
 
-    -- Ícone minimalista: olho principal e uma fruta em pequeno selo sobreposto.
+    -- Ícone minimalista: fruta preenchida na cor do tema e olho levemente deslocado à direita.
     local iconCanvas = Instance.new("Frame")
     iconCanvas.Name = "EyeFruitIcon"
     iconCanvas.Size = UDim2.new(0, 24, 0, 24)
@@ -4742,7 +4742,7 @@ task.spawn(function()
     local eyeIcon = Instance.new("ImageLabel")
     eyeIcon.Name = "EyeMark"
     eyeIcon.Size = UDim2.new(0, 9, 0, 7)
-    eyeIcon.Position = UDim2.new(0, 0, 0, 0)
+    eyeIcon.Position = UDim2.new(0, 2, 0, 0)
     eyeIcon.BackgroundTransparency = 1
     eyeIcon.Image = "rbxassetid://16898613353"
     eyeIcon.ImageRectOffset = Vector2.new(771, 563)
@@ -4753,42 +4753,28 @@ task.spawn(function()
     eyeIcon.Parent = iconCanvas
     table.insert(themeImages, eyeIcon)
 
-    local fruitBadge = Instance.new("Frame")
-    fruitBadge.Name = "FruitBadge"
-    fruitBadge.Size = UDim2.new(0, 14, 0, 14)
-    fruitBadge.AnchorPoint = Vector2.new(0.5, 0.5)
-    fruitBadge.Position = UDim2.new(0.5, 0, 0.5, 1)
-    fruitBadge.BackgroundColor3 = Color3.fromRGB(32, 35, 49)
-    fruitBadge.BorderSizePixel = 0
-    fruitBadge.ZIndex = 63
-    fruitBadge.Parent = iconCanvas
-    Instance.new("UICorner", fruitBadge).CornerRadius = UDim.new(1, 0)
-    local fruitBadgeStroke = Instance.new("UIStroke", fruitBadge)
-    fruitBadgeStroke.Color = currentThemeColor
-    fruitBadgeStroke.Thickness = 1
-    fruitBadgeStroke.Transparency = 0.08
-    table.insert(themeSections, fruitBadgeStroke)
-
+    -- Ícone Lucide da fruta sem o preenchimento adicional; mantém a cor do tema.
     local fruitIcon = Instance.new("ImageLabel")
     fruitIcon.Name = "FruitMark"
-    fruitIcon.Size = UDim2.new(0, 10, 0, 10)
+    fruitIcon.Size = UDim2.new(0, 14, 0, 14)
     fruitIcon.AnchorPoint = Vector2.new(0.5, 0.5)
-    fruitIcon.Position = UDim2.new(0.5, 0, 0.5, 0)
+    fruitIcon.Position = UDim2.new(0.5, 0, 0.5, 1)
     fruitIcon.BackgroundTransparency = 1
     fruitIcon.Image = "rbxassetid://16898612629"
     fruitIcon.ImageRectOffset = Vector2.new(563, 869)
     fruitIcon.ImageRectSize = Vector2.new(48, 48)
-    fruitIcon.ImageColor3 = Color3.fromRGB(255, 112, 118)
+    fruitIcon.ImageColor3 = currentThemeColor
     fruitIcon.ScaleType = Enum.ScaleType.Fit
-    fruitIcon.ZIndex = 64
-    fruitIcon.Parent = fruitBadge
+    fruitIcon.ZIndex = 65
+    fruitIcon.Parent = iconCanvas
+    table.insert(themeImages, fruitIcon)
 
     btn.MouseEnter:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = 1, Size = UDim2.new(0, 26, 0, 26)}):Play()
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = 0, Size = UDim2.new(0, 26, 0, 26)}):Play()
         TweenService:Create(btnStroke, TweenInfo.new(0.15), {Transparency = 0.05, Thickness = 1.7}):Play()
     end)
     btn.MouseLeave:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = 1, Size = UDim2.new(0, 24, 0, 24)}):Play()
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = 0.12, Size = UDim2.new(0, 24, 0, 24)}):Play()
         TweenService:Create(btnStroke, TweenInfo.new(0.15), {Transparency = 0.28, Thickness = 1.2}):Play()
     end)
     btn.MouseButton1Click:Connect(function()
