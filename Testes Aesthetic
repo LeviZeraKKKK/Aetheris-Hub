@@ -4087,6 +4087,7 @@ RunService.RenderStepped:Connect(function()
 								Box = Drawing.new("Square"),
 								Line = Drawing.new("Line"),
 								NameText = Drawing.new("Text"),
+								LevelText = Drawing.new("Text"),
 								DistText = Drawing.new("Text"),
 								HeadDot = Drawing.new("Circle"),
 								HealthBarBg = Drawing.new("Square"),
@@ -4175,29 +4176,29 @@ RunService.RenderStepped:Connect(function()
 							cache.HealthBarFill.Visible = false
 						end
 
-						local showPlayerName = _G_EspName
-						local showPlayerLevel = playerLevelEspEnabled
-						if onScreen and hrp and (showPlayerName or showPlayerLevel) then
-							local levelText = playerLevelValues[targetPlayer] or "?"
-							if showPlayerName and showPlayerLevel then
-								cache.NameText.Text = targetPlayer.Name .. " [Lv. " .. levelText .. "]"
-								cache.NameText.Color = playerLevelEspColor
-							elseif showPlayerName then
-								cache.NameText.Text = targetPlayer.Name
-								cache.NameText.Color = _G_ColorName
-							else
-								cache.NameText.Text = "Lv. " .. levelText
-								cache.NameText.Color = playerLevelEspColor
-							end
+						if _G_EspName and onScreen and hrp then
+							cache.NameText.Text = targetPlayer.Name
 							cache.NameText.Size = 12
 							cache.NameText.Center = true
 							cache.NameText.Outline = true
+							cache.NameText.Color = _G_ColorName
 							cache.NameText.Position = Vector2.new(pos.X, pos.Y - 35)
 							cache.NameText.Visible = true
 						else
 							cache.NameText.Visible = false
 						end
-
+						if playerLevelEspEnabled and onScreen and hrp then
+							local levelText = playerLevelValues[targetPlayer] or "?"
+							cache.LevelText.Text = "Lv. " .. levelText
+							cache.LevelText.Size = 11
+							cache.LevelText.Center = true
+							cache.LevelText.Outline = true
+							cache.LevelText.Color = playerLevelEspColor
+							cache.LevelText.Position = Vector2.new(pos.X, pos.Y - (_G_EspName and 50 or 35))
+							cache.LevelText.Visible = true
+						else
+							cache.LevelText.Visible = false
+						end
 						if _G_EspDistance and onScreen then
 							local dist = math.floor((camera.CFrame.Position - hrp.Position).Magnitude)
 							cache.DistText.Text = "[" .. dist .. "m]"
@@ -4229,6 +4230,7 @@ RunService.RenderStepped:Connect(function()
 						espDrawings[targetPlayer].Box.Visible = false
 						espDrawings[targetPlayer].Line.Visible = false
 						espDrawings[targetPlayer].NameText.Visible = false
+						espDrawings[targetPlayer].LevelText.Visible = false
 						espDrawings[targetPlayer].DistText.Visible = false
 						espDrawings[targetPlayer].HeadDot.Visible = false
 						espDrawings[targetPlayer].HealthBarBg.Visible = false
