@@ -383,6 +383,14 @@ local _G_ColorEnemyDist = Color3.fromRGB(200, 200, 255)
 local _G_ColorFruitChams = Color3.fromRGB(170, 90, 255)
 local _G_ColorFruitName = Color3.fromRGB(255, 255, 255)
 local _G_ColorFruitDist = Color3.fromRGB(200, 200, 255)
+-- Estado compartilhado pelo menu Visual e pelo renderizador do ESP Baú.
+local chestEspEnabled = false
+local chestEspChams = false
+local chestEspName = false
+local chestEspDistance = false
+local chestEspChamsColor = Color3.fromRGB(255, 190, 60)
+local chestEspNameColor = Color3.fromRGB(255, 255, 255)
+local chestEspDistanceColor = Color3.fromRGB(255, 220, 140)
 
 local hideKeybindEnabled = false
 local hideKeybindKey = Enum.KeyCode.RightControl
@@ -2399,13 +2407,6 @@ function showMainPanel()
 	addEspToggleWithColor(secEspEnemies, "ESP Distância", _G_ColorEnemyDist, function(c) _G_ColorEnemyDist = c end, function(s) _G_EnemyEspDistance = s end)
 
 	local secEspChests = createSection(visualPage, "ESP Baú", sectionIcons.World)
-	local chestEspEnabled = false
-	local chestEspChams = false
-	local chestEspName = false
-	local chestEspDistance = false
-	local chestEspChamsColor = Color3.fromRGB(255, 190, 60)
-	local chestEspNameColor = Color3.fromRGB(255, 255, 255)
-	local chestEspDistanceColor = Color3.fromRGB(255, 220, 140)
 	addToggle(secEspChests, "Ativar ESP Baú", function(state) chestEspEnabled = state end, false)
 	addEspToggleWithColor(secEspChests, "Chams", chestEspChamsColor, function(c) chestEspChamsColor = c end, function(s) chestEspChams = s end)
 	addEspToggleWithColor(secEspChests, "Nome (Baú)", chestEspNameColor, function(c) chestEspNameColor = c end, function(s) chestEspName = s end)
@@ -4901,4 +4902,4 @@ task.spawn(function()
     btn.MouseButton1Click:Connect(function()
         panel.Visible = not panel.Visible
     end)
-end)
+en
