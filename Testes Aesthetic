@@ -391,8 +391,10 @@ local chestEspDistance = false
 local chestEspChamsColor = Color3.fromRGB(255, 190, 60)
 local chestEspNameColor = Color3.fromRGB(255, 255, 255)
 local chestEspDistanceColor = Color3.fromRGB(255, 220, 140)
-local playerLevelEspEnabled = false
-local playerLevelEspColor = Color3.fromRGB(255, 220, 80)
+
+-- Variável do Level ESP integrado
+local _G_LevelEspEnabled = false
+local _G_ColorLevel = Color3.fromRGB(80, 220, 255)
 
 local hideKeybindEnabled = false
 local hideKeybindKey = Enum.KeyCode.RightControl
@@ -2408,13 +2410,20 @@ function showMainPanel()
 	addEspToggleWithColor(secEspEnemies, "ESP Nome", _G_ColorEnemyName, function(c) _G_ColorEnemyName = c end, function(s) _G_EnemyEspName = s end)
 	addEspToggleWithColor(secEspEnemies, "ESP Distância", _G_ColorEnemyDist, function(c) _G_ColorEnemyDist = c end, function(s) _G_EnemyEspDistance = s end)
 
-	local secEspLevel = createSection(visualPage, "ESP Level dos Players", sectionIcons.EspPlayers)
-	addEspToggleWithColor(secEspLevel, "Mostrar Level", playerLevelEspColor, function(c) playerLevelEspColor = c end, function(state) playerLevelEspEnabled = state end)
+	-- Seção integrada para o Level ESP dentro da aba Visual
+	local secEspLevel = createSection(visualPage, "ESP Level", sectionIcons.World)
+	addEspToggleWithColor(secEspLevel, "Ativar Level ESP", _G_ColorLevel, function(c) 
+		_G_ColorLevel = c 
+	end, function(state) 
+		_G_LevelEspEnabled = state 
+	end)
+
 	local secEspChests = createSection(visualPage, "ESP Baú", sectionIcons.World)
 	addToggle(secEspChests, "Ativar ESP Baú", function(state) chestEspEnabled = state end, false)
 	addEspToggleWithColor(secEspChests, "Chams", chestEspChamsColor, function(c) chestEspChamsColor = c end, function(s) chestEspChams = s end)
 	addEspToggleWithColor(secEspChests, "Nome (Baú)", chestEspNameColor, function(c) chestEspNameColor = c end, function(s) chestEspName = s end)
 	addEspToggleWithColor(secEspChests, "Distância", chestEspDistanceColor, function(c) chestEspDistanceColor = c end, function(s) chestEspDistance = s end)
+	
 	local secWorld = createSection(visualPage, "Visual do Mapa", sectionIcons.World)
 	addToggle(secWorld, "Fullbright (Remover Escuridão)", function(state)
 		_G_FullbrightEnabled = state
@@ -3662,83 +3671,6 @@ local function makeEnemyText(parent, name, size, position, fontSize)
 	return label
 end
 
--- ESP Level: procura Level em Workspace.Players, Player.Data ou Character.
-local playerLevelBillboards = {}
-local function findPlayerLevelValue(container)
-    if not container then return nil end
-    local function valid(value)
-        return value and (value:IsA("IntValue") or value:IsA("NumberValue") or value:IsA("StringValue"))
-    end
-    local direct = container:FindFirstChild("Level")
-    if valid(direct) then return direct end
-    local data = container:FindFirstChild("Data")
-    local nested = data and data:FindFirstChild("Level")
-    if valid(nested) then return nested end
-    local recursive = container:FindFirstChild("Level", true)
-    if valid(recursive) then return recursive end
-    return nil
-end
-local function getPlayerLevelSource(targetPlayer, character)
-    local worldPlayers = workspace:FindFirstChild("Players")
-    local worldEntry = worldPlayers and (worldPlayers:FindFirstChild(targetPlayer.Name) or worldPlayers:FindFirstChild(targetPlayer.DisplayName))
-    return findPlayerLevelValue(worldEntry) or findPlayerLevelValue(targetPlayer) or findPlayerLevelValue(character)
-end
-local function removePlayerLevelESP(targetPlayer)
-    local data = playerLevelBillboards[targetPlayer]
-    if not data then return end
-    if data.gui then data.gui:Destroy() end
-    playerLevelBillboards[targetPlayer] = nil
-end
-local function updatePlayerLevelESP(targetPlayer)
-    if targetPlayer == player then return end
-    local character = targetPlayer.Character
-    local head = character and character:FindFirstChild("Head")
-    local levelValue = getPlayerLevelSource(targetPlayer, character)
-    if not character or not head or not levelValue then
-        removePlayerLevelESP(targetPlayer)
-        return
-    end
-    local data = playerLevelBillboards[targetPlayer]
-    if not data or data.character ~= character or not data.gui.Parent then
-        removePlayerLevelESP(targetPlayer)
-        local gui = Instance.new("BillboardGui")
-        gui.Name = "AetherisPlayerLevel"
-        gui.Size = UDim2.fromOffset(130, 24)
-        gui.StudsOffsetWorldSpace = Vector3.new(0, 3, 0)
-        gui.AlwaysOnTop = true
-        gui.LightInfluence = 0
-        gui.MaxDistance = 500
-        gui.Adornee = head
-        gui.Enabled = false
-        gui.Parent = screenGui
-        local label = makeEnemyText(gui, "LevelLabel", UDim2.new(1, 0, 1, 0), UDim2.fromOffset(0, 0), 14)
-        label.Font = Enum.Font.GothamBold
-        label.TextXAlignment = Enum.TextXAlignment.Center
-        playerLevelBillboards[targetPlayer] = {gui = gui, label = label, character = character}
-        data = playerLevelBillboards[targetPlayer]
-    end
-    data.label.Text = "Lv. " .. tostring(levelValue.Value)
-    data.label.TextColor3 = playerLevelEspColor
-    data.gui.Enabled = playerLevelEspEnabled
-end
-Players.PlayerRemoving:Connect(removePlayerLevelESP)
-task.spawn(function()
-    while screenGui.Parent do
-        task.wait(0.5)
-        for _, targetPlayer in ipairs(Players:GetPlayers()) do
-            if targetPlayer ~= player then
-                if playerLevelEspEnabled then
-                    updatePlayerLevelESP(targetPlayer)
-                else
-                    removePlayerLevelESP(targetPlayer)
-                end
-            end
-        end
-        for targetPlayer in pairs(playerLevelBillboards) do
-            if not targetPlayer.Parent then removePlayerLevelESP(targetPlayer) end
-        end
-    end
-end)
 local chestEspObjects = {}
 local function isChestName(name)
     local lowerName = string.lower(name or "")
@@ -3843,6 +3775,163 @@ RunService.Heartbeat:Connect(function()
         end
     end
 end)
+
+-----------------------------------------------------------------
+-- IMPLEMENTAÇÃO DO SCRIPT DE LEVEL ESP (SUPORTE A DISPLAYNAME / NAME)
+-----------------------------------------------------------------
+local LP = Players.LocalPlayer
+local levelBillboards = {}
+
+local function findLevelValue(obj)
+    if not obj then return nil end
+    local lvl = obj:FindFirstChild("Level")
+    if lvl and (lvl:IsA("IntValue") or lvl:IsA("NumberValue") or lvl:IsA("StringValue")) then
+        return lvl
+    end
+    local data = obj:FindFirstChild("Data")
+    if data then
+        local l = data:FindFirstChild("Level")
+        if l and (l:IsA("IntValue") or l:IsA("NumberValue") or l:IsA("StringValue")) then
+            return l
+        end
+    end
+    local found = obj:FindFirstChild("Level", true)
+    if found and (found:IsA("IntValue") or found:IsA("NumberValue") or found:IsA("StringValue")) then
+        return found
+    end
+    return nil
+end
+
+local function getCharacterModel(playerName)
+    local wp = workspace:FindFirstChild("Players")
+    if wp then
+        local child = wp:FindFirstChild(playerName)
+        if child and child:FindFirstChild("Head") and child:FindFirstChildOfClass("Humanoid") then
+            return child
+        end
+    end
+    local p = Players:FindFirstChild(playerName)
+    if p and p.Character and p.Character:FindFirstChild("Head") then
+        return p.Character
+    end
+    return nil
+end
+
+local function getLevelSource(playerName)
+    local wp = workspace:FindFirstChild("Players")
+    if wp then
+        local child = wp:FindFirstChild(playerName)
+        if child and findLevelValue(child) then
+            return findLevelValue(child)
+        end
+    end
+    local p = Players:FindFirstChild(playerName)
+    if p and findLevelValue(p) then return findLevelValue(p) end
+    local char = getCharacterModel(playerName)
+    if char and findLevelValue(char) then return findLevelValue(char) end
+    return nil
+end
+
+local function createLevelBillboard(character)
+    local head = character:FindFirstChild("Head")
+    if not head then return nil end
+
+    local existing = head:FindFirstChild("_LevelBillboard")
+    if existing then existing:Destroy() end
+
+    local bb = Instance.new("BillboardGui")
+    bb.Name = "_LevelBillboard"
+    bb.Size = UDim2.new(0, 110, 0, 28)
+    bb.StudsOffset = Vector3.new(0, 2.6, 0)
+    bb.AlwaysOnTop = true
+    bb.LightInfluence = 0
+    bb.MaxDistance = 500
+    bb.Parent = head
+
+    local label = Instance.new("TextLabel")
+    label.Name = "LevelLabel"
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = _G_ColorLevel
+    label.Font = Enum.Font.GothamBlack
+    label.TextSize = 16
+    label.TextStrokeTransparency = 0.4
+    label.TextStrokeColor3 = Color3.new(0, 0, 0)
+    label.Text = "Lv. ?"
+    label.Parent = bb
+
+    return bb, label
+end
+
+local function attachLevelToPlayer(playerName)
+    if not _G_LevelEspEnabled then return end
+    
+    local targetPlayer = Players:FindFirstChild(playerName)
+    local targetName = targetPlayer and targetPlayer.Name or ""
+    local targetDisplayName = targetPlayer and targetPlayer.DisplayName or ""
+
+    if playerName == LP.Name or playerName == LP.DisplayName or playerName == targetName or playerName == targetDisplayName then 
+        return 
+    end
+
+    if levelBillboards[playerName] then
+        if levelBillboards[playerName].conn then levelBillboards[playerName].conn:Disconnect() end
+        if levelBillboards[playerName].gui then levelBillboards[playerName].gui:Destroy() end
+        levelBillboards[playerName] = nil
+    end
+
+    local character = getCharacterModel(playerName)
+    if not character then return end
+    if LP.Character and character == LP.Character then return end
+
+    local levelVal = getLevelSource(playerName)
+    if not levelVal then return end
+
+    local bb, label = createLevelBillboard(character)
+    if not bb then return end
+
+    label.Text = "Lv. " .. tostring(levelVal.Value)
+
+    local conn = levelVal.Changed:Connect(function(newVal)
+        if bb.Parent then
+            label.Text = "Lv. " .. tostring(newVal)
+        end
+    end)
+
+    levelBillboards[playerName] = { gui = bb, conn = conn }
+end
+
+local function clearAllLevelBillboards()
+    for playerName, data in pairs(levelBillboards) do
+        if data.conn then data.conn:Disconnect() end
+        if data.gui then data.gui:Destroy() end
+        levelBillboards[playerName] = nil
+    end
+end
+
+RunService.Heartbeat:Connect(function()
+    if not _G_LevelEspEnabled then
+        clearAllLevelBillboards()
+        return
+    end
+
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LP and not levelBillboards[p.Name] then
+            attachLevelToPlayer(p.Name)
+            if p.DisplayName and not levelBillboards[p.DisplayName] then
+                attachLevelToPlayer(p.DisplayName)
+            end
+        end
+    end
+
+    -- Atualiza as cores do Level ESP em tempo real se o usuário alterar no seletor
+    for _, data in pairs(levelBillboards) do
+        if data.gui and data.gui:FindFirstChild("LevelLabel") then
+            data.gui.LevelLabel.TextColor3 = _G_ColorLevel
+        end
+    end
+end)
+
 local function createEnemyESP(enemy)
 	if enemyObjects[enemy] then return end
 	local root = getEnemyRoot(enemy)
@@ -4979,3 +5068,5 @@ task.spawn(function()
         panel.Visible = not panel.Visible
     end)
 end)
+
+print("[Aetheris] Hub e Level ESP carregados com sucesso!")
