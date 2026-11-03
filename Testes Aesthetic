@@ -133,29 +133,7 @@ local _G_FullbrightEnabled = false
 local _G_EnergyEnabled = false
 local _G_InfiniteKenEnabled = false
 local _G_InfiniteAirJumpsEnabled = false
-local _G_FloatEnabled = false
 local floatVelocity = nil
-local function setFloatEnabled(state)
-	_G_FloatEnabled = state
-	if floatVelocity then
-		pcall(function() floatVelocity:Destroy() end)
-		floatVelocity = nil
-	end
-	if not state then return end
-	local character = player.Character
-	local root = character and character:FindFirstChild("HumanoidRootPart")
-	if not root then return end
-	local velocity = Instance.new("BodyVelocity")
-	velocity.Name = "AetherisFloatVelocity"
-	velocity.MaxForce = Vector3.new(0, 100000000, 0)
-	velocity.P = 10000
-	velocity.Velocity = Vector3.zero
-	velocity.Parent = root
-	floatVelocity = velocity
-end
-screenGui.Destroying:Connect(function()
-	setFloatEnabled(false)
-end)
 
 local activeObservationInstance = nil
 local originalObservationRadius = nil
@@ -197,7 +175,6 @@ player.CharacterAdded:Connect(function()
 	task.defer(updateObservationRoot)
 	task.wait(1)
 	updateObservationRoot()
-	if _G_FloatEnabled then setFloatEnabled(true) end
 end)
 
 task.spawn(function()
@@ -2161,7 +2138,25 @@ function showMainPanel()
 
 	addToggle(secMovimento, "Ativar JumpPower", function(state) _G_JumpPowerEnabled = state end, false)
 	addSlider(secMovimento, "Força do Pulo", 50, 300, 50, function(val) _G_JumpPowerValue = val end)
-	addToggle(secMovimento, "Flutuar", function(state) setFloatEnabled(state) end, false)
+	addToggle(secMovimento, "Flutuar", function(state)
+		if floatVelocity then
+			pcall(function() floatVelocity:Destroy() end)
+			floatVelocity = nil
+		end
+		if state then
+			local character = player.Character
+			local root = character and character:FindFirstChild("HumanoidRootPart")
+			if root then
+				local velocity = Instance.new("BodyVelocity")
+				velocity.Name = "AetherisFloatVelocity"
+				velocity.MaxForce = Vector3.new(0, 100000000, 0)
+				velocity.P = 10000
+				velocity.Velocity = Vector3.zero
+				velocity.Parent = root
+				floatVelocity = velocity
+			end
+		end
+	end, false)
 
 	local secFisico = createSection(playerPage, "Habilidades Físicas", sectionIcons.Physical)
 	addToggle(secFisico, "Noclip (Atravessar Paredes)", function(state) _G_NoclipEnabled = state end, false)
