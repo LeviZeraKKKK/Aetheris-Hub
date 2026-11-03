@@ -391,8 +391,6 @@ local chestEspDistance = false
 local chestEspChamsColor = Color3.fromRGB(255, 190, 60)
 local chestEspNameColor = Color3.fromRGB(255, 255, 255)
 local chestEspDistanceColor = Color3.fromRGB(255, 220, 140)
-local playerLevelEspEnabled = false
-local playerLevelEspColor = Color3.fromRGB(255, 220, 80)
 
 local hideKeybindEnabled = false
 local hideKeybindKey = Enum.KeyCode.RightControl
@@ -2408,8 +2406,6 @@ function showMainPanel()
 	addEspToggleWithColor(secEspEnemies, "ESP Nome", _G_ColorEnemyName, function(c) _G_ColorEnemyName = c end, function(s) _G_EnemyEspName = s end)
 	addEspToggleWithColor(secEspEnemies, "ESP Distância", _G_ColorEnemyDist, function(c) _G_ColorEnemyDist = c end, function(s) _G_EnemyEspDistance = s end)
 
-	local secEspLevel = createSection(visualPage, "ESP Level dos Players", sectionIcons.EspPlayers)
-	addEspToggleWithColor(secEspLevel, "ESP Level (com Name ESP)", playerLevelEspColor, function(c) playerLevelEspColor = c end, function(state) playerLevelEspEnabled = state end)
 	local secEspChests = createSection(visualPage, "ESP Baú", sectionIcons.World)
 	addToggle(secEspChests, "Ativar ESP Baú", function(state) chestEspEnabled = state end, false)
 	addEspToggleWithColor(secEspChests, "Chams", chestEspChamsColor, function(c) chestEspChamsColor = c end, function(s) chestEspChams = s end)
@@ -4048,7 +4044,6 @@ RunService.RenderStepped:Connect(function()
 								Box = Drawing.new("Square"),
 								Line = Drawing.new("Line"),
 								NameText = Drawing.new("Text"),
-								LevelText = Drawing.new("Text"),
 								DistText = Drawing.new("Text"),
 								HeadDot = Drawing.new("Circle"),
 								HealthBarBg = Drawing.new("Square"),
@@ -4148,31 +4143,7 @@ RunService.RenderStepped:Connect(function()
 						else
 							cache.NameText.Visible = false
 						end
-						if playerLevelEspEnabled and onScreen and hrp then
-							local levelText = "?"
-							local worldPlayers = workspace:FindFirstChild("Players")
-							local worldEntry = worldPlayers and (worldPlayers:FindFirstChild(targetPlayer.Name) or worldPlayers:FindFirstChild(targetPlayer.DisplayName))
-							local function readLevel(source)
-								if not source then return nil end
-								local value = source:FindFirstChild("Level")
-								local dataFolder = source:FindFirstChild("Data")
-								if not value and dataFolder then value = dataFolder:FindFirstChild("Level") end
-								if not value then value = source:FindFirstChild("Level", true) end
-								if value and (value:IsA("IntValue") or value:IsA("NumberValue") or value:IsA("StringValue")) then return value end
-								return nil
-							end
-							local levelValue = readLevel(worldEntry) or readLevel(targetPlayer) or readLevel(tChar)
-							if levelValue then levelText = tostring(levelValue.Value) end
-							cache.LevelText.Text = "Lv. " .. levelText
-							cache.LevelText.Size = 11
-							cache.LevelText.Center = true
-							cache.LevelText.Outline = true
-							cache.LevelText.Color = playerLevelEspColor
-							cache.LevelText.Position = Vector2.new(pos.X, pos.Y - (_G_EspName and 50 or 35))
-							cache.LevelText.Visible = true
-						else
-							cache.LevelText.Visible = false
-						end
+
 						if _G_EspDistance and onScreen then
 							local dist = math.floor((camera.CFrame.Position - hrp.Position).Magnitude)
 							cache.DistText.Text = "[" .. dist .. "m]"
@@ -4204,7 +4175,6 @@ RunService.RenderStepped:Connect(function()
 						espDrawings[targetPlayer].Box.Visible = false
 						espDrawings[targetPlayer].Line.Visible = false
 						espDrawings[targetPlayer].NameText.Visible = false
-						espDrawings[targetPlayer].LevelText.Visible = false
 						espDrawings[targetPlayer].DistText.Visible = false
 						espDrawings[targetPlayer].HeadDot.Visible = false
 						espDrawings[targetPlayer].HealthBarBg.Visible = false
