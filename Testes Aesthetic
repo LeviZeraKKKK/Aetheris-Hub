@@ -3662,45 +3662,6 @@ local function makeEnemyText(parent, name, size, position, fontSize)
 	return label
 end
 
--- Cache de level para o ESP Name/Level existente (sem BillboardGui separado).
-local playerLevelValues = {}
-local function findPlayerLevelValue(container)
-    if not container then return nil end
-    local direct = container:FindFirstChild("Level")
-    if direct and (direct:IsA("IntValue") or direct:IsA("NumberValue") or direct:IsA("StringValue")) then return direct end
-    local data = container:FindFirstChild("Data")
-    local nested = data and data:FindFirstChild("Level")
-    if nested and (nested:IsA("IntValue") or nested:IsA("NumberValue") or nested:IsA("StringValue")) then return nested end
-    local recursive = container:FindFirstChild("Level", true)
-    if recursive and (recursive:IsA("IntValue") or recursive:IsA("NumberValue") or recursive:IsA("StringValue")) then return recursive end
-    return nil
-end
-local function getPlayerLevelValue(targetPlayer)
-    local worldPlayers = workspace:FindFirstChild("Players")
-    local worldEntry = worldPlayers and (worldPlayers:FindFirstChild(targetPlayer.Name) or worldPlayers:FindFirstChild(targetPlayer.DisplayName))
-    local value = findPlayerLevelValue(worldEntry) or findPlayerLevelValue(targetPlayer) or findPlayerLevelValue(targetPlayer.Character)
-    return value and tostring(value.Value) or "?"
-end
-task.spawn(function()
-    while screenGui.Parent do
-        task.wait(0.5)
-        if playerLevelEspEnabled then
-            for _, targetPlayer in ipairs(Players:GetPlayers()) do
-                if targetPlayer ~= player then
-                    local ok, value = pcall(getPlayerLevelValue, targetPlayer)
-                    playerLevelValues[targetPlayer] = ok and value or "?"
-                end
-            end
-        else
-            for targetPlayer in pairs(playerLevelValues) do
-                playerLevelValues[targetPlayer] = nil
-            end
-        end
-    end
-end)
-Players.PlayerRemoving:Connect(function(targetPlayer)
-    playerLevelValues[targetPlayer] = nil
-end)
 local chestEspObjects = {}
 local function isChestName(name)
     local lowerName = string.lower(name or "")
@@ -4188,7 +4149,20 @@ RunService.RenderStepped:Connect(function()
 							cache.NameText.Visible = false
 						end
 						if playerLevelEspEnabled and onScreen and hrp then
-							local levelText = playerLevelValues[targetPlayer] or "?"
+							local levelText = "?"
+							local worldPlayers = workspace:FindFirstChild("Players")
+							local worldEntry = worldPlayers and (worldPlayers:FindFirstChild(targetPlayer.Name) or worldPlayers:FindFirstChild(targetPlayer.DisplayName))
+							local function readLevel(source)
+								if not source then return nil end
+								local value = source:FindFirstChild("Level")
+								local dataFolder = source:FindFirstChild("Data")
+								if not value and dataFolder then value = dataFolder:FindFirstChild("Level") end
+								if not value then value = source:FindFirstChild("Level", true) end
+								if value and (value:IsA("IntValue") or value:IsA("NumberValue") or value:IsA("StringValue")) then return value end
+								return nil
+							end
+							local levelValue = readLevel(worldEntry) or readLevel(targetPlayer) or readLevel(tChar)
+							if levelValue then levelText = tostring(levelValue.Value) end
 							cache.LevelText.Text = "Lv. " .. levelText
 							cache.LevelText.Size = 11
 							cache.LevelText.Center = true
