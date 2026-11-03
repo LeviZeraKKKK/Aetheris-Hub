@@ -1,4 +1,4 @@
- -- Serviços necessários
+-- Serviços necessários
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
@@ -391,6 +391,11 @@ local chestEspDistance = false
 local chestEspChamsColor = Color3.fromRGB(255, 190, 60)
 local chestEspNameColor = Color3.fromRGB(255, 255, 255)
 local chestEspDistanceColor = Color3.fromRGB(255, 220, 140)
+
+-- Estado compartilhado do ESP Berries.
+local berryEspName = false
+local berryEspDistance = false
+local berryEspObjects = {}
 
 local hideKeybindEnabled = false
 local hideKeybindKey = Enum.KeyCode.RightControl
@@ -2411,9 +2416,15 @@ function showMainPanel()
 	addEspToggleWithColor(secEspChests, "Chams", chestEspChamsColor, function(c) chestEspChamsColor = c end, function(s) chestEspChams = s end)
 	addEspToggleWithColor(secEspChests, "Nome (Baú)", chestEspNameColor, function(c) chestEspNameColor = c end, function(s) chestEspName = s end)
 	addEspToggleWithColor(secEspChests, "Distância", chestEspDistanceColor, function(c) chestEspDistanceColor = c end, function(s) chestEspDistance = s end)
-	local secEspBerries = createSection(visualPage, "ESP Berries", sectionIcons.FruitEsp)
-	addToggle(secEspBerries, "ESP Name Berry", function(state) end, false)
-	addToggle(secEspBerries, "ESP Distance", function(state) end, false)
+
+	local secEspBerries = createSection(visualPage, "ESP Berries", sectionIcons.World)
+	addToggle(secEspBerries, "ESP Name Berry", function(state)
+		berryEspName = state
+	end, false)
+	addToggle(secEspBerries, "ESP Distance", function(state)
+		berryEspDistance = state
+	end, false)
+
 	local secWorld = createSection(visualPage, "Visual do Mapa", sectionIcons.World)
 	addToggle(secWorld, "Fullbright (Remover Escuridão)", function(state)
 		_G_FullbrightEnabled = state
@@ -3765,6 +3776,138 @@ RunService.Heartbeat:Connect(function()
         end
     end
 end)
+
+-----------------------------------------------------------------
+-- SISTEMA DE ESP DE BERRIES
+-----------------------------------------------------------------
+local function getBerryColor(attributeText)
+	local lowerName = string.lower(tostring(attributeText))
+	if lowerName:find("green", 1, true) then
+		return Color3.fromRGB(0, 255, 0)
+	elseif lowerName:find("yellow", 1, true) then
+		return Color3.fromRGB(255, 255, 0)
+	elseif lowerName:find("red", 1, true) then
+		return Color3.fromRGB(255, 0, 0)
+	elseif lowerName:find("blue", 1, true) then
+		return Color3.fromRGB(0, 150, 255)
+	elseif lowerName:find("orange", 1, true) then
+		return Color3.fromRGB(255, 140, 0)
+	elseif lowerName:find("purple", 1, true) then
+		return Color3.fromRGB(180, 50, 255)
+	end
+	return Color3.fromRGB(255, 255, 255)
+end
+
+local function getBerryPart(target)
+	if target:IsA("BasePart") then return target end
+	if target:IsA("Model") then
+		return target.PrimaryPart or target:FindFirstChildWhichIsA("BasePart", true)
+	end
+	return nil
+end
+
+local function getBerryAttribute(berriesFolder)
+	local attributes = berriesFolder:GetAttributes()
+	for _, value in pairs(attributes) do
+		return tostring(value)
+	end
+	return nil
+end
+
+local function removeBerryESP(target)
+	local data = berryEspObjects[target]
+	if not data then return end
+	if data.billboard then data.billboard:Destroy() end
+	berryEspObjects[target] = nil
+end
+
+local function createBerryESP(target, part, attributeText)
+	if berryEspObjects[target] then return end
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "AetherisBerryESP"
+	billboard.Adornee = part
+	billboard.Size = UDim2.fromOffset(150, 38)
+	billboard.StudsOffsetWorldSpace = Vector3.new(0, 2.5, 0)
+	billboard.AlwaysOnTop = true
+	billboard.LightInfluence = 0
+	billboard.Enabled = false
+	billboard.Parent = screenGui
+
+	local nameLabel = makeEnemyText(billboard, "BerryName", UDim2.new(1, 0, 0, 18), UDim2.fromOffset(0, 0), 12)
+	nameLabel.Text = attributeText
+	nameLabel.TextColor3 = getBerryColor(attributeText)
+	nameLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+	local distanceLabel = makeEnemyText(billboard, "BerryDistance", UDim2.new(1, 0, 0, 16), UDim2.fromOffset(0, 19), 10)
+	distanceLabel.TextXAlignment = Enum.TextXAlignment.Center
+	distanceLabel.TextColor3 = Color3.fromRGB(210, 210, 210)
+
+	berryEspObjects[target] = {
+		billboard = billboard,
+		part = part,
+		nameLabel = nameLabel,
+		distanceLabel = distanceLabel
+	}
+end
+
+task.spawn(function()
+	while screenGui.Parent do
+		task.wait(0.5)
+		if berryEspName or berryEspDistance then
+			local searchRoot = workspace:FindFirstChild("Map") or map or workspace
+			local found = {}
+			for _, target in ipairs(searchRoot:GetDescendants()) do
+				if string.sub(target.Name, 1, 1) == "{" then
+					local berriesFolder = target:FindFirstChild("Berries")
+					if berriesFolder then
+						local attributeText = getBerryAttribute(berriesFolder)
+						local part = getBerryPart(target)
+						if attributeText and part then
+							found[target] = true
+							if not berryEspObjects[target] then
+								createBerryESP(target, part, attributeText)
+							else
+								local data = berryEspObjects[target]
+								data.part = part
+								data.billboard.Adornee = part
+								data.nameLabel.Text = attributeText
+								data.nameLabel.TextColor3 = getBerryColor(attributeText)
+							end
+						end
+					end
+				end
+			end
+			for target in pairs(berryEspObjects) do
+				if not found[target] or not target.Parent then
+					removeBerryESP(target)
+				end
+			end
+		else
+			for target in pairs(berryEspObjects) do
+				removeBerryESP(target)
+			end
+		end
+	end
+end)
+
+RunService.Heartbeat:Connect(function()
+	if not (berryEspName or berryEspDistance) then return end
+	local character = player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if not root then return end
+	for target, data in pairs(berryEspObjects) do
+		if target.Parent and data.part and data.part.Parent then
+			data.nameLabel.Visible = berryEspName
+			data.distanceLabel.Visible = berryEspDistance
+			data.billboard.Enabled = berryEspName or berryEspDistance
+			if berryEspDistance then
+				local distance = (data.part.Position - root.Position).Magnitude
+				data.distanceLabel.Text = string.format("%.0f studs", distance)
+			end
+		end
+	end
+end)
+
 local function createEnemyESP(enemy)
 	if enemyObjects[enemy] then return end
 	local root = getEnemyRoot(enemy)
