@@ -2418,7 +2418,6 @@ function showMainPanel()
 		local berryEspEnabled = false
 		local berryEspName = false
 		local berryEspDistance = false
-		local berryEspNameColor = Color3.fromRGB(255, 255, 255)
 		local berryEspDistanceColor = Color3.fromRGB(200, 200, 200)
 		local berryEspObjects = {}
 
@@ -2428,6 +2427,25 @@ function showMainPanel()
 				return target.PrimaryPart or target:FindFirstChildWhichIsA("BasePart", true)
 			end
 			return nil
+		end
+
+		-- Cor do nome conforme o tipo da berry (texto do atributo): Red, Orange, Blue, Green...
+		local function getBerryColor(text)
+			local lowerName = string.lower(tostring(text))
+			if string.find(lowerName, "green", 1, true) then
+				return Color3.fromRGB(0, 255, 0)
+			elseif string.find(lowerName, "yellow", 1, true) then
+				return Color3.fromRGB(255, 255, 0)
+			elseif string.find(lowerName, "red", 1, true) then
+				return Color3.fromRGB(255, 0, 0)
+			elseif string.find(lowerName, "blue", 1, true) then
+				return Color3.fromRGB(0, 150, 255)
+			elseif string.find(lowerName, "orange", 1, true) then
+				return Color3.fromRGB(255, 140, 0)
+			elseif string.find(lowerName, "purple", 1, true) then
+				return Color3.fromRGB(180, 50, 255)
+			end
+			return Color3.fromRGB(255, 255, 255)
 		end
 
 		local function makeBerryLabel(parent, name, size, position, fontSize)
@@ -2469,6 +2487,7 @@ function showMainPanel()
 				nameLabel = nameLabel,
 				distanceLabel = distanceLabel,
 				text = text,
+				color = getBerryColor(text),
 				lastDistance = nil,
 			}
 		end
@@ -2503,6 +2522,7 @@ function showMainPanel()
 										local data = berryEspObjects[child]
 										if data then
 											data.text = text
+											data.color = getBerryColor(text)
 										else
 											local part = getBerryPart(child)
 											if part then createBerryESP(child, part, text) end
@@ -2537,7 +2557,7 @@ function showMainPanel()
 				local part = data.part
 				if target.Parent and part and part.Parent then
 					data.nameLabel.Text = data.text
-					data.nameLabel.TextColor3 = berryEspNameColor
+					data.nameLabel.TextColor3 = data.color
 					data.distanceLabel.TextColor3 = berryEspDistanceColor
 					data.nameLabel.Visible = berryEspName
 					data.distanceLabel.Visible = berryEspDistance
@@ -2560,7 +2580,7 @@ function showMainPanel()
 			berryEspEnabled = state
 			if not state then clearBerryESP() end
 		end, false)
-		addEspToggleWithColor(secEspBerries, "ESP Nome (Berry)", berryEspNameColor, function(c) berryEspNameColor = c end, function(s) berryEspName = s end)
+		addToggle(secEspBerries, "ESP Nome (Berry)", function(state) berryEspName = state end, false)
 		addEspToggleWithColor(secEspBerries, "ESP Distância", berryEspDistanceColor, function(c) berryEspDistanceColor = c end, function(s) berryEspDistance = s end)
 	end
 	local secWorld = createSection(visualPage, "Visual do Mapa", sectionIcons.World)
