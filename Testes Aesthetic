@@ -3325,6 +3325,7 @@ function showMainPanel()
 			data.highlight.OutlineColor = Color3.new(1, 1, 1)
 			data.label.TextColor3       = _G_ColorFruitName
 			data.label.TextStrokeColor3 = Color3.new(0, 0, 0)
+			data.distLabel.TextColor3   = _G_ColorFruitDist
 		end
 	end
 
@@ -3352,22 +3353,37 @@ function showMainPanel()
 		billboard.Enabled = false
 		billboard.Parent = screenGui
 
+		-- Nome e distância ficam em rótulos separados, cada um com a sua própria cor.
 		local text = Instance.new("TextLabel")
 		text.Name = "Label"
-		text.Size = UDim2.fromScale(1, 1)
+		text.Size = UDim2.new(1, 0, 0, 18)
+		text.Position = UDim2.fromOffset(0, 0)
 		text.BackgroundTransparency = 1
 		text.TextColor3 = _G_ColorFruitName
 		text.TextStrokeTransparency = 0.2
 		text.Font = currentGlobalFont
 		text.TextSize = 12
-		text.TextWrapped = true
+		text.TextWrapped = false
 		text.Parent = billboard
 		table.insert(allTextLabels, text)
+
+		local distText = Instance.new("TextLabel")
+		distText.Name = "DistanceLabel"
+		distText.Size = UDim2.new(1, 0, 0, 16)
+		distText.Position = UDim2.fromOffset(0, 19)
+		distText.BackgroundTransparency = 1
+		distText.TextColor3 = _G_ColorFruitDist
+		distText.TextStrokeTransparency = 0.2
+		distText.Font = currentGlobalFont
+		distText.TextSize = 11
+		distText.TextWrapped = false
+		distText.Parent = billboard
 
 		local data = {
 			highlight  = highlight,
 			billboard  = billboard,
 			label      = text,
+			distLabel  = distText,
 			handle     = handle,
 			lastText   = "",
 			lastParent = tool.Parent,
@@ -3690,6 +3706,9 @@ function showMainPanel()
 
 	addEspToggleWithColor(secFrutaEsp, "ESP Distance", _G_ColorFruitDist, function(c)
 		_G_ColorFruitDist = c
+		for _, data in pairs(fruitEspObjects) do
+			data.distLabel.TextColor3 = c
+		end
 	end, function(s) fruitEnabledOptions.Distance = s end)
 
 	local fruitAccumulator = 0
@@ -3751,19 +3770,24 @@ function showMainPanel()
 			if data.billboard.Enabled ~= wantBB then data.billboard.Enabled = wantBB end
 
 			if wantBB then
-				local newText
+				local nTxt, dTxt
 				if data.isHeld then
-					newText = fruitConfig.HeldText
+					nTxt = fruitConfig.HeldText
+					dTxt = ""
 				else
-					local distance = math.sqrt(distSq)
-					local nTxt = nameV and tool.Name or ""
-					local dTxt = distV and string.format("%.0f studs", distance) or ""
-					newText = nTxt .. ((nTxt ~= "" and dTxt ~= "") and "\n" or "") .. dTxt
+					nTxt = nameV and tool.Name or ""
+					dTxt = distV and string.format("%.0f studs", math.sqrt(distSq)) or ""
 				end
 
+				local newText = nTxt .. "\n" .. dTxt
 				if data.lastText ~= newText then
-					data.label.Text = newText
 					data.lastText = newText
+					data.label.Text = nTxt
+					data.label.Visible = nTxt ~= ""
+					data.distLabel.Text = dTxt
+					data.distLabel.Visible = dTxt ~= ""
+					-- Só a distância: sobe para o meio do quadro; com o nome, fica na segunda linha.
+					data.distLabel.Position = UDim2.fromOffset(0, nTxt ~= "" and 19 or 11)
 				end
 			end
 		end
@@ -4767,14 +4791,14 @@ table.insert(themeSliders, topAccent)
 
 local dragH = Instance.new("TextButton")
 dragH.Name = "DragHeader"
-dragH.Size = UDim2.new(1, -82, 0, 48)
+dragH.Size = UDim2.new(1, -44, 0, 48)
 dragH.BackgroundTransparency = 1
 dragH.Text = ""
 dragH.ZIndex = 12
 dragH.Parent = panel
 
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -118, 0, 20)
+title.Size = UDim2.new(1, -56, 0, 20)
 title.Position = UDim2.new(0, 16, 0, 8)
 title.BackgroundTransparency = 1
 title.TextColor3 = currentThemeColor
@@ -4799,23 +4823,6 @@ subtitle.Text = "SEU SALDO  •  " .. formatBeli(getBeli()) .. " Beli"
 subtitle.ZIndex = 12
 subtitle.Parent = panel
 table.insert(allTextLabels, subtitle)
-
-local refreshB = Instance.new("TextButton")
-refreshB.Name = "RefreshStock"
-refreshB.Size = UDim2.new(0, 25, 0, 25)
-refreshB.Position = UDim2.new(1, -64, 0, 10)
-refreshB.BackgroundColor3 = Color3.fromRGB(36, 40, 54)
-refreshB.BorderSizePixel = 0
-refreshB.Text = "↻"
-refreshB.TextColor3 = currentThemeColor
-refreshB.Font = Enum.Font.GothamBold
-refreshB.TextSize = 15
-refreshB.AutoButtonColor = true
-refreshB.ZIndex = 13
-refreshB.Parent = panel
-Instance.new("UICorner", refreshB).CornerRadius = UDim.new(0, 7)
-table.insert(allTextLabels, refreshB)
-table.insert(themeTexts, refreshB)
 
 local closeB = Instance.new("TextButton")
 closeB.Name = "CloseStock"
@@ -5210,10 +5217,6 @@ task.spawn(function()
     end
 end)
 
-refreshB.MouseButton1Click:Connect(function()
-    TweenService:Create(refreshB, TweenInfo.new(0.35), {Rotation = refreshB.Rotation + 180}):Play()
-    refreshAll()
-end)
 closeB.MouseButton1Click:Connect(function()
     panel.Visible = false
 end)
