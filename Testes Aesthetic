@@ -4089,13 +4089,22 @@ task.spawn(function()
         task.wait(0.5)
         if chestEspEnabled then
             local found = {}
-            local searchRoot = workspace:FindFirstChild("Map") or map or workspace
-            for _, instance in ipairs(searchRoot:GetDescendants()) do
-                if isChestName(instance.Name) then
-                    local target = getChestTarget(instance)
-                    if target and target:IsDescendantOf(searchRoot) and getChestPart(target) then
-                        found[target] = true
-                        if not chestEspObjects[target] then createChestESP(target) end
+            -- Os baús do jogo ficam em workspace.ChestModels (a coleta de baú do Farming usa essa
+            -- pasta); Map entra também por garantia. Sem nenhuma das duas, varre o workspace.
+            local searchRoots = {}
+            local chestModelsRoot = workspace:FindFirstChild("ChestModels")
+            if chestModelsRoot then table.insert(searchRoots, chestModelsRoot) end
+            local mapRoot = workspace:FindFirstChild("Map") or map
+            if mapRoot and mapRoot ~= workspace then table.insert(searchRoots, mapRoot) end
+            if #searchRoots == 0 then table.insert(searchRoots, workspace) end
+            for _, searchRoot in ipairs(searchRoots) do
+                for _, instance in ipairs(searchRoot:GetDescendants()) do
+                    if isChestName(instance.Name) then
+                        local target = getChestTarget(instance)
+                        if target and target:IsDescendantOf(searchRoot) and getChestPart(target) then
+                            found[target] = true
+                            if not chestEspObjects[target] then createChestESP(target) end
+                        end
                     end
                 end
             end
@@ -4334,23 +4343,71 @@ local function getManualTarget()
 	return bestTarget
 end
 
+-- Estado do loop principal (numa tabela só, para não consumir variáveis locais/upvalues).
+local mainLoopState = {
+	staleCleaned = false,
+	jumpApplied = false,
+	savedUseJump = true,
+	savedJump = 50,
+	noclipParts = setmetatable({}, {__mode = "k"}),
+}
+
 RunService.RenderStepped:Connect(function()
+	-- Se o hub foi recarregado, esta execução antiga fica inerte. Antes ela continuava
+	-- rodando e brigava com a nova (forçava JumpPower 50, CanCollide true e apagava os chams).
+	if not screenGui.Parent then
+		if not mainLoopState.staleCleaned then
+			mainLoopState.staleCleaned = true
+			for _, cache in pairs(espDrawings) do
+				if type(cache) == "table" then
+					for _, drawingObj in pairs(cache) do
+						pcall(function() drawingObj:Remove() end)
+					end
+				end
+			end
+			table.clear(espDrawings)
+			if fovCircleDrawing then pcall(function() fovCircleDrawing:Remove() end) end
+		end
+		return
+	end
+
 	local char = player.Character
-	if char and char:FindFirstChild("Humanoid") then
-		local hum = char.Humanoid
+	local hum = char and char:FindFirstChildOfClass("Humanoid")
+	if hum then
 		if _G_WalkSpeedEnabled then hum.WalkSpeed = _G_WalkSpeedValue end
-		if _G_JumpPowerEnabled then 
+
+		-- JumpPower: só mexe enquanto ligado; ao desligar, devolve o valor que o jogo tinha.
+		if _G_JumpPowerEnabled then
+			if not mainLoopState.jumpApplied then
+				mainLoopState.jumpApplied = true
+				mainLoopState.savedUseJump = hum.UseJumpPower
+				mainLoopState.savedJump = hum.JumpPower
+			end
 			hum.UseJumpPower = true
-			hum.JumpPower = _G_JumpPowerValue 
-		else
-			hum.UseJumpPower = true
-			hum.JumpPower = 50
+			hum.JumpPower = _G_JumpPowerValue
+		elseif mainLoopState.jumpApplied then
+			mainLoopState.jumpApplied = false
+			hum.UseJumpPower = mainLoopState.savedUseJump
+			hum.JumpPower = mainLoopState.savedJump
 		end
 	end
 
+	-- Noclip: só mexe enquanto ligado; guarda o CanCollide original de cada parte e devolve ao desligar.
 	if char then
-		for _, part in pairs(char:GetDescendants()) do
-			if part:IsA("BasePart") then part.CanCollide = not _G_NoclipEnabled end
+		if _G_NoclipEnabled then
+			for _, part in ipairs(char:GetDescendants()) do
+				if part:IsA("BasePart") then
+					if mainLoopState.noclipParts[part] == nil then
+						mainLoopState.noclipParts[part] = part.CanCollide
+					end
+					part.CanCollide = false
+				end
+			end
+		elseif next(mainLoopState.noclipParts) ~= nil then
+			for part, originalValue in pairs(mainLoopState.noclipParts) do
+				if part.Parent then part.CanCollide = originalValue end
+			end
+			table.clear(mainLoopState.noclipParts)
 		end
 	end
 
@@ -4402,6 +4459,23 @@ RunService.RenderStepped:Connect(function()
 			if _G_EspMaster and tChar and tChar:FindFirstChild("HumanoidRootPart") and tChar:FindFirstChild("Humanoid") and tChar.Humanoid.Health > 0 then
 				local hrp = tChar.HumanoidRootPart
 				local pos, onScreen = camera:WorldToViewportPoint(hrp.Position)
+
+				-- Chams (Highlight) não depende do Drawing, então fica fora do bloco do cache.
+				do
+					local chamsHighlight = tChar:FindFirstChild("AetherisHighlight")
+					if _G_EspChams then
+						if not chamsHighlight then
+							chamsHighlight = Instance.new("Highlight")
+							chamsHighlight.Name = "AetherisHighlight"
+							chamsHighlight.Parent = tChar
+						end
+						chamsHighlight.FillColor = _G_ColorChams
+						chamsHighlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+						chamsHighlight.Enabled = true
+					elseif chamsHighlight then
+						chamsHighlight.Enabled = false
+					end
+				end
 
 				if not espDrawings[targetPlayer] then
 					pcall(function()
@@ -4456,20 +4530,6 @@ RunService.RenderStepped:Connect(function()
 							cache.Line.Visible = true
 						else
 							cache.Line.Visible = false
-						end
-
-						local highlight = tChar:FindFirstChild("AetherisHighlight")
-						if _G_EspChams then
-							if not highlight then
-								highlight = Instance.new("Highlight")
-								highlight.Name = "AetherisHighlight"
-								highlight.Parent = tChar
-							end
-							highlight.FillColor = _G_ColorChams
-							highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-							highlight.Enabled = true
-						elseif highlight then
-							highlight.Enabled = false
 						end
 
 						if _G_EspHealth and onScreen then
