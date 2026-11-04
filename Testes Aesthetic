@@ -25,6 +25,144 @@ screenGui.DisplayOrder = 999999
 screenGui.Parent = playerGui
 
 -----------------------------------------------------------------
+-- ESTADOS & LÓGICA DO ESP BERRIES
+-----------------------------------------------------------------
+local _G_BerryEspEnabled = false
+local _G_BerryDistanceEnabled = false
+local activeAttributeEspItems = {}
+
+local function cleanupBerryEsp()
+	_G_BerryEspEnabled = false
+	_G_BerryDistanceEnabled = false
+	for _, data in pairs(activeAttributeEspItems) do
+		if data.billboard and data.billboard.Parent then
+			data.billboard:Destroy()
+		end
+	end
+	activeAttributeEspItems = {}
+end
+
+local function getColorFromName(name)
+	local lowerName = string.lower(tostring(name))
+	if string.find(lowerName, "green") then
+		return Color3.fromRGB(0, 255, 0)
+	elseif string.find(lowerName, "yellow") then
+		return Color3.fromRGB(255, 255, 0)
+	elseif string.find(lowerName, "red") then
+		return Color3.fromRGB(255, 0, 0)
+	elseif string.find(lowerName, "blue") then
+		return Color3.fromRGB(0, 150, 255)
+	elseif string.find(lowerName, "orange") then
+		return Color3.fromRGB(255, 140, 0)
+	elseif string.find(lowerName, "purple") then
+		return Color3.fromRGB(180, 50, 255)
+	end
+	return Color3.fromRGB(255, 255, 255)
+end
+
+-- Loop de verificação estrutural e atualização das Berries
+task.spawn(function()
+	while screenGui.Parent do
+		task.wait(0.5)
+		if _G_BerryEspEnabled then
+			local mapFolder = workspace:FindFirstChild("Map")
+			if mapFolder then
+				local currentFound = {}
+
+				for _, child in ipairs(mapFolder:GetDescendants()) do
+					if string.sub(child.Name, 1, 1) == "{" then
+						local berriesChild = child:FindFirstChild("Berries")
+						
+						if berriesChild then
+							local attributes = berriesChild:GetAttributes()
+							
+							for _, attrValue in pairs(attributes) do
+								currentFound[child] = true
+								local textValue = tostring(attrValue)
+								local assignedColor = getColorFromName(textValue)
+								
+								if not activeAttributeEspItems[child] then
+									local partForAdornee = child:IsA("BasePart") and child or (child:IsA("Model") and (child.PrimaryPart or child:FindFirstChildWhichIsA("BasePart", true)))
+									
+									if partForAdornee then
+										local billboard = Instance.new("BillboardGui")
+										billboard.Name = "BerryFullEspBillboard"
+										billboard.Adornee = partForAdornee
+										billboard.Size = UDim2.new(0, 120, 0, 50)
+										billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+										billboard.AlwaysOnTop = true
+										billboard.Parent = screenGui
+
+										local nameLabel = Instance.new("TextLabel")
+										nameLabel.Name = "NameLabel"
+										nameLabel.Size = UDim2.new(1, 0, 0, 24)
+										nameLabel.BackgroundTransparency = 1
+										nameLabel.Font = Enum.Font.GothamBold
+										nameLabel.Text = textValue
+										nameLabel.TextColor3 = assignedColor
+										nameLabel.TextSize = 12
+										nameLabel.TextStrokeTransparency = 0.2
+										nameLabel.Parent = billboard
+
+										local distLabel = Instance.new("TextLabel")
+										distLabel.Name = "DistLabel"
+										distLabel.Size = UDim2.new(1, 0, 0, 20)
+										distLabel.Position = UDim2.new(0, 0, 0, 24)
+										distLabel.BackgroundTransparency = 1
+										distLabel.Font = Enum.Font.GothamMedium
+										distLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+										distLabel.TextSize = 10
+										distLabel.TextStrokeTransparency = 0.2
+										distLabel.Parent = billboard
+
+										activeAttributeEspItems[child] = {
+											billboard = billboard,
+											part = partForAdornee,
+											distLabel = distLabel,
+											nameLabel = nameLabel
+										}
+									end
+								else
+									local itemData = activeAttributeEspItems[child]
+									if itemData and itemData.nameLabel then
+										itemData.nameLabel.Text = textValue
+										itemData.nameLabel.TextColor3 = assignedColor
+									end
+								end
+								break
+							end
+						end
+					end
+				end
+
+				for parentObj, itemData in pairs(activeAttributeEspItems) do
+					if not currentFound[parentObj] or not parentObj.Parent then
+						if itemData.billboard and itemData.billboard.Parent then
+							itemData.billboard:Destroy()
+						end
+						activeAttributeEspItems[parentObj] = nil
+					end
+				end
+			end
+		end
+
+		local char = player.Character
+		local root = char and char:FindFirstChild("HumanoidRootPart")
+		if root then
+			for _, itemData in pairs(activeAttributeEspItems) do
+				if itemData.part and itemData.part.Parent and itemData.distLabel then
+					itemData.distLabel.Visible = _G_BerryDistanceEnabled
+					if _G_BerryDistanceEnabled then
+						local dist = math.floor((itemData.part.Position - root.Position).Magnitude)
+						itemData.distLabel.Text = "[" .. dist .. " studs]"
+					end
+				end
+			end
+		end
+	end
+end)
+
+-----------------------------------------------------------------
 -- SISTEMA DE CORES DINÂMICAS & TEMA GLOBAL
 -----------------------------------------------------------------
 local currentThemeColor = Color3.fromRGB(138, 43, 226)
@@ -178,18 +316,12 @@ end)
 
 task.spawn(function()
 	local moduleScript = ReplicatedStorage:WaitForChild("ObservationManager", 10)
-	if not moduleScript or not moduleScript:IsA("ModuleScript") then
-		warn("[Aetheris] ObservationManager não encontrado em ReplicatedStorage")
-		return
-	end
+	if not moduleScript or not moduleScript:IsA("ModuleScript") then return end
 
 	local loaded, ObservationManager = pcall(function()
 		return require(moduleScript)
 	end)
-	if not loaded or type(ObservationManager) ~= "table" then
-		warn("[Aetheris] Não foi possível carregar ObservationManager")
-		return
-	end
+	if not loaded or type(ObservationManager) ~= "table" then return end
 
 	local oldNew = ObservationManager.new
 	if type(oldNew) == "function" then
@@ -345,7 +477,6 @@ local _G_FovThickness = 1
 local _G_FovTransparency = 0.7
 local _G_ColorFov = Color3.fromRGB(138, 43, 226)
 
--- Blinda a inicialização do Drawing para evitar erros de attempt to call nil value
 local fovCircleDrawing = nil
 pcall(function()
 	if Drawing and typeof(Drawing.new) == "function" then
@@ -383,7 +514,7 @@ local _G_ColorEnemyDist = Color3.fromRGB(200, 200, 255)
 local _G_ColorFruitChams = Color3.fromRGB(170, 90, 255)
 local _G_ColorFruitName = Color3.fromRGB(255, 255, 255)
 local _G_ColorFruitDist = Color3.fromRGB(200, 200, 255)
--- Estado compartilhado do ESP Baú (menu Visual + renderizador).
+
 local chestEspEnabled = false
 local chestEspChams = false
 local chestEspName = false
@@ -396,7 +527,7 @@ local hideKeybindEnabled = false
 local hideKeybindKey = Enum.KeyCode.RightControl
 
 -----------------------------------------------------------------
--- TELA DE CARREGAMENTO: SIMPLES, ORGANIZADA E RESPONSIVA
+-- TELA DE CARREGAMENTO
 -----------------------------------------------------------------
 local loadWrapper = Instance.new("Frame")
 loadWrapper.Name = "LoadingCard"
@@ -419,7 +550,6 @@ loadStroke.Thickness = 1.5
 loadStroke.Parent = loadWrapper
 table.insert(themeSections, loadStroke)
 
--- Linha superior animada: primeiro destaque visual, sem competir com o conteúdo.
 local loadAccent = Instance.new("Frame")
 loadAccent.Name = "LoadingAccent"
 loadAccent.Size = UDim2.new(0.18, 0, 0, 2)
@@ -432,7 +562,6 @@ local accentCorner = Instance.new("UICorner")
 accentCorner.CornerRadius = UDim.new(1, 0)
 accentCorner.Parent = loadAccent
 
--- Partículas discretas ficam na camada de fundo, atrás dos textos.
 local loadingParticles = {}
 local loadingColumns = 5
 local loadingRows = 4
@@ -464,7 +593,6 @@ for i = 1, loadingColumns * loadingRows do
     }):Play()
 end
 
--- Ícone central com aro lento e sutil.
 local sciFiRing = Instance.new("Frame")
 sciFiRing.Size = UDim2.new(0, 42, 0, 42)
 sciFiRing.Position = UDim2.new(0.5, -21, 0, 14)
@@ -1043,29 +1171,28 @@ function showMainPanel()
 		end
 	end
 
-		local function createControlButton(text, callback, color, order)
-			local btn = Instance.new("TextButton")
-			btn.Name = text .. "ControlButton"
-			btn.Size = UDim2.new(0, 12, 0, 12)
-			btn.BackgroundColor3 = color
-			btn.BackgroundTransparency = 0
-			btn.BorderSizePixel = 0
-			btn.Font = currentGlobalFont
-			btn.Text = ""
-			btn.LayoutOrder = order
-			btn.Parent = controlsContainer
+	local function createControlButton(text, callback, color, order)
+		local btn = Instance.new("TextButton")
+		btn.Name = text .. "ControlButton"
+		btn.Size = UDim2.new(0, 12, 0, 12)
+		btn.BackgroundColor3 = color
+		btn.BackgroundTransparency = 0
+		btn.BorderSizePixel = 0
+		btn.Font = currentGlobalFont
+		btn.Text = ""
+		btn.LayoutOrder = order
+		btn.Parent = controlsContainer
 
-			local corner = Instance.new("UICorner")
-			corner.CornerRadius = UDim.new(1, 0)
-			corner.Parent = btn
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(1, 0)
+		corner.Parent = btn
 
 		btn.MouseButton1Click:Connect(callback)
 		return btn
 	end
 
-		-- Ordem invertida: minimizar à esquerda e fechar à direita.
-		createControlButton("Minimize", toggleMinimizePanel, Color3.fromRGB(255, 196, 61), 1)
-		createControlButton("Close", function() screenGui:Destroy() end, Color3.fromRGB(245, 75, 75), 2)
+	createControlButton("Minimize", toggleMinimizePanel, Color3.fromRGB(255, 196, 61), 1)
+	createControlButton("Close", function() screenGui:Destroy() end, Color3.fromRGB(245, 75, 75), 2)
 
 	floatingBtn.MouseButton1Click:Connect(toggleMinimizePanel)
 
@@ -1129,7 +1256,6 @@ function showMainPanel()
 		return page
 	end
 
-	-- Imagens Lucide publicadas na biblioteca oficial do Roblox; recortes individuais de 48x48.
 	local tabs = {
 		{Name = "Info", Image = "rbxassetid://16898613509", Offset = Vector2.new(612, 869)},
 		{Name = "Player", Image = "rbxassetid://16898613044", Offset = Vector2.new(0, 869)},
@@ -1140,22 +1266,21 @@ function showMainPanel()
 		{Name = "Config", Image = "rbxassetid://16898613777", Offset = Vector2.new(771, 257)}
 	}
 
-	-- Ícones Lucide individuais por significado; todos são recortes dos atlas oficiais de 48px.
 	local sectionIcons = {
-		Movement = {Image = "rbxassetid://16898613353", Offset = Vector2.new(918, 710)}, -- footprints
-		Physical = {Image = "rbxassetid://16898613777", Offset = Vector2.new(771, 257)}, -- settings
-		Travel = {Image = "rbxassetid://16898613869", Offset = Vector2.new(820, 612)}, -- tree-palm
-		EspPlayers = {Image = "rbxassetid://16898613699", Offset = Vector2.new(869, 759)}, -- scan-eye
-		EspEnemies = {Image = "rbxassetid://16898612819", Offset = Vector2.new(869, 98)}, -- bot
-		World = {Image = "rbxassetid://16898613509", Offset = Vector2.new(771, 563)}, -- globe
-		Combat = {Image = "rbxassetid://16898613777", Offset = Vector2.new(967, 759)}, -- swords
-		Filters = {Image = "rbxassetid://16898613869", Offset = Vector2.new(514, 771)}, -- target
-		FarmAutomation = {Image = "rbxassetid://16898613869", Offset = Vector2.new(918, 906)}, -- zap
-		FruitAutomation = {Image = "rbxassetid://16898612629", Offset = Vector2.new(563, 869)}, -- apple
-		FruitEsp = {Image = "rbxassetid://16898613353", Offset = Vector2.new(771, 563)}, -- eye
-		Theme = {Image = "rbxassetid://16898613777", Offset = Vector2.new(771, 257)}, -- settings
-		TextConfig = {Image = "rbxassetid://16898613869", Offset = Vector2.new(967, 257)}, -- type
-		Keybind = {Image = "rbxassetid://16898613509", Offset = Vector2.new(453, 820)} -- keyboard
+		Movement = {Image = "rbxassetid://16898613353", Offset = Vector2.new(918, 710)},
+		Physical = {Image = "rbxassetid://16898613777", Offset = Vector2.new(771, 257)},
+		Travel = {Image = "rbxassetid://16898613869", Offset = Vector2.new(820, 612)},
+		EspPlayers = {Image = "rbxassetid://16898613699", Offset = Vector2.new(869, 759)},
+		EspEnemies = {Image = "rbxassetid://16898612819", Offset = Vector2.new(869, 98)},
+		World = {Image = "rbxassetid://16898613509", Offset = Vector2.new(771, 563)},
+		Combat = {Image = "rbxassetid://16898613777", Offset = Vector2.new(967, 759)},
+		Filters = {Image = "rbxassetid://16898613869", Offset = Vector2.new(514, 771)},
+		FarmAutomation = {Image = "rbxassetid://16898613869", Offset = Vector2.new(918, 906)},
+		FruitAutomation = {Image = "rbxassetid://16898612629", Offset = Vector2.new(563, 869)},
+		FruitEsp = {Image = "rbxassetid://16898613353", Offset = Vector2.new(771, 563)},
+		Theme = {Image = "rbxassetid://16898613777", Offset = Vector2.new(771, 257)},
+		TextConfig = {Image = "rbxassetid://16898613869", Offset = Vector2.new(967, 257)},
+		Keybind = {Image = "rbxassetid://16898613509", Offset = Vector2.new(453, 820)}
 	}
 
 	local activePage = nil
@@ -1607,7 +1732,6 @@ function showMainPanel()
 		cBtnCorner.CornerRadius = UDim.new(0, 3)
 		cBtnCorner.Parent = colorBtn
 
-		-- Botão opcional para escolher a origem, alinhado ao lado do seletor de cor.
 		if modeCallback then
 			local modeBtn = Instance.new("TextButton")
 			modeBtn.Name = "TracerOriginButton"
@@ -2035,7 +2159,6 @@ function showMainPanel()
 		if ok and avatar.Parent then avatar.Image = image end
 	end)
 
-	-- Grade de métricas em duas colunas para leitura rápida de dashboard.
 	local metricsGrid = Instance.new("Frame")
 	metricsGrid.Name = "DashboardMetrics"
 	metricsGrid.Size = UDim2.new(1, -8, 0, 142)
@@ -2050,35 +2173,35 @@ function showMainPanel()
 	metricsLayout.Parent = metricsGrid
 
 	local function makeMetricCard(title, initialValue, order, accentColor)
-	local card = Instance.new("Frame")
-	card.Name = title:gsub("%s+", "") .. "Metric"
-	card.BackgroundColor3 = Color3.fromRGB(26, 26, 36)
-	card.BackgroundTransparency = 0.16
-	card.BorderSizePixel = 0
-	card.LayoutOrder = order
-	card.Parent = metricsGrid
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 9)
-	corner.Parent = card
-	local stroke = Instance.new("UIStroke")
-	stroke.Color = currentThemeColor
-	stroke.Transparency = 0.78
-	stroke.Thickness = 1
-	stroke.Parent = card
-	table.insert(themeSections, stroke)
-	local cap = Instance.new("Frame")
-	cap.Size = UDim2.new(0, 3, 0, 28)
-	cap.Position = UDim2.new(0, 0, 0.5, -14)
-	cap.BackgroundColor3 = accentColor or currentThemeColor
-	cap.BorderSizePixel = 0
-	cap.Parent = card
-	table.insert(themeSliders, cap)
-	local capCorner = Instance.new("UICorner")
-	capCorner.CornerRadius = UDim.new(1, 0)
-	capCorner.Parent = cap
-	makeInfoText(card, title:upper(), 8, UDim2.new(0, 11, 0, 10), UDim2.new(1, -18, 0, 13), Color3.fromRGB(165, 165, 185), Enum.Font.GothamBold)
-	local value = makeInfoText(card, initialValue, 16, UDim2.new(0, 11, 0, 29), UDim2.new(1, -18, 0, 25), currentTextColor, Enum.Font.GothamBold)
-	return value
+		local card = Instance.new("Frame")
+		card.Name = title:gsub("%s+", "") .. "Metric"
+		card.BackgroundColor3 = Color3.fromRGB(26, 26, 36)
+		card.BackgroundTransparency = 0.16
+		card.BorderSizePixel = 0
+		card.LayoutOrder = order
+		card.Parent = metricsGrid
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 9)
+		corner.Parent = card
+		local stroke = Instance.new("UIStroke")
+		stroke.Color = currentThemeColor
+		stroke.Transparency = 0.78
+		stroke.Thickness = 1
+		stroke.Parent = card
+		table.insert(themeSections, stroke)
+		local cap = Instance.new("Frame")
+		cap.Size = UDim2.new(0, 3, 0, 28)
+		cap.Position = UDim2.new(0, 0, 0.5, -14)
+		cap.BackgroundColor3 = accentColor or currentThemeColor
+		cap.BorderSizePixel = 0
+		cap.Parent = card
+		table.insert(themeSliders, cap)
+		local capCorner = Instance.new("UICorner")
+		capCorner.CornerRadius = UDim.new(1, 0)
+		capCorner.Parent = cap
+		makeInfoText(card, title:upper(), 8, UDim2.new(0, 11, 0, 10), UDim2.new(1, -18, 0, 13), Color3.fromRGB(165, 165, 185), Enum.Font.GothamBold)
+		local value = makeInfoText(card, initialValue, 16, UDim2.new(0, 11, 0, 29), UDim2.new(1, -18, 0, 25), currentTextColor, Enum.Font.GothamBold)
+		return value
 	end
 
 	local fpsLabel = makeMetricCard("FPS", "--", 1)
@@ -2369,7 +2492,7 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- ABA VISUAL
+	-- ABA VISUAL (COM ESP BERRIES ADICIONADO)
 	-----------------------------------------------------------------
 	local visualPage = pages["Visual"]
 	local secEspPlayers = createSection(visualPage, "ESP Players", sectionIcons.EspPlayers)
@@ -2377,23 +2500,22 @@ function showMainPanel()
 
 	addEspToggleWithColor(secEspPlayers, "Box ESP", _G_ColorBox, function(c) _G_ColorBox = c end, function(s) _G_EspBox = s end)
 	
-	-- Usa o mesmo componente dos outros ESPs: toggle e seletor colorido na mesma linha.
-		addEspToggleWithColor(secEspPlayers, "Tracers / Line ESP", _G_ColorLine,
-			function(color) _G_ColorLine = color end,
-			function(state) _G_EspLine = state end,
-			function()
-				if _G_TracerOrigin == "Bottom" then
-					_G_TracerOrigin = "Center"
-				elseif _G_TracerOrigin == "Center" then
-					_G_TracerOrigin = "Top"
-				else
-					_G_TracerOrigin = "Bottom"
-				end
-				return _G_TracerOrigin
-			end,
-			_G_TracerOrigin)
+	addEspToggleWithColor(secEspPlayers, "Tracers / Line ESP", _G_ColorLine,
+		function(color) _G_ColorLine = color end,
+		function(state) _G_EspLine = state end,
+		function()
+			if _G_TracerOrigin == "Bottom" then
+				_G_TracerOrigin = "Center"
+			elseif _G_TracerOrigin == "Center" then
+				_G_TracerOrigin = "Top"
+			else
+				_G_TracerOrigin = "Bottom"
+			end
+			return _G_TracerOrigin
+		end,
+		_G_TracerOrigin)
 
-		addEspToggleWithColor(secEspPlayers, "Chams (Highlight)", _G_ColorChams, function(c) _G_ColorChams = c end, function(s) _G_EspChams = s end)
+	addEspToggleWithColor(secEspPlayers, "Chams (Highlight)", _G_ColorChams, function(c) _G_ColorChams = c end, function(s) _G_EspChams = s end)
 	addEspToggleWithColor(secEspPlayers, "Health Bar", _G_ColorHealth, function(c) _G_ColorHealth = c end, function(s) _G_EspHealth = s end)
 	addEspToggleWithColor(secEspPlayers, "Name ESP", _G_ColorName, function(c) _G_ColorName = c end, function(s) _G_EspName = s end)
 	addEspToggleWithColor(secEspPlayers, "Distance ESP", _G_ColorDistance, function(c) _G_ColorDistance = c end, function(s) _G_EspDistance = s end)
@@ -2406,11 +2528,24 @@ function showMainPanel()
 	addEspToggleWithColor(secEspEnemies, "ESP Nome", _G_ColorEnemyName, function(c) _G_ColorEnemyName = c end, function(s) _G_EnemyEspName = s end)
 	addEspToggleWithColor(secEspEnemies, "ESP Distância", _G_ColorEnemyDist, function(c) _G_ColorEnemyDist = c end, function(s) _G_EnemyEspDistance = s end)
 
+	-- Nova Seção Berries integrada na Aba Visual
+	local secBerries = createSection(visualPage, "Berries", sectionIcons.World)
+	addToggle(secBerries, "Esp Name Berries", function(state)
+		_G_BerryEspEnabled = state
+		if not state then
+			cleanupBerryEsp()
+		end
+	end, false)
+	addToggle(secBerries, "Esp Distance", function(state)
+		_G_BerryDistanceEnabled = state
+	end, false)
+
 	local secEspChests = createSection(visualPage, "ESP Baú", sectionIcons.World)
 	addToggle(secEspChests, "Ativar ESP Baú", function(state) chestEspEnabled = state end, false)
 	addEspToggleWithColor(secEspChests, "Chams", chestEspChamsColor, function(c) chestEspChamsColor = c end, function(s) chestEspChams = s end)
 	addEspToggleWithColor(secEspChests, "Nome (Baú)", chestEspNameColor, function(c) chestEspNameColor = c end, function(s) chestEspName = s end)
 	addEspToggleWithColor(secEspChests, "Distância", chestEspDistanceColor, function(c) chestEspDistanceColor = c end, function(s) chestEspDistance = s end)
+	
 	local secWorld = createSection(visualPage, "Visual do Mapa", sectionIcons.World)
 	addToggle(secWorld, "Fullbright (Remover Escuridão)", function(state)
 		_G_FullbrightEnabled = state
@@ -3762,6 +3897,7 @@ RunService.Heartbeat:Connect(function()
         end
     end
 end)
+
 local function createEnemyESP(enemy)
 	if enemyObjects[enemy] then return end
 	local root = getEnemyRoot(enemy)
@@ -3842,7 +3978,7 @@ task.spawn(function()
 end)
 
 -----------------------------------------------------------------
--- RENDER LOOP (BLINDADO COM PCALL PARA DRAWINGS)
+-- RENDER LOOP
 -----------------------------------------------------------------
 local espDrawings = {}
 
@@ -3988,7 +4124,6 @@ RunService.RenderStepped:Connect(function()
 		end
 	end
 
-	-- LÓGICA COMPLETA DE ENERGIA/STAMINA INFINITA RESTAURADA
 	if _G_EnergyEnabled and char then
 		if char:GetAttribute("Energy") then char:SetAttribute("Energy", 999999) end
 		if char:GetAttribute("Stamina") then char:SetAttribute("Stamina", 999999) end
@@ -4218,7 +4353,9 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
---== FRUIT VIEWER — estoque visual refinado ==--
+-----------------------------------------------------------------
+-- FRUIT VIEWER
+-----------------------------------------------------------------
 local RS = game:GetService("ReplicatedStorage")
 local UIS = game:GetService("UserInputService")
 local LP = Players.LocalPlayer
@@ -4238,8 +4375,6 @@ local stateOk, stateResult = pcall(function()
 end)
 if stateOk and type(stateResult) == "table" then
     StateUtil = stateResult
-else
-    warn("[FV] Não foi possível carregar StateUtil")
 end
 
 local FruitData
@@ -4294,7 +4429,6 @@ sg.DisplayOrder = 1000000
 sg.IgnoreGuiInset = true
 sg.Parent = PG
 
--- ============ PAINEL ============
 local isFruitViewerMobile = UIS.TouchEnabled and not UIS.KeyboardEnabled
 local PW = isFruitViewerMobile and 340 or 390
 local PH = isFruitViewerMobile and 292 or 320
@@ -4416,7 +4550,6 @@ headerDivider.BorderSizePixel = 0
 headerDivider.ZIndex = 11
 headerDivider.Parent = panel
 
--- ============ COLUNAS DE ESTOQUE ============
 local colGap = 8
 local colW = (PW - colGap * 3) / 2
 local colTop = 57
@@ -4524,7 +4657,6 @@ end
 makeColumn(false, colGap, "NORMAL", Color3.fromRGB(120, 220, 150), 14400)
 makeColumn(true, colGap * 2 + colW, "AVANÇADO", Color3.fromRGB(120, 180, 255), 7200)
 
--- ============ LINHAS DE FRUTAS E PREÇOS ============
 local ROW_STEP = 30
 local function createRow(sc, accent)
     local row = Instance.new("Frame")
@@ -4655,7 +4787,6 @@ local function render(adv, fruits)
     col.hasLoaded = true
 end
 
--- ============ CONSULTA SEGURA ============
 local fetching = {[false] = false, [true] = false}
 local function fetch(adv)
     if type(StateUtil) ~= "table" then return nil end
@@ -4739,7 +4870,6 @@ local function refreshAll()
     fetchCol(true)
 end
 
--- Liga o saldo do jogador com retry para o caso de Data/Beli ainda não existir.
 task.spawn(function()
     for _ = 1, 60 do
         if sg.Parent == nil then return end
@@ -4766,7 +4896,6 @@ panel:GetPropertyChangedSignal("Visible"):Connect(function()
     end
 end)
 
--- Contagem regressiva visível e atualização automática quando cada ciclo reinicia.
 task.spawn(function()
     while sg.Parent do
         task.wait(1)
@@ -4776,7 +4905,6 @@ task.spawn(function()
     end
 end)
 
--- Atualização periódica discreta entre os ciclos de estoque.
 task.spawn(function()
     while sg.Parent do
         task.wait(30)
@@ -4792,7 +4920,6 @@ closeB.MouseButton1Click:Connect(function()
     panel.Visible = false
 end)
 
--- ============ ARRASTAR PAINEL ============
 local dragging, dragStart, startPos = false, nil, nil
 dragH.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -4811,7 +4938,6 @@ UIS.InputChanged:Connect(function(input)
     end
 end)
 
--- ============ BOTÃO NO HEADER ============
 task.spawn(function()
     local hub = PG:WaitForChild("AetherisHub", 30)
     if not hub then return end
@@ -4825,7 +4951,7 @@ task.spawn(function()
             break
         end
     end
-    if not mainPanel then warn("[FV] mainPanel não encontrado"); return end
+    if not mainPanel then return end
 
     local btn = Instance.new("ImageButton")
     btn.Name = "FruitShopButton"
@@ -4845,7 +4971,6 @@ task.spawn(function()
     btnStroke.Transparency = 0.28
     table.insert(themeSections, btnStroke)
 
-    -- Ícone minimalista: fruta preenchida na cor do tema e olho levemente deslocado à direita.
     local iconCanvas = Instance.new("Frame")
     iconCanvas.Name = "EyeFruitIcon"
     iconCanvas.Size = UDim2.new(0, 24, 0, 24)
@@ -4870,7 +4995,6 @@ task.spawn(function()
     eyeIcon.Parent = iconCanvas
     table.insert(themeImages, eyeIcon)
 
-    -- Ícone Lucide da fruta sem o preenchimento adicional; mantém a cor do tema.
     local fruitIcon = Instance.new("ImageLabel")
     fruitIcon.Name = "FruitMark"
     fruitIcon.Size = UDim2.new(0, 14, 0, 14)
@@ -4897,329 +5021,4 @@ task.spawn(function()
     btn.MouseButton1Click:Connect(function()
         panel.Visible = not panel.Visible
     end)
-end)
-
--- Serviços necessários
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-
-local player = Players.LocalPlayer
-local camera = workspace.CurrentCamera
-local playerGui = player:WaitForChild("PlayerGui")
-
--- Remove instâncias antigas se houver
-if playerGui:FindFirstChild("TestBerryFullEspHub") then
-	playerGui.TestBerryFullEspHub:Destroy()
-end
-
--- ScreenGui Principal
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "TestBerryFullEspHub"
-screenGui.ResetOnSpawn = false
-screenGui.IgnoreGuiInset = true
-screenGui.Parent = playerGui
-
--- Painel Flutuante Compacto (Aumentado levemente para caber os 2 toggles)
-local mainPanel = Instance.new("Frame")
-mainPanel.Name = "MainPanel"
-mainPanel.Size = UDim2.new(0, 240, 0, 180)
-mainPanel.Position = UDim2.new(0.5, -120, 0.5, -90)
-mainPanel.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
-mainPanel.BorderSizePixel = 0
-mainPanel.Active = true
-mainPanel.Parent = screenGui
-
-local panelCorner = Instance.new("UICorner")
-panelCorner.CornerRadius = UDim.new(0, 8)
-panelCorner.Parent = mainPanel
-
-local panelStroke = Instance.new("UIStroke")
-panelStroke.Color = Color3.fromRGB(138, 43, 226)
-panelStroke.Thickness = 1.2
-panelStroke.Parent = mainPanel
-
--- Topbar / Barra de Arraste (Draggable)
-local topBar = Instance.new("Frame")
-topBar.Name = "TopBar"
-topBar.Size = UDim2.new(1, 0, 0, 30)
-topBar.BackgroundTransparency = 1
-topBar.Parent = mainPanel
-
-local titleLabel = Instance.new("TextLabel")
-titleLabel.Size = UDim2.new(1, -40, 1, 0)
-titleLabel.Position = UDim2.new(0, 10, 0, 0)
-titleLabel.BackgroundTransparency = 1
-titleLabel.Font = Enum.Font.GothamBold
-titleLabel.Text = "BERRY ESP HUB"
-titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleLabel.TextSize = 11
-titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-titleLabel.Parent = topBar
-
--- Variáveis de controle e armazenamento dos ESPs criados
-local _G_BerryEspEnabled = false
-local _G_BerryDistanceEnabled = false
-local activeAttributeEspItems = {}
-
-local function cleanupBerryEsp()
-	_G_BerryEspEnabled = false
-	_G_BerryDistanceEnabled = false
-	for _, data in pairs(activeAttributeEspItems) do
-		if data.billboard and data.billboard.Parent then
-			data.billboard:Destroy()
-		end
-	end
-	activeAttributeEspItems = {}
-end
-
--- Botão Fechar (Desliga as funções e fecha o painel)
-local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 20, 0, 20)
-closeBtn.Position = UDim2.new(1, -25, 0.5, -10)
-closeBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
-closeBtn.Text = "×"
-closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeBtn.TextSize = 14
-closeBtn.Font = Enum.Font.GothamBold
-closeBtn.Parent = topBar
-
-local closeCorner = Instance.new("UICorner")
-closeCorner.CornerRadius = UDim.new(1, 0)
-closeCorner.Parent = closeBtn
-
-closeBtn.MouseButton1Click:Connect(function()
-	cleanupBerryEsp()
-	screenGui:Destroy()
-end)
-
--- Sistema de Arrastar (Draggable)
-local dragging, dragStart, startPos
-topBar.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-		dragging = true
-		dragStart = input.Position
-		startPos = mainPanel.Position
-		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then
-				dragging = false
-			end
-		end)
-	end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-	if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-		local delta = input.Position - dragStart
-		mainPanel.Position = UDim2.new(
-			startPos.X.Scale, startPos.X.Offset + delta.X,
-			startPos.Y.Scale, startPos.Y.Offset + delta.Y
-		)
-	end
-end)
-
--- Container do Conteúdo
-local contentContainer = Instance.new("Frame")
-contentContainer.Size = UDim2.new(1, -16, 1, -45)
-contentContainer.Position = UDim2.new(0, 8, 0, 35)
-contentContainer.BackgroundTransparency = 1
-contentContainer.Parent = mainPanel
-
-local contentLayout = Instance.new("UIListLayout")
-contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-contentLayout.Padding = UDim.new(0, 6)
-contentLayout.Parent = contentContainer
-
--- Função criadora de Toggles reutilizável
-local function createToggle(parent, text, callback)
-	local toggleFrame = Instance.new("Frame")
-	toggleFrame.Size = UDim2.new(1, 0, 0, 30)
-	toggleFrame.BackgroundColor3 = Color3.fromRGB(26, 26, 36)
-	toggleFrame.Parent = parent
-
-	local tfCorner = Instance.new("UICorner")
-	tfCorner.CornerRadius = UDim.new(0, 6)
-	tfCorner.Parent = toggleFrame
-
-	local toggleLabel = Instance.new("TextLabel")
-	toggleLabel.Size = UDim2.new(1, -50, 1, 0)
-	toggleLabel.Position = UDim2.new(0, 10, 0, 0)
-	toggleLabel.BackgroundTransparency = 1
-	toggleLabel.Font = Enum.Font.GothamMedium
-	toggleLabel.Text = text
-	toggleLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
-	toggleLabel.TextSize = 11
-	toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
-	toggleLabel.Parent = toggleFrame
-
-	local toggleBtn = Instance.new("TextButton")
-	toggleBtn.Size = UDim2.new(0, 28, 0, 16)
-	toggleBtn.Position = UDim2.new(1, -34, 0.5, -8)
-	toggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
-	toggleBtn.Text = ""
-	toggleBtn.Parent = toggleFrame
-
-	local tbCorner = Instance.new("UICorner")
-	tbCorner.CornerRadius = UDim.new(1, 0)
-	tbCorner.Parent = toggleBtn
-
-	local circle = Instance.new("Frame")
-	circle.Size = UDim2.new(0, 12, 0, 12)
-	circle.Position = UDim2.new(0, 2, 0.5, -6)
-	circle.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-	circle.Parent = toggleBtn
-
-	local cCorner = Instance.new("UICorner")
-	cCorner.CornerRadius = UDim.new(1, 0)
-	cCorner.Parent = circle
-
-	local state = false
-	toggleBtn.MouseButton1Click:Connect(function()
-		state = not state
-		local targetPos = state and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
-		local targetColor = state and Color3.fromRGB(138, 43, 226) or Color3.fromRGB(50, 50, 70)
-		
-		circle.Position = targetPos
-		toggleBtn.BackgroundColor3 = targetColor
-
-		callback(state)
-	end)
-end
-
--- Criando os dois toggles solicitados
-createToggle(contentContainer, "ESP Berries", function(state)
-	_G_BerryEspEnabled = state
-	if not state then
-		cleanupBerryEsp()
-	end
-end)
-
-createToggle(contentContainer, "ESP Distance", function(state)
-	_G_BerryDistanceEnabled = state
-end)
-
--- Função para converter o texto do atributo em Color3
-local function getColorFromName(name)
-	local lowerName = string.lower(tostring(name))
-	if string.find(lowerName, "green") then
-		return Color3.fromRGB(0, 255, 0)
-	elseif string.find(lowerName, "yellow") then
-		return Color3.fromRGB(255, 255, 0)
-	elseif string.find(lowerName, "red") then
-		return Color3.fromRGB(255, 0, 0)
-	elseif string.find(lowerName, "blue") then
-		return Color3.fromRGB(0, 150, 255)
-	elseif string.find(lowerName, "orange") then
-		return Color3.fromRGB(255, 140, 0)
-	elseif string.find(lowerName, "purple") then
-		return Color3.fromRGB(180, 50, 255)
-	end
-	return Color3.fromRGB(255, 255, 255)
-end
-
--- Loop de verificação estrutural e atualização da distância
-task.spawn(function()
-	while screenGui.Parent do
-		task.wait(0.5)
-		if _G_BerryEspEnabled then
-			local mapFolder = workspace:FindFirstChild("Map")
-			if mapFolder then
-				local currentFound = {}
-
-				-- Varre todos os descendentes dentro de Workspace.Map
-				for _, child in ipairs(mapFolder:GetDescendants()) do
-					if string.sub(child.Name, 1, 1) == "{" then
-						local berriesChild = child:FindFirstChild("Berries")
-						
-						if berriesChild then
-							local attributes = berriesChild:GetAttributes()
-							
-							for _, attrValue in pairs(attributes) do
-								currentFound[child] = true
-								local textValue = tostring(attrValue)
-								local assignedColor = getColorFromName(textValue)
-								
-								if not activeAttributeEspItems[child] then
-									local partForAdornee = child:IsA("BasePart") and child or (child:IsA("Model") and (child.PrimaryPart or child:FindFirstChildWhichIsA("BasePart", true)))
-									
-									if partForAdornee then
-										local billboard = Instance.new("BillboardGui")
-										billboard.Name = "BerryFullEspBillboard"
-										billboard.Adornee = partForAdornee
-										billboard.Size = UDim2.new(0, 120, 0, 50)
-										billboard.StudsOffset = Vector3.new(0, 2.5, 0)
-										billboard.AlwaysOnTop = true
-										billboard.Parent = screenGui
-
-										-- Label do Nome/Atributo da Berry
-										local nameLabel = Instance.new("TextLabel")
-										nameLabel.Name = "NameLabel"
-										nameLabel.Size = UDim2.new(1, 0, 0, 24)
-										nameLabel.BackgroundTransparency = 1
-										nameLabel.Font = Enum.Font.GothamBold
-										nameLabel.Text = textValue
-										nameLabel.TextColor3 = assignedColor
-										nameLabel.TextSize = 12
-										nameLabel.TextStrokeTransparency = 0.2
-										nameLabel.Parent = billboard
-
-										-- Label da Distância (logo abaixo)
-										local distLabel = Instance.new("TextLabel")
-										distLabel.Name = "DistLabel"
-										distLabel.Size = UDim2.new(1, 0, 0, 20)
-										distLabel.Position = UDim2.new(0, 0, 0, 24)
-										distLabel.BackgroundTransparency = 1
-										distLabel.Font = Enum.Font.GothamMedium
-										distLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-										distLabel.TextSize = 10
-										distLabel.TextStrokeTransparency = 0.2
-										distLabel.Parent = billboard
-
-										activeAttributeEspItems[child] = {
-											billboard = billboard,
-											part = partForAdornee,
-											distLabel = distLabel,
-											nameLabel = nameLabel
-										}
-									end
-								else
-									local itemData = activeAttributeEspItems[child]
-									if itemData and itemData.nameLabel then
-										itemData.nameLabel.Text = textValue
-										itemData.nameLabel.TextColor3 = assignedColor
-									end
-								end
-								break
-							end
-						end
-					end
-				end
-
-				-- Remove ESP se o item sumir
-				for parentObj, itemData in pairs(activeAttributeEspItems) do
-					if not currentFound[parentObj] or not parentObj.Parent then
-						if itemData.billboard and itemData.billboard.Parent then
-							itemData.billboard:Destroy()
-						end
-						activeAttributeEspItems[parentObj] = nil
-					end
-				end
-			end
-		end
-
-		-- Atualiza a distância e a visibilidade do label de distância em tempo real
-		local char = player.Character
-		local root = char and char:FindFirstChild("HumanoidRootPart")
-		if root then
-			for _, itemData in pairs(activeAttributeEspItems) do
-				if itemData.part and itemData.part.Parent and itemData.distLabel then
-					itemData.distLabel.Visible = _G_BerryDistanceEnabled
-					if _G_BerryDistanceEnabled then
-						local dist = math.floor((itemData.part.Position - root.Position).Magnitude)
-						itemData.distLabel.Text = "[" .. dist .. " studs]"
-					end
-				end
-			end
-		end
-	end
 end)
