@@ -2360,6 +2360,53 @@ function showMainPanel()
 		setInfiniteAirJumpsEnabled(state)
 	end, false)
 
+	-- Walk Water: barreira invisível que segue o jogador (X e Z) sobre a água.
+	-- Fica dentro de do...end para não gastar variáveis locais (limite de 200).
+	do
+		local waterBarrier = nil
+		local waterConn = nil
+
+		local function stopWalkWater()
+			if waterConn then waterConn:Disconnect(); waterConn = nil end
+			if waterBarrier then waterBarrier:Destroy(); waterBarrier = nil end
+		end
+
+		local function startWalkWater()
+			stopWalkWater()
+			local mapFolder = workspace:FindFirstChild("Map")
+			local waterBase = mapFolder and mapFolder:FindFirstChild("WaterBase-Plane")
+			if not (waterBase and waterBase:IsA("BasePart")) then
+				warn("[Aetheris] Workspace.Map.WaterBase-Plane não encontrado!")
+				return
+			end
+
+			waterBarrier = Instance.new("Part")
+			waterBarrier.Name = "WaterInvisibleBarrier"
+			waterBarrier.Size = Vector3.new(1000, 1, 1000)
+			waterBarrier.Anchored = true
+			waterBarrier.CanCollide = true
+			waterBarrier.Transparency = 1
+			waterBarrier.Parent = workspace
+
+			local fixedY = waterBase.Position.Y + (waterBase.Size.Y / 2) + (waterBarrier.Size.Y / 2) + 16
+
+			waterConn = RunService.Heartbeat:Connect(function()
+				if not waterBarrier or not waterBarrier.Parent then return end
+				local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+				if root then
+					waterBarrier.CFrame = CFrame.new(root.Position.X, fixedY, root.Position.Z)
+				end
+			end)
+		end
+
+		addToggle(secFisico, "Walk Water", function(state)
+			if state then startWalkWater() else stopWalkWater() end
+		end, false)
+
+		-- Limpa tudo ao fechar o hub.
+		screenGui.Destroying:Connect(stopWalkWater)
+	end
+
 	local secTravel = createSection(playerPage, "Viajar para Ilhas", sectionIcons.Travel)
 
 	local function refreshIslands()
