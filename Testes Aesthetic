@@ -329,6 +329,8 @@ local originalCollision = {}
 local isLockOnEnabled = false
 local lockOnMode = "Nearest"
 local selectedManualTargets = {}
+-- Jogadores marcados como aliados (menu "Aim Silent Gun"): nunca viram alvo do Lock-On.
+local aimAllies = setmetatable({}, {__mode = "k"})
 local _G_LockOnPlayers = true
 local _G_LockOnEnemies = false
 
@@ -2951,6 +2953,267 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
+	-- AIM SILENT GUN (aba Combate)
+	-- Ajusta o raio (FOV) e a distância máxima do AimAssist do próprio jogo.
+	-- Os valores originais são guardados e devolvidos ao desligar ou ao fechar o hub.
+	-----------------------------------------------------------------
+	do
+		local silentGunEnabled = false
+		local silentFovPercent = 400   -- % do raio padrão do jogo
+		local silentDistPercent = 250  -- % da distância máxima padrão do jogo
+
+		local aimSettings = nil        -- módulo ReplicatedStorage.Modules.AimAssistSettings
+		local aimOriginals = {}        -- [perfil] = {radius = ..., dist = ...}
+		local aimBaseFov = 40
+		local aimBaseDist = 600
+		local aimWarned = false
+		local globalStateModule = nil  -- ReplicatedStorage.Global (false = não existe)
+
+		local function loadAimSettings()
+			if aimSettings then return true end
+			local ok, result = pcall(function()
+				local modules = ReplicatedStorage:FindFirstChild("Modules") or ReplicatedStorage:WaitForChild("Modules", 3)
+				local moduleScript = modules and (modules:FindFirstChild("AimAssistSettings") or modules:WaitForChild("AimAssistSettings", 3))
+				return moduleScript and require(moduleScript)
+			end)
+			if ok and type(result) == "table" and type(result.Profiles) == "table" then
+				aimSettings = result
+				for profileName, profile in pairs(result.Profiles) do
+					aimOriginals[profileName] = {radius = profile.AssistRadiusPixels, dist = profile.MaxDistance}
+				end
+				local defaultProfile = result.Profiles["PC"] or result.Profiles[result.DefaultProfile]
+				if defaultProfile then
+					aimBaseFov = defaultProfile.AssistRadiusPixels or 40
+					aimBaseDist = defaultProfile.MaxDistance or 600
+				end
+				return true
+			end
+			return false
+		end
+
+		local function applyAimValues()
+			if not aimSettings then return end
+			local radius = math.floor(aimBaseFov * silentFovPercent / 100)
+			local maxDistance = math.floor(aimBaseDist * silentDistPercent / 100)
+			local ok = pcall(function()
+				for _, profile in pairs(aimSettings.Profiles) do
+					profile.AssistRadiusPixels = radius
+					profile.MaxDistance = maxDistance
+				end
+			end)
+			if not ok and not aimWarned then
+				aimWarned = true
+				warn("[Aetheris] Não foi possível alterar o AimAssistSettings (tabela protegida).")
+			end
+		end
+
+		local function restoreAimValues()
+			if not aimSettings then return end
+			pcall(function()
+				for profileName, profile in pairs(aimSettings.Profiles) do
+					local original = aimOriginals[profileName]
+					if original then
+						profile.AssistRadiusPixels = original.radius
+						profile.MaxDistance = original.dist
+					end
+				end
+			end)
+		end
+
+		-- Ao fechar/recarregar o hub, devolve as configurações originais do jogo.
+		screenGui.Destroying:Connect(function()
+			silentGunEnabled = false
+			restoreAimValues()
+		end)
+
+		-- Sincroniza o toque/clique com o wrapper do jogo (usado pelas skills e pelo CombatController).
+		UserInputService.InputBegan:Connect(function(input)
+			if not silentGunEnabled then return end
+			if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+				pcall(function()
+					if globalStateModule == nil then
+						local ok, result = pcall(function() return require(ReplicatedStorage.Global) end)
+						globalStateModule = (ok and type(result) == "table") and result or false
+					end
+					if globalStateModule then
+						globalStateModule.CurrentTouchObjectForMouse = input
+					end
+				end)
+			end
+		end)
+
+		local secSilentGun = createSection(aimLockPage, "Aim Silent Gun", sectionIcons.Combat)
+
+		addToggle(secSilentGun, "Aim Silent Gun", function(state)
+			silentGunEnabled = state
+			task.spawn(function()
+				if state then
+					if not loadAimSettings() then
+						warn("[Aetheris] AimAssistSettings não encontrado neste jogo.")
+						return
+					end
+					if silentGunEnabled then applyAimValues() end
+				else
+					restoreAimValues()
+				end
+			end)
+		end, false)
+
+		addSlider(secSilentGun, "FOV do Aim (% do padrão)", 100, 1500, silentFovPercent, function(val)
+			silentFovPercent = val
+			if silentGunEnabled then applyAimValues() end
+		end)
+
+		addSlider(secSilentGun, "Distância do Aim (% do padrão)", 100, 500, silentDistPercent, function(val)
+			silentDistPercent = val
+			if silentGunEnabled then applyAimValues() end
+		end)
+
+		-- Dropdown de jogadores: cada clique alterna Neutro -> Foco -> Aliado -> Neutro.
+		-- Foco = entra na lista manual do Lock-On; Aliado = nunca é alvo do Lock-On.
+		local playerDropFrame = Instance.new("Frame")
+		playerDropFrame.Size = UDim2.new(1, 0, 0, 26)
+		playerDropFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+		playerDropFrame.BackgroundTransparency = 0.5
+		playerDropFrame.Parent = secSilentGun
+		local playerDropCorner = Instance.new("UICorner")
+		playerDropCorner.CornerRadius = UDim.new(0, 5)
+		playerDropCorner.Parent = playerDropFrame
+
+		local playerDropLabel = Instance.new("TextLabel")
+		playerDropLabel.Size = UDim2.new(1, -34, 1, 0)
+		playerDropLabel.Position = UDim2.new(0, 8, 0, 0)
+		playerDropLabel.BackgroundTransparency = 1
+		playerDropLabel.Font = currentGlobalFont
+		playerDropLabel.Text = "Jogadores: Focar / Aliado"
+		playerDropLabel.TextColor3 = currentTextColor
+		playerDropLabel.TextSize = 11
+		playerDropLabel.TextXAlignment = Enum.TextXAlignment.Left
+		playerDropLabel.TextTruncate = Enum.TextTruncate.AtEnd
+		playerDropLabel.Parent = playerDropFrame
+		table.insert(allTextLabels, playerDropLabel)
+
+		local playerDropArrow = Instance.new("TextLabel")
+		playerDropArrow.Size = UDim2.new(0, 24, 1, 0)
+		playerDropArrow.Position = UDim2.new(1, -28, 0, 0)
+		playerDropArrow.BackgroundTransparency = 1
+		playerDropArrow.Font = currentGlobalFont
+		playerDropArrow.Text = "▼"
+		playerDropArrow.TextColor3 = currentTextColor
+		playerDropArrow.TextSize = 10
+		playerDropArrow.Parent = playerDropFrame
+		table.insert(allTextLabels, playerDropArrow)
+
+		local playerDropHit = Instance.new("TextButton")
+		playerDropHit.Size = UDim2.new(1, 0, 1, 0)
+		playerDropHit.BackgroundTransparency = 1
+		playerDropHit.Text = ""
+		playerDropHit.ZIndex = 5
+		playerDropHit.Parent = playerDropFrame
+
+		local playerDropList = Instance.new("ScrollingFrame")
+		playerDropList.Size = UDim2.new(1, 0, 0, 130)
+		playerDropList.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+		playerDropList.BackgroundTransparency = 0.5
+		playerDropList.BorderSizePixel = 0
+		playerDropList.CanvasSize = UDim2.new(0, 0, 0, 0)
+		playerDropList.ScrollBarThickness = 3
+		playerDropList.Visible = false
+		playerDropList.Parent = secSilentGun
+		local playerDropListCorner = Instance.new("UICorner")
+		playerDropListCorner.CornerRadius = UDim.new(0, 5)
+		playerDropListCorner.Parent = playerDropList
+		local playerDropListLayout = Instance.new("UIListLayout")
+		playerDropListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		playerDropListLayout.Padding = UDim.new(0, 4)
+		playerDropListLayout.Parent = playerDropList
+
+		local focusColor = currentThemeColor
+		local allyColor = Color3.fromRGB(46, 160, 90)
+		local neutralColor = Color3.fromRGB(34, 34, 46)
+
+		local function renderAimPlayers()
+			for _, child in ipairs(playerDropList:GetChildren()) do
+				if child:IsA("TextButton") then child:Destroy() end
+			end
+
+			local count, focusCount, allyCount = 0, 0, 0
+			for _, p in ipairs(Players:GetPlayers()) do
+				if p ~= player then
+					count = count + 1
+					local isAlly = aimAllies[p] == true
+					local isFocus = (not isAlly) and selectedManualTargets[p] == true
+					if isAlly then allyCount = allyCount + 1 end
+					if isFocus then focusCount = focusCount + 1 end
+
+					local item = Instance.new("TextButton")
+					item.Size = UDim2.new(1, -6, 0, 24)
+					item.BackgroundColor3 = isAlly and allyColor or (isFocus and currentThemeColor or neutralColor)
+					item.Font = currentGlobalFont
+					item.Text = "  " .. p.DisplayName .. " (@" .. p.Name .. ")"
+					item.TextColor3 = currentTextColor
+					item.TextSize = 10
+					item.TextXAlignment = Enum.TextXAlignment.Left
+					item.TextTruncate = Enum.TextTruncate.AtEnd
+					item.Parent = playerDropList
+					local itemPadding = Instance.new("UIPadding")
+					itemPadding.PaddingRight = UDim.new(0, 62)
+					itemPadding.Parent = item
+					local itemCorner = Instance.new("UICorner")
+					itemCorner.CornerRadius = UDim.new(0, 4)
+					itemCorner.Parent = item
+
+					local tag = Instance.new("TextLabel")
+					tag.Size = UDim2.new(0, 56, 1, 0)
+					tag.Position = UDim2.new(1, 62 - 58, 0, 0)
+					tag.BackgroundTransparency = 1
+					tag.Font = Enum.Font.GothamBold
+					tag.Text = isAlly and "ALIADO" or (isFocus and "FOCO" or "NEUTRO")
+					tag.TextColor3 = (isAlly or isFocus) and Color3.new(1, 1, 1) or Color3.fromRGB(140, 140, 160)
+					tag.TextSize = 9
+					tag.TextXAlignment = Enum.TextXAlignment.Right
+					tag.Parent = item
+
+					item.MouseButton1Click:Connect(function()
+						if aimAllies[p] then
+							aimAllies[p] = nil                  -- Aliado -> Neutro
+						elseif selectedManualTargets[p] then
+							selectedManualTargets[p] = nil      -- Foco -> Aliado
+							aimAllies[p] = true
+						else
+							selectedManualTargets[p] = true     -- Neutro -> Foco
+							lockOnMode = "Manual"
+							modeSwitchBtn.Text = lockOnMode
+						end
+						updateServerList()
+						renderAimPlayers()
+					end)
+				end
+			end
+
+			playerDropList.CanvasSize = UDim2.new(0, 0, 0, count * 28)
+			playerDropLabel.Text = string.format("Jogadores  (Foco: %d · Aliados: %d)", focusCount, allyCount)
+		end
+
+		playerDropHit.MouseButton1Click:Connect(function()
+			playerDropList.Visible = not playerDropList.Visible
+			playerDropArrow.Text = playerDropList.Visible and "▲" or "▼"
+			if playerDropList.Visible then renderAimPlayers() end
+		end)
+
+		Players.PlayerAdded:Connect(function()
+			if playerDropList.Visible then renderAimPlayers() end
+		end)
+		Players.PlayerRemoving:Connect(function(leavingPlayer)
+			aimAllies[leavingPlayer] = nil
+			task.defer(function()
+				if playerDropList.Parent then renderAimPlayers() end
+			end)
+		end)
+		renderAimPlayers()
+	end
+
+	-----------------------------------------------------------------
 	-- ABA FARMING (CHEST COLLECTOR)
 	-----------------------------------------------------------------
 	local farmingPage = pages["Farming"]
@@ -4279,7 +4542,7 @@ local function getAdvancedTarget()
 
 	if _G_LockOnPlayers then
 		for _, p in ipairs(Players:GetPlayers()) do
-			if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Head") then
+			if p ~= player and not aimAllies[p] and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Head") then
 				local hum = p.Character:FindFirstChild("Humanoid")
 				if hum and hum.Health > 0 then
 					local hrp = p.Character.HumanoidRootPart
@@ -4351,7 +4614,7 @@ local function getManualTarget()
 	local myPos = myChar.HumanoidRootPart.Position
 
 	for p, isSelected in pairs(selectedManualTargets) do
-		if isSelected and p and p.Character and p.Character:FindFirstChild("Head") then
+		if isSelected and p and not aimAllies[p] and p.Character and p.Character:FindFirstChild("Head") then
 			local hum = p.Character:FindFirstChild("Humanoid")
 			if hum and hum.Health > 0 then
 				local headPos = p.Character.Head.Position
