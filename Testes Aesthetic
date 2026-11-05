@@ -2858,9 +2858,7 @@ function showMainPanel()
 	msCorner.CornerRadius = UDim.new(0, 4)
 	msCorner.Parent = modeSwitchBtn
 
-	-- Os filtros (FOV, distância, "apenas se eu estiver com item" etc.) ficam na mesma
-	-- seção do "Ativar Lock-On".
-	local secFilters = secCombat
+	local secFilters = createSection(aimLockPage, "FOV & Filtros de Alvo", sectionIcons.Filters)
 	addToggle(secFilters, "Ativar Círculo FOV", function(state) _G_FovVisible = state end, false)
 	addSlider(secFilters, "Raio do FOV", 50, 500, 150, function(val) _G_FovRadius = val end)
 	addSlider(secFilters, "Grossura do FOV", 1, 5, 1, function(val) _G_FovThickness = val end)
@@ -2874,47 +2872,21 @@ function showMainPanel()
 	addToggle(secFilters, "Mais Perto da Mira (Crosshair)", function(state) _G_FilterCrosshair = state end, false)
 	addToggle(secFilters, "Apenas se EU Estiver com Item", function(state) _G_FilterHoldingItem = state end, false)
 
-	-- Lista de jogadores do Lock-On manual, em formato dropdown (abre e fecha ao clicar).
-	local lockDropFrame = Instance.new("Frame")
-	lockDropFrame.Size = UDim2.new(1, 0, 0, 26)
-	lockDropFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-	lockDropFrame.BackgroundTransparency = 0.5
-	lockDropFrame.Parent = secCombat
+	local refreshBtn = Instance.new("TextButton")
+	refreshBtn.Size = UDim2.new(1, 0, 0, 26)
+	refreshBtn.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+	refreshBtn.BackgroundTransparency = 0.5
+	refreshBtn.Font = currentGlobalFont
+	refreshBtn.Text = "  🔄 Atualizar Lista de Jogadores"
+	refreshBtn.TextColor3 = currentTextColor
+	refreshBtn.TextSize = 11
+	refreshBtn.TextXAlignment = Enum.TextXAlignment.Left
+	refreshBtn.Parent = secCombat
+	table.insert(allTextLabels, refreshBtn)
 
-	local lockDropCorner = Instance.new("UICorner")
-	lockDropCorner.CornerRadius = UDim.new(0, 5)
-	lockDropCorner.Parent = lockDropFrame
-
-	local lockDropLabel = Instance.new("TextLabel")
-	lockDropLabel.Size = UDim2.new(1, -34, 1, 0)
-	lockDropLabel.Position = UDim2.new(0, 8, 0, 0)
-	lockDropLabel.BackgroundTransparency = 1
-	lockDropLabel.Font = currentGlobalFont
-	lockDropLabel.Text = "Jogadores  (Selecionados: 0)"
-	lockDropLabel.TextColor3 = currentTextColor
-	lockDropLabel.TextSize = 11
-	lockDropLabel.TextXAlignment = Enum.TextXAlignment.Left
-	lockDropLabel.TextTruncate = Enum.TextTruncate.AtEnd
-	lockDropLabel.Parent = lockDropFrame
-	table.insert(allTextLabels, lockDropLabel)
-
-	local lockDropArrow = Instance.new("TextLabel")
-	lockDropArrow.Size = UDim2.new(0, 24, 1, 0)
-	lockDropArrow.Position = UDim2.new(1, -28, 0, 0)
-	lockDropArrow.BackgroundTransparency = 1
-	lockDropArrow.Font = currentGlobalFont
-	lockDropArrow.Text = "▼"
-	lockDropArrow.TextColor3 = currentTextColor
-	lockDropArrow.TextSize = 10
-	lockDropArrow.Parent = lockDropFrame
-	table.insert(allTextLabels, lockDropArrow)
-
-	local lockDropHit = Instance.new("TextButton")
-	lockDropHit.Size = UDim2.new(1, 0, 1, 0)
-	lockDropHit.BackgroundTransparency = 1
-	lockDropHit.Text = ""
-	lockDropHit.ZIndex = 5
-	lockDropHit.Parent = lockDropFrame
+	local rbCorner = Instance.new("UICorner")
+	rbCorner.CornerRadius = UDim.new(0, 5)
+	rbCorner.Parent = refreshBtn
 
 	local scrollList = Instance.new("ScrollingFrame")
 	scrollList.Size = UDim2.new(1, 0, 0, 130)
@@ -2923,7 +2895,6 @@ function showMainPanel()
 	scrollList.BorderSizePixel = 0
 	scrollList.CanvasSize = UDim2.new(0, 0, 0, 0)
 	scrollList.ScrollBarThickness = 3
-	scrollList.Visible = false
 	scrollList.Parent = secCombat
 
 	local slCorner = Instance.new("UICorner")
@@ -2941,15 +2912,13 @@ function showMainPanel()
 		end
 
 		local count = 0
-		local selectedCount = 0
 		for _, p in ipairs(Players:GetPlayers()) do
 			if p ~= player then
 				count = count + 1
 				local item = Instance.new("TextButton")
 				item.Size = UDim2.new(1, -6, 0, 24)
-
+				
 				local isSelected = selectedManualTargets[p] == true
-				if isSelected then selectedCount = selectedCount + 1 end
 				item.BackgroundColor3 = isSelected and currentThemeColor or Color3.fromRGB(34, 34, 46)
 				
 				item.Font = currentGlobalFont
@@ -2979,14 +2948,9 @@ function showMainPanel()
 		end
 
 		scrollList.CanvasSize = UDim2.new(0, 0, 0, count * 28)
-		lockDropLabel.Text = string.format("Jogadores  (Selecionados: %d)", selectedCount)
 	end
 
-	lockDropHit.MouseButton1Click:Connect(function()
-		scrollList.Visible = not scrollList.Visible
-		lockDropArrow.Text = scrollList.Visible and "▲" or "▼"
-		if scrollList.Visible then updateServerList() end
-	end)
+	refreshBtn.MouseButton1Click:Connect(updateServerList)
 	Players.PlayerAdded:Connect(updateServerList)
 	Players.PlayerRemoving:Connect(function(leavingPlayer)
 		selectedManualTargets[leavingPlayer] = nil
