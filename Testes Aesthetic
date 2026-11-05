@@ -378,6 +378,161 @@ local _G_ColorName = Color3.fromRGB(255, 255, 255)
 local _G_ColorDistance = Color3.fromRGB(200, 200, 255)
 local _G_ColorHead = Color3.fromRGB(255, 100, 100)
 
+-- ESP Level (aba Visual > ESP Players). Tudo numa tabela só para não gastar variáveis locais.
+--  * Com o Name ESP desligado: mostra "Lv. N" acima da cabeça (BillboardGui).
+--  * Com o Name ESP ligado: o nível entra no nome, "Nome [N]", cada parte com a sua cor.
+local levelEsp = {
+	enabled = false,
+	color = Color3.fromRGB(255, 220, 80),
+	boards = setmetatable({}, {__mode = "k"}),   -- [jogador] = {gui, label, text}
+	sources = setmetatable({}, {__mode = "k"}),  -- [jogador] = {value, checked}
+}
+
+local function levelEspIsValueObject(obj)
+	return obj ~= nil and (obj:IsA("IntValue") or obj:IsA("NumberValue") or obj:IsA("StringValue"))
+end
+
+-- Procura o valor "Level" dentro de um objeto (Level direto, Data.Level ou busca recursiva).
+function levelEsp.findValue(obj)
+	if not obj then return nil end
+	local direct = obj:FindFirstChild("Level")
+	if levelEspIsValueObject(direct) then return direct end
+	local data = obj:FindFirstChild("Data")
+	if data then
+		local nested = data:FindFirstChild("Level")
+		if levelEspIsValueObject(nested) then return nested end
+	end
+	local found = obj:FindFirstChild("Level", true)
+	if levelEspIsValueObject(found) then return found end
+	return nil
+end
+
+-- Onde o Level fica guardado: Workspace.Players.<nome>, o próprio Player ou o personagem.
+function levelEsp.findSource(targetPlayer, tChar)
+	local container = workspace:FindFirstChild("Players")
+	local inWorkspace = container and container:FindFirstChild(targetPlayer.Name)
+	local value = levelEsp.findValue(inWorkspace)
+	if value then return value end
+	value = levelEsp.findValue(targetPlayer)
+	if value then return value end
+	return levelEsp.findValue(tChar)
+end
+
+-- Texto do nível ("123") ou nil se não achar. A fonte é guardada; se não achar, tenta de novo a cada 2s.
+function levelEsp.getText(targetPlayer, tChar)
+	local entry = levelEsp.sources[targetPlayer]
+	if entry and entry.value and entry.value.Parent then
+		return tostring(entry.value.Value)
+	end
+	local now = os.clock()
+	if entry and now - entry.checked < 2 then return nil end
+	local value = levelEsp.findSource(targetPlayer, tChar)
+	levelEsp.sources[targetPlayer] = {value = value, checked = now}
+	return value and tostring(value.Value) or nil
+end
+
+-- Mostra/atualiza/remove o "Lv. N" avulso acima da cabeça. nameShown = o nome está sendo desenhado
+-- (nesse caso o nível já vai junto do nome e o avulso some).
+function levelEsp.sync(targetPlayer, tChar, nameShown)
+	local entry = levelEsp.boards[targetPlayer]
+	local head = tChar and tChar:FindFirstChild("Head")
+	local levelStr = (levelEsp.enabled and head and not nameShown) and levelEsp.getText(targetPlayer, tChar) or nil
+
+	if not levelStr then
+		if entry then
+			entry.gui:Destroy()
+			levelEsp.boards[targetPlayer] = nil
+		end
+		return
+	end
+
+	if entry and entry.gui.Parent ~= head then
+		entry.gui:Destroy()
+		entry = nil
+	end
+	if not entry then
+		local gui = Instance.new("BillboardGui")
+		gui.Name = "_AetherisLevelBillboard"
+		gui.Size = UDim2.new(0, 110, 0, 28)
+		gui.StudsOffset = Vector3.new(0, 2.6, 0)
+		gui.AlwaysOnTop = true
+		gui.LightInfluence = 0
+		gui.MaxDistance = 500
+		gui.Parent = head
+
+		local label = Instance.new("TextLabel")
+		label.Name = "LevelLabel"
+		label.Size = UDim2.new(1, 0, 1, 0)
+		label.BackgroundTransparency = 1
+		label.Font = Enum.Font.GothamBlack
+		label.TextSize = 20
+		label.TextStrokeTransparency = 0.4
+		label.TextStrokeColor3 = Color3.new(0, 0, 0)
+		label.Text = ""
+		label.Parent = gui
+
+		entry = {gui = gui, label = label, text = ""}
+		levelEsp.boards[targetPlayer] = entry
+	end
+
+	entry.label.TextColor3 = levelEsp.color
+	local text = "Lv. " .. levelStr
+	if entry.text ~= text then
+		entry.text = text
+		entry.label.Text = text
+	end
+end
+
+function levelEsp.clearAll()
+	for targetPlayer, entry in pairs(levelEsp.boards) do
+		pcall(function() entry.gui:Destroy() end)
+		levelEsp.boards[targetPlayer] = nil
+	end
+end
+
+-- Desenha o nome (Drawing). Com o Level ESP ligado vira "Nome [N]": o nome e o nível são dois textos
+-- lado a lado, cada um com a sua cor. Se o executor não informar o tamanho do texto (TextBounds),
+-- junta tudo em um texto só, na cor do nome.
+function levelEsp.drawName(cache, targetPlayer, tChar, x, y, nameColor)
+	local nameText = cache.NameText
+	local levelText = cache.LevelText
+	local levelStr = levelEsp.enabled and levelEsp.getText(targetPlayer, tChar) or nil
+
+	nameText.Text = targetPlayer.Name
+	nameText.Size = 12
+	nameText.Outline = true
+	nameText.Color = nameColor
+
+	if levelStr and levelText then
+		levelText.Text = "[" .. levelStr .. "]"
+		levelText.Size = 12
+		levelText.Outline = true
+		levelText.Color = levelEsp.color
+
+		local okName, nameBounds = pcall(function() return nameText.TextBounds end)
+		local okLevel, levelBounds = pcall(function() return levelText.TextBounds end)
+		local nameWidth = (okName and nameBounds and nameBounds.X) or 0
+		local levelWidth = (okLevel and levelBounds and levelBounds.X) or 0
+		if nameWidth > 0 and levelWidth > 0 then
+			local gap = 4
+			local startX = x - (nameWidth + gap + levelWidth) / 2
+			nameText.Center = false
+			levelText.Center = false
+			nameText.Position = Vector2.new(startX, y)
+			levelText.Position = Vector2.new(startX + nameWidth + gap, y)
+			nameText.Visible = true
+			levelText.Visible = true
+			return
+		end
+		nameText.Text = targetPlayer.Name .. " [" .. levelStr .. "]"
+	end
+
+	nameText.Center = true
+	nameText.Position = Vector2.new(x, y)
+	nameText.Visible = true
+	if levelText then levelText.Visible = false end
+end
+
 local _G_ColorEnemyChams = Color3.fromRGB(255, 65, 75)
 local _G_ColorEnemyName = Color3.fromRGB(255, 255, 255)
 local _G_ColorEnemyDist = Color3.fromRGB(200, 200, 255)
@@ -2655,6 +2810,8 @@ function showMainPanel()
 		addEspToggleWithColor(secEspPlayers, "Chams (Highlight)", _G_ColorChams, function(c) _G_ColorChams = c end, function(s) _G_EspChams = s end)
 	addEspToggleWithColor(secEspPlayers, "Health Bar", _G_ColorHealth, function(c) _G_ColorHealth = c end, function(s) _G_EspHealth = s end)
 	addEspToggleWithColor(secEspPlayers, "Name ESP", _G_ColorName, function(c) _G_ColorName = c end, function(s) _G_EspName = s end)
+	-- Level ESP: sozinho mostra "Lv. N" acima da cabeça; com o Name ESP ligado vira "Nome [N]".
+	addEspToggleWithColor(secEspPlayers, "Level ESP", levelEsp.color, function(c) levelEsp.color = c end, function(s) levelEsp.enabled = s end)
 	addEspToggleWithColor(secEspPlayers, "Distance ESP", _G_ColorDistance, function(c) _G_ColorDistance = c end, function(s) _G_EspDistance = s end)
 	addEspToggleWithColor(secEspPlayers, "Head Dot ESP", _G_ColorHead, function(c) _G_ColorHead = c end, function(s) _G_EspHead = s end)
 
@@ -4798,6 +4955,7 @@ RunService.RenderStepped:Connect(function()
 				end
 			end
 			table.clear(espDrawings)
+			levelEsp.clearAll()
 			if fovCircleDrawing then pcall(function() fovCircleDrawing:Remove() end) end
 		end
 		return
@@ -4916,6 +5074,7 @@ RunService.RenderStepped:Connect(function()
 								Box = Drawing.new("Square"),
 								Line = Drawing.new("Line"),
 								NameText = Drawing.new("Text"),
+								LevelText = Drawing.new("Text"),
 								DistText = Drawing.new("Text"),
 								HeadDot = Drawing.new("Circle"),
 								HealthBarBg = Drawing.new("Square"),
@@ -4991,15 +5150,11 @@ RunService.RenderStepped:Connect(function()
 						end
 
 						if _G_EspName and onScreen and hrp then
-							cache.NameText.Text = targetPlayer.Name
-							cache.NameText.Size = 12
-							cache.NameText.Center = true
-							cache.NameText.Outline = true
-							cache.NameText.Color = _G_ColorName
-							cache.NameText.Position = Vector2.new(pos.X, pos.Y - 35)
-							cache.NameText.Visible = true
+							-- Com o Level ESP ligado o nome vira "Nome [N]" (ver levelEsp.drawName).
+							levelEsp.drawName(cache, targetPlayer, tChar, pos.X, pos.Y - 35, _G_ColorName)
 						else
 							cache.NameText.Visible = false
+							if cache.LevelText then cache.LevelText.Visible = false end
 						end
 
 						if _G_EspDistance and onScreen then
@@ -5027,9 +5182,14 @@ RunService.RenderStepped:Connect(function()
 						end
 					end)
 				end
+
+				-- Level avulso (acima da cabeça): só aparece quando o nome não está sendo desenhado.
+				pcall(levelEsp.sync, targetPlayer, tChar, _G_EspName and cache ~= nil)
 			else
+				pcall(levelEsp.sync, targetPlayer, nil, true) -- ESP desligado / jogador morto: remove o Level avulso
 				if espDrawings[targetPlayer] then
 					pcall(function()
+						if espDrawings[targetPlayer].LevelText then espDrawings[targetPlayer].LevelText.Visible = false end
 						espDrawings[targetPlayer].Box.Visible = false
 						espDrawings[targetPlayer].Line.Visible = false
 						espDrawings[targetPlayer].NameText.Visible = false
