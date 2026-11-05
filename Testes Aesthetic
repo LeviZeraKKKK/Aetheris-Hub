@@ -2094,7 +2094,16 @@ function showMainPanel()
 		end)
 	end
 
-	local function addSlider(parent, name, min, max, default, callback)
+	-- decimals/suffix são opcionais: sem eles o slider continua inteiro, como sempre foi.
+	-- Com decimals = 1 e suffix = "x" o valor aparece como "4.0x" (multiplicador).
+	local function addSlider(parent, name, min, max, default, callback, decimals, suffix)
+		local function formatSliderValue(value)
+			if decimals and decimals > 0 then
+				return string.format("%." .. decimals .. "f", value) .. (suffix or "")
+			end
+			return tostring(value) .. (suffix or "")
+		end
+
 		local sliderFrame = Instance.new("Frame")
 		sliderFrame.Size = UDim2.new(1, 0, 0, 38)
 		sliderFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
@@ -2110,7 +2119,7 @@ function showMainPanel()
 		label.Position = UDim2.new(0, 8, 0, 3)
 		label.BackgroundTransparency = 1
 		label.Font = currentGlobalFont
-		label.Text = name .. ": " .. default
+		label.Text = name .. ": " .. formatSliderValue(default)
 		label.TextColor3 = currentTextColor
 		label.TextSize = 11
 		label.TextXAlignment = Enum.TextXAlignment.Left
@@ -2150,8 +2159,15 @@ function showMainPanel()
 			if draggingSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 				local pos = math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
 				fill.Size = UDim2.new(pos, 0, 1, 0)
-				local val = math.floor(min + (max - min) * pos)
-				label.Text = name .. ": " .. val
+				local rawValue = min + (max - min) * pos
+				local val
+				if decimals and decimals > 0 then
+					local factor = 10 ^ decimals
+					val = math.floor(rawValue * factor + 0.5) / factor
+				else
+					val = math.floor(rawValue)
+				end
+				label.Text = name .. ": " .. formatSliderValue(val)
 				callback(val)
 			end
 		end)
@@ -2959,8 +2975,8 @@ function showMainPanel()
 	-----------------------------------------------------------------
 	do
 		local silentGunEnabled = false
-		local silentFovPercent = 400   -- % do raio padrão do jogo
-		local silentDistPercent = 250  -- % da distância máxima padrão do jogo
+		local silentFovMultiplier = 4.0   -- multiplicador do raio (FOV) padrão do jogo
+		local silentDistMultiplier = 2.5  -- multiplicador da distância máxima padrão do jogo
 
 		local aimSettings = nil        -- módulo ReplicatedStorage.Modules.AimAssistSettings
 		local aimOriginals = {}        -- [perfil] = {radius = ..., dist = ...}
@@ -2993,8 +3009,8 @@ function showMainPanel()
 
 		local function applyAimValues()
 			if not aimSettings then return end
-			local radius = math.floor(aimBaseFov * silentFovPercent / 100)
-			local maxDistance = math.floor(aimBaseDist * silentDistPercent / 100)
+			local radius = math.floor(aimBaseFov * silentFovMultiplier)
+			local maxDistance = math.floor(aimBaseDist * silentDistMultiplier)
 			local ok = pcall(function()
 				for _, profile in pairs(aimSettings.Profiles) do
 					profile.AssistRadiusPixels = radius
@@ -3059,15 +3075,15 @@ function showMainPanel()
 			end)
 		end, false)
 
-		addSlider(secSilentGun, "FOV do Aim (% do padrão)", 100, 1500, silentFovPercent, function(val)
-			silentFovPercent = val
+		addSlider(secSilentGun, "FOV Multiplier", 1.0, 15.0, silentFovMultiplier, function(val)
+			silentFovMultiplier = val
 			if silentGunEnabled then applyAimValues() end
-		end)
+		end, 1, "x")
 
-		addSlider(secSilentGun, "Distância do Aim (% do padrão)", 100, 500, silentDistPercent, function(val)
-			silentDistPercent = val
+		addSlider(secSilentGun, "Distance Multiplier", 1.0, 5.0, silentDistMultiplier, function(val)
+			silentDistMultiplier = val
 			if silentGunEnabled then applyAimValues() end
-		end)
+		end, 1, "x")
 
 		-- Dropdown de jogadores: cada clique alterna Neutro -> Foco -> Aliado -> Neutro.
 		-- Foco = entra na lista manual do Lock-On; Aliado = nunca é alvo do Lock-On.
