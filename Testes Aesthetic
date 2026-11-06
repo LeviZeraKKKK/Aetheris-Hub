@@ -2757,6 +2757,243 @@ function showMainPanel()
 		setInfiniteAirJumpsEnabled(state)
 	end, false)
 
+	-- Flashstep (Soru) sem cooldown. Os módulos do jogo são carregados só na
+	-- primeira ativação; com o toggle desligado o handler segue o cooldown normal.
+	do
+		local S = {enabled = false, loaded = false, bound = false, selecting = false, lastUse = 0, signal = nil}
+
+		local function handleAction(actionName, inputState, input)
+			local RS = ReplicatedStorage
+			local char = player.Character
+			if not char then return end
+			local Global = require(RS.Global)
+			local seatUtil = require(RS.Util.SeatUtil)
+			local data = player:FindFirstChild("Data")
+			local race = data and data:FindFirstChild("Race")
+			if not race then return end
+
+			local maxRange = 200
+			local cooldown = S.enabled and 0 or 15
+			local skypieaTransformed = false
+			if race.Value == "Human" and race:FindFirstChild("Evolved") then
+				maxRange = 350
+			elseif race.Value == "Skypiea" and char:FindFirstChild("RaceTransformed") and char.RaceTransformed.Value then
+				skypieaTransformed = true
+			end
+
+			local flashCd = char:GetAttribute("FlashstepCooldown")
+			if flashCd and flashCd > 0 and not S.enabled then
+				cooldown = cooldown * (1 - flashCd)
+			end
+
+			local isTouch = UserInputService.TouchEnabled and input.KeyCode == Enum.KeyCode.Unknown
+			local fired = (isTouch and inputState == Enum.UserInputState.End and input.UserInputState == Enum.UserInputState.End)
+				or (not isTouch and inputState == Enum.UserInputState.Begin and input.UserInputState == Enum.UserInputState.Begin)
+			if not fired then return end
+			if not char:HasTag("Soru") then return end
+
+			local button = S.mobile:GetContextButton(actionName)
+			local isMouse = input.UserInputType == Enum.UserInputType.MouseButton1
+
+			if isTouch or isMouse then
+				if S.selecting then
+					task.wait()
+					S.selecting = false
+					Global.mobileSoru = false
+					if button then button:SetAttribute("Selected", false) end
+					return
+				end
+				if button then button:SetAttribute("Selected", true) end
+				S.selecting = true
+				Global.mobileSoru = true
+
+				local t0 = tick()
+				repeat task.wait() until tick() - t0 > 0.0333
+
+				if isMouse then
+					local waiting = true
+					local conn
+					conn = UserInputService.InputBegan:Connect(function(obj, processed)
+						if obj.UserInputType == Enum.UserInputType.MouseButton1 and not processed then
+							conn:Disconnect()
+							waiting = false
+						end
+					end)
+					while waiting do task.wait() end
+				else
+					local tapped
+					repeat
+						local _, processed = UserInputService.TouchTapInWorld:Wait()
+						tapped = processed
+					until tapped == false
+				end
+
+				if S.selecting == false then
+					if button then button:SetAttribute("Selected", false) end
+					return
+				end
+			end
+
+			S.selecting = false
+			if button then button:SetAttribute("Selected", false) end
+			Global.mobileSoru = false
+
+			char = player.Character
+			if not char then return end
+			local humanoid = char:FindFirstChildOfClass("Humanoid")
+			local root = char:FindFirstChild("HumanoidRootPart")
+			if not humanoid or not root then return end
+
+			local target = player:GetMouse().Hit.p
+			local now = tick()
+			local tool = char:FindFirstChildOfClass("Tool")
+			if tool and tool:GetAttribute("State") == "StartCasting" then return end
+			if humanoid.Health <= 0 or seatUtil.isSeated(char) then return end
+
+			if (target - root.Position).Magnitude > maxRange then
+				if not skypieaTransformed then return end
+				target = (CFrame.new(root.Position, target) * CFrame.new(0, 0, -maxRange)).Position
+			end
+
+			if char.Busy.Value or Global.Swimming or root.Anchored or char.Stun.Value > 0 then return end
+			if not char:FindFirstChild("DoorMode") then
+				if char:FindFirstChild("Phoenix") or char:FindFirstChild("Dragon") then return end
+				if char:FindFirstChild("DisableMovement") then return end
+			end
+			if char.Energy.Value < 10 then return end
+
+			if not S.enabled and now - S.lastUse < cooldown then
+				local charges = humanoid:GetAttribute("SoruCharges")
+				if charges and charges > 0 then
+					humanoid:SetAttribute("SoruCharges", charges - 1)
+				else
+					return
+				end
+			end
+
+			local startCF = root.CFrame
+			local endCF = (startCF - startCF.p + target) + Vector3.new(0, root.Size.Y * 1.5, 0)
+			local seed = math.random(1, 999999999)
+			RS.Remotes.CommE:FireServer("Soru", startCF, endCF, workspace:GetServerTimeNow(), seed)
+
+			local effect, util = S.effect, S.util
+			local humanLevel, draco, gravity, yeti, inRoom = false, false, false, false, false
+			if char:FindFirstChild("YetiRig") then yeti = true end
+			if race.Value == "Human" and char:FindFirstChild("RaceTransformed") and char.RaceTransformed.Value then
+				if race:FindFirstChild("A") and race.A.Value >= 1 then humanLevel = race.A.Value end
+			elseif race.Value == "Draco" and race:FindFirstChild("Evolved") then
+				draco = true
+			end
+			local room = char:FindFirstChild("__Room")
+			if room and room:GetAttribute("CFrame") and room:GetAttribute("Radius")
+				and room:GetAttribute("Radius") >= (endCF.Position - room:GetAttribute("CFrame").Position).Magnitude then
+				inRoom = true
+			end
+			if data:FindFirstChild("DevilFruit") and data.DevilFruit.Value == "Gravity-Gravity" then gravity = true end
+
+			if yeti and not player:GetAttribute("RedYeti") then
+				effect.new("Yeti.Transformed.FlashStep"):play({Stage = 1, Origin = root.Position, Root = root, StartCFrame = startCF, ID = seed})
+			elseif inRoom then
+				local rayResult = nil
+				local hit, pos, normal = util.Ray(endCF.Position + Vector3.new(0, 1, 0), Vector3.new(0, -10, 0), {workspace._WorldOrigin, workspace.Characters, workspace.Enemies})
+				if hit then rayResult = {Instance = hit, Position = pos, Normal = normal} end
+				effect.new("ControlRework.Dodge"):play({Stage = 3, Root = root, Character = char, Humanoid = humanoid, EndCF = endCF, RaycastResult = rayResult})
+			elseif gravity then
+				effect.new("Gravity.Teleport"):play({Stage = 1, Origin = root.Position, Root = root, StartCFrame = startCF})
+			elseif draco then
+				effect.new("DracoRace.Step"):play({ID = 1, CFrame = startCF, Character = char, player = player})
+			elseif not humanLevel and S.soruEffect then
+				S.soruEffect:play({Mode = 1, CFrame = startCF, Character = char, player = player})
+			end
+
+			if seatUtil.isSeated(char) then return end
+			S.lastUse = now
+			root.CFrame = endCF
+
+			if not S.enabled then
+				task.delay(1, function()
+					if cooldown - 1 <= 0 then return end
+					RS.Events.PlaySkillCooldownAnimation:Fire("BoundActionSoru", "none", humanLevel and 0 or cooldown - 1)
+				end)
+			end
+
+			if not inRoom then
+				local speed = math.clamp((root.Velocity * Vector3.new(1, 0, 1)).Magnitude / 16, 1.1, 3.3)
+				if yeti and not player:GetAttribute("RedYeti") then
+					effect.new("Yeti.Transformed.FlashStep"):play({Stage = 2, Origin = root.Position, Root = root, EndCFrame = endCF})
+				elseif gravity then
+					root.Velocity = endCF.LookVector * 100
+					effect.new("Gravity.Teleport"):play({Stage = 2, Origin = root.Position, Root = root, EndCFrame = endCF})
+					util.Anims:Get(char, "GravityFlashstep"):Play()
+				elseif draco then
+					if util.Ray(endCF.p, Vector3.new(0, 1, 0) * -(0.5 + root.Size.Y * 0.5 + humanoid.HipHeight), {workspace.Characters, workspace.Enemies}) then
+						util.Anims:Get(char, "FlashStepDraco"):Play(0, nil, speed)
+					end
+					effect.new("DracoRace.Step"):play({ID = 2, CFrame = root.CFrame, Character = char, player = player})
+				elseif not humanLevel then
+					util.Anims:Get(char, "FlashStepRegular"):Play(0, nil, speed)
+					if S.soruEffect then S.soruEffect:play({Mode = 2, CFrame = root.CFrame, Character = char}) end
+				else
+					util.Anims:Get(char, "FlashStepRegular"):Play(0, nil, speed)
+					effect.new("RaceAwakenings.Human"):play({Root = root, originPos = startCF, goalPos = endCF, level = humanLevel})
+				end
+			end
+		end
+
+		local function bindSoru()
+			local CAS = game:GetService("ContextActionService")
+			pcall(function() S.mobile:UnbindContextButton("BoundActionSoru") end)
+			pcall(function() CAS:UnbindAction("BoundActionSoru") end)
+			local okBtn, btn = pcall(function()
+				return S.mobile:CreateContextButton("BoundActionSoru", handleAction, Enum.KeyCode.R, Enum.KeyCode.ButtonR3)
+			end)
+			if okBtn and btn then
+				btn:SetAttribute("NonToolButton", true)
+			else
+				CAS:BindAction("BoundActionSoru", handleAction, false, Enum.KeyCode.R, Enum.KeyCode.ButtonR3)
+			end
+			S.bound = true
+		end
+
+		local function setupFlashstep()
+			if not S.loaded then
+				local ok, err = pcall(function()
+					local RS = ReplicatedStorage
+					S.effect = require(RS:WaitForChild("Effect", 5))
+					S.util = require(RS:WaitForChild("Util", 5))
+					S.mobile = require(RS.Controllers.UI.MobileUIController)
+					local shared = RS.EffectContainer:FindFirstChild("Shared")
+					S.soruEffect = (shared and shared:FindFirstChild("Soru")) and S.effect.new("Shared.Soru") or nil
+				end)
+				if not ok then
+					warn("[Aetheris] Flashstep: falha ao carregar módulos do jogo: " .. tostring(err))
+					return
+				end
+				S.loaded = true
+				S.signal = game:GetService("CollectionService"):GetInstanceAddedSignal("Soru"):Connect(function(inst)
+					if S.enabled and inst == player.Character then
+						task.wait(0.3)
+						if S.enabled then bindSoru() end
+					end
+				end)
+			end
+			local char = player.Character
+			if char and char:HasTag("Soru") then
+				bindSoru()
+			end
+		end
+
+		addToggle(secFisico, "Flashstep sem cooldown", function(state)
+			S.enabled = state
+			if state then task.spawn(setupFlashstep) end
+		end, false)
+
+		screenGui.Destroying:Connect(function()
+			S.enabled = false
+			if S.signal then S.signal:Disconnect(); S.signal = nil end
+		end)
+	end
+
 	-- Walk Water: barreira invisível que segue o jogador (X e Z) sobre a água.
 	-- Fica dentro de do...end para não gastar variáveis locais (limite de 200).
 	do
