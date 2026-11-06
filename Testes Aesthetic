@@ -2333,8 +2333,27 @@ function showMainPanel()
 	-----------------------------------------------------------------
 	do
 		local infoPage = pages["Info"]
+		-- Remove o layout automático (ele criava um canvas maior que a página e a aba subia sozinha).
+		local infoLayout = infoPage:FindFirstChildOfClass("UIListLayout")
+		if infoLayout then infoLayout:Destroy() end
 		infoPage.ScrollingEnabled = false
 		infoPage.ScrollBarThickness = 0
+		infoPage.ScrollBarImageTransparency = 1
+		infoPage.ElasticBehavior = Enum.ElasticBehavior.Never
+		infoPage.ScrollingDirection = Enum.ScrollingDirection.Y
+		infoPage.AutomaticCanvasSize = Enum.AutomaticSize.None
+		infoPage.CanvasSize = UDim2.new(0, 0, 0, 0)
+		infoPage.CanvasPosition = Vector2.new(0, 0)
+		infoPage:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
+			if infoPage.CanvasPosition.Y ~= 0 or infoPage.CanvasPosition.X ~= 0 then
+				infoPage.CanvasPosition = Vector2.new(0, 0)
+			end
+		end)
+		infoPage:GetPropertyChangedSignal("CanvasSize"):Connect(function()
+			if infoPage.CanvasSize ~= UDim2.new(0, 0, 0, 0) then
+				infoPage.CanvasSize = UDim2.new(0, 0, 0, 0)
+			end
+		end)
 
 		local function makeInfoText(parent, text, size, position, dimensions, color, font, align)
 			local label = Instance.new("TextLabel")
@@ -2359,7 +2378,8 @@ function showMainPanel()
 		-- Card gigante que ocupa a página inteira.
 		local card = Instance.new("Frame")
 		card.Name = "InfoCard"
-		card.Size = UDim2.new(1, -8, 1, -8)
+		card.Size = UDim2.new(1, 0, 1, 0)
+		card.Position = UDim2.new(0, 0, 0, 0)
 		card.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
 		card.BackgroundTransparency = 0.12
 		card.BorderSizePixel = 0
@@ -3284,7 +3304,9 @@ function showMainPanel()
 			end
 		end
 		local function getLayersFolder()
-			return Lighting:FindFirstChild("LightingLayers")
+			local root = workspace:FindFirstChild("Lightning") or workspace:FindFirstChild("Lighting")
+			local folder = root and root:FindFirstChild("LightingLayers")
+			return folder or Lighting:FindFirstChild("LightingLayers")
 		end
 		local function restoreLayer(layer)
 			local saved = fog.detached[layer]
@@ -3332,7 +3354,7 @@ function showMainPanel()
 				missing.Size = UDim2.new(1, -8, 0, 36)
 				missing.BackgroundTransparency = 1
 				missing.Font = currentGlobalFont
-				missing.Text = "Lighting.LightingLayers não encontrado."
+				missing.Text = "Workspace.Lightning.LightingLayers não encontrado."
 				missing.TextColor3 = Color3.fromRGB(220, 170, 170)
 				missing.TextSize = 9
 				missing.TextWrapped = true
