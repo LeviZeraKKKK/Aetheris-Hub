@@ -3204,8 +3204,7 @@ function showMainPanel()
 			end
 		end
 		local function getLayersFolder()
-			local lightning = workspace:FindFirstChild("Lighting")
-			return lightning and lightning:FindFirstChild("LightingLayers") or nil
+			return Lighting:FindFirstChild("LightingLayers")
 		end
 		local function restoreLayer(layer)
 			local saved = fog.detached[layer]
@@ -3253,7 +3252,7 @@ function showMainPanel()
 				missing.Size = UDim2.new(1, -8, 0, 36)
 				missing.BackgroundTransparency = 1
 				missing.Font = currentGlobalFont
-				missing.Text = "Workspace.Lighting.LightingLayers não encontrado."
+				missing.Text = "Lighting.LightingLayers não encontrado."
 				missing.TextColor3 = Color3.fromRGB(220, 170, 170)
 				missing.TextSize = 9
 				missing.TextWrapped = true
