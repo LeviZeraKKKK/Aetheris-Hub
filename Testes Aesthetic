@@ -3011,7 +3011,7 @@ function showMainPanel()
 	-- isso permite restaurar as mesmas instâncias ao desativar.
 	do
 		local fog = {enabled = false, selected = {}, detached = {}}
-		local fogSection = createSection(visualPage, "Remover Neblina", sectionIcons.World)
+		local fogSection = secWorld
 		local fogRow = Instance.new("Frame")
 		fogRow.Name = "FogToggleRow"
 		fogRow.Size = UDim2.new(1, 0, 0, 26)
@@ -3083,11 +3083,12 @@ function showMainPanel()
 		local panel = Instance.new("Frame")
 		panel.Name = "FogLayersSettings"
 		panel.Size = UDim2.new(0, 270, 0, 300)
-		panel.Position = UDim2.new(0.5, -135, 0.5, -150)
+		panel.AnchorPoint = Vector2.new(0.5, 0.5)
+		panel.Position = UDim2.new(0.5, 0, 0.5, 0)
 		panel.BackgroundColor3 = Color3.fromRGB(18, 18, 27)
 		panel.BorderSizePixel = 0
 		panel.Visible = false
-		panel.ZIndex = 50
+		panel.ZIndex = 80
 		panel.Parent = screenGui
 		local panelCorner = Instance.new("UICorner")
 		panelCorner.CornerRadius = UDim.new(0, 9)
@@ -3108,7 +3109,7 @@ function showMainPanel()
 		panelTitle.TextColor3 = currentTextColor
 		panelTitle.TextSize = 12
 		panelTitle.TextXAlignment = Enum.TextXAlignment.Left
-		panelTitle.ZIndex = 51
+		panelTitle.ZIndex = 81
 		panelTitle.Parent = panel
 		table.insert(allTextLabels, panelTitle)
 
@@ -3121,7 +3122,7 @@ function showMainPanel()
 		closeButton.Text = "×"
 		closeButton.TextColor3 = currentTextColor
 		closeButton.TextSize = 16
-		closeButton.ZIndex = 51
+		closeButton.ZIndex = 81
 		closeButton.Parent = panel
 		local closeCorner = Instance.new("UICorner")
 		closeCorner.CornerRadius = UDim.new(0, 5)
@@ -3138,7 +3139,7 @@ function showMainPanel()
 		hint.TextSize = 9
 		hint.TextWrapped = true
 		hint.TextXAlignment = Enum.TextXAlignment.Left
-		hint.ZIndex = 51
+		hint.ZIndex = 81
 		hint.Parent = panel
 		table.insert(allTextLabels, hint)
 
@@ -3151,7 +3152,7 @@ function showMainPanel()
 		refreshButton.Text = "Atualizar lista"
 		refreshButton.TextColor3 = currentTextColor
 		refreshButton.TextSize = 10
-		refreshButton.ZIndex = 51
+		refreshButton.ZIndex = 81
 		refreshButton.Parent = panel
 		local refreshCorner = Instance.new("UICorner")
 		refreshCorner.CornerRadius = UDim.new(0, 5)
@@ -3167,7 +3168,7 @@ function showMainPanel()
 		scroll.BorderSizePixel = 0
 		scroll.ScrollBarThickness = 4
 		scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-		scroll.ZIndex = 51
+		scroll.ZIndex = 81
 		scroll.Parent = panel
 		local scrollCorner = Instance.new("UICorner")
 		scrollCorner.CornerRadius = UDim.new(0, 5)
@@ -3186,8 +3187,24 @@ function showMainPanel()
 		listPadding.PaddingRight = UDim.new(0, 4)
 		listPadding.Parent = scroll
 
+		local function positionFogPanel()
+			local stockButton = screenGui:FindFirstChild("FruitShopButton", true)
+			if stockButton then
+				local screenSize = (workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize) or Vector2.new(1024, 768)
+				local panelSize = panel.AbsoluteSize
+				local maxRight = math.max(panelSize.X + 8, screenSize.X - 8)
+				local rightEdge = math.max(panelSize.X + 8, math.min(stockButton.AbsolutePosition.X + stockButton.AbsoluteSize.X, maxRight))
+				local maxTop = math.max(8, screenSize.Y - panelSize.Y - 8)
+				local topEdge = math.max(8, math.min(stockButton.AbsolutePosition.Y, maxTop))
+				panel.AnchorPoint = Vector2.new(1, 0)
+				panel.Position = UDim2.fromOffset(rightEdge, topEdge)
+			else
+				panel.AnchorPoint = Vector2.new(0.5, 0.5)
+				panel.Position = UDim2.new(0.5, 0, 0.5, 0)
+			end
+		end
 		local function getLayersFolder()
-			local lightning = workspace:FindFirstChild("Lightning")
+			local lightning = workspace:FindFirstChild("Lighting")
 			return lightning and lightning:FindFirstChild("LightingLayers") or nil
 		end
 		local function restoreLayer(layer)
@@ -3236,11 +3253,11 @@ function showMainPanel()
 				missing.Size = UDim2.new(1, -8, 0, 36)
 				missing.BackgroundTransparency = 1
 				missing.Font = currentGlobalFont
-				missing.Text = "Workspace.Lightning.LightingLayers não encontrado."
+				missing.Text = "Workspace.Lighting.LightingLayers não encontrado."
 				missing.TextColor3 = Color3.fromRGB(220, 170, 170)
 				missing.TextSize = 9
 				missing.TextWrapped = true
-				missing.ZIndex = 52
+				missing.ZIndex = 82
 				missing.Parent = scroll
 				return
 			end
@@ -3260,7 +3277,7 @@ function showMainPanel()
 				empty.Text = "Nenhuma camada encontrada."
 				empty.TextColor3 = Color3.fromRGB(175, 175, 190)
 				empty.TextSize = 9
-				empty.ZIndex = 52
+				empty.ZIndex = 82
 				empty.Parent = scroll
 				return
 			end
@@ -3273,7 +3290,7 @@ function showMainPanel()
 				row.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
 				row.BackgroundTransparency = 0.25
 				row.BorderSizePixel = 0
-				row.ZIndex = 52
+				row.ZIndex = 82
 				row.Parent = scroll
 				local rowCorner = Instance.new("UICorner")
 				rowCorner.CornerRadius = UDim.new(0, 4)
@@ -3288,7 +3305,7 @@ function showMainPanel()
 				label.TextSize = 10
 				label.TextTruncate = Enum.TextTruncate.AtEnd
 				label.TextXAlignment = Enum.TextXAlignment.Left
-				label.ZIndex = 53
+				label.ZIndex = 83
 				label.Parent = row
 				local layerButton = Instance.new("TextButton")
 				layerButton.Size = UDim2.new(0, 42, 0, 18)
@@ -3299,7 +3316,7 @@ function showMainPanel()
 				layerButton.Text = fog.selected[layerInstance] and "ON" or "OFF"
 				layerButton.TextColor3 = currentTextColor
 				layerButton.TextSize = 9
-				layerButton.ZIndex = 53
+				layerButton.ZIndex = 83
 				layerButton.Parent = row
 				local buttonCorner = Instance.new("UICorner")
 				buttonCorner.CornerRadius = UDim.new(0, 4)
@@ -3317,7 +3334,10 @@ function showMainPanel()
 		fogToggle.MouseButton1Click:Connect(function() setFogEnabled(not fog.enabled) end)
 		settingsButton.MouseButton1Click:Connect(function()
 			panel.Visible = not panel.Visible
-			if panel.Visible then refreshList() end
+			if panel.Visible then
+				positionFogPanel()
+				refreshList()
+			end
 		end)
 		refreshButton.MouseButton1Click:Connect(refreshList)
 		closeButton.MouseButton1Click:Connect(function() panel.Visible = false end)
