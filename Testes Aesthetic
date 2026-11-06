@@ -2955,6 +2955,23 @@ function showMainPanel()
 			S.bound = true
 		end
 
+		-- Após reset/morte o jogo recria o botão do Soru; reaplicamos o nosso
+		-- algumas vezes seguidas para vencer a corrida com o script do jogo.
+		S.gen = 0
+		function S.scheduleRebind()
+			S.gen = S.gen + 1
+			local gen = S.gen
+			S.selecting = false
+			task.spawn(function()
+				for _, delay in ipairs({0.3, 0.7, 1.5, 2.5, 4}) do
+					task.wait(delay)
+					if gen ~= S.gen or not S.enabled then return end
+					local char = player.Character
+					if char and char:HasTag("Soru") then bindSoru() end
+				end
+			end)
+		end
+
 		local function setupFlashstep()
 			if not S.loaded then
 				local ok, err = pcall(function()
@@ -2971,10 +2988,10 @@ function showMainPanel()
 				end
 				S.loaded = true
 				S.signal = game:GetService("CollectionService"):GetInstanceAddedSignal("Soru"):Connect(function(inst)
-					if S.enabled and inst == player.Character then
-						task.wait(0.3)
-						if S.enabled then bindSoru() end
-					end
+					if inst == player.Character then S.scheduleRebind() end
+				end)
+				S.charSignal = player.CharacterAdded:Connect(function()
+					S.scheduleRebind()
 				end)
 			end
 			local char = player.Character
@@ -2991,6 +3008,7 @@ function showMainPanel()
 		screenGui.Destroying:Connect(function()
 			S.enabled = false
 			if S.signal then S.signal:Disconnect(); S.signal = nil end
+			if S.charSignal then S.charSignal:Disconnect(); S.charSignal = nil end
 		end)
 	end
 
@@ -3577,6 +3595,45 @@ function showMainPanel()
 		panelStroke.Transparency = 0.25
 		panelStroke.Thickness = 1.2
 		panelStroke.Parent = panel
+		local panelScale = Instance.new("UIScale")
+		panelScale.Scale = 1
+		panelScale.Parent = panel
+		local panelGradient = Instance.new("UIGradient")
+		panelGradient.Rotation = 90
+		panelGradient.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(165, 165, 185))
+		panelGradient.Parent = panel
+		local accentLine = Instance.new("Frame")
+		accentLine.Size = UDim2.new(1, -24, 0, 2)
+		accentLine.Position = UDim2.new(0, 12, 0, 36)
+		accentLine.BackgroundColor3 = currentThemeColor
+		accentLine.BorderSizePixel = 0
+		accentLine.ZIndex = 81
+		accentLine.Parent = panel
+		local accentGradient = Instance.new("UIGradient")
+		accentGradient.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.25, 0.15),
+			NumberSequenceKeypoint.new(0.75, 0.15),
+			NumberSequenceKeypoint.new(1, 1)
+		})
+		accentGradient.Parent = accentLine
+		table.insert(themeSliders, accentLine)
+		-- Brilho que desliza pela linha enquanto o painel está aberto.
+		local accentSweep = Instance.new("Frame")
+		accentSweep.Size = UDim2.new(0.25, 0, 1, 0)
+		accentSweep.Position = UDim2.new(-0.25, 0, 0, 0)
+		accentSweep.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		accentSweep.BackgroundTransparency = 0.35
+		accentSweep.BorderSizePixel = 0
+		accentSweep.ZIndex = 82
+		accentSweep.Parent = accentLine
+		local sweepGradient = Instance.new("UIGradient")
+		sweepGradient.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.5, 0),
+			NumberSequenceKeypoint.new(1, 1)
+		})
+		sweepGradient.Parent = accentSweep
 		table.insert(themeSections, panelStroke)
 
 		local panelTitle = Instance.new("TextLabel")
@@ -3614,6 +3671,7 @@ function showMainPanel()
 		hint.BackgroundTransparency = 1
 		hint.Font = currentGlobalFont
 		hint.Text = "Ative o toggle principal e marque as camadas a remover."
+		hint.Name = "FogStatusHint"
 		hint.TextColor3 = Color3.fromRGB(175, 175, 190)
 		hint.TextSize = 9
 		hint.TextWrapped = true
@@ -3708,6 +3766,14 @@ function showMainPanel()
 			for layer in pairs(fog.detached) do table.insert(pending, layer) end
 			for _, layer in ipairs(pending) do restoreLayer(layer) end
 		end
+		local function updateFogStatus()
+			local count = 0
+			for _, isSelected in pairs(fog.selected) do
+				if isSelected then count = count + 1 end
+			end
+			hint.Text = (fog.enabled and "● Neblina removida" or "○ Neblina restaurada") .. "  •  " .. count .. (count == 1 and " camada marcada" or " camadas marcadas")
+			TweenService:Create(hint, TweenInfo.new(0.2), {TextColor3 = fog.enabled and currentThemeColor or Color3.fromRGB(175, 175, 190)}):Play()
+		end
 		local function setFogEnabled(enabled)
 			fog.enabled = enabled
 			toggleState.isToggled = enabled
@@ -3722,6 +3788,7 @@ function showMainPanel()
 			else
 				restoreAll()
 			end
+			updateFogStatus()
 		end
 		local function refreshList()
 			for _, child in ipairs(scroll:GetChildren()) do
@@ -3801,26 +3868,106 @@ function showMainPanel()
 				local buttonCorner = Instance.new("UICorner")
 				buttonCorner.CornerRadius = UDim.new(0, 4)
 				buttonCorner.Parent = layerButton
+				local function tintRow()
+					local sel = fog.selected[layerInstance]
+					TweenService:Create(row, TweenInfo.new(0.2), {
+						BackgroundColor3 = sel and currentThemeColor or Color3.fromRGB(34, 34, 46),
+						BackgroundTransparency = sel and 0.72 or 0.25
+					}):Play()
+				end
+				tintRow()
 				layerButton.MouseButton1Click:Connect(function()
 					fog.selected[layerInstance] = not fog.selected[layerInstance]
 					local selected = fog.selected[layerInstance]
 					layerButton.Text = selected and "ON" or "OFF"
-					layerButton.BackgroundColor3 = selected and currentThemeColor or Color3.fromRGB(50, 50, 70)
+					TweenService:Create(layerButton, TweenInfo.new(0.2), {BackgroundColor3 = selected and currentThemeColor or Color3.fromRGB(50, 50, 70)}):Play()
+					-- "pulo" rápido de feedback
+					layerButton.Size = UDim2.new(0, 48, 0, 21)
+					layerButton.Position = UDim2.new(1, -51, 0.5, -10.5)
+					TweenService:Create(layerButton, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+						Size = UDim2.new(0, 42, 0, 18),
+						Position = UDim2.new(1, -48, 0.5, -9)
+					}):Play()
+					tintRow()
 					applyLayer(layerInstance)
+					updateFogStatus()
+				end)
+				row.MouseEnter:Connect(function()
+					if not fog.selected[layerInstance] then
+						TweenService:Create(row, TweenInfo.new(0.12), {BackgroundTransparency = 0.05}):Play()
+					end
+				end)
+				row.MouseLeave:Connect(tintRow)
+				-- entrada em cascata: cada linha surge com um pequeno atraso
+				row.BackgroundTransparency = 1
+				label.TextTransparency = 1
+				layerButton.BackgroundTransparency = 1
+				layerButton.TextTransparency = 1
+				task.delay(index * 0.035, function()
+					if not row.Parent then return end
+					tintRow()
+					TweenService:Create(label, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
+					TweenService:Create(layerButton, TweenInfo.new(0.25), {BackgroundTransparency = 0, TextTransparency = 0}):Play()
 				end)
 			end
 		end
 
 		fogToggle.MouseButton1Click:Connect(function() setFogEnabled(not fog.enabled) end)
+		local panelToken = 0
+		local function closeFogPanel()
+			if not panel.Visible then return end
+			panelToken = panelToken + 1
+			local token = panelToken
+			TweenService:Create(settingsButton, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {Rotation = 0}):Play()
+			TweenService:Create(panelScale, TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0.88}):Play()
+			task.delay(0.16, function()
+				if token == panelToken then panel.Visible = false end
+			end)
+		end
+		local function openFogPanel()
+			panelToken = panelToken + 1
+			local token = panelToken
+			panelScale.Scale = 1
+			panel.Visible = true
+			positionFogPanel()
+			refreshList()
+			updateFogStatus()
+			panelScale.Scale = 0.85
+			TweenService:Create(panelScale, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+			TweenService:Create(settingsButton, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Rotation = 90}):Play()
+			-- brilho pulsante na borda + faixa de luz na linha do título
+			task.spawn(function()
+				while token == panelToken and panel.Visible and screenGui.Parent do
+					TweenService:Create(panelStroke, TweenInfo.new(0.9, Enum.EasingStyle.Sine), {Transparency = 0.6}):Play()
+					accentSweep.Position = UDim2.new(-0.25, 0, 0, 0)
+					TweenService:Create(accentSweep, TweenInfo.new(1.4, Enum.EasingStyle.Sine), {Position = UDim2.new(1, 0, 0, 0)}):Play()
+					task.wait(0.9)
+					if token ~= panelToken then break end
+					TweenService:Create(panelStroke, TweenInfo.new(0.9, Enum.EasingStyle.Sine), {Transparency = 0.15}):Play()
+					task.wait(0.9)
+				end
+				panelStroke.Transparency = 0.25
+			end)
+		end
 		settingsButton.MouseButton1Click:Connect(function()
-			panel.Visible = not panel.Visible
-			if panel.Visible then
-				positionFogPanel()
-				refreshList()
-			end
+			if panel.Visible and panelScale.Scale > 0.95 then closeFogPanel() else openFogPanel() end
 		end)
-		refreshButton.MouseButton1Click:Connect(refreshList)
-		closeButton.MouseButton1Click:Connect(function() panel.Visible = false end)
+		refreshButton.MouseButton1Click:Connect(function()
+			refreshButton.Size = UDim2.new(1, -30, 0, 22)
+			TweenService:Create(refreshButton, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(1, -24, 0, 24)}):Play()
+			refreshList()
+		end)
+		closeButton.MouseButton1Click:Connect(closeFogPanel)
+		-- efeito de hover nos botões do painel e do engrenagem
+		for _, b in ipairs({closeButton, refreshButton, settingsButton}) do
+			local base = b.BackgroundColor3
+			b.MouseEnter:Connect(function()
+				TweenService:Create(b, TweenInfo.new(0.12), {BackgroundColor3 = base:Lerp(currentThemeColor, 0.35)}):Play()
+			end)
+			b.MouseLeave:Connect(function()
+				TweenService:Create(b, TweenInfo.new(0.15), {BackgroundColor3 = base}):Play()
+			end)
+		end
 		screenGui.Destroying:Connect(function()
 			fog.enabled = false
 			restoreAll()
