@@ -1377,7 +1377,8 @@ function showMainPanel()
 	uiListLayout.Parent = controlsContainer
 
 	-- Minimizar / maximizar: o painel encolhe voando até o botão flutuante (e volta de lá),
-	-- tudo ao mesmo tempo: posição, escala, inclinação, transparência e brilho da borda.
+	-- tudo ao mesmo tempo: posição, escala, transparência e brilho da borda.
+	-- (sem Rotation: um painel girado desliga o ClipsDescendants e os toggles vazavam para fora)
 	local panelAnimScale = Instance.new("UIScale")
 	panelAnimScale.Scale = 1
 	panelAnimScale.Parent = mainPanel
@@ -1424,8 +1425,7 @@ function showMainPanel()
 			local dur = 0.46
 			local flyInfo = TweenInfo.new(dur, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut)
 			TweenService:Create(mainPanel, flyInfo, {
-				Position = UDim2.fromOffset(target.X, target.Y),
-				Rotation = -5
+				Position = UDim2.fromOffset(target.X, target.Y)
 			}):Play()
 			TweenService:Create(panelAnimScale, TweenInfo.new(dur, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Scale = 0.04}):Play()
 			TweenService:Create(mainPanel, TweenInfo.new(dur * 0.9, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play()
@@ -1443,7 +1443,6 @@ function showMainPanel()
 			mainPanel.Visible = false
 			-- restaura os valores para a próxima abertura
 			panelAnimScale.Scale = 1
-			mainPanel.Rotation = 0
 			mainPanel.Position = savedPanelPosition
 			mainPanel.BackgroundTransparency = panelTransparencyValue
 			panelStroke.Transparency = 0.25
@@ -1458,7 +1457,6 @@ function showMainPanel()
 			rippleAt(from, currentThemeColor)
 
 			panelAnimScale.Scale = 0.04
-			mainPanel.Rotation = 5
 			mainPanel.Position = UDim2.fromOffset(from.X, from.Y)
 			mainPanel.BackgroundTransparency = 1
 			panelStroke.Transparency = 1
@@ -1467,8 +1465,7 @@ function showMainPanel()
 			mainPanel.Visible = true
 
 			TweenService:Create(mainPanel, TweenInfo.new(dur, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-				Position = target,
-				Rotation = 0
+				Position = target
 			}):Play()
 			TweenService:Create(panelAnimScale, TweenInfo.new(dur, Enum.EasingStyle.Back, Enum.EasingDirection.Out, 0, false, 0), {Scale = 1}):Play()
 			TweenService:Create(mainPanel, TweenInfo.new(dur * 0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {BackgroundTransparency = panelTransparencyValue}):Play()
