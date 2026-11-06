@@ -1376,22 +1376,107 @@ function showMainPanel()
 	uiListLayout.Padding = UDim.new(0, 5)
 	uiListLayout.Parent = controlsContainer
 
+	-- Minimizar / maximizar: o painel encolhe voando até o botão flutuante (e volta de lá),
+	-- tudo ao mesmo tempo: posição, escala, inclinação, transparência e brilho da borda.
+	local panelAnimScale = Instance.new("UIScale")
+	panelAnimScale.Scale = 1
+	panelAnimScale.Parent = mainPanel
+	local savedPanelPosition = nil
+	local panelAnimating = false
+
+	local function floatingCenter(size)
+		local screen = screenGui.AbsoluteSize
+		local pos = floatingBtn.Position
+		return Vector2.new(pos.X.Scale * screen.X + pos.X.Offset + size / 2, pos.Y.Scale * screen.Y + pos.Y.Offset + size / 2)
+	end
+
+	local function rippleAt(center, color)
+		local ring = Instance.new("Frame")
+		ring.AnchorPoint = Vector2.new(0.5, 0.5)
+		ring.Position = UDim2.fromOffset(center.X, center.Y)
+		ring.Size = UDim2.new(0, 20, 0, 20)
+		ring.BackgroundTransparency = 1
+		ring.BorderSizePixel = 0
+		ring.ZIndex = 19
+		ring.Parent = screenGui
+		local ringCorner = Instance.new("UICorner")
+		ringCorner.CornerRadius = UDim.new(1, 0)
+		ringCorner.Parent = ring
+		local ringStroke = Instance.new("UIStroke")
+		ringStroke.Color = color
+		ringStroke.Thickness = 3
+		ringStroke.Transparency = 0.15
+		ringStroke.Parent = ring
+		TweenService:Create(ring, TweenInfo.new(0.55, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, 110, 0, 110)}):Play()
+		TweenService:Create(ringStroke, TweenInfo.new(0.55, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Transparency = 1, Thickness = 0.5}):Play()
+		task.delay(0.6, function() ring:Destroy() end)
+	end
+
 	local function toggleMinimizePanel()
+		if panelAnimating then return end
+		panelAnimating = true
+
 		if mainPanel.Visible then
+			-- ===== MINIMIZAR =====
 			currentPanelSize = mainPanel.Size
-			TweenService:Create(mainPanel, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 0, 0, 0)}):Play()
-			task.wait(0.25)
+			savedPanelPosition = mainPanel.Position
+			local target = floatingCenter(40)
+			local dur = 0.46
+			local flyInfo = TweenInfo.new(dur, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut)
+			TweenService:Create(mainPanel, flyInfo, {
+				Position = UDim2.fromOffset(target.X, target.Y),
+				Rotation = -5
+			}):Play()
+			TweenService:Create(panelAnimScale, TweenInfo.new(dur, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Scale = 0.04}):Play()
+			TweenService:Create(mainPanel, TweenInfo.new(dur * 0.9, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play()
+			TweenService:Create(panelStroke, TweenInfo.new(dur, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Transparency = 1}):Play()
+
+			-- o botão surge um pouco antes do painel terminar de chegar
+			task.delay(dur * 0.72, function()
+				floatingBtn.Size = UDim2.new(0, 0, 0, 0)
+				floatingBtn.Visible = true
+				TweenService:Create(floatingBtn, TweenInfo.new(0.34, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 40, 0, 40)}):Play()
+				rippleAt(target, currentThemeColor)
+			end)
+
+			task.wait(dur)
 			mainPanel.Visible = false
-			floatingBtn.Visible = true
-			TweenService:Create(floatingBtn, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 40, 0, 40)}):Play()
+			-- restaura os valores para a próxima abertura
+			panelAnimScale.Scale = 1
+			mainPanel.Rotation = 0
+			mainPanel.Position = savedPanelPosition
+			mainPanel.BackgroundTransparency = panelTransparencyValue
+			panelStroke.Transparency = 0.25
 		else
-			TweenService:Create(floatingBtn, TweenInfo.new(0.18), {Size = UDim2.new(0, 0, 0, 0)}):Play()
-			task.wait(0.18)
-			floatingBtn.Visible = false
+			-- ===== MAXIMIZAR =====
+			local from = floatingCenter(40)
+			local target = savedPanelPosition or mainPanel.Position
+			local dur = 0.55
+			-- o botão encolhe enquanto o painel já está nascendo dele
+			TweenService:Create(floatingBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+			task.delay(0.2, function() floatingBtn.Visible = false end)
+			rippleAt(from, currentThemeColor)
+
+			panelAnimScale.Scale = 0.04
+			mainPanel.Rotation = 5
+			mainPanel.Position = UDim2.fromOffset(from.X, from.Y)
+			mainPanel.BackgroundTransparency = 1
+			panelStroke.Transparency = 1
+			panelStroke.Thickness = 4
+			mainPanel.Size = currentPanelSize
 			mainPanel.Visible = true
-			mainPanel.Size = UDim2.new(0, 0, 0, 0)
-			TweenService:Create(mainPanel, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = currentPanelSize}):Play()
+
+			TweenService:Create(mainPanel, TweenInfo.new(dur, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+				Position = target,
+				Rotation = 0
+			}):Play()
+			TweenService:Create(panelAnimScale, TweenInfo.new(dur, Enum.EasingStyle.Back, Enum.EasingDirection.Out, 0, false, 0), {Scale = 1}):Play()
+			TweenService:Create(mainPanel, TweenInfo.new(dur * 0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {BackgroundTransparency = panelTransparencyValue}):Play()
+			TweenService:Create(panelStroke, TweenInfo.new(dur * 0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Transparency = 0.25, Thickness = 1.6}):Play()
+			task.wait(dur)
 		end
+
+		panelAnimating = false
 	end
 
 		local function createControlButton(text, callback, color, order)
@@ -1776,13 +1861,14 @@ function showMainPanel()
 		local baseW = isMobile and 420 or 580
 		local baseH = isMobile and 270 or 390
 		local function applyPanelScale()
-			local w, h = mainPanel.AbsoluteSize.X, mainPanel.AbsoluteSize.Y
-			if w < 150 or h < 100 then return end -- durante a animação de minimizar/abrir
+			-- usa o Size configurado (e não o AbsoluteSize) para não somar com a animação de escala
+			local w, h = mainPanel.Size.X.Offset, mainPanel.Size.Y.Offset
+			if w <= 0 or h <= 0 then return end
 			local f = math.clamp(math.min(w / baseW, h / baseH), 0.6, 1.7)
 			bodyScale.Scale = f
 			body.Size = UDim2.new(0, w / f, 0, h / f)
 		end
-		mainPanel:GetPropertyChangedSignal("AbsoluteSize"):Connect(applyPanelScale)
+		mainPanel:GetPropertyChangedSignal("Size"):Connect(applyPanelScale)
 		applyPanelScale()
 	end
 
