@@ -3577,153 +3577,299 @@ function showMainPanel()
 		settingsCorner.CornerRadius = UDim.new(0, 5)
 		settingsCorner.Parent = settingsButton
 
-		local panel = Instance.new("Frame")
-		panel.Name = "FogLayersSettings"
-		panel.Size = UDim2.new(0, 270, 0, 300)
-		panel.AnchorPoint = Vector2.new(0.5, 0.5)
-		panel.Position = UDim2.new(0.5, 0, 0.5, 0)
-		panel.BackgroundColor3 = Color3.fromRGB(18, 18, 27)
-		panel.BorderSizePixel = 0
-		panel.Visible = false
-		panel.ZIndex = 80
-		panel.Parent = screenGui
-		local panelCorner = Instance.new("UICorner")
-		panelCorner.CornerRadius = UDim.new(0, 9)
-		panelCorner.Parent = panel
-		local panelStroke = Instance.new("UIStroke")
-		panelStroke.Color = currentThemeColor
-		panelStroke.Transparency = 0.25
-		panelStroke.Thickness = 1.2
-		panelStroke.Parent = panel
-		local panelScale = Instance.new("UIScale")
-		panelScale.Scale = 1
-		panelScale.Parent = panel
-		local panelGradient = Instance.new("UIGradient")
-		panelGradient.Rotation = 90
-		panelGradient.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(165, 165, 185))
-		panelGradient.Parent = panel
-		local accentLine = Instance.new("Frame")
-		accentLine.Size = UDim2.new(1, -24, 0, 2)
-		accentLine.Position = UDim2.new(0, 12, 0, 36)
-		accentLine.BackgroundColor3 = currentThemeColor
-		accentLine.BorderSizePixel = 0
-		accentLine.ZIndex = 81
-		accentLine.Parent = panel
-		local accentGradient = Instance.new("UIGradient")
-		accentGradient.Transparency = NumberSequence.new({
+		-- ===== PAINEL DE CAMADAS (redesenhado) =====
+		local function new(class, props, parent)
+			local o = Instance.new(class)
+			if props.ZIndex == nil then o.ZIndex = 81 end
+			for k, v in pairs(props) do o[k] = v end
+			o.Parent = parent
+			return o
+		end
+		local function round(parent, radius)
+			return new("UICorner", {CornerRadius = UDim.new(0, radius)}, parent)
+		end
+		local GRAY = Color3.fromRGB(150, 150, 170)
+		local OFFCOLOR = Color3.fromRGB(52, 52, 72)
+
+		local panel = new("Frame", {
+			Name = "FogLayersSettings",
+			Size = UDim2.new(0, 300, 0, 372),
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.new(0.5, 0, 0.5, 0),
+			BackgroundColor3 = Color3.fromRGB(15, 15, 23),
+			BorderSizePixel = 0,
+			Visible = false,
+			ZIndex = 80
+		}, screenGui)
+		round(panel, 14)
+		local panelStroke = new("UIStroke", {Color = currentThemeColor, Transparency = 0.25, Thickness = 1.4}, panel)
+		table.insert(themeSections, panelStroke)
+		local panelScale = new("UIScale", {Scale = 1}, panel)
+		new("UIGradient", {
+			Rotation = 90,
+			Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(170, 170, 190))
+		}, panel)
+
+		-- Cabeçalho
+		local headerGlow = new("Frame", {
+			Size = UDim2.new(1, 0, 0, 64),
+			BackgroundColor3 = currentThemeColor,
+			BorderSizePixel = 0
+		}, panel)
+		round(headerGlow, 14)
+		new("UIGradient", {
+			Rotation = 90,
+			Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.82), NumberSequenceKeypoint.new(1, 1)})
+		}, headerGlow)
+		table.insert(themeSliders, headerGlow)
+
+		local badge = new("Frame", {
+			Size = UDim2.new(0, 36, 0, 36),
+			Position = UDim2.new(0, 14, 0, 14),
+			BackgroundColor3 = currentThemeColor,
+			BackgroundTransparency = 0.8,
+			BorderSizePixel = 0
+		}, panel)
+		round(badge, 10)
+		local badgeStroke = new("UIStroke", {Color = currentThemeColor, Transparency = 0.45, Thickness = 1}, badge)
+		table.insert(themeSections, badgeStroke)
+		local badgeIcon = new("TextLabel", {
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+			Font = Enum.Font.GothamBold,
+			Text = "☁",
+			TextColor3 = currentThemeColor,
+			TextSize = 20
+		}, badge)
+		table.insert(themeTexts, badgeIcon)
+
+		local panelTitle = new("TextLabel", {
+			Size = UDim2.new(1, -110, 0, 18),
+			Position = UDim2.new(0, 60, 0, 13),
+			BackgroundTransparency = 1,
+			Font = currentGlobalFont,
+			Text = "Remover Neblina",
+			TextColor3 = currentTextColor,
+			TextSize = 14,
+			TextXAlignment = Enum.TextXAlignment.Left
+		}, panel)
+		table.insert(allTextLabels, panelTitle)
+		new("TextLabel", {
+			Size = UDim2.new(1, -110, 0, 12),
+			Position = UDim2.new(0, 60, 0, 32),
+			BackgroundTransparency = 1,
+			Font = Enum.Font.Gotham,
+			Text = "Workspace.Lightning.LightingLayers",
+			TextColor3 = GRAY,
+			TextSize = 9,
+			TextTruncate = Enum.TextTruncate.AtEnd,
+			TextXAlignment = Enum.TextXAlignment.Left
+		}, panel)
+
+		local closeButton = new("TextButton", {
+			Size = UDim2.new(0, 26, 0, 26),
+			Position = UDim2.new(1, -40, 0, 19),
+			BackgroundColor3 = Color3.fromRGB(46, 40, 58),
+			BorderSizePixel = 0,
+			AutoButtonColor = false,
+			Font = Enum.Font.GothamBold,
+			Text = "✕",
+			TextColor3 = Color3.fromRGB(230, 230, 240),
+			TextSize = 11
+		}, panel)
+		round(closeButton, 8)
+
+		local accentLine = new("Frame", {
+			Size = UDim2.new(1, -28, 0, 2),
+			Position = UDim2.new(0, 14, 0, 62),
+			BackgroundColor3 = currentThemeColor,
+			BorderSizePixel = 0
+		}, panel)
+		new("UIGradient", {Transparency = NumberSequence.new({
 			NumberSequenceKeypoint.new(0, 1),
-			NumberSequenceKeypoint.new(0.25, 0.15),
-			NumberSequenceKeypoint.new(0.75, 0.15),
+			NumberSequenceKeypoint.new(0.25, 0.2),
+			NumberSequenceKeypoint.new(0.75, 0.2),
 			NumberSequenceKeypoint.new(1, 1)
-		})
-		accentGradient.Parent = accentLine
+		})}, accentLine)
 		table.insert(themeSliders, accentLine)
-		-- Brilho que desliza pela linha enquanto o painel está aberto.
-		local accentSweep = Instance.new("Frame")
-		accentSweep.Size = UDim2.new(0.25, 0, 1, 0)
-		accentSweep.Position = UDim2.new(-0.25, 0, 0, 0)
-		accentSweep.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		accentSweep.BackgroundTransparency = 0.35
-		accentSweep.BorderSizePixel = 0
-		accentSweep.ZIndex = 82
-		accentSweep.Parent = accentLine
-		local sweepGradient = Instance.new("UIGradient")
-		sweepGradient.Transparency = NumberSequence.new({
+		local accentSweep = new("Frame", {
+			Size = UDim2.new(0.25, 0, 1, 0),
+			Position = UDim2.new(-0.25, 0, 0, 0),
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+			BackgroundTransparency = 0.3,
+			BorderSizePixel = 0,
+			ZIndex = 82
+		}, accentLine)
+		new("UIGradient", {Transparency = NumberSequence.new({
 			NumberSequenceKeypoint.new(0, 1),
 			NumberSequenceKeypoint.new(0.5, 0),
 			NumberSequenceKeypoint.new(1, 1)
-		})
-		sweepGradient.Parent = accentSweep
-		table.insert(themeSections, panelStroke)
+		})}, accentSweep)
 
-		local panelTitle = Instance.new("TextLabel")
-		panelTitle.Size = UDim2.new(1, -76, 0, 30)
-		panelTitle.Position = UDim2.new(0, 12, 0, 8)
-		panelTitle.BackgroundTransparency = 1
-		panelTitle.Font = currentGlobalFont
-		panelTitle.Text = "Camadas de iluminação"
-		panelTitle.TextColor3 = currentTextColor
-		panelTitle.TextSize = 12
-		panelTitle.TextXAlignment = Enum.TextXAlignment.Left
-		panelTitle.ZIndex = 81
-		panelTitle.Parent = panel
-		table.insert(allTextLabels, panelTitle)
+		-- Cartão de status
+		local statusCard = new("Frame", {
+			Size = UDim2.new(1, -28, 0, 46),
+			Position = UDim2.new(0, 14, 0, 74),
+			BackgroundColor3 = Color3.fromRGB(24, 24, 36),
+			BorderSizePixel = 0
+		}, panel)
+		round(statusCard, 10)
+		new("UIStroke", {Color = Color3.fromRGB(70, 70, 95), Transparency = 0.6, Thickness = 1}, statusCard)
+		local statusDot = new("Frame", {
+			Size = UDim2.new(0, 10, 0, 10),
+			Position = UDim2.new(0, 14, 0.5, -5),
+			BackgroundColor3 = Color3.fromRGB(90, 90, 110),
+			BorderSizePixel = 0
+		}, statusCard)
+		round(statusDot, 5)
+		local statusDotRing = new("Frame", {
+			Size = UDim2.new(0, 10, 0, 10),
+			Position = UDim2.new(0, 14, 0.5, -5),
+			BackgroundColor3 = currentThemeColor,
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0
+		}, statusCard)
+		round(statusDotRing, 5)
+		local statusTitle = new("TextLabel", {
+			Size = UDim2.new(1, -120, 0, 16),
+			Position = UDim2.new(0, 34, 0, 8),
+			BackgroundTransparency = 1,
+			Font = currentGlobalFont,
+			Text = "Neblina restaurada",
+			TextColor3 = currentTextColor,
+			TextSize = 12,
+			TextXAlignment = Enum.TextXAlignment.Left
+		}, statusCard)
+		table.insert(allTextLabels, statusTitle)
+		local statusSub = new("TextLabel", {
+			Size = UDim2.new(1, -120, 0, 12),
+			Position = UDim2.new(0, 34, 0, 25),
+			BackgroundTransparency = 1,
+			Font = Enum.Font.Gotham,
+			Text = "0 de 0 camadas marcadas",
+			TextColor3 = GRAY,
+			TextSize = 9,
+			TextXAlignment = Enum.TextXAlignment.Left
+		}, statusCard)
+		local statusPill = new("TextLabel", {
+			Size = UDim2.new(0, 60, 0, 20),
+			Position = UDim2.new(1, -72, 0.5, -10),
+			BackgroundColor3 = OFFCOLOR,
+			BorderSizePixel = 0,
+			Font = Enum.Font.GothamBold,
+			Text = "INATIVO",
+			TextColor3 = Color3.fromRGB(235, 235, 245),
+			TextSize = 9
+		}, statusCard)
+		round(statusPill, 10)
 
-		local closeButton = Instance.new("TextButton")
-		closeButton.Size = UDim2.new(0, 26, 0, 24)
-		closeButton.Position = UDim2.new(1, -34, 0, 7)
-		closeButton.BackgroundColor3 = Color3.fromRGB(48, 42, 58)
-		closeButton.BorderSizePixel = 0
-		closeButton.Font = currentGlobalFont
-		closeButton.Text = "×"
-		closeButton.TextColor3 = currentTextColor
-		closeButton.TextSize = 16
-		closeButton.ZIndex = 81
-		closeButton.Parent = panel
-		local closeCorner = Instance.new("UICorner")
-		closeCorner.CornerRadius = UDim.new(0, 5)
-		closeCorner.Parent = closeButton
-		table.insert(allTextLabels, closeButton)
-
-		local hint = Instance.new("TextLabel")
-		hint.Size = UDim2.new(1, -24, 0, 28)
-		hint.Position = UDim2.new(0, 12, 0, 37)
-		hint.BackgroundTransparency = 1
-		hint.Font = currentGlobalFont
-		hint.Text = "Ative o toggle principal e marque as camadas a remover."
-		hint.Name = "FogStatusHint"
-		hint.TextColor3 = Color3.fromRGB(175, 175, 190)
-		hint.TextSize = 9
-		hint.TextWrapped = true
-		hint.TextXAlignment = Enum.TextXAlignment.Left
-		hint.ZIndex = 81
-		hint.Parent = panel
-		table.insert(allTextLabels, hint)
-
-		local refreshButton = Instance.new("TextButton")
-		refreshButton.Size = UDim2.new(1, -24, 0, 24)
-		refreshButton.Position = UDim2.new(0, 12, 0, 70)
-		refreshButton.BackgroundColor3 = Color3.fromRGB(45, 40, 60)
-		refreshButton.BorderSizePixel = 0
-		refreshButton.Font = currentGlobalFont
-		refreshButton.Text = "Atualizar lista"
-		refreshButton.TextColor3 = currentTextColor
-		refreshButton.TextSize = 10
-		refreshButton.ZIndex = 81
-		refreshButton.Parent = panel
-		local refreshCorner = Instance.new("UICorner")
-		refreshCorner.CornerRadius = UDim.new(0, 5)
-		refreshCorner.Parent = refreshButton
-		table.insert(allTextLabels, refreshButton)
-
-		local scroll = Instance.new("ScrollingFrame")
-		scroll.Name = "FogLayerList"
-		scroll.Size = UDim2.new(1, -24, 1, -108)
-		scroll.Position = UDim2.new(0, 12, 0, 100)
-		scroll.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-		scroll.BackgroundTransparency = 0.25
-		scroll.BorderSizePixel = 0
-		scroll.ScrollBarThickness = 4
-		scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-		scroll.ZIndex = 81
-		scroll.Parent = panel
-		local scrollCorner = Instance.new("UICorner")
-		scrollCorner.CornerRadius = UDim.new(0, 5)
-		scrollCorner.Parent = scroll
-		local listLayout = Instance.new("UIListLayout")
-		listLayout.Padding = UDim.new(0, 4)
-		listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		listLayout.Parent = scroll
-		listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			scroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 8)
+		-- Barra de ferramentas: busca + ações rápidas
+		local searchBack = new("Frame", {
+			Size = UDim2.new(1, -176, 0, 28),
+			Position = UDim2.new(0, 14, 0, 130),
+			BackgroundColor3 = Color3.fromRGB(24, 24, 36),
+			BorderSizePixel = 0
+		}, panel)
+		round(searchBack, 8)
+		local searchStroke = new("UIStroke", {Color = Color3.fromRGB(70, 70, 95), Transparency = 0.6, Thickness = 1}, searchBack)
+		new("TextLabel", {
+			Size = UDim2.new(0, 20, 1, 0),
+			Position = UDim2.new(0, 4, 0, 0),
+			BackgroundTransparency = 1,
+			Font = Enum.Font.GothamBold,
+			Text = "⌕",
+			TextColor3 = GRAY,
+			TextSize = 14
+		}, searchBack)
+		local searchBox = new("TextBox", {
+			Size = UDim2.new(1, -28, 1, 0),
+			Position = UDim2.new(0, 24, 0, 0),
+			BackgroundTransparency = 1,
+			ClearTextOnFocus = false,
+			Font = Enum.Font.Gotham,
+			PlaceholderText = "Buscar camada...",
+			PlaceholderColor3 = Color3.fromRGB(110, 110, 130),
+			Text = "",
+			TextColor3 = Color3.fromRGB(235, 235, 245),
+			TextSize = 10,
+			TextXAlignment = Enum.TextXAlignment.Left
+		}, searchBack)
+		searchBox.Focused:Connect(function()
+			TweenService:Create(searchStroke, TweenInfo.new(0.15), {Color = currentThemeColor, Transparency = 0.2}):Play()
 		end)
-		local listPadding = Instance.new("UIPadding")
-		listPadding.PaddingTop = UDim.new(0, 4)
-		listPadding.PaddingBottom = UDim.new(0, 4)
-		listPadding.PaddingLeft = UDim.new(0, 4)
-		listPadding.PaddingRight = UDim.new(0, 4)
-		listPadding.Parent = scroll
+		searchBox.FocusLost:Connect(function()
+			TweenService:Create(searchStroke, TweenInfo.new(0.15), {Color = Color3.fromRGB(70, 70, 95), Transparency = 0.6}):Play()
+		end)
 
+		local function toolButton(text, width, rightOffset)
+			local b = new("TextButton", {
+				Size = UDim2.new(0, width, 0, 28),
+				Position = UDim2.new(1, -rightOffset, 0, 130),
+				BackgroundColor3 = Color3.fromRGB(38, 36, 54),
+				BorderSizePixel = 0,
+				AutoButtonColor = false,
+				Font = currentGlobalFont,
+				Text = text,
+				TextColor3 = currentTextColor,
+				TextSize = 10
+			}, panel)
+			round(b, 8)
+			table.insert(allTextLabels, b)
+			return b
+		end
+		local refreshButton = toolButton("↻", 28, 42)
+		local noneButton = toolButton("Nenhuma", 56, 102)
+		local allButton = toolButton("Todas", 44, 150)
+
+		-- Lista
+		local listBack = new("Frame", {
+			Size = UDim2.new(1, -28, 1, -218),
+			Position = UDim2.new(0, 14, 0, 166),
+			BackgroundColor3 = Color3.fromRGB(10, 10, 16),
+			BackgroundTransparency = 0.35,
+			BorderSizePixel = 0
+		}, panel)
+		round(listBack, 10)
+		new("UIStroke", {Color = Color3.fromRGB(70, 70, 95), Transparency = 0.65, Thickness = 1}, listBack)
+		local scroll = new("ScrollingFrame", {
+			Name = "FogLayerList",
+			Size = UDim2.new(1, -8, 1, -8),
+			Position = UDim2.new(0, 4, 0, 4),
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			ScrollBarThickness = 3,
+			ScrollBarImageColor3 = currentThemeColor,
+			CanvasSize = UDim2.new(0, 0, 0, 0)
+		}, listBack)
+		local listLayout = new("UIListLayout", {Padding = UDim.new(0, 5), SortOrder = Enum.SortOrder.LayoutOrder}, scroll)
+		listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+			scroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 4)
+		end)
+
+		-- Rodapé
+		new("TextLabel", {
+			Size = UDim2.new(1, -28, 0, 30),
+			Position = UDim2.new(0, 14, 1, -42),
+			BackgroundTransparency = 1,
+			Font = Enum.Font.Gotham,
+			Text = "Marque as camadas e ative o toggle \"Remover Neblina\". Ao desativar, tudo volta ao lugar.",
+			TextColor3 = Color3.fromRGB(125, 125, 145),
+			TextSize = 9,
+			TextWrapped = true,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextYAlignment = Enum.TextYAlignment.Center
+		}, panel)
+
+		-- hover nos botões
+		for _, b in ipairs({closeButton, refreshButton, noneButton, allButton, settingsButton}) do
+			local base = b.BackgroundColor3
+			b.MouseEnter:Connect(function()
+				TweenService:Create(b, TweenInfo.new(0.12), {BackgroundColor3 = base:Lerp(currentThemeColor, 0.4)}):Play()
+			end)
+			b.MouseLeave:Connect(function()
+				TweenService:Create(b, TweenInfo.new(0.15), {BackgroundColor3 = base}):Play()
+			end)
+		end
 		local function positionFogPanel()
 			local stockButton = screenGui:FindFirstChild("FruitShopButton", true)
 			if stockButton then
@@ -3771,8 +3917,22 @@ function showMainPanel()
 			for _, isSelected in pairs(fog.selected) do
 				if isSelected then count = count + 1 end
 			end
-			hint.Text = (fog.enabled and "● Neblina removida" or "○ Neblina restaurada") .. "  •  " .. count .. (count == 1 and " camada marcada" or " camadas marcadas")
-			TweenService:Create(hint, TweenInfo.new(0.2), {TextColor3 = fog.enabled and currentThemeColor or Color3.fromRGB(175, 175, 190)}):Play()
+			local total = fog.total or 0
+			statusTitle.Text = fog.enabled and "Neblina removida" or "Neblina restaurada"
+			statusSub.Text = count .. (count == 1 and " camada marcada" or " camadas marcadas") .. " de " .. total
+			statusPill.Text = fog.enabled and "ATIVO" or "INATIVO"
+			TweenService:Create(statusPill, TweenInfo.new(0.2), {BackgroundColor3 = fog.enabled and currentThemeColor or OFFCOLOR}):Play()
+			TweenService:Create(statusDot, TweenInfo.new(0.2), {BackgroundColor3 = fog.enabled and currentThemeColor or Color3.fromRGB(90, 90, 110)}):Play()
+			statusDotRing.BackgroundTransparency = fog.enabled and 0.4 or 1
+			statusDotRing.Size = UDim2.new(0, 10, 0, 10)
+			statusDotRing.Position = UDim2.new(0, 14, 0.5, -5)
+			if fog.enabled then
+				TweenService:Create(statusDotRing, TweenInfo.new(0.9, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+					Size = UDim2.new(0, 22, 0, 22),
+					Position = UDim2.new(0, 8, 0.5, -11),
+					BackgroundTransparency = 1
+				}):Play()
+			end
 		end
 		local function setFogEnabled(enabled)
 			fog.enabled = enabled
@@ -3790,22 +3950,27 @@ function showMainPanel()
 			end
 			updateFogStatus()
 		end
+		fog.rowSetters = {}
 		local function refreshList()
 			for _, child in ipairs(scroll:GetChildren()) do
-				if child:IsA("Frame") or child:IsA("TextLabel") then child:Destroy() end
+				if child:IsA("GuiObject") then child:Destroy() end
 			end
+			fog.rowSetters = {}
+			fog.listed = {}
+
+			local function message(glyph, text, color)
+				local holder = new("Frame", {Size = UDim2.new(1, 0, 0, 90), BackgroundTransparency = 1, ZIndex = 82}, scroll)
+				new("TextLabel", {Size = UDim2.new(1, 0, 0, 34), Position = UDim2.new(0, 0, 0, 8), BackgroundTransparency = 1,
+					Font = Enum.Font.GothamBold, Text = glyph, TextColor3 = color or GRAY, TextSize = 26, ZIndex = 83}, holder)
+				new("TextLabel", {Size = UDim2.new(1, -16, 0, 36), Position = UDim2.new(0, 8, 0, 44), BackgroundTransparency = 1,
+					Font = Enum.Font.Gotham, Text = text, TextColor3 = GRAY, TextSize = 10, TextWrapped = true, ZIndex = 83}, holder)
+			end
+
 			local folder = getLayersFolder()
 			if not folder then
-				local missing = Instance.new("TextLabel")
-				missing.Size = UDim2.new(1, -8, 0, 36)
-				missing.BackgroundTransparency = 1
-				missing.Font = currentGlobalFont
-				missing.Text = "Workspace.Lightning.LightingLayers não encontrado."
-				missing.TextColor3 = Color3.fromRGB(220, 170, 170)
-				missing.TextSize = 9
-				missing.TextWrapped = true
-				missing.ZIndex = 82
-				missing.Parent = scroll
+				fog.total = 0
+				message("⚠", "Workspace.Lightning.LightingLayers não encontrado.", Color3.fromRGB(235, 175, 110))
+				updateFogStatus()
 				return
 			end
 			local candidates = {}
@@ -3816,103 +3981,164 @@ function showMainPanel()
 			local layers = {}
 			for layer in pairs(candidates) do table.insert(layers, layer) end
 			table.sort(layers, function(a, b) return string.lower(a.Name) < string.lower(b.Name) end)
+			fog.total = #layers
+			updateFogStatus()
+
+			local query = string.lower(searchBox.Text or "")
+			local shown = {}
+			for _, layer in ipairs(layers) do
+				if query == "" or string.find(string.lower(layer.Name), query, 1, true) then
+					table.insert(shown, layer)
+				end
+			end
 			if #layers == 0 then
-				local empty = Instance.new("TextLabel")
-				empty.Size = UDim2.new(1, -8, 0, 30)
-				empty.BackgroundTransparency = 1
-				empty.Font = currentGlobalFont
-				empty.Text = "Nenhuma camada encontrada."
-				empty.TextColor3 = Color3.fromRGB(175, 175, 190)
-				empty.TextSize = 9
-				empty.ZIndex = 82
-				empty.Parent = scroll
+				message("∅", "Nenhuma camada encontrada.")
+				return
+			elseif #shown == 0 then
+				message("⌕", "Nenhuma camada corresponde à busca.")
 				return
 			end
-			for index, layer in ipairs(layers) do
+
+			for index, layer in ipairs(shown) do
 				local layerInstance = layer
-				local row = Instance.new("Frame")
-				row.Name = "LayerRow_" .. tostring(index)
-				row.LayoutOrder = index
-				row.Size = UDim2.new(1, -8, 0, 27)
-				row.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-				row.BackgroundTransparency = 0.25
-				row.BorderSizePixel = 0
-				row.ZIndex = 82
-				row.Parent = scroll
-				local rowCorner = Instance.new("UICorner")
-				rowCorner.CornerRadius = UDim.new(0, 4)
-				rowCorner.Parent = row
-				local label = Instance.new("TextLabel")
-				label.Size = UDim2.new(1, -54, 1, 0)
-				label.Position = UDim2.new(0, 8, 0, 0)
-				label.BackgroundTransparency = 1
-				label.Font = currentGlobalFont
-				label.Text = layerInstance.Name
-				label.TextColor3 = currentTextColor
-				label.TextSize = 10
-				label.TextTruncate = Enum.TextTruncate.AtEnd
-				label.TextXAlignment = Enum.TextXAlignment.Left
-				label.ZIndex = 83
-				label.Parent = row
-				local layerButton = Instance.new("TextButton")
-				layerButton.Size = UDim2.new(0, 42, 0, 18)
-				layerButton.Position = UDim2.new(1, -48, 0.5, -9)
-				layerButton.BackgroundColor3 = fog.selected[layerInstance] and currentThemeColor or Color3.fromRGB(50, 50, 70)
-				layerButton.BorderSizePixel = 0
-				layerButton.Font = currentGlobalFont
-				layerButton.Text = fog.selected[layerInstance] and "ON" or "OFF"
-				layerButton.TextColor3 = currentTextColor
-				layerButton.TextSize = 9
-				layerButton.ZIndex = 83
-				layerButton.Parent = row
-				local buttonCorner = Instance.new("UICorner")
-				buttonCorner.CornerRadius = UDim.new(0, 4)
-				buttonCorner.Parent = layerButton
-				local function tintRow()
-					local sel = fog.selected[layerInstance]
-					TweenService:Create(row, TweenInfo.new(0.2), {
-						BackgroundColor3 = sel and currentThemeColor or Color3.fromRGB(34, 34, 46),
-						BackgroundTransparency = sel and 0.72 or 0.25
+				fog.listed[index] = layerInstance
+				local holder = new("Frame", {Name = "Layer_" .. index, LayoutOrder = index, Size = UDim2.new(1, -6, 0, 38), BackgroundTransparency = 1, ZIndex = 82}, scroll)
+				local card = new("TextButton", {
+					Size = UDim2.new(1, 0, 1, 0),
+					Position = UDim2.new(0, 18, 0, 0),
+					BackgroundColor3 = Color3.fromRGB(30, 30, 44),
+					BackgroundTransparency = 1,
+					BorderSizePixel = 0,
+					AutoButtonColor = false,
+					Text = "",
+					ZIndex = 82
+				}, holder)
+				round(card, 9)
+				local cardStroke = new("UIStroke", {Color = Color3.fromRGB(70, 70, 95), Transparency = 1, Thickness = 1}, card)
+				local bar = new("Frame", {
+					Size = UDim2.new(0, 3, 0, 0),
+					Position = UDim2.new(0, 0, 0.5, 0),
+					AnchorPoint = Vector2.new(0, 0.5),
+					BackgroundColor3 = currentThemeColor,
+					BorderSizePixel = 0,
+					ZIndex = 84
+				}, card)
+				round(bar, 2)
+				local iconBack = new("Frame", {
+					Size = UDim2.new(0, 24, 0, 24),
+					Position = UDim2.new(0, 10, 0.5, -12),
+					BackgroundColor3 = Color3.fromRGB(44, 44, 62),
+					BackgroundTransparency = 1,
+					BorderSizePixel = 0,
+					ZIndex = 83
+				}, card)
+				round(iconBack, 7)
+				local iconText = new("TextLabel", {
+					Size = UDim2.new(1, 0, 1, 0),
+					BackgroundTransparency = 1,
+					Font = Enum.Font.GothamBold,
+					Text = string.upper(string.sub(layerInstance.ClassName, 1, 1)),
+					TextColor3 = GRAY,
+					TextSize = 11,
+					TextTransparency = 1,
+					ZIndex = 84
+				}, iconBack)
+				local nameLabel = new("TextLabel", {
+					Size = UDim2.new(1, -112, 0, 15),
+					Position = UDim2.new(0, 42, 0, 5),
+					BackgroundTransparency = 1,
+					Font = currentGlobalFont,
+					Text = layerInstance.Name,
+					TextColor3 = currentTextColor,
+					TextSize = 11,
+					TextTransparency = 1,
+					TextTruncate = Enum.TextTruncate.AtEnd,
+					TextXAlignment = Enum.TextXAlignment.Left,
+					ZIndex = 83
+				}, card)
+				local classLabel = new("TextLabel", {
+					Size = UDim2.new(1, -112, 0, 12),
+					Position = UDim2.new(0, 42, 0, 20),
+					BackgroundTransparency = 1,
+					Font = Enum.Font.Gotham,
+					Text = layerInstance.ClassName,
+					TextColor3 = GRAY,
+					TextSize = 9,
+					TextTransparency = 1,
+					TextXAlignment = Enum.TextXAlignment.Left,
+					ZIndex = 83
+				}, card)
+				local track = new("Frame", {
+					Size = UDim2.new(0, 36, 0, 18),
+					Position = UDim2.new(1, -46, 0.5, -9),
+					BackgroundColor3 = OFFCOLOR,
+					BackgroundTransparency = 1,
+					BorderSizePixel = 0,
+					ZIndex = 83
+				}, card)
+				round(track, 9)
+				local knob = new("Frame", {
+					Size = UDim2.new(0, 14, 0, 14),
+					Position = UDim2.new(0, 2, 0.5, -7),
+					BackgroundColor3 = Color3.fromRGB(215, 215, 225),
+					BackgroundTransparency = 1,
+					BorderSizePixel = 0,
+					ZIndex = 84
+				}, track)
+				round(knob, 7)
+				table.insert(allTextLabels, nameLabel)
+
+				local function setVisual(selected, animate)
+					local info = TweenInfo.new(animate and 0.22 or 0, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+					TweenService:Create(track, info, {BackgroundColor3 = selected and currentThemeColor or OFFCOLOR}):Play()
+					TweenService:Create(knob, TweenInfo.new(animate and 0.25 or 0, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+						Position = selected and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
 					}):Play()
+					TweenService:Create(card, info, {
+						BackgroundColor3 = selected and currentThemeColor:Lerp(Color3.fromRGB(20, 20, 30), 0.78) or Color3.fromRGB(30, 30, 44),
+						BackgroundTransparency = 0.05
+					}):Play()
+					TweenService:Create(cardStroke, info, {Color = currentThemeColor, Transparency = selected and 0.45 or 1}):Play()
+					TweenService:Create(bar, info, {Size = UDim2.new(0, 3, 0, selected and 20 or 0)}):Play()
+					TweenService:Create(iconText, info, {TextColor3 = selected and currentThemeColor or GRAY}):Play()
 				end
-				tintRow()
-				layerButton.MouseButton1Click:Connect(function()
+				fog.rowSetters[layerInstance] = setVisual
+
+				card.MouseEnter:Connect(function()
+					if not fog.selected[layerInstance] then
+						TweenService:Create(card, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(40, 40, 58)}):Play()
+					end
+				end)
+				card.MouseLeave:Connect(function()
+					if not fog.selected[layerInstance] then
+						TweenService:Create(card, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(30, 30, 44)}):Play()
+					end
+				end)
+				card.MouseButton1Click:Connect(function()
 					fog.selected[layerInstance] = not fog.selected[layerInstance]
-					local selected = fog.selected[layerInstance]
-					layerButton.Text = selected and "ON" or "OFF"
-					TweenService:Create(layerButton, TweenInfo.new(0.2), {BackgroundColor3 = selected and currentThemeColor or Color3.fromRGB(50, 50, 70)}):Play()
-					-- "pulo" rápido de feedback
-					layerButton.Size = UDim2.new(0, 48, 0, 21)
-					layerButton.Position = UDim2.new(1, -51, 0.5, -10.5)
-					TweenService:Create(layerButton, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-						Size = UDim2.new(0, 42, 0, 18),
-						Position = UDim2.new(1, -48, 0.5, -9)
-					}):Play()
-					tintRow()
+					setVisual(fog.selected[layerInstance], true)
 					applyLayer(layerInstance)
 					updateFogStatus()
 				end)
-				row.MouseEnter:Connect(function()
-					if not fog.selected[layerInstance] then
-						TweenService:Create(row, TweenInfo.new(0.12), {BackgroundTransparency = 0.05}):Play()
-					end
-				end)
-				row.MouseLeave:Connect(tintRow)
-				-- entrada em cascata: cada linha surge com um pequeno atraso
-				row.BackgroundTransparency = 1
-				label.TextTransparency = 1
-				layerButton.BackgroundTransparency = 1
-				layerButton.TextTransparency = 1
-				task.delay(index * 0.035, function()
-					if not row.Parent then return end
-					tintRow()
-					TweenService:Create(label, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
-					TweenService:Create(layerButton, TweenInfo.new(0.25), {BackgroundTransparency = 0, TextTransparency = 0}):Play()
+
+				-- entrada em cascata (desliza + surge)
+				task.delay(index * 0.04, function()
+					if not card.Parent then return end
+					TweenService:Create(card, TweenInfo.new(0.32, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, 0)}):Play()
+					setVisual(fog.selected[layerInstance], false)
+					local fade = TweenInfo.new(0.3)
+					TweenService:Create(nameLabel, fade, {TextTransparency = 0}):Play()
+					TweenService:Create(classLabel, fade, {TextTransparency = 0}):Play()
+					TweenService:Create(iconText, fade, {TextTransparency = 0}):Play()
+					TweenService:Create(iconBack, fade, {BackgroundTransparency = 0}):Play()
+					TweenService:Create(track, fade, {BackgroundTransparency = 0}):Play()
+					TweenService:Create(knob, fade, {BackgroundTransparency = 0}):Play()
 				end)
 			end
 		end
 
 		fogToggle.MouseButton1Click:Connect(function() setFogEnabled(not fog.enabled) end)
+
 		local panelToken = 0
 		local function closeFogPanel()
 			if not panel.Visible then return end
@@ -3935,7 +4161,6 @@ function showMainPanel()
 			panelScale.Scale = 0.85
 			TweenService:Create(panelScale, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
 			TweenService:Create(settingsButton, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Rotation = 90}):Play()
-			-- brilho pulsante na borda + faixa de luz na linha do título
 			task.spawn(function()
 				while token == panelToken and panel.Visible and screenGui.Parent do
 					TweenService:Create(panelStroke, TweenInfo.new(0.9, Enum.EasingStyle.Sine), {Transparency = 0.6}):Play()
@@ -3952,22 +4177,27 @@ function showMainPanel()
 		settingsButton.MouseButton1Click:Connect(function()
 			if panel.Visible and panelScale.Scale > 0.95 then closeFogPanel() else openFogPanel() end
 		end)
-		refreshButton.MouseButton1Click:Connect(function()
-			refreshButton.Size = UDim2.new(1, -30, 0, 22)
-			TweenService:Create(refreshButton, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(1, -24, 0, 24)}):Play()
-			refreshList()
-		end)
 		closeButton.MouseButton1Click:Connect(closeFogPanel)
-		-- efeito de hover nos botões do painel e do engrenagem
-		for _, b in ipairs({closeButton, refreshButton, settingsButton}) do
-			local base = b.BackgroundColor3
-			b.MouseEnter:Connect(function()
-				TweenService:Create(b, TweenInfo.new(0.12), {BackgroundColor3 = base:Lerp(currentThemeColor, 0.35)}):Play()
-			end)
-			b.MouseLeave:Connect(function()
-				TweenService:Create(b, TweenInfo.new(0.15), {BackgroundColor3 = base}):Play()
-			end)
-		end
+		refreshButton.MouseButton1Click:Connect(refreshList)
+		searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+			if panel.Visible then refreshList() end
+		end)
+		allButton.MouseButton1Click:Connect(function()
+			for _, layer in ipairs(fog.listed or {}) do
+				fog.selected[layer] = true
+				if fog.rowSetters[layer] then fog.rowSetters[layer](true, true) end
+				applyLayer(layer)
+			end
+			updateFogStatus()
+		end)
+		noneButton.MouseButton1Click:Connect(function()
+			for _, layer in ipairs(fog.listed or {}) do
+				fog.selected[layer] = false
+				if fog.rowSetters[layer] then fog.rowSetters[layer](false, true) end
+				applyLayer(layer)
+			end
+			updateFogStatus()
+		end)
 		screenGui.Destroying:Connect(function()
 			fog.enabled = false
 			restoreAll()
