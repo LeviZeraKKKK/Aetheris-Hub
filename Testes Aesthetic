@@ -1606,6 +1606,148 @@ function showMainPanel()
 		end
 	end
 
+	-----------------------------------------------------------------
+	-- POLIMENTO VISUAL DO PAINEL PRINCIPAL
+	-----------------------------------------------------------------
+	do
+		-- Faixa de brilho suave atrás do cabeçalho (segue a cor do tema).
+		local headerGlow = Instance.new("Frame")
+		headerGlow.Name = "HeaderGlow"
+		headerGlow.Size = UDim2.new(1, 0, 0, 40)
+		headerGlow.BackgroundColor3 = currentThemeColor
+		headerGlow.BackgroundTransparency = 0
+		headerGlow.BorderSizePixel = 0
+		headerGlow.ZIndex = 0
+		headerGlow.Active = false
+		headerGlow.Parent = mainPanel
+		local glowCorner = Instance.new("UICorner")
+		glowCorner.CornerRadius = UDim.new(0, 12)
+		glowCorner.Parent = headerGlow
+		local glowGradient = Instance.new("UIGradient")
+		glowGradient.Rotation = 90
+		glowGradient.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0.86),
+			NumberSequenceKeypoint.new(1, 1)
+		})
+		glowGradient.Parent = headerGlow
+		table.insert(themeSliders, headerGlow)
+
+		-- Linha divisória degradê abaixo do cabeçalho.
+		local divider = Instance.new("Frame")
+		divider.Name = "HeaderDivider"
+		divider.Size = UDim2.new(1, -20, 0, 1)
+		divider.Position = UDim2.new(0, 10, 0, 37)
+		divider.BackgroundColor3 = currentThemeColor
+		divider.BorderSizePixel = 0
+		divider.Active = false
+		divider.Parent = mainPanel
+		local dividerGradient = Instance.new("UIGradient")
+		dividerGradient.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.2, 0.35),
+			NumberSequenceKeypoint.new(0.8, 0.35),
+			NumberSequenceKeypoint.new(1, 1)
+		})
+		dividerGradient.Parent = divider
+		table.insert(themeSliders, divider)
+
+		-- Fundo da barra lateral (cartão com borda sutil).
+		local sideBack = Instance.new("Frame")
+		sideBack.Name = "SidebarBack"
+		sideBack.Size = UDim2.new(0, 118, 1, -54)
+		sideBack.Position = UDim2.new(0, 4, 0, 42)
+		sideBack.BackgroundColor3 = Color3.fromRGB(12, 12, 19)
+		sideBack.BackgroundTransparency = 0.35
+		sideBack.BorderSizePixel = 0
+		sideBack.ZIndex = 0
+		sideBack.Active = false
+		sideBack.Parent = mainPanel
+		local sideCorner = Instance.new("UICorner")
+		sideCorner.CornerRadius = UDim.new(0, 8)
+		sideCorner.Parent = sideBack
+		local sideStroke = Instance.new("UIStroke")
+		sideStroke.Color = Color3.fromRGB(70, 70, 95)
+		sideStroke.Transparency = 0.7
+		sideStroke.Thickness = 1
+		sideStroke.Parent = sideBack
+
+		sidebar.Position = UDim2.new(0, 8, 0, 46)
+		sidebar.Size = UDim2.new(0, 110, 1, -62)
+
+		-- Borda fina no painel de conteúdo.
+		local contentStroke = Instance.new("UIStroke")
+		contentStroke.Color = Color3.fromRGB(70, 70, 95)
+		contentStroke.Transparency = 0.7
+		contentStroke.Thickness = 1
+		contentStroke.Parent = contentContainer
+
+		-- Abas: borda temática na ativa, realce ao passar o mouse.
+		local tabStrokes = {}
+		for index, data in ipairs(tabButtonsList) do
+			local btn = data.Button
+			local stroke = Instance.new("UIStroke")
+			stroke.Color = currentThemeColor
+			stroke.Thickness = 1
+			stroke.Transparency = (data.Page == activePage) and 0.5 or 1
+			stroke.Parent = btn
+			table.insert(themeSections, stroke)
+			tabStrokes[index] = stroke
+			if data.Page == activePage then
+				btn.BackgroundTransparency = 0.2
+			end
+
+			btn.MouseEnter:Connect(function()
+				if data.Page ~= activePage then
+					TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = 0.3}):Play()
+				end
+			end)
+			btn.MouseLeave:Connect(function()
+				if data.Page ~= activePage then
+					TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = 0.5}):Play()
+				end
+			end)
+			btn.MouseButton1Click:Connect(function()
+				task.defer(function()
+					for i2, d2 in ipairs(tabButtonsList) do
+						local isActive = d2.Page == activePage
+						TweenService:Create(tabStrokes[i2], TweenInfo.new(0.18), {Transparency = isActive and 0.5 or 1}):Play()
+						TweenService:Create(d2.Button, TweenInfo.new(0.18), {BackgroundTransparency = isActive and 0.2 or 0.5}):Play()
+					end
+				end)
+			end)
+		end
+
+		-- Rodapé: status de FPS e ping.
+		local footer = Instance.new("TextLabel")
+		footer.Name = "StatusFooter"
+		footer.Size = UDim2.new(0, 220, 0, 12)
+		footer.Position = UDim2.new(0, 12, 1, -14)
+		footer.BackgroundTransparency = 1
+		footer.Font = Enum.Font.GothamMedium
+		footer.Text = "● Aetheris Hub"
+		footer.TextColor3 = Color3.fromRGB(140, 140, 160)
+		footer.TextSize = 9
+		footer.TextXAlignment = Enum.TextXAlignment.Left
+		footer.Parent = mainPanel
+
+		task.spawn(function()
+			local frames, lastTick = 0, os.clock()
+			local conn = RunService.RenderStepped:Connect(function() frames = frames + 1 end)
+			while screenGui.Parent do
+				task.wait(0.5)
+				local now = os.clock()
+				local fps = math.floor(frames / math.max(now - lastTick, 0.001) + 0.5)
+				frames, lastTick = 0, now
+				local ping = 0
+				pcall(function()
+					ping = math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue() + 0.5)
+				end)
+				footer.Text = "● Aetheris Hub   " .. fps .. " FPS   " .. ping .. " ms"
+			end
+			conn:Disconnect()
+		end)
+	end
+
 	local function createSection(pageTarget, title, iconSymbol)
 		local section = Instance.new("Frame")
 		section.Size = UDim2.new(1, -4, 0, 0)
