@@ -3007,6 +3007,326 @@ function showMainPanel()
 		Lighting.GlobalShadows = not _G_FullbrightEnabled
 	end, false)
 
+	-- Remover Neblina: desparenta temporariamente as camadas selecionadas;
+	-- isso permite restaurar as mesmas instâncias ao desativar.
+	do
+		local fog = {enabled = false, selected = {}, detached = {}}
+		local fogSection = createSection(visualPage, "Remover Neblina", sectionIcons.World)
+		local fogRow = Instance.new("Frame")
+		fogRow.Name = "FogToggleRow"
+		fogRow.Size = UDim2.new(1, 0, 0, 26)
+		fogRow.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+		fogRow.BackgroundTransparency = 0.5
+		fogRow.Parent = fogSection
+		local rowCorner = Instance.new("UICorner")
+		rowCorner.CornerRadius = UDim.new(0, 5)
+		rowCorner.Parent = fogRow
+
+		local fogLed = Instance.new("Frame")
+		fogLed.Size = UDim2.new(0, 6, 0, 6)
+		fogLed.Position = UDim2.new(0, 8, 0.5, -3)
+		fogLed.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
+		fogLed.BorderSizePixel = 0
+		fogLed.Parent = fogRow
+		local ledCorner = Instance.new("UICorner")
+		ledCorner.CornerRadius = UDim.new(1, 0)
+		ledCorner.Parent = fogLed
+
+		local fogLabel = Instance.new("TextLabel")
+		fogLabel.Size = UDim2.new(1, -96, 1, 0)
+		fogLabel.Position = UDim2.new(0, 20, 0, 0)
+		fogLabel.BackgroundTransparency = 1
+		fogLabel.Font = currentGlobalFont
+		fogLabel.Text = "Remover Neblina"
+		fogLabel.TextColor3 = currentTextColor
+		fogLabel.TextSize = 11
+		fogLabel.TextXAlignment = Enum.TextXAlignment.Left
+		fogLabel.Parent = fogRow
+		table.insert(allTextLabels, fogLabel)
+
+		local fogToggle = Instance.new("TextButton")
+		fogToggle.Size = UDim2.new(0, 28, 0, 16)
+		fogToggle.Position = UDim2.new(1, -34, 0.5, -8)
+		fogToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+		fogToggle.Text = ""
+		fogToggle.Parent = fogRow
+		local toggleCorner = Instance.new("UICorner")
+		toggleCorner.CornerRadius = UDim.new(1, 0)
+		toggleCorner.Parent = fogToggle
+		local toggleCircle = Instance.new("Frame")
+		toggleCircle.Size = UDim2.new(0, 12, 0, 12)
+		toggleCircle.Position = UDim2.new(0, 2, 0.5, -6)
+		toggleCircle.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+		toggleCircle.Parent = fogToggle
+		local circleCorner = Instance.new("UICorner")
+		circleCorner.CornerRadius = UDim.new(1, 0)
+		circleCorner.Parent = toggleCircle
+		local toggleState = {isToggled = false, circle = toggleCircle, button = fogToggle, led = fogLed}
+		table.insert(themeToggles, toggleState)
+
+		local settingsButton = Instance.new("TextButton")
+		settingsButton.Name = "FogSettingsButton"
+		settingsButton.Size = UDim2.new(0, 24, 0, 20)
+		settingsButton.Position = UDim2.new(1, -64, 0.5, -10)
+		settingsButton.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+		settingsButton.BorderSizePixel = 0
+		settingsButton.Font = Enum.Font.GothamBold
+		settingsButton.Text = "⚙"
+		settingsButton.TextColor3 = currentTextColor
+		settingsButton.TextSize = 13
+		settingsButton.Parent = fogRow
+		table.insert(allTextLabels, settingsButton)
+		local settingsCorner = Instance.new("UICorner")
+		settingsCorner.CornerRadius = UDim.new(0, 5)
+		settingsCorner.Parent = settingsButton
+
+		local panel = Instance.new("Frame")
+		panel.Name = "FogLayersSettings"
+		panel.Size = UDim2.new(0, 270, 0, 300)
+		panel.Position = UDim2.new(0.5, -135, 0.5, -150)
+		panel.BackgroundColor3 = Color3.fromRGB(18, 18, 27)
+		panel.BorderSizePixel = 0
+		panel.Visible = false
+		panel.ZIndex = 50
+		panel.Parent = screenGui
+		local panelCorner = Instance.new("UICorner")
+		panelCorner.CornerRadius = UDim.new(0, 9)
+		panelCorner.Parent = panel
+		local panelStroke = Instance.new("UIStroke")
+		panelStroke.Color = currentThemeColor
+		panelStroke.Transparency = 0.25
+		panelStroke.Thickness = 1.2
+		panelStroke.Parent = panel
+		table.insert(themeSections, panelStroke)
+
+		local panelTitle = Instance.new("TextLabel")
+		panelTitle.Size = UDim2.new(1, -76, 0, 30)
+		panelTitle.Position = UDim2.new(0, 12, 0, 8)
+		panelTitle.BackgroundTransparency = 1
+		panelTitle.Font = currentGlobalFont
+		panelTitle.Text = "Camadas de iluminação"
+		panelTitle.TextColor3 = currentTextColor
+		panelTitle.TextSize = 12
+		panelTitle.TextXAlignment = Enum.TextXAlignment.Left
+		panelTitle.ZIndex = 51
+		panelTitle.Parent = panel
+		table.insert(allTextLabels, panelTitle)
+
+		local closeButton = Instance.new("TextButton")
+		closeButton.Size = UDim2.new(0, 26, 0, 24)
+		closeButton.Position = UDim2.new(1, -34, 0, 7)
+		closeButton.BackgroundColor3 = Color3.fromRGB(48, 42, 58)
+		closeButton.BorderSizePixel = 0
+		closeButton.Font = currentGlobalFont
+		closeButton.Text = "×"
+		closeButton.TextColor3 = currentTextColor
+		closeButton.TextSize = 16
+		closeButton.ZIndex = 51
+		closeButton.Parent = panel
+		local closeCorner = Instance.new("UICorner")
+		closeCorner.CornerRadius = UDim.new(0, 5)
+		closeCorner.Parent = closeButton
+		table.insert(allTextLabels, closeButton)
+
+		local hint = Instance.new("TextLabel")
+		hint.Size = UDim2.new(1, -24, 0, 28)
+		hint.Position = UDim2.new(0, 12, 0, 37)
+		hint.BackgroundTransparency = 1
+		hint.Font = currentGlobalFont
+		hint.Text = "Ative o toggle principal e marque as camadas a remover."
+		hint.TextColor3 = Color3.fromRGB(175, 175, 190)
+		hint.TextSize = 9
+		hint.TextWrapped = true
+		hint.TextXAlignment = Enum.TextXAlignment.Left
+		hint.ZIndex = 51
+		hint.Parent = panel
+		table.insert(allTextLabels, hint)
+
+		local refreshButton = Instance.new("TextButton")
+		refreshButton.Size = UDim2.new(1, -24, 0, 24)
+		refreshButton.Position = UDim2.new(0, 12, 0, 70)
+		refreshButton.BackgroundColor3 = Color3.fromRGB(45, 40, 60)
+		refreshButton.BorderSizePixel = 0
+		refreshButton.Font = currentGlobalFont
+		refreshButton.Text = "Atualizar lista"
+		refreshButton.TextColor3 = currentTextColor
+		refreshButton.TextSize = 10
+		refreshButton.ZIndex = 51
+		refreshButton.Parent = panel
+		local refreshCorner = Instance.new("UICorner")
+		refreshCorner.CornerRadius = UDim.new(0, 5)
+		refreshCorner.Parent = refreshButton
+		table.insert(allTextLabels, refreshButton)
+
+		local scroll = Instance.new("ScrollingFrame")
+		scroll.Name = "FogLayerList"
+		scroll.Size = UDim2.new(1, -24, 1, -108)
+		scroll.Position = UDim2.new(0, 12, 0, 100)
+		scroll.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+		scroll.BackgroundTransparency = 0.25
+		scroll.BorderSizePixel = 0
+		scroll.ScrollBarThickness = 4
+		scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+		scroll.ZIndex = 51
+		scroll.Parent = panel
+		local scrollCorner = Instance.new("UICorner")
+		scrollCorner.CornerRadius = UDim.new(0, 5)
+		scrollCorner.Parent = scroll
+		local listLayout = Instance.new("UIListLayout")
+		listLayout.Padding = UDim.new(0, 4)
+		listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		listLayout.Parent = scroll
+		listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+			scroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 8)
+		end)
+		local listPadding = Instance.new("UIPadding")
+		listPadding.PaddingTop = UDim.new(0, 4)
+		listPadding.PaddingBottom = UDim.new(0, 4)
+		listPadding.PaddingLeft = UDim.new(0, 4)
+		listPadding.PaddingRight = UDim.new(0, 4)
+		listPadding.Parent = scroll
+
+		local function getLayersFolder()
+			local lightning = workspace:FindFirstChild("Lightning")
+			return lightning and lightning:FindFirstChild("LightingLayers") or nil
+		end
+		local function restoreLayer(layer)
+			local saved = fog.detached[layer]
+			if not saved then return end
+			local restored = pcall(function() layer.Parent = saved.parent end)
+			if restored then fog.detached[layer] = nil end
+		end
+		local function applyLayer(layer)
+			if fog.enabled and fog.selected[layer] then
+				if layer.Parent then
+					fog.detached[layer] = {parent = layer.Parent}
+					layer.Parent = nil
+				end
+			else
+				restoreLayer(layer)
+			end
+		end
+		local function restoreAll()
+			local pending = {}
+			for layer in pairs(fog.detached) do table.insert(pending, layer) end
+			for _, layer in ipairs(pending) do restoreLayer(layer) end
+		end
+		local function setFogEnabled(enabled)
+			fog.enabled = enabled
+			toggleState.isToggled = enabled
+			local targetPosition = enabled and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
+			local targetColor = enabled and currentThemeColor or Color3.fromRGB(50, 50, 70)
+			local ledColor = enabled and currentThemeColor or Color3.fromRGB(80, 80, 100)
+			TweenService:Create(toggleCircle, TweenInfo.new(0.18), {Position = targetPosition}):Play()
+			TweenService:Create(fogToggle, TweenInfo.new(0.18), {BackgroundColor3 = targetColor}):Play()
+			TweenService:Create(fogLed, TweenInfo.new(0.18), {BackgroundColor3 = ledColor}):Play()
+			if enabled then
+				for layer in pairs(fog.selected) do applyLayer(layer) end
+			else
+				restoreAll()
+			end
+		end
+		local function refreshList()
+			for _, child in ipairs(scroll:GetChildren()) do
+				if child:IsA("Frame") or child:IsA("TextLabel") then child:Destroy() end
+			end
+			local folder = getLayersFolder()
+			if not folder then
+				local missing = Instance.new("TextLabel")
+				missing.Size = UDim2.new(1, -8, 0, 36)
+				missing.BackgroundTransparency = 1
+				missing.Font = currentGlobalFont
+				missing.Text = "Workspace.Lightning.LightingLayers não encontrado."
+				missing.TextColor3 = Color3.fromRGB(220, 170, 170)
+				missing.TextSize = 9
+				missing.TextWrapped = true
+				missing.ZIndex = 52
+				missing.Parent = scroll
+				return
+			end
+			local candidates = {}
+			for _, layer in ipairs(folder:GetChildren()) do candidates[layer] = true end
+			for layer, saved in pairs(fog.detached) do
+				if saved.parent == folder then candidates[layer] = true end
+			end
+			local layers = {}
+			for layer in pairs(candidates) do table.insert(layers, layer) end
+			table.sort(layers, function(a, b) return string.lower(a.Name) < string.lower(b.Name) end)
+			if #layers == 0 then
+				local empty = Instance.new("TextLabel")
+				empty.Size = UDim2.new(1, -8, 0, 30)
+				empty.BackgroundTransparency = 1
+				empty.Font = currentGlobalFont
+				empty.Text = "Nenhuma camada encontrada."
+				empty.TextColor3 = Color3.fromRGB(175, 175, 190)
+				empty.TextSize = 9
+				empty.ZIndex = 52
+				empty.Parent = scroll
+				return
+			end
+			for index, layer in ipairs(layers) do
+				local layerInstance = layer
+				local row = Instance.new("Frame")
+				row.Name = "LayerRow_" .. tostring(index)
+				row.LayoutOrder = index
+				row.Size = UDim2.new(1, -8, 0, 27)
+				row.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+				row.BackgroundTransparency = 0.25
+				row.BorderSizePixel = 0
+				row.ZIndex = 52
+				row.Parent = scroll
+				local rowCorner = Instance.new("UICorner")
+				rowCorner.CornerRadius = UDim.new(0, 4)
+				rowCorner.Parent = row
+				local label = Instance.new("TextLabel")
+				label.Size = UDim2.new(1, -54, 1, 0)
+				label.Position = UDim2.new(0, 8, 0, 0)
+				label.BackgroundTransparency = 1
+				label.Font = currentGlobalFont
+				label.Text = layerInstance.Name
+				label.TextColor3 = currentTextColor
+				label.TextSize = 10
+				label.TextTruncate = Enum.TextTruncate.AtEnd
+				label.TextXAlignment = Enum.TextXAlignment.Left
+				label.ZIndex = 53
+				label.Parent = row
+				local layerButton = Instance.new("TextButton")
+				layerButton.Size = UDim2.new(0, 42, 0, 18)
+				layerButton.Position = UDim2.new(1, -48, 0.5, -9)
+				layerButton.BackgroundColor3 = fog.selected[layerInstance] and currentThemeColor or Color3.fromRGB(50, 50, 70)
+				layerButton.BorderSizePixel = 0
+				layerButton.Font = currentGlobalFont
+				layerButton.Text = fog.selected[layerInstance] and "ON" or "OFF"
+				layerButton.TextColor3 = currentTextColor
+				layerButton.TextSize = 9
+				layerButton.ZIndex = 53
+				layerButton.Parent = row
+				local buttonCorner = Instance.new("UICorner")
+				buttonCorner.CornerRadius = UDim.new(0, 4)
+				buttonCorner.Parent = layerButton
+				layerButton.MouseButton1Click:Connect(function()
+					fog.selected[layerInstance] = not fog.selected[layerInstance]
+					local selected = fog.selected[layerInstance]
+					layerButton.Text = selected and "ON" or "OFF"
+					layerButton.BackgroundColor3 = selected and currentThemeColor or Color3.fromRGB(50, 50, 70)
+					applyLayer(layerInstance)
+				end)
+			end
+		end
+
+		fogToggle.MouseButton1Click:Connect(function() setFogEnabled(not fog.enabled) end)
+		settingsButton.MouseButton1Click:Connect(function()
+			panel.Visible = not panel.Visible
+			if panel.Visible then refreshList() end
+		end)
+		refreshButton.MouseButton1Click:Connect(refreshList)
+		closeButton.MouseButton1Click:Connect(function() panel.Visible = false end)
+		screenGui.Destroying:Connect(function()
+			fog.enabled = false
+			restoreAll()
+		end)
+	end
+
 	-----------------------------------------------------------------
 	-- ABA COMBATE
 	-----------------------------------------------------------------
