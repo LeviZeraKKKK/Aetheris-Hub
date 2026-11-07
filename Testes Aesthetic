@@ -5,6 +5,7 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
+local HttpService = game:GetService("HttpService")
 
 local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
@@ -42,6 +43,31 @@ local tabIndicators = {}
 local allTextLabels = {}
 local resizeSymbolsLines = {}
 local headerSubtitles = {}
+
+local configBindings = {}
+local configBindingCounts = {}
+local function registerConfigBinding(parent, name, getter, setter)
+    local section = parent and parent.Parent or nil
+    local sectionTitle = "Geral"
+    if section then
+        for _, child in ipairs(section:GetChildren()) do
+            if child:IsA("TextLabel") then
+                sectionTitle = child.Text
+                break
+            end
+        end
+    end
+    local page = section and section.Parent or nil
+    local pageName = page and page.Name or "Page"
+    local baseKey = pageName .. "|" .. sectionTitle .. "|" .. name
+    configBindingCounts[baseKey] = (configBindingCounts[baseKey] or 0) + 1
+    local key = baseKey
+    if configBindingCounts[baseKey] > 1 then
+        key = baseKey .. " #" .. tostring(configBindingCounts[baseKey])
+    end
+    table.insert(configBindings, {key = key, getter = getter, setter = setter})
+    return key
+end
 
 local function updateGlobalTheme(newColor)
 	currentThemeColor = newColor
@@ -2150,6 +2176,15 @@ function showMainPanel()
 		end)
 
 		updateColor()
+		registerConfigBinding(parent, title, function()
+			return Color3.fromHSV(currentH, currentS, currentV)
+		end, function(value)
+			if typeof(value) ~= "Color3" then return end
+			currentH, currentS, currentV = value:ToHSV()
+			huePicker.Position = UDim2.new(0, 0, currentH, -1)
+			cursor.Position = UDim2.new(currentS, 0, 1 - currentV, 0)
+			updateColor()
+		end)
 		return colorBtn
 	end
 
@@ -2241,6 +2276,14 @@ function showMainPanel()
 			modeBtn.MouseButton1Click:Connect(function()
 				local nextText = modeCallback()
 				if nextText then modeBtn.Text = tostring(nextText) end
+			end)
+			registerConfigBinding(parent, name .. " Modo", function() return modeBtn.Text end, function(savedMode)
+				if type(savedMode) ~= "string" then return end
+				for _ = 1, 8 do
+					if modeBtn.Text == savedMode then break end
+					local nextText = modeCallback()
+					if nextText then modeBtn.Text = tostring(nextText) end
+				end
 			end)
 		end
 
@@ -2362,6 +2405,15 @@ function showMainPanel()
 			colorBtn.BackgroundColor3 = color
 			colorCallback(color)
 		end
+		registerConfigBinding(parent, name .. " Cor", function()
+			return Color3.fromHSV(currentH, currentS, currentV)
+		end, function(value)
+			if typeof(value) ~= "Color3" then return end
+			currentH, currentS, currentV = value:ToHSV()
+			huePicker.Position = UDim2.new(0, 0, currentH, -1)
+			cur.Position = UDim2.new(currentS, 0, 1 - currentV, 0)
+			updateColor()
+		end)
 
 		colorBtn.MouseButton1Click:Connect(function()
 			modal.Visible = not modal.Visible
@@ -2427,18 +2479,18 @@ function showMainPanel()
 			end
 		end)
 
-		toggleBtn.MouseButton1Click:Connect(function()
-			toggleStateRef.isToggled = not toggleStateRef.isToggled
+		local function setEspToggleState(state)
+			toggleStateRef.isToggled = state == true
 			local targetPos = toggleStateRef.isToggled and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
 			local targetColor = toggleStateRef.isToggled and currentThemeColor or Color3.fromRGB(50, 50, 70)
 			local targetLedColor = toggleStateRef.isToggled and currentThemeColor or Color3.fromRGB(80, 80, 100)
-			
 			TweenService:Create(circle, TweenInfo.new(0.18), {Position = targetPos}):Play()
 			TweenService:Create(toggleBtn, TweenInfo.new(0.18), {BackgroundColor3 = targetColor}):Play()
 			TweenService:Create(ledIndicator, TweenInfo.new(0.18), {BackgroundColor3 = targetLedColor}):Play()
-			
 			toggleCallback(toggleStateRef.isToggled)
-		end)
+		end
+		toggleBtn.MouseButton1Click:Connect(function() setEspToggleState(not toggleStateRef.isToggled) end)
+		registerConfigBinding(parent, name .. " Ativado", function() return toggleStateRef.isToggled end, setEspToggleState)
 	end
 
 	local function addToggle(parent, name, callback, defaultState)
@@ -2498,18 +2550,18 @@ function showMainPanel()
 		local toggleStateRef = {isToggled = (defaultState == true), circle = circle, button = toggleBtn, led = ledIndicator}
 		table.insert(themeToggles, toggleStateRef)
 
-		toggleBtn.MouseButton1Click:Connect(function()
-			toggleStateRef.isToggled = not toggleStateRef.isToggled
+		local function setToggleState(state)
+			toggleStateRef.isToggled = state == true
 			local targetPos = toggleStateRef.isToggled and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
 			local targetColor = toggleStateRef.isToggled and currentThemeColor or Color3.fromRGB(50, 50, 70)
 			local targetLedColor = toggleStateRef.isToggled and currentThemeColor or Color3.fromRGB(80, 80, 100)
-			
 			TweenService:Create(circle, TweenInfo.new(0.18), {Position = targetPos}):Play()
 			TweenService:Create(toggleBtn, TweenInfo.new(0.18), {BackgroundColor3 = targetColor}):Play()
 			TweenService:Create(ledIndicator, TweenInfo.new(0.18), {BackgroundColor3 = targetLedColor}):Play()
-			
 			callback(toggleStateRef.isToggled)
-		end)
+		end
+		toggleBtn.MouseButton1Click:Connect(function() setToggleState(not toggleStateRef.isToggled) end)
+		registerConfigBinding(parent, name, function() return toggleStateRef.isToggled end, setToggleState)
 	end
 
 	-- decimals/suffix são opcionais: sem eles o slider continua inteiro, como sempre foi.
@@ -2567,6 +2619,20 @@ function showMainPanel()
 		fCorner.Parent = fill
 
 		local draggingSlider = false
+		local currentValue = default
+		local function setSliderValue(value)
+			value = math.clamp(tonumber(value) or default, min, max)
+			if decimals and decimals > 0 then
+				local factor = 10 ^ decimals
+				value = math.floor(value * factor + 0.5) / factor
+			else
+				value = math.floor(value + 0.5)
+			end
+			currentValue = value
+			fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
+			label.Text = name .. ": " .. formatSliderValue(value)
+			callback(value)
+		end
 		bar.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSlider = true end
 		end)
@@ -2576,7 +2642,6 @@ function showMainPanel()
 		UserInputService.InputChanged:Connect(function(input)
 			if draggingSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 				local pos = math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
-				fill.Size = UDim2.new(pos, 0, 1, 0)
 				local rawValue = min + (max - min) * pos
 				local val
 				if decimals and decimals > 0 then
@@ -2585,10 +2650,10 @@ function showMainPanel()
 				else
 					val = math.floor(rawValue)
 				end
-				label.Text = name .. ": " .. formatSliderValue(val)
-				callback(val)
+				setSliderValue(val)
 			end
 		end)
+		registerConfigBinding(parent, name, function() return currentValue end, setSliderValue)
 	end
 
 	-----------------------------------------------------------------
@@ -3300,6 +3365,13 @@ function showMainPanel()
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			dropList.Visible = not dropList.Visible
 			if dropList.Visible then updateDropdownList() end
+		end
+	end)
+	registerConfigBinding(secTravel, "Ilha selecionada", function() return selectedIsland and selectedIsland.Name or "" end, function(savedName)
+		if type(savedName) ~= "string" then return end
+		refreshIslands()
+		for _, island in ipairs(islands) do
+			if island.Name == savedName then selectedIsland = island; dropLabel.Text = island.Name; break end
 		end
 	end)
 
@@ -4033,6 +4105,25 @@ function showMainPanel()
 			end
 		end
 
+		registerConfigBinding(fogSection, "Camadas de neblina marcadas", function()
+			local selectedNames = {}
+			for layer, isSelected in pairs(fog.selected) do if isSelected then table.insert(selectedNames, layer.Name) end end
+			table.sort(selectedNames)
+			return selectedNames
+		end, function(savedNames)
+			local wanted = {}
+			if type(savedNames) == "table" then
+				for _, layerName in ipairs(savedNames) do if type(layerName) == "string" then wanted[layerName] = true end end
+			end
+			local folder = getLayersFolder()
+			for layer in pairs(fog.selected) do fog.selected[layer] = wanted[layer.Name] == true end
+			if folder then for _, layer in ipairs(folder:GetChildren()) do fog.selected[layer] = wanted[layer.Name] == true end end
+			for layer, saved in pairs(fog.detached) do if saved.parent == folder then fog.selected[layer] = wanted[layer.Name] == true end end
+			if fog.enabled then for layer in pairs(fog.selected) do applyLayer(layer) end end
+			updateFogStatus()
+			if panel.Visible then refreshList() end
+		end)
+		registerConfigBinding(fogSection, "Remover Neblina ativo", function() return fog.enabled end, setFogEnabled)
 		fogToggle.MouseButton1Click:Connect(function() setFogEnabled(not fog.enabled) end)
 		local panelToken = 0
 		local function closeFogPanel()
@@ -4421,11 +4512,33 @@ function showMainPanel()
 						TweenService:Create(nameLabel, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
 					end)
 				end
+				end
 			end
-		end
 
-		local function setDropdown(open)
-			dropOpen = open
+			registerConfigBinding(secCombat, "Alvos manuais do Lock-On", function()
+				local userIds = {}
+				for target, isSelected in pairs(selectedManualTargets) do
+					if isSelected and target and target.UserId then table.insert(userIds, target.UserId) end
+				end
+				table.sort(userIds)
+				return userIds
+			end, function(savedUserIds)
+				local wanted = {}
+				if type(savedUserIds) == "table" then
+					for _, userId in ipairs(savedUserIds) do
+						local numericId = tonumber(userId)
+						if numericId then wanted[numericId] = true end
+					end
+				end
+				for target in pairs(selectedManualTargets) do selectedManualTargets[target] = nil end
+				for _, target in ipairs(Players:GetPlayers()) do
+					if target ~= player and wanted[target.UserId] then selectedManualTargets[target] = true end
+				end
+				if dropOpen then updateServerList(false) else updateBadge() end
+			end)
+
+			local function setDropdown(open)
+				dropOpen = open
 			TweenService:Create(arrow, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {Rotation = open and 180 or 0}):Play()
 			TweenService:Create(headerStroke, TweenInfo.new(0.2), {Color = open and currentThemeColor or Color3.fromRGB(70, 70, 95), Transparency = open and 0.2 or 0.55}):Play()
 			if open then
@@ -4488,6 +4601,13 @@ function showMainPanel()
 		end
 		modeSwitchBtn.Text = lockOnMode
 		updateServerList()
+	end)
+	registerConfigBinding(secCombat, "Modo Lock-On", function() return lockOnMode end, function(savedMode)
+		if savedMode == "Nearest" or savedMode == "Manual" then
+			lockOnMode = savedMode
+			modeSwitchBtn.Text = lockOnMode
+			updateServerList(false)
+		end
 	end)
 
 	-----------------------------------------------------------------
@@ -4829,9 +4949,34 @@ function showMainPanel()
 			task.defer(function()
 				if playerDropList.Parent then renderAimPlayers() end
 			end)
-		end)
-		renderAimPlayers()
-	end
+			end)
+			renderAimPlayers()
+			registerConfigBinding(secSilentGun, "Jogadores aliados do Aim", function()
+				local userIds = {}
+				for target, isAlly in pairs(aimAllies) do
+					if isAlly and target and target.UserId then table.insert(userIds, target.UserId) end
+				end
+				table.sort(userIds)
+				return userIds
+			end, function(savedUserIds)
+				local wanted = {}
+				if type(savedUserIds) == "table" then
+					for _, userId in ipairs(savedUserIds) do
+						local numericId = tonumber(userId)
+						if numericId then wanted[numericId] = true end
+					end
+				end
+				for target in pairs(aimAllies) do aimAllies[target] = nil end
+				for _, target in ipairs(Players:GetPlayers()) do
+					if target ~= player and wanted[target.UserId] then
+						aimAllies[target] = true
+						selectedManualTargets[target] = nil
+					end
+				end
+				if playerDropList.Visible then renderAimPlayers() end
+				updateServerList(false)
+			end)
+		end
 
 	-----------------------------------------------------------------
 	-- ABA FARMING (CHEST COLLECTOR)
@@ -5795,6 +5940,18 @@ function showMainPanel()
 			fontDropList.Visible = not fontDropList.Visible
 		end
 	end)
+	registerConfigBinding(secTextConfig, "Fonte do Hub", function() return currentGlobalFont end, function(savedFont)
+		if typeof(savedFont) ~= "EnumItem" then return end
+		for index, fontInfo in ipairs(safeFonts) do
+			if fontInfo.Enum == savedFont then
+				currentFontIndex = index
+				fontDropLabel.Text = "Fonte: " .. fontInfo.Name
+				fontDropList.Visible = false
+				updateGlobalTextFont(fontInfo.Enum)
+				break
+			end
+		end
+	end)
 
 	local secKeybind = createSection(configPage, "Atalhos (PC)", sectionIcons.Keybind)
 	
@@ -5884,17 +6041,377 @@ function showMainPanel()
 		end
 	end)
 
-	kbToggleBtn.MouseButton1Click:Connect(function()
-		keybindStateRef.isToggled = not keybindStateRef.isToggled
+	local function setHideKeybindEnabled(state)
+		keybindStateRef.isToggled = state == true
 		hideKeybindEnabled = keybindStateRef.isToggled
 		local targetPos = keybindStateRef.isToggled and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
 		local targetColor = keybindStateRef.isToggled and currentThemeColor or Color3.fromRGB(50, 50, 70)
 		local targetLedColor = keybindStateRef.isToggled and currentThemeColor or Color3.fromRGB(80, 80, 100)
-		
 		TweenService:Create(kbCircle, TweenInfo.new(0.18), {Position = targetPos}):Play()
 		TweenService:Create(kbToggleBtn, TweenInfo.new(0.18), {BackgroundColor3 = targetColor}):Play()
 		TweenService:Create(kbLed, TweenInfo.new(0.18), {BackgroundColor3 = targetLedColor}):Play()
+	end
+	kbToggleBtn.MouseButton1Click:Connect(function() setHideKeybindEnabled(not hideKeybindEnabled) end)
+	registerConfigBinding(secKeybind, "Atalho de ocultar ativado", function() return hideKeybindEnabled end, setHideKeybindEnabled)
+	registerConfigBinding(secKeybind, "Tecla para ocultar", function() return hideKeybindKey end, function(savedKey)
+		if typeof(savedKey) == "EnumItem" and tostring(savedKey.EnumType) == "Enum.KeyCode" then
+			hideKeybindKey = savedKey
+			keyBox.Text = savedKey.Name
+		end
 	end)
+
+
+	-- Presets: salva valores de todos os controles registrados em um JSON local.
+	do
+		local manager = {profiles = {}, selectedName = nil, deleteName = nil, fileName = "AetherisHub_Configs.json"}
+		manager.fileIO = type(readfile) == "function" and type(writefile) == "function"
+		manager.encode = function(value)
+			local valueType = typeof(value)
+			if valueType == "Color3" then
+				return {__aetherisType = "Color3", r = value.R, g = value.G, b = value.B}
+			elseif valueType == "EnumItem" then
+				local enumType = string.match(tostring(value.EnumType), "Enum%.(.+)")
+				return {__aetherisType = "EnumItem", enumType = enumType, name = value.Name}
+			elseif type(value) == "table" then
+				local out = {}
+				for key, item in pairs(value) do
+					if type(key) == "string" or type(key) == "number" then
+						local encoded = manager.encode(item)
+						if encoded ~= nil then out[key] = encoded end
+					end
+				end
+				return out
+			elseif type(value) == "string" or type(value) == "number" or type(value) == "boolean" then
+				return value
+			end
+			return nil
+		end
+		manager.decode = function(value)
+			if type(value) ~= "table" then return value end
+			if value.__aetherisType == "Color3" then
+				if type(value.r) == "number" and type(value.g) == "number" and type(value.b) == "number" then
+					return Color3.new(value.r, value.g, value.b)
+				end
+				return nil
+			elseif value.__aetherisType == "EnumItem" then
+				local enumContainer = value.enumType and Enum[value.enumType]
+				if enumContainer and type(value.name) == "string" then
+					local ok, enumValue = pcall(function() return enumContainer[value.name] end)
+					if ok then return enumValue end
+				end
+				return nil
+			end
+			local out = {}
+			for key, item in pairs(value) do out[key] = manager.decode(item) end
+			return out
+		end
+		manager.persist = function()
+			if not manager.fileIO then return true end
+			local ok, encoded = pcall(function() return HttpService:JSONEncode(manager.profiles) end)
+			if not ok then return false end
+			local wrote = pcall(function() writefile(manager.fileName, encoded) end)
+			return wrote
+		end
+		if manager.fileIO then
+			local readOk, content = pcall(function() return readfile(manager.fileName) end)
+			if readOk and type(content) == "string" and content ~= "" then
+				local decodeOk, stored = pcall(function() return HttpService:JSONDecode(content) end)
+				if decodeOk and type(stored) == "table" then manager.profiles = stored end
+			end
+		end
+
+		local profileSection = createSection(configPage, "Configurações Salvas", sectionIcons.Theme)
+		manager.nameRow = Instance.new("Frame")
+		manager.nameRow.Size = UDim2.new(1, 0, 0, 28)
+		manager.nameRow.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+		manager.nameRow.BackgroundTransparency = 0.5
+		manager.nameRow.Parent = profileSection
+		Instance.new("UICorner", manager.nameRow).CornerRadius = UDim.new(0, 5)
+		manager.nameBox = Instance.new("TextBox")
+		manager.nameBox.Size = UDim2.new(1, -82, 1, -4)
+		manager.nameBox.Position = UDim2.new(0, 4, 0, 2)
+		manager.nameBox.BackgroundColor3 = Color3.fromRGB(24, 24, 34)
+		manager.nameBox.BorderSizePixel = 0
+		manager.nameBox.ClearTextOnFocus = false
+		manager.nameBox.Font = currentGlobalFont
+		manager.nameBox.PlaceholderText = "Nome da configuração..."
+		manager.nameBox.Text = ""
+		manager.nameBox.TextColor3 = currentTextColor
+		manager.nameBox.PlaceholderColor3 = Color3.fromRGB(130, 130, 150)
+		manager.nameBox.TextSize = 10
+		manager.nameBox.Parent = manager.nameRow
+		Instance.new("UICorner", manager.nameBox).CornerRadius = UDim.new(0, 4)
+		table.insert(allTextLabels, manager.nameBox)
+		manager.saveButton = Instance.new("TextButton")
+		manager.saveButton.Size = UDim2.new(0, 72, 1, -4)
+		manager.saveButton.Position = UDim2.new(1, -76, 0, 2)
+		manager.saveButton.BackgroundColor3 = Color3.fromRGB(50, 42, 70)
+		manager.saveButton.BorderSizePixel = 0
+		manager.saveButton.Font = currentGlobalFont
+		manager.saveButton.Text = "Salvar"
+		manager.saveButton.TextColor3 = currentTextColor
+		manager.saveButton.TextSize = 10
+		manager.saveButton.Parent = manager.nameRow
+		Instance.new("UICorner", manager.saveButton).CornerRadius = UDim.new(0, 4)
+		table.insert(allTextLabels, manager.saveButton)
+		table.insert(themeSliders, manager.saveButton)
+
+		manager.selectButton = Instance.new("TextButton")
+		manager.selectButton.Size = UDim2.new(1, 0, 0, 27)
+		manager.selectButton.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+		manager.selectButton.BackgroundTransparency = 0.2
+		manager.selectButton.BorderSizePixel = 0
+		manager.selectButton.Font = currentGlobalFont
+		manager.selectButton.Text = "Selecione uma configuração  ▼"
+		manager.selectButton.TextColor3 = currentTextColor
+		manager.selectButton.TextSize = 10
+		manager.selectButton.TextXAlignment = Enum.TextXAlignment.Left
+		manager.selectButton.Parent = profileSection
+		Instance.new("UICorner", manager.selectButton).CornerRadius = UDim.new(0, 5)
+		table.insert(allTextLabels, manager.selectButton)
+
+		manager.list = Instance.new("ScrollingFrame")
+		manager.list.Name = "SavedConfigDropdown"
+		manager.list.Size = UDim2.new(1, 0, 0, 0)
+		manager.list.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+		manager.list.BackgroundTransparency = 0.2
+		manager.list.BorderSizePixel = 0
+		manager.list.ScrollBarThickness = 3
+		manager.list.CanvasSize = UDim2.new(0, 0, 0, 0)
+		manager.list.Visible = false
+		manager.list.Parent = profileSection
+		Instance.new("UICorner", manager.list).CornerRadius = UDim.new(0, 5)
+		manager.listLayout = Instance.new("UIListLayout")
+		manager.listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		manager.listLayout.Padding = UDim.new(0, 3)
+		manager.listLayout.Parent = manager.list
+		Instance.new("UIPadding", manager.list).PaddingTop = UDim.new(0, 4)
+		manager.listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+			manager.list.CanvasSize = UDim2.new(0, 0, 0, manager.listLayout.AbsoluteContentSize.Y + 8)
+		end)
+		manager.useButton = Instance.new("TextButton")
+		manager.useButton.Size = UDim2.new(1, 0, 0, 27)
+		manager.useButton.BackgroundColor3 = currentThemeColor
+		manager.useButton.BackgroundTransparency = 0.2
+		manager.useButton.BorderSizePixel = 0
+		manager.useButton.Font = currentGlobalFont
+		manager.useButton.Text = "Usar configuração"
+		manager.useButton.TextColor3 = currentTextColor
+		manager.useButton.TextSize = 10
+		manager.useButton.Parent = profileSection
+		Instance.new("UICorner", manager.useButton).CornerRadius = UDim.new(0, 5)
+		table.insert(allTextLabels, manager.useButton)
+		table.insert(themeSliders, manager.useButton)
+		manager.status = Instance.new("TextLabel")
+		manager.status.Size = UDim2.new(1, 0, 0, 20)
+		manager.status.BackgroundTransparency = 1
+		manager.status.Font = currentGlobalFont
+		manager.status.Text = manager.fileIO and "Presets salvos no arquivo local do executor." or "Sem acesso a arquivo: presets valem nesta sessão."
+		manager.status.TextColor3 = Color3.fromRGB(165, 165, 185)
+		manager.status.TextSize = 9
+		manager.status.TextXAlignment = Enum.TextXAlignment.Left
+		manager.status.TextWrapped = true
+		manager.status.Parent = profileSection
+		table.insert(allTextLabels, manager.status)
+		manager.setStatus = function(text, isError)
+			manager.status.Text = text
+			manager.status.TextColor3 = isError and Color3.fromRGB(255, 135, 135) or currentThemeColor
+		end
+
+		manager.confirmPanel = Instance.new("Frame")
+		manager.confirmPanel.Name = "DeleteConfigConfirmation"
+		manager.confirmPanel.Size = UDim2.new(0, 290, 0, 132)
+		manager.confirmPanel.AnchorPoint = Vector2.new(0.5, 0.5)
+		manager.confirmPanel.Position = UDim2.new(0.5, 0, 0.5, 0)
+		manager.confirmPanel.BackgroundColor3 = Color3.fromRGB(18, 18, 27)
+		manager.confirmPanel.BorderSizePixel = 0
+		manager.confirmPanel.Visible = false
+		manager.confirmPanel.ZIndex = 120
+		manager.confirmPanel.Parent = screenGui
+		Instance.new("UICorner", manager.confirmPanel).CornerRadius = UDim.new(0, 9)
+		manager.confirmStroke = Instance.new("UIStroke", manager.confirmPanel)
+		manager.confirmStroke.Color = currentThemeColor
+		manager.confirmStroke.Transparency = 0.25
+		table.insert(themeSections, manager.confirmStroke)
+		manager.confirmText = Instance.new("TextLabel")
+		manager.confirmText.Size = UDim2.new(1, -24, 0, 70)
+		manager.confirmText.Position = UDim2.new(0, 12, 0, 8)
+		manager.confirmText.BackgroundTransparency = 1
+		manager.confirmText.Font = currentGlobalFont
+		manager.confirmText.Text = ""
+		manager.confirmText.TextColor3 = currentTextColor
+		manager.confirmText.TextSize = 11
+		manager.confirmText.TextWrapped = true
+		manager.confirmText.ZIndex = 121
+		manager.confirmText.Parent = manager.confirmPanel
+		table.insert(allTextLabels, manager.confirmText)
+		manager.cancelDelete = Instance.new("TextButton")
+		manager.cancelDelete.Size = UDim2.new(0.5, -18, 0, 30)
+		manager.cancelDelete.Position = UDim2.new(0, 12, 1, -42)
+		manager.cancelDelete.BackgroundColor3 = Color3.fromRGB(48, 48, 62)
+		manager.cancelDelete.BorderSizePixel = 0
+		manager.cancelDelete.Font = currentGlobalFont
+		manager.cancelDelete.Text = "Cancelar"
+		manager.cancelDelete.TextColor3 = currentTextColor
+		manager.cancelDelete.TextSize = 10
+		manager.cancelDelete.ZIndex = 121
+		manager.cancelDelete.Parent = manager.confirmPanel
+		Instance.new("UICorner", manager.cancelDelete).CornerRadius = UDim.new(0, 5)
+		table.insert(allTextLabels, manager.cancelDelete)
+		manager.confirmDelete = Instance.new("TextButton")
+		manager.confirmDelete.Size = UDim2.new(0.5, -18, 0, 30)
+		manager.confirmDelete.Position = UDim2.new(0.5, 6, 1, -42)
+		manager.confirmDelete.BackgroundColor3 = Color3.fromRGB(150, 48, 58)
+		manager.confirmDelete.BorderSizePixel = 0
+		manager.confirmDelete.Font = currentGlobalFont
+		manager.confirmDelete.Text = "Excluir"
+		manager.confirmDelete.TextColor3 = Color3.fromRGB(255, 255, 255)
+		manager.confirmDelete.TextSize = 10
+		manager.confirmDelete.ZIndex = 121
+		manager.confirmDelete.Parent = manager.confirmPanel
+		Instance.new("UICorner", manager.confirmDelete).CornerRadius = UDim.new(0, 5)
+		table.insert(allTextLabels, manager.confirmDelete)
+
+		manager.refreshList = function()
+			for _, child in ipairs(manager.list:GetChildren()) do
+				if child:IsA("GuiObject") then child:Destroy() end
+			end
+			local names = {}
+			for profileName in pairs(manager.profiles) do
+				if type(profileName) == "string" then table.insert(names, profileName) end
+			end
+			table.sort(names, function(a, b) return string.lower(a) < string.lower(b) end)
+			if #names == 0 then
+				local empty = Instance.new("TextLabel")
+				empty.Size = UDim2.new(1, -8, 0, 26)
+				empty.BackgroundTransparency = 1
+				empty.Font = currentGlobalFont
+				empty.Text = "Nenhuma configuração salva."
+				empty.TextColor3 = Color3.fromRGB(175, 175, 190)
+				empty.TextSize = 9
+				empty.ZIndex = 2
+				empty.Parent = manager.list
+				table.insert(allTextLabels, empty)
+				return
+			end
+			for index, profileName in ipairs(names) do
+				local row = Instance.new("Frame")
+				row.Name = "SavedProfileRow"
+				row.LayoutOrder = index
+				row.Size = UDim2.new(1, -8, 0, 28)
+				row.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+				row.BorderSizePixel = 0
+				row.Parent = manager.list
+				Instance.new("UICorner", row).CornerRadius = UDim.new(0, 4)
+				local choose = Instance.new("TextButton")
+				choose.Size = UDim2.new(1, -38, 1, 0)
+				choose.BackgroundTransparency = 1
+				choose.Font = currentGlobalFont
+				choose.Text = "  " .. profileName
+				choose.TextColor3 = currentTextColor
+				choose.TextSize = 10
+				choose.TextXAlignment = Enum.TextXAlignment.Left
+				choose.TextTruncate = Enum.TextTruncate.AtEnd
+				choose.Parent = row
+				table.insert(allTextLabels, choose)
+				local delete = Instance.new("ImageButton")
+				delete.Name = "DeleteSavedProfile"
+				delete.Size = UDim2.new(0, 25, 0, 24)
+				delete.Position = UDim2.new(1, -29, 0.5, -12)
+				delete.BackgroundColor3 = Color3.fromRGB(58, 38, 48)
+				delete.BorderSizePixel = 0
+				delete.Image = "rbxassetid://7743873772"
+				delete.ImageColor3 = currentThemeColor
+				delete.ScaleType = Enum.ScaleType.Fit
+				delete.Parent = row
+				Instance.new("UICorner", delete).CornerRadius = UDim.new(0, 4)
+				table.insert(themeImages, delete)
+				choose.MouseButton1Click:Connect(function()
+					manager.selectedName = profileName
+					manager.selectButton.Text = profileName .. "  ▼"
+					manager.list.Visible = false
+					manager.list.Size = UDim2.new(1, 0, 0, 0)
+				end)
+				delete.MouseButton1Click:Connect(function()
+					manager.deleteName = profileName
+					manager.confirmText.Text = "Tem certeza de que deseja excluir a configuração \"" .. profileName .. "\"?"
+					manager.confirmPanel.Visible = true
+				end)
+			end
+		end
+		manager.selectButton.MouseButton1Click:Connect(function()
+			manager.list.Visible = not manager.list.Visible
+			if manager.list.Visible then
+				manager.list.Size = UDim2.new(1, 0, 0, 120)
+				manager.refreshList()
+			else
+				manager.list.Size = UDim2.new(1, 0, 0, 0)
+			end
+		end)
+		manager.saveButton.MouseButton1Click:Connect(function()
+			local profileName = string.match(manager.nameBox.Text, "^%s*(.-)%s*$") or ""
+			if profileName == "" then manager.setStatus("Digite um nome para a configuração.", true); return end
+			if #profileName > 40 then manager.setStatus("O nome pode ter no máximo 40 caracteres.", true); return end
+			local settings = {}
+			for _, binding in ipairs(configBindings) do
+				local ok, value = pcall(binding.getter)
+				if ok then
+					local encoded = manager.encode(value)
+					if encoded ~= nil then settings[binding.key] = encoded end
+				end
+			end
+			manager.profiles[profileName] = {version = 1, settings = settings}
+			manager.selectedName = profileName
+			manager.selectButton.Text = profileName .. "  ▼"
+			manager.nameBox.Text = ""
+			local stored = manager.persist()
+			manager.setStatus(stored and ("Configuração \"" .. profileName .. "\" salva.") or "Salva na sessão, mas não foi possível gravar o arquivo.", not stored)
+			manager.refreshList()
+		end)
+		manager.useButton.MouseButton1Click:Connect(function()
+			if not manager.selectedName or not manager.profiles[manager.selectedName] then
+				manager.setStatus("Escolha uma configuração na lista primeiro.", true)
+				return
+			end
+			local profile = manager.profiles[manager.selectedName]
+			local settings = type(profile) == "table" and (profile.settings or profile) or nil
+			if type(settings) ~= "table" then manager.setStatus("A configuração salva está inválida.", true); return end
+			local applied = 0
+			for _, binding in ipairs(configBindings) do
+				local storedValue = settings[binding.key]
+				if storedValue ~= nil then
+					local value = manager.decode(storedValue)
+					if value ~= nil then
+						local ok = pcall(binding.setter, value)
+						if ok then applied = applied + 1 end
+					end
+				end
+			end
+			manager.setStatus("Configuração aplicada: " .. manager.selectedName .. " (" .. tostring(applied) .. " opções).", false)
+		end)
+		manager.cancelDelete.MouseButton1Click:Connect(function()
+			manager.confirmPanel.Visible = false
+			manager.deleteName = nil
+		end)
+		manager.confirmDelete.MouseButton1Click:Connect(function()
+			local profileName = manager.deleteName
+			if not profileName or manager.profiles[profileName] == nil then
+				manager.confirmPanel.Visible = false
+				return
+			end
+			manager.profiles[profileName] = nil
+			if manager.selectedName == profileName then
+				manager.selectedName = nil
+				manager.selectButton.Text = "Selecione uma configuração  ▼"
+			end
+			manager.confirmPanel.Visible = false
+			manager.deleteName = nil
+			local stored = manager.persist()
+			manager.refreshList()
+			manager.setStatus(stored and ("Configuração \"" .. profileName .. "\" excluída.") or "Excluída da sessão, mas não foi possível atualizar o arquivo.", not stored)
+		end)
+		manager.refreshList()
+	end
 
 	TweenService:Create(mainPanel, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
 		Size = currentPanelSize
