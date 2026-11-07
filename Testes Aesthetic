@@ -4151,20 +4151,6 @@ function showMainPanel()
 	msCorner.CornerRadius = UDim.new(0, 4)
 	msCorner.Parent = modeSwitchBtn
 
-	-- Filtros e FOV ficam dentro da própria section "Sistema Lock-On".
-	local secFilters = secCombat
-	addToggle(secFilters, "Ativar Círculo FOV", function(state) _G_FovVisible = state end, false)
-	addSlider(secFilters, "Raio do FOV", 50, 500, 150, function(val) _G_FovRadius = val end)
-	addSlider(secFilters, "Grossura do FOV", 1, 5, 1, function(val) _G_FovThickness = val end)
-	addSlider(secFilters, "Transparência do FOV (%)", 10, 100, 70, function(val) _G_FovTransparency = val / 100 end)
-	addColorPicker(secFilters, "Cor do Círculo FOV", _G_ColorFov, function(c) _G_ColorFov = c end)
-
-	addToggle(secFilters, "Filtro por Distância Máxima", function(state) _G_FilterDistanceEnabled = state end, false)
-	addSlider(secFilters, "Distância Máxima", 50, 2000, 500, function(val) _G_FilterDistanceMax = val end)
-	addToggle(secFilters, "Mais Perto de Mim (Mais Próximo)", function(state) _G_FilterClosest = state end, false)
-	addToggle(secFilters, "Priorizar Menor Vida (HP)", function(state) _G_FilterLowestHP = state end, false)
-	addToggle(secFilters, "Mais Perto da Mira (Crosshair)", function(state) _G_FilterCrosshair = state end, false)
-	addToggle(secFilters, "Apenas se EU Estiver com Item", function(state) _G_FilterHoldingItem = state end, false)
 
 	-- Dropdown de jogadores (alvos manuais do Lock-On)
 	local updateServerList
@@ -4240,13 +4226,18 @@ function showMainPanel()
 
 		-- Barra superior: busca + limpar + atualizar
 		local searchBack = new("Frame", {
-			Size = UDim2.new(1, -122, 0, 24), Position = UDim2.new(0, 6, 0, 6),
+			Size = UDim2.new(1, -72, 0, 24), Position = UDim2.new(0, 6, 0, 6),
 			BackgroundColor3 = Color3.fromRGB(26, 26, 38), BorderSizePixel = 0
 		}, body)
 		round(searchBack, 6)
 		local searchStroke = new("UIStroke", {Color = Color3.fromRGB(70, 70, 95), Transparency = 0.6, Thickness = 1}, searchBack)
-		new("TextLabel", {Size = UDim2.new(0, 18, 1, 0), Position = UDim2.new(0, 3, 0, 0), BackgroundTransparency = 1,
-			Font = Enum.Font.GothamBold, Text = "⌕", TextColor3 = GRAY, TextSize = 13}, searchBack)
+		local searchIcon = new("ImageLabel", {
+			Name = "PlayerSearchIcon",
+			Size = UDim2.new(0, 14, 0, 14), Position = UDim2.new(0, 4, 0.5, -7),
+			BackgroundTransparency = 1, Image = "rbxassetid://7734052925",
+			ImageColor3 = currentThemeColor, ScaleType = Enum.ScaleType.Fit
+		}, searchBack)
+		table.insert(themeImages, searchIcon)
 		local searchBox = new("TextBox", {
 			Size = UDim2.new(1, -24, 1, 0), Position = UDim2.new(0, 21, 0, 0), BackgroundTransparency = 1,
 			ClearTextOnFocus = false, Font = Enum.Font.Gotham, PlaceholderText = "Buscar jogador...",
@@ -4276,8 +4267,24 @@ function showMainPanel()
 			end)
 			return btn
 		end
-		local clearButton = miniButton("Limpar", 48, 90)
-		local refreshButton = miniButton("↻", 26, 38)
+		local clearButton = miniButton("", 24, 66)
+		clearButton.Name = "ClearLockOnTargetsButton"
+		local clearIcon = new("ImageLabel", {
+			Name = "ClearTargetsTrashIcon",
+			Size = UDim2.new(0, 14, 0, 14), Position = UDim2.new(0.5, -7, 0.5, -7),
+			BackgroundTransparency = 1, Image = "rbxassetid://7743873772",
+			ImageColor3 = currentThemeColor, ScaleType = Enum.ScaleType.Fit
+		}, clearButton)
+		table.insert(themeImages, clearIcon)
+		local refreshButton = miniButton("", 24, 36)
+		refreshButton.Name = "RefreshLockOnPlayersButton"
+		local refreshIcon = new("ImageLabel", {
+			Name = "RefreshPlayersCircularArrowsIcon",
+			Size = UDim2.new(0, 14, 0, 14), Position = UDim2.new(0.5, -7, 0.5, -7),
+			BackgroundTransparency = 1, Image = "rbxassetid://7734051052",
+			ImageColor3 = currentThemeColor, ScaleType = Enum.ScaleType.Fit
+		}, refreshButton)
+		table.insert(themeImages, refreshIcon)
 
 		local list = new("ScrollingFrame", {
 			Size = UDim2.new(1, -12, 1, -42), Position = UDim2.new(0, 6, 0, 36),
@@ -4457,6 +4464,21 @@ function showMainPanel()
 		end)
 		updateBadge()
 	end
+
+	-- Filtros e FOV ficam dentro da própria section "Sistema Lock-On".
+	local secFilters = secCombat
+	addToggle(secFilters, "Ativar Círculo FOV", function(state) _G_FovVisible = state end, false)
+	addSlider(secFilters, "Raio do FOV", 50, 500, 150, function(val) _G_FovRadius = val end)
+	addSlider(secFilters, "Grossura do FOV", 1, 5, 1, function(val) _G_FovThickness = val end)
+	addSlider(secFilters, "Transparência do FOV (%)", 10, 100, 70, function(val) _G_FovTransparency = val / 100 end)
+	addColorPicker(secFilters, "Cor do Círculo FOV", _G_ColorFov, function(c) _G_ColorFov = c end)
+
+	addToggle(secFilters, "Filtro por Distância Máxima", function(state) _G_FilterDistanceEnabled = state end, false)
+	addSlider(secFilters, "Distância Máxima", 50, 2000, 500, function(val) _G_FilterDistanceMax = val end)
+	addToggle(secFilters, "Mais Perto de Mim (Mais Próximo)", function(state) _G_FilterClosest = state end, false)
+	addToggle(secFilters, "Priorizar Menor Vida (HP)", function(state) _G_FilterLowestHP = state end, false)
+	addToggle(secFilters, "Mais Perto da Mira (Crosshair)", function(state) _G_FilterCrosshair = state end, false)
+	addToggle(secFilters, "Apenas se EU Estiver com Item", function(state) _G_FilterHoldingItem = state end, false)
 
 	modeSwitchBtn.MouseButton1Click:Connect(function()
 		if lockOnMode == "Nearest" then
