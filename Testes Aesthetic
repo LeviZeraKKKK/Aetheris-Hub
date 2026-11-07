@@ -5471,6 +5471,358 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
+	-- AUTO ATTACK (ataca automaticamente quem estiver ao redor)
+	-----------------------------------------------------------------
+	do
+		local secAutoAttack = createSection(secFarm.Parent.Parent, "Auto Attack", sectionIcons.Combat)
+		local AA = {
+			enabled = false, players = true, npcs = true, range = 25, delay = 0.15,
+			lastAttack = 0, conn = nil, loaded = false
+		}
+		-- Input falso para armas à distância (usam o mouse.Hit internamente)
+		local fakeInput = {
+			UserInputType = Enum.UserInputType.MouseButton1,
+			UserInputState = Enum.UserInputState.Begin,
+			Position = Vector3.zero,
+			Delta = Vector3.zero,
+			KeyCode = Enum.KeyCode.Unknown,
+		}
+
+		local function loadModules()
+			if AA.loaded then return true end
+			local okCC, CC = pcall(function() return require(ReplicatedStorage.Controllers.CombatController) end)
+			if not okCC or not CC then
+				warn("[Aetheris] Auto Attack: CombatController indisponível")
+				return false
+			end
+			local okCU, CU = pcall(function() return require(ReplicatedStorage.Modules.CombatUtil) end)
+			AA.CC = CC
+			AA.CU = okCU and CU or nil
+			AA.loaded = true
+			return true
+		end
+
+		local function getEquippedTool()
+			local char = player.Character
+			if not char then return nil end
+			local tool = char:FindFirstChildOfClass("Tool")
+			if not tool or not tool:FindFirstChild("LocalEquippedWeaponPointer") then return nil end
+			return tool
+		end
+
+		local function isValidTarget(obj)
+			if not obj or not obj.Parent then return false end
+			local myChar = player.Character
+			if not myChar or obj == myChar then return false end
+			local hum = obj:FindFirstChildOfClass("Humanoid")
+			if not hum or hum.Health <= 0 then return false end
+			local summoner = obj:FindFirstChild("Summoner")
+			if summoner and summoner.Value == player then return false end
+			local myHRP = myChar:FindFirstChild("HumanoidRootPart")
+			local tHRP = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Head")
+			if not myHRP or not tHRP then return false end
+			if (tHRP.Position - myHRP.Position).Magnitude > AA.range then return false end
+			return true, tHRP, hum
+		end
+
+		local function findTarget()
+			local myChar = player.Character
+			local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
+			if not myHRP then return nil end
+			local best, bestDist = nil, math.huge
+			local function scan(folder)
+				if not folder then return end
+				for _, obj in ipairs(folder:GetChildren()) do
+					local ok, hrp = isValidTarget(obj)
+					if ok then
+						local d = (hrp.Position - myHRP.Position).Magnitude
+						if d < bestDist then
+							bestDist = d
+							best = {char = obj, hrp = hrp, dist = d}
+						end
+					end
+				end
+			end
+			if AA.players then scan(workspace:FindFirstChild("Characters")) end
+			if AA.npcs then scan(workspace:FindFirstChild("Enemies")) end
+			return best
+		end
+
+		local function faceTarget(targetHRP)
+			local char = player.Character
+			local myHRP = char and char:FindFirstChild("HumanoidRootPart")
+			if not myHRP then return end
+			local pos, tp = myHRP.Position, targetHRP.Position
+			myHRP.CFrame = CFrame.lookAt(pos, Vector3.new(tp.X, pos.Y, tp.Z))
+		end
+
+		local function tryAttack()
+			if tick() - AA.lastAttack < AA.delay then return end
+			local tool = getEquippedTool()
+			if not tool then return end
+			local char = player.Character
+			if AA.CU then
+				local okData, wdata = pcall(function()
+					return AA.CU:GetWeaponData(AA.CU:GetWeaponName(tool))
+				end)
+				if not okData or not wdata then return end
+				local okCan, canAttack = pcall(function() return AA.CU:CanAttack(char, wdata.WeaponType) end)
+				if okCan and not canAttack then return end
+			end
+			AA.lastAttack = tick()
+			local ok = pcall(function() AA.CC:Attack(tool, fakeInput) end)
+			if not ok then pcall(function() tool:Activate() end) end
+		end
+
+		local function stopAutoAttack()
+			AA.enabled = false
+			if AA.conn then AA.conn:Disconnect(); AA.conn = nil end
+		end
+
+		local function startAutoAttack()
+			if not loadModules() then return end
+			if AA.conn then AA.conn:Disconnect() end
+			AA.enabled = true
+			AA.conn = RunService.Heartbeat:Connect(function()
+				if not screenGui.Parent then stopAutoAttack() return end
+				if not AA.enabled then return end
+				local target = findTarget()
+				if target then
+					faceTarget(target.hrp)
+					tryAttack()
+				end
+			end)
+		end
+
+		addToggle(secAutoAttack, "Auto Attack", function(state)
+			if state then startAutoAttack() else stopAutoAttack() end
+		end, false)
+		addToggle(secAutoAttack, "Atacar Players", function(state) AA.players = state end, true)
+		addToggle(secAutoAttack, "Atacar NPCs", function(state) AA.npcs = state end, true)
+		addSlider(secAutoAttack, "Alcance", 5, 150, 25, function(val) AA.range = val end, 0, " studs")
+		addSlider(secAutoAttack, "Delay entre ataques", 0.05, 1, 0.15, function(val) AA.delay = math.max(0.05, val) end, 2, "s")
+
+		screenGui.Destroying:Connect(stopAutoAttack)
+	end
+
+	-----------------------------------------------------------------
+	-- VELOCIDADE DE ATAQUE (aba Combate)
+	-----------------------------------------------------------------
+	do
+		local secAttackSpeed = createSection(aimLockPage, "Velocidade de Ataque", sectionIcons.Combat)
+		local AS = {enabled = false, mult = 1.5, conn = nil, charConn = nil, loaded = false, orig = {}}
+
+		local function loadModules()
+			if AS.loaded then return true end
+			local okCU, CU = pcall(function() return require(ReplicatedStorage.Modules.CombatUtil) end)
+			local okG, G = pcall(function() return require(ReplicatedStorage.Global) end)
+			AS.CU = okCU and CU or nil
+			AS.G = okG and G or nil
+			if not AS.CU and not AS.G then
+				warn("[Aetheris] Velocidade de Ataque: módulos do jogo indisponíveis")
+				return false
+			end
+			-- guarda as funções originais (uma única vez)
+			if AS.CU then
+				AS.orig.padding = AS.CU.GetComboPaddingTime
+				AS.orig.cancel = AS.CU.GetAttackCancelMultiplier
+				AS.orig.aoe = AS.CU.GetDefaultAOEDelay
+			end
+			AS.loaded = true
+			return true
+		end
+
+		local function applyHooks()
+			local CU = AS.CU
+			if not CU then return end
+			CU.GetComboPaddingTime = function() return 0.05 end
+			CU.GetAttackCancelMultiplier = function() return 0.3 end
+			CU.GetDefaultAOEDelay = function() return 0.05 end
+		end
+
+		local function removeHooks()
+			local CU = AS.CU
+			if not CU then return end
+			if AS.orig.padding then CU.GetComboPaddingTime = AS.orig.padding end
+			if AS.orig.cancel then CU.GetAttackCancelMultiplier = AS.orig.cancel end
+			if AS.orig.aoe then CU.GetDefaultAOEDelay = AS.orig.aoe end
+		end
+
+		local function applySpeedAttr()
+			local char = player.Character
+			if char then char:SetAttribute("AttackSpeedMultiplier", AS.mult) end
+		end
+
+		local function clearSpeedAttr()
+			local char = player.Character
+			if char then char:SetAttribute("AttackSpeedMultiplier", nil) end
+		end
+
+		local function stopAttackSpeed()
+			AS.enabled = false
+			if AS.conn then AS.conn:Disconnect(); AS.conn = nil end
+			if AS.charConn then AS.charConn:Disconnect(); AS.charConn = nil end
+			if AS.loaded then
+				if AS.G then AS.G.tapCooldown = 0 end
+				removeHooks()
+			end
+			clearSpeedAttr()
+		end
+
+		local function startAttackSpeed()
+			if not loadModules() then return end
+			AS.enabled = true
+			applyHooks()
+			applySpeedAttr()
+			if AS.conn then AS.conn:Disconnect() end
+			AS.conn = RunService.Heartbeat:Connect(function()
+				if not screenGui.Parent then stopAttackSpeed() return end
+				if not AS.enabled then return end
+				applySpeedAttr()
+				if AS.G then AS.G.tapCooldown = 0 end
+			end)
+			-- reaplica ao renascer
+			if AS.charConn then AS.charConn:Disconnect() end
+			AS.charConn = player.CharacterAdded:Connect(function()
+				if AS.enabled then
+					task.wait(0.5)
+					applySpeedAttr()
+				end
+			end)
+		end
+
+		addToggle(secAttackSpeed, "Velocidade de Ataque", function(state)
+			if state then startAttackSpeed() else stopAttackSpeed() end
+		end, false)
+		addSlider(secAttackSpeed, "Multiplicador", 1, 2, 1.5, function(val)
+			AS.mult = math.clamp(val, 1, 2)
+			if AS.enabled then applySpeedAttr() end
+		end, 2, "x")
+
+		screenGui.Destroying:Connect(stopAttackSpeed)
+	end
+
+	-----------------------------------------------------------------
+	-- ATTACK DIRECT (dano direto nos alvos ao redor, sem animação)
+	-----------------------------------------------------------------
+	do
+		local secAttackDirect = createSection(secFarm.Parent.Parent, "Attack Direct", sectionIcons.Combat)
+		local AD = {
+			enabled = false, players = true, npcs = true, useAttackEvent = true,
+			range = 20, delay = 0.1, lastHit = 0, combo = 1, conn = nil, resolved = false
+		}
+
+		-- Procura os remotes só na primeira ativação.
+		local function resolveRemotes()
+			if AD.resolved then return AD.hitEvent ~= nil end
+			pcall(function()
+				local net = require(ReplicatedStorage.Modules.Net)
+				if net and type(net.RemoteEvent) == "function" then
+					AD.hitEvent = net:RemoteEvent("RegisterHit")
+					AD.attackEvent = net:RemoteEvent("RegisterAttack")
+				end
+			end)
+			if not AD.hitEvent then
+				for _, obj in ipairs(ReplicatedStorage:GetDescendants()) do
+					if obj:IsA("RemoteEvent") then
+						if obj.Name == "RegisterHit" then AD.hitEvent = obj end
+						if obj.Name == "RegisterAttack" then AD.attackEvent = obj end
+					end
+				end
+			end
+			AD.resolved = AD.hitEvent ~= nil
+			if not AD.hitEvent then
+				warn("[Aetheris] Attack Direct: RegisterHit não encontrado")
+			end
+			return AD.hitEvent ~= nil
+		end
+
+		local function getTool()
+			local char = player.Character
+			if not char then return nil end
+			local tool = char:FindFirstChildOfClass("Tool")
+			if tool and tool:FindFirstChild("LocalEquippedWeaponPointer") then return tool end
+			return nil
+		end
+
+		local function scanNearby()
+			local char = player.Character
+			local hrp = char and char:FindFirstChild("HumanoidRootPart")
+			if not hrp then return {} end
+			local results = {}
+			local function scan(folder)
+				if not folder then return end
+				for _, obj in ipairs(folder:GetChildren()) do
+					if obj ~= char then
+						local hum = obj:FindFirstChildOfClass("Humanoid")
+						local hitPart = obj:FindFirstChild("Head") or obj:FindFirstChild("UpperTorso") or obj:FindFirstChild("HumanoidRootPart")
+						if hum and hum.Health > 0 and hitPart then
+							local summoner = obj:FindFirstChild("Summoner")
+							if not (summoner and summoner.Value == player) then
+								local d = (hitPart.Position - hrp.Position).Magnitude
+								if d <= AD.range then
+									table.insert(results, {char = obj, part = hitPart, dist = d})
+								end
+							end
+						end
+					end
+				end
+			end
+			if AD.players then scan(workspace:FindFirstChild("Characters")) end
+			if AD.npcs then scan(workspace:FindFirstChild("Enemies")) end
+			table.sort(results, function(a, b) return a.dist < b.dist end)
+			return results
+		end
+
+		local function doHit()
+			if tick() - AD.lastHit < AD.delay then return end
+			if not getTool() then return end
+			local targets = scanNearby()
+			if #targets == 0 then return end
+
+			AD.lastHit = tick()
+			AD.combo = (AD.combo % 4) + 1
+
+			-- atualiza o combo para não ficar preso no 1
+			if AD.useAttackEvent and AD.attackEvent then
+				pcall(function() AD.attackEvent:FireServer(0.3, AD.combo) end)
+			end
+
+			local primary = targets[1]
+			local extras = {}
+			for i = 2, #targets do
+				table.insert(extras, {targets[i].char, targets[i].part})
+			end
+			pcall(function() AD.hitEvent:FireServer(primary.part, extras) end)
+		end
+
+		local function stopAttackDirect()
+			AD.enabled = false
+			if AD.conn then AD.conn:Disconnect(); AD.conn = nil end
+		end
+
+		local function startAttackDirect()
+			if not resolveRemotes() then return end
+			if AD.conn then AD.conn:Disconnect() end
+			AD.enabled = true
+			AD.conn = RunService.Heartbeat:Connect(function()
+				if not screenGui.Parent then stopAttackDirect() return end
+				if AD.enabled then doHit() end
+			end)
+		end
+
+		addToggle(secAttackDirect, "Attack Direct", function(state)
+			if state then startAttackDirect() else stopAttackDirect() end
+		end, false)
+		addToggle(secAttackDirect, "Atacar Players", function(state) AD.players = state end, true)
+		addToggle(secAttackDirect, "Atacar NPCs", function(state) AD.npcs = state end, true)
+		addSlider(secAttackDirect, "Raio", 5, 150, 20, function(val) AD.range = val end, 0, " studs")
+		addSlider(secAttackDirect, "Delay entre hits", 0.05, 1, 0.1, function(val) AD.delay = math.max(0.05, val) end, 2, "s")
+
+		screenGui.Destroying:Connect(stopAttackDirect)
+	end
+
+	-----------------------------------------------------------------
 	-- ABA FRUTA
 	-----------------------------------------------------------------
 	local frutaPage = pages["Fruta"]
