@@ -44,6 +44,25 @@ local allTextLabels = {}
 local resizeSymbolsLines = {}
 local headerSubtitles = {}
 
+-- Altura do conteúdo de um UIListLayout em pixels LOCAIS (sem o UIScale do painel).
+-- O AbsoluteContentSize vem multiplicado pela escala quando o painel é redimensionado, o que
+-- deixava seções grandes demais (espaço sobrando) ou pequenas demais (toggles se sobrepondo).
+function AetherisLayoutHeight(layout)
+	local container = layout.Parent
+	if not container then return layout.AbsoluteContentSize.Y end
+	local total, count = 0, 0
+	for _, child in ipairs(container:GetChildren()) do
+		if child:IsA("GuiObject") and child.Visible then
+			if child.Size.Y.Scale ~= 0 or child.AutomaticSize ~= Enum.AutomaticSize.None then
+				return layout.AbsoluteContentSize.Y
+			end
+			total = total + child.Size.Y.Offset
+			count = count + 1
+		end
+	end
+	return total + layout.Padding.Offset * math.max(count - 1, 0)
+end
+
 local configBindings = {}
 local configBindingCounts = {}
 local function registerConfigBinding(parent, name, getter, setter)
@@ -1581,7 +1600,7 @@ function showMainPanel()
 		layout.Parent = page
 
 		layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			page.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
+			page.CanvasSize = UDim2.new(0, 0, 0, AetherisLayoutHeight(layout) + 10)
 		end)
 
 		pages[name] = page
@@ -1952,7 +1971,7 @@ function showMainPanel()
 		sLayout.Parent = sContainer
 
 		sLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			section.Size = UDim2.new(1, -4, 0, sLayout.AbsoluteContentSize.Y + 28)
+			section.Size = UDim2.new(1, -4, 0, AetherisLayoutHeight(sLayout) + 28)
 		end)
 
 		return sContainer
@@ -4084,7 +4103,7 @@ function showMainPanel()
 		listLayout.SortOrder = Enum.SortOrder.LayoutOrder
 		listLayout.Parent = scroll
 		listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			scroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 8)
+			scroll.CanvasSize = UDim2.new(0, 0, 0, AetherisLayoutHeight(listLayout) + 8)
 		end)
 		local listPadding = Instance.new("UIPadding")
 		listPadding.PaddingTop = UDim.new(0, 4)
@@ -4560,7 +4579,7 @@ function showMainPanel()
 		}, body)
 		local listLayout = new("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 4)}, list)
 		listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			list.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 2)
+			list.CanvasSize = UDim2.new(0, 0, 0, AetherisLayoutHeight(listLayout) + 2)
 		end)
 
 		local function updateBadge()
@@ -6406,7 +6425,7 @@ function showMainPanel()
 		manager.listLayout = new("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 4)}, manager.list)
 		new("UIPadding", {PaddingTop = UDim.new(0, 5), PaddingLeft = UDim.new(0, 5), PaddingRight = UDim.new(0, 5)}, manager.list)
 		manager.listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			manager.list.CanvasSize = UDim2.new(0, 0, 0, manager.listLayout.AbsoluteContentSize.Y + 10)
+			manager.list.CanvasSize = UDim2.new(0, 0, 0, AetherisLayoutHeight(manager.listLayout) + 10)
 		end)
 
 		manager.setListOpen = function(open)
