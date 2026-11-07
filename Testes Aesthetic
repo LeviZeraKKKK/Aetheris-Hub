@@ -2089,10 +2089,9 @@ function showMainPanel()
 			ui.modal.Position = UDim2.fromOffset(x + w / 2, y)
 		end
 
+		local inputOffset = Vector2.new(0, 0)
 		local function updateFromInput(position)
-			-- O ScreenGui usa IgnoreGuiInset=true; mantenha Input.Position e AbsolutePosition
-			-- no mesmo espaço de coordenadas (sem somar o inset pela segunda vez).
-			local p = Vector2.new(position.X, position.Y)
+			local p = Vector2.new(position.X, position.Y) + inputOffset
 			if dragMode == "sv" then
 				local x = math.clamp((p.X - ui.canvas.AbsolutePosition.X) / ui.canvas.AbsoluteSize.X, 0, 1)
 				local y = math.clamp((p.Y - ui.canvas.AbsolutePosition.Y) / ui.canvas.AbsoluteSize.Y, 0, 1)
@@ -2103,8 +2102,23 @@ function showMainPanel()
 			commit()
 		end
 
+		local function findInputTarget(position)
+			local raw = Vector2.new(position.X, position.Y)
+			local inset = guiService:GetGuiInset()
+			local points = {raw, raw + inset, raw - inset}
+			for _, point in ipairs(points) do
+				if isInside(ui.canvas, point) then return "sv", point - raw, true end
+				if isInside(ui.hueBar, point) then return "hue", point - raw, true end
+			end
+			for _, point in ipairs(points) do
+				if isInside(ui.modal, point) or isInside(colorBtn, point) then return nil, nil, true end
+			end
+			return nil, nil, false
+		end
+
 		local function setDragging(mode)
 			dragMode = mode
+			if mode == nil then inputOffset = Vector2.new(0, 0) end
 			local grow = mode ~= nil
 			ColorPicker.tween(ui.cursorShadow, 0.12, {Size = grow and UDim2.fromOffset(26, 26) or UDim2.fromOffset(20, 20)}, Enum.EasingStyle.Back)
 			ColorPicker.tween(ui.cursorFill, 0.12, {Size = grow and UDim2.fromOffset(16, 16) or UDim2.fromOffset(12, 12)}, Enum.EasingStyle.Back)
@@ -2318,19 +2332,6 @@ function showMainPanel()
 			thumbStroke.Parent = hueThumb
 			u.hueBar, u.hueThumb = hueBar, hueThumb
 
-			canvas.InputBegan:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-					setDragging("sv")
-					updateFromInput(input.Position)
-				end
-			end)
-			hueBar.InputBegan:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-					setDragging("hue")
-					updateFromInput(input.Position)
-				end
-			end)
-
 			-- Linha 2: pre-visualizacao | HEX | desfazer
 			local preview = Instance.new("CanvasGroup")
 			preview.Size = UDim2.fromOffset(34, 24)
@@ -2485,8 +2486,14 @@ function showMainPanel()
 			-- clicar fora fecha
 			table.insert(conns, UserInputService.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-					local p = Vector2.new(input.Position.X, input.Position.Y)
-					if not isInside(ui.modal, p) and not isInside(colorBtn, p) then picker.close() end
+					local mode, offset, inside = findInputTarget(input.Position)
+					if mode then
+						inputOffset = offset
+						setDragging(mode)
+						updateFromInput(input.Position)
+					elseif not inside then
+						picker.close()
+					end
 				end
 			end))
 			-- acompanha o botao (painel arrastado / pagina rolando) e fecha se o hub sumir
@@ -2513,6 +2520,7 @@ function showMainPanel()
 			ColorPicker.tween(btnStroke, 0.2, {Transparency = 0.75, Thickness = 1, Color = Color3.new(1, 1, 1)})
 			if ui then
 				dragMode = nil
+				inputOffset = Vector2.new(0, 0)
 				ColorPicker.tween(ui.scale, 0.15, {Scale = ui.baseScale * 0.9}, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
 				ColorPicker.tween(ui.modal, 0.15, {GroupTransparency = 1}, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
 				task.delay(0.17, function()
