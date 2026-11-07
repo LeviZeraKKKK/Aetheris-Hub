@@ -1219,18 +1219,97 @@ function showMainPanel()
 			Transparency = 0.48, Thickness = 5
 		})
 		glowTween:Play()
-		local angle = 0
-		while floatingBtn.Parent do
-			angle += 0.035
-			for index, particle in ipairs(floatParticles) do
-				if particle.Parent then
-					local a = angle + (index - 1) * math.pi / 2
-					particle.Position = UDim2.new(0.5, math.cos(a) * 13 - 1.5, 0.5, math.sin(a) * 13 - 1.5)
-				end
-			end
-			task.wait(0.03)
-		end
 	end)
+
+	-- Efeitos extras do botão flutuante: fundo em degradê, borda com brilho giratório,
+	-- anel de pulso, vai-e-vem da letra e reação ao passar o mouse / clicar.
+	do
+		floatCorner.CornerRadius = UDim.new(0, 12)
+		visibleBorderCorner.CornerRadius = UDim.new(0, 12)
+		visibleBorderStroke.Thickness = 2
+
+		local bgGrad = Instance.new("UIGradient")
+		bgGrad.Color = ColorSequence.new(Color3.fromRGB(46, 46, 66), Color3.fromRGB(12, 12, 20))
+		bgGrad.Rotation = 135
+		bgGrad.Parent = floatingBtn
+
+		-- brilho que gira ao redor da borda (a cor continua sendo a do tema)
+		local sweep = Instance.new("UIGradient")
+		sweep.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(0.35, 0.9),
+			NumberSequenceKeypoint.new(0.65, 0.9),
+			NumberSequenceKeypoint.new(1, 0),
+		})
+		sweep.Parent = visibleBorderStroke
+
+		-- anel de pulso que se expande a partir do botão
+		local ring = Instance.new("Frame")
+		ring.Name = "PulseRing"
+		ring.AnchorPoint = Vector2.new(0.5, 0.5)
+		ring.Position = UDim2.new(0.5, 0, 0.5, 0)
+		ring.Size = UDim2.new(1, 0, 1, 0)
+		ring.BackgroundTransparency = 1
+		ring.BorderSizePixel = 0
+		ring.Active = false
+		ring.ZIndex = 19
+		ring.Parent = floatingBtn
+		local ringCorner = Instance.new("UICorner")
+		ringCorner.CornerRadius = UDim.new(0, 14)
+		ringCorner.Parent = ring
+		local ringStroke = Instance.new("UIStroke")
+		ringStroke.Color = currentThemeColor
+		ringStroke.Thickness = 2
+		ringStroke.Transparency = 0.2
+		ringStroke.Parent = ring
+		table.insert(themeSections, ringStroke)
+
+		local ringSize = TweenInfo.new(1.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, -1, false, 0.6)
+		TweenService:Create(ring, ringSize, {Size = UDim2.new(1.9, 0, 1.9, 0)}):Play()
+		TweenService:Create(ringStroke, ringSize, {Transparency = 1, Thickness = 0.5}):Play()
+
+		-- reação ao mouse
+		local btnScale = Instance.new("UIScale")
+		btnScale.Scale = 1
+		btnScale.Parent = floatingBtn
+		local function scaleTo(v, t, style)
+			TweenService:Create(btnScale, TweenInfo.new(t, style or Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = v}):Play()
+		end
+		local hovering = false
+		floatingBtn.MouseEnter:Connect(function()
+			hovering = true
+			scaleTo(1.14, 0.25)
+		end)
+		floatingBtn.MouseLeave:Connect(function()
+			hovering = false
+			scaleTo(1, 0.25)
+		end)
+		floatingBtn.MouseButton1Down:Connect(function() scaleTo(0.88, 0.1, Enum.EasingStyle.Quad) end)
+		floatingBtn.MouseButton1Up:Connect(function() scaleTo(hovering and 1.14 or 1, 0.22) end)
+
+		-- animação contínua: giro do brilho, balanço da letra e órbita das partículas
+		task.spawn(function()
+			local t0 = tick()
+			while floatingBtn.Parent do
+				local t = tick() - t0
+				if floatingBtn.Visible then
+					sweep.Rotation = (t * 120) % 360
+					bgGrad.Rotation = 135 + math.sin(t * 0.8) * 25
+					floatLetter.Rotation = math.sin(t * 1.6) * 6
+					floatLetter.Position = UDim2.new(0, 0, 0, math.sin(t * 2.2) * 1.5)
+					for index, particle in ipairs(floatParticles) do
+						if particle.Parent then
+							local a = t * 2.1 + (index - 1) * math.pi / 2
+							local r = 14 + math.sin(t * 2 + index) * 2.5
+							particle.Position = UDim2.new(0.5, math.cos(a) * r - 1.5, 0.5, math.sin(a) * r - 1.5)
+							particle.BackgroundTransparency = 0.25 + (math.sin(t * 3 + index * 1.7) + 1) * 0.28
+						end
+					end
+				end
+				task.wait(0.03)
+			end
+		end)
+	end
 
 	local floatDragging, floatDragStart, floatStartPos
 	floatingBtn.InputBegan:Connect(function(input)
@@ -4112,6 +4191,84 @@ function showMainPanel()
 		listPadding.PaddingRight = UDim.new(0, 4)
 		listPadding.Parent = scroll
 
+		-- Decoração: "névoa" suave à deriva atrás do conteúdo, recortada nos cantos do painel.
+		local fogDecor = Instance.new("Frame")
+		fogDecor.Name = "FogDecor"
+		fogDecor.Size = UDim2.new(1, 0, 1, 0)
+		fogDecor.BackgroundTransparency = 1
+		fogDecor.BorderSizePixel = 0
+		fogDecor.ClipsDescendants = true
+		fogDecor.Active = false
+		fogDecor.ZIndex = 80
+		fogDecor.Parent = panel
+		local decorCorner = Instance.new("UICorner")
+		decorCorner.CornerRadius = UDim.new(0, 9)
+		decorCorner.Parent = fogDecor
+		local blobSpecs = {
+			{size = 150, from = UDim2.new(-0.2, 0, 0.05, 0), to = UDim2.new(0.45, 0, 0.25, 0), time = 5.5, alpha = 0.9},
+			{size = 120, from = UDim2.new(0.7, 0, 0.55, 0), to = UDim2.new(0.2, 0, 0.8, 0), time = 6.5, alpha = 0.92},
+			{size = 100, from = UDim2.new(0.5, 0, -0.1, 0), to = UDim2.new(0.85, 0, 0.35, 0), time = 4.8, alpha = 0.93},
+		}
+		for _, spec in ipairs(blobSpecs) do
+			local blob = Instance.new("Frame")
+			blob.Name = "FogBlob"
+			blob.Size = UDim2.new(0, spec.size, 0, spec.size)
+			blob.Position = spec.from
+			blob.BackgroundColor3 = currentThemeColor
+			blob.BackgroundTransparency = spec.alpha
+			blob.BorderSizePixel = 0
+			blob.ZIndex = 80
+			blob.Parent = fogDecor
+			local blobCorner = Instance.new("UICorner")
+			blobCorner.CornerRadius = UDim.new(1, 0)
+			blobCorner.Parent = blob
+			table.insert(themeSliders, blob)
+			TweenService:Create(blob, TweenInfo.new(spec.time, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+				Position = spec.to
+			}):Play()
+		end
+
+		-- Linha do toggle principal: contorno que acende quando a neblina está removida.
+		local fogRowStroke = Instance.new("UIStroke")
+		fogRowStroke.Color = currentThemeColor
+		fogRowStroke.Thickness = 1
+		fogRowStroke.Transparency = 1
+		fogRowStroke.Parent = fogRow
+		table.insert(themeSections, fogRowStroke)
+		local fogRowGradient = Instance.new("UIGradient")
+		fogRowGradient.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(190, 190, 210))
+		fogRowGradient.Rotation = 90
+		fogRowGradient.Parent = fogRow
+		local ledPulse = Instance.new("Frame")
+		ledPulse.Name = "LedPulse"
+		ledPulse.AnchorPoint = Vector2.new(0.5, 0.5)
+		ledPulse.Position = UDim2.new(0.5, 0, 0.5, 0)
+		ledPulse.Size = UDim2.new(1, 0, 1, 0)
+		ledPulse.BackgroundColor3 = currentThemeColor
+		ledPulse.BackgroundTransparency = 1
+		ledPulse.BorderSizePixel = 0
+		ledPulse.Parent = fogLed
+		local ledPulseCorner = Instance.new("UICorner")
+		ledPulseCorner.CornerRadius = UDim.new(1, 0)
+		ledPulseCorner.Parent = ledPulse
+		table.insert(themeSliders, ledPulse)
+		local fogPulseToken = 0
+		local function setFogRowActive(active)
+			TweenService:Create(fogRowStroke, TweenInfo.new(0.3), {Transparency = active and 0.45 or 1}):Play()
+			fogPulseToken = fogPulseToken + 1
+			local token = fogPulseToken
+			if not active then ledPulse.BackgroundTransparency = 1 return end
+			task.spawn(function()
+				while token == fogPulseToken and screenGui.Parent do
+					ledPulse.Size = UDim2.new(1, 0, 1, 0)
+					ledPulse.BackgroundTransparency = 0.35
+					local info = TweenInfo.new(1.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+					TweenService:Create(ledPulse, info, {Size = UDim2.new(3.2, 0, 3.2, 0), BackgroundTransparency = 1}):Play()
+					task.wait(1.3)
+				end
+			end)
+		end
+
 		local function positionFogPanel()
 			local stockButton = screenGui:FindFirstChild("FruitShopButton", true)
 			if stockButton then
@@ -4176,6 +4333,7 @@ function showMainPanel()
 			else
 				restoreAll()
 			end
+			setFogRowActive(enabled)
 			updateFogStatus()
 		end
 		local function refreshList()
@@ -4256,8 +4414,23 @@ function showMainPanel()
 				local buttonCorner = Instance.new("UICorner")
 				buttonCorner.CornerRadius = UDim.new(0, 4)
 				buttonCorner.Parent = layerButton
+				local accentBar = Instance.new("Frame")
+				accentBar.Name = "SelectBar"
+				accentBar.Size = UDim2.new(0, 3, 0, 0)
+				accentBar.AnchorPoint = Vector2.new(0, 0.5)
+				accentBar.Position = UDim2.new(0, 0, 0.5, 0)
+				accentBar.BackgroundColor3 = currentThemeColor
+				accentBar.BorderSizePixel = 0
+				accentBar.ZIndex = 84
+				accentBar.Parent = row
+				local accentBarCorner = Instance.new("UICorner")
+				accentBarCorner.CornerRadius = UDim.new(1, 0)
+				accentBarCorner.Parent = accentBar
 				local function tintRow()
 					local sel = fog.selected[layerInstance]
+					TweenService:Create(accentBar, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+						Size = UDim2.new(0, 3, 0, sel and 17 or 0)
+					}):Play()
 					TweenService:Create(row, TweenInfo.new(0.2), {
 						BackgroundColor3 = sel and currentThemeColor or Color3.fromRGB(34, 34, 46),
 						BackgroundTransparency = sel and 0.72 or 0.25
@@ -4340,6 +4513,9 @@ function showMainPanel()
 			refreshList()
 			updateFogStatus()
 			panelScale.Scale = 0.85
+			local restPos = panel.Position
+			panel.Position = UDim2.new(restPos.X.Scale, restPos.X.Offset, restPos.Y.Scale, restPos.Y.Offset + 14)
+			TweenService:Create(panel, TweenInfo.new(0.34, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = restPos}):Play()
 			TweenService:Create(panelScale, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
 			TweenService:Create(settingsButton, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Rotation = 90}):Play()
 			-- brilho pulsante na borda + faixa de luz na linha do título
@@ -4368,6 +4544,9 @@ function showMainPanel()
 		-- efeito de hover nos botões do painel e do engrenagem
 		for _, b in ipairs({closeButton, refreshButton, settingsButton}) do
 			local base = b.BackgroundColor3
+			b.MouseButton1Down:Connect(function()
+				TweenService:Create(b, TweenInfo.new(0.08), {BackgroundColor3 = base:Lerp(currentThemeColor, 0.6)}):Play()
+			end)
 			b.MouseEnter:Connect(function()
 				TweenService:Create(b, TweenInfo.new(0.12), {BackgroundColor3 = base:Lerp(currentThemeColor, 0.35)}):Play()
 			end)
@@ -4638,6 +4817,36 @@ function showMainPanel()
 					Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, Font = Enum.Font.GothamBold,
 					Text = string.upper(string.sub(target.DisplayName, 1, 1)), TextColor3 = Color3.fromRGB(225, 225, 240), TextSize = 11
 				}, avatar)
+				-- foto do avatar (skin) do jogador; a inicial fica como fallback enquanto carrega
+				do
+					AetherisAvatarCache = AetherisAvatarCache or {}
+					local avatarImg = new("ImageLabel", {
+						Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, BorderSizePixel = 0,
+						ScaleType = Enum.ScaleType.Crop, Image = "", Visible = false
+					}, avatar)
+					round(avatarImg, 11)
+					local userId = target.UserId
+					local function applyAvatar(img)
+						if img and img ~= "" and avatarImg.Parent then
+							avatarImg.Image = img
+							avatarImg.Visible = true
+							initial.Visible = false
+						end
+					end
+					if AetherisAvatarCache[userId] then
+						applyAvatar(AetherisAvatarCache[userId])
+					else
+						task.spawn(function()
+							local ok, img = pcall(function()
+								return Players:GetUserThumbnailAsync(userId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+							end)
+							if ok and img then
+								AetherisAvatarCache[userId] = img
+								applyAvatar(img)
+							end
+						end)
+					end
+				end
 				local nameLabel = new("TextLabel", {
 					Size = UDim2.new(1, -78, 0, 14), Position = UDim2.new(0, 34, 0, 3), BackgroundTransparency = 1,
 					Font = currentGlobalFont, Text = target.DisplayName, TextColor3 = currentTextColor, TextSize = 10,
@@ -5474,7 +5683,7 @@ function showMainPanel()
 	-- AUTO ATTACK (ataca automaticamente quem estiver ao redor)
 	-----------------------------------------------------------------
 	do
-		local secAutoAttack = createSection(secFarm.Parent.Parent, "Auto Attack", sectionIcons.Combat)
+		local secAutoAttack = createSection(aimLockPage, "Atacar Automáticamente", sectionIcons.Combat)
 		local AA = {
 			enabled = false, players = true, npcs = true, range = 25, delay = 0.15,
 			lastAttack = 0, conn = nil, loaded = false
@@ -5594,7 +5803,7 @@ function showMainPanel()
 			end)
 		end
 
-		addToggle(secAutoAttack, "Auto Attack", function(state)
+		addToggle(secAutoAttack, "Atacar Automáticamente", function(state)
 			if state then startAutoAttack() else stopAutoAttack() end
 		end, false)
 		addToggle(secAutoAttack, "Atacar Players", function(state) AA.players = state end, true)
@@ -5706,7 +5915,7 @@ function showMainPanel()
 	-- ATTACK DIRECT (dano direto nos alvos ao redor, sem animação)
 	-----------------------------------------------------------------
 	do
-		local secAttackDirect = createSection(secFarm.Parent.Parent, "Attack Direct", sectionIcons.Combat)
+		local secAttackDirect = createSection(aimLockPage, "Ataque direto", sectionIcons.Combat)
 		local AD = {
 			enabled = false, players = true, npcs = true, useAttackEvent = true,
 			range = 20, delay = 0.1, lastHit = 0, combo = 1, conn = nil, resolved = false
@@ -5811,7 +6020,7 @@ function showMainPanel()
 			end)
 		end
 
-		addToggle(secAttackDirect, "Attack Direct", function(state)
+		addToggle(secAttackDirect, "Ataque direto", function(state)
 			if state then startAttackDirect() else stopAttackDirect() end
 		end, false)
 		addToggle(secAttackDirect, "Atacar Players", function(state) AD.players = state end, true)
