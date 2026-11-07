@@ -4151,7 +4151,8 @@ function showMainPanel()
 	msCorner.CornerRadius = UDim.new(0, 4)
 	msCorner.Parent = modeSwitchBtn
 
-	local secFilters = createSection(aimLockPage, "FOV & Filtros de Alvo", sectionIcons.Filters)
+	-- Filtros e FOV ficam dentro da própria section "Sistema Lock-On".
+	local secFilters = secCombat
 	addToggle(secFilters, "Ativar Círculo FOV", function(state) _G_FovVisible = state end, false)
 	addSlider(secFilters, "Raio do FOV", 50, 500, 150, function(val) _G_FovRadius = val end)
 	addSlider(secFilters, "Grossura do FOV", 1, 5, 1, function(val) _G_FovThickness = val end)
