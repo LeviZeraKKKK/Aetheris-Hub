@@ -2102,17 +2102,31 @@ function showMainPanel()
 			commit()
 		end
 
+		-- Diferença entre a posição do input e a posição na interface (barra superior do Roblox).
+		-- Calibrada UMA vez pelo clique no botão de cor, que sabemos estar sobre o botão. Antes o código
+		-- testava vários deslocamentos de uma vez e, conforme o tamanho da barra, um clique nos botões
+		-- de baixo "caía" dentro do quadro de cores e sobrescrevia a cor escolhida.
+		local pointOffset = screenGui.IgnoreGuiInset and guiService:GetGuiInset() or Vector2.new(0, 0)
+		colorBtn.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				local raw = Vector2.new(input.Position.X, input.Position.Y)
+				local inset = guiService:GetGuiInset()
+				local expected = screenGui.IgnoreGuiInset and inset or Vector2.new(0, 0)
+				for _, candidate in ipairs({expected, Vector2.new(0, 0), inset, -inset}) do
+					if isInside(colorBtn, raw + candidate) then
+						pointOffset = candidate
+						break
+					end
+				end
+			end
+		end)
+
 		local function findInputTarget(position)
 			local raw = Vector2.new(position.X, position.Y)
-			local inset = guiService:GetGuiInset()
-			local points = {raw, raw + inset, raw - inset}
-			for _, point in ipairs(points) do
-				if isInside(ui.canvas, point) then return "sv", point - raw, true end
-				if isInside(ui.hueBar, point) then return "hue", point - raw, true end
-			end
-			for _, point in ipairs(points) do
-				if isInside(ui.modal, point) or isInside(colorBtn, point) then return nil, nil, true end
-			end
+			local point = raw + pointOffset
+			if isInside(ui.canvas, point) then return "sv", pointOffset, true end
+			if isInside(ui.hueBar, point) then return "hue", pointOffset, true end
+			if isInside(ui.modal, point) or isInside(colorBtn, point) then return nil, nil, true end
 			return nil, nil, false
 		end
 
@@ -6332,157 +6346,241 @@ function showMainPanel()
 			end
 		end
 
-		local profileSection = createSection(configPage, "Configurações Salvas", sectionIcons.Theme)
-		manager.nameRow = Instance.new("Frame")
-		manager.nameRow.Size = UDim2.new(1, 0, 0, 28)
-		manager.nameRow.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-		manager.nameRow.BackgroundTransparency = 0.5
-		manager.nameRow.Parent = profileSection
-		Instance.new("UICorner", manager.nameRow).CornerRadius = UDim.new(0, 5)
-		manager.nameBox = Instance.new("TextBox")
-		manager.nameBox.Size = UDim2.new(1, -82, 1, -4)
-		manager.nameBox.Position = UDim2.new(0, 4, 0, 2)
-		manager.nameBox.BackgroundColor3 = Color3.fromRGB(24, 24, 34)
-		manager.nameBox.BorderSizePixel = 0
-		manager.nameBox.ClearTextOnFocus = false
-		manager.nameBox.Font = currentGlobalFont
-		manager.nameBox.PlaceholderText = "Nome da configuração..."
-		manager.nameBox.Text = ""
-		manager.nameBox.TextColor3 = currentTextColor
-		manager.nameBox.PlaceholderColor3 = Color3.fromRGB(130, 130, 150)
-		manager.nameBox.TextSize = 10
-		manager.nameBox.Parent = manager.nameRow
-		Instance.new("UICorner", manager.nameBox).CornerRadius = UDim.new(0, 4)
-		table.insert(allTextLabels, manager.nameBox)
-		manager.saveButton = Instance.new("TextButton")
-		manager.saveButton.Size = UDim2.new(0, 72, 1, -4)
-		manager.saveButton.Position = UDim2.new(1, -76, 0, 2)
-		manager.saveButton.BackgroundColor3 = Color3.fromRGB(50, 42, 70)
-		manager.saveButton.BorderSizePixel = 0
-		manager.saveButton.Font = currentGlobalFont
-		manager.saveButton.Text = "Salvar"
-		manager.saveButton.TextColor3 = currentTextColor
-		manager.saveButton.TextSize = 10
-		manager.saveButton.Parent = manager.nameRow
-		Instance.new("UICorner", manager.saveButton).CornerRadius = UDim.new(0, 4)
-		table.insert(allTextLabels, manager.saveButton)
-		table.insert(themeSliders, manager.saveButton)
-
-		manager.selectButton = Instance.new("TextButton")
-		manager.selectButton.Size = UDim2.new(1, 0, 0, 27)
-		manager.selectButton.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-		manager.selectButton.BackgroundTransparency = 0.2
-		manager.selectButton.BorderSizePixel = 0
-		manager.selectButton.Font = currentGlobalFont
-		manager.selectButton.Text = "Selecione uma configuração  ▼"
-		manager.selectButton.TextColor3 = currentTextColor
-		manager.selectButton.TextSize = 10
-		manager.selectButton.TextXAlignment = Enum.TextXAlignment.Left
-		manager.selectButton.Parent = profileSection
-		Instance.new("UICorner", manager.selectButton).CornerRadius = UDim.new(0, 5)
-		table.insert(allTextLabels, manager.selectButton)
-
-		manager.list = Instance.new("ScrollingFrame")
-		manager.list.Name = "SavedConfigDropdown"
-		manager.list.Size = UDim2.new(1, 0, 0, 0)
-		manager.list.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
-		manager.list.BackgroundTransparency = 0.2
-		manager.list.BorderSizePixel = 0
-		manager.list.ScrollBarThickness = 3
-		manager.list.CanvasSize = UDim2.new(0, 0, 0, 0)
-		manager.list.Visible = false
-		manager.list.Parent = profileSection
-		Instance.new("UICorner", manager.list).CornerRadius = UDim.new(0, 5)
-		manager.listLayout = Instance.new("UIListLayout")
-		manager.listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		manager.listLayout.Padding = UDim.new(0, 3)
-		manager.listLayout.Parent = manager.list
-		Instance.new("UIPadding", manager.list).PaddingTop = UDim.new(0, 4)
-		manager.listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			manager.list.CanvasSize = UDim2.new(0, 0, 0, manager.listLayout.AbsoluteContentSize.Y + 8)
-		end)
-		manager.useButton = Instance.new("TextButton")
-		manager.useButton.Size = UDim2.new(1, 0, 0, 27)
-		manager.useButton.BackgroundColor3 = currentThemeColor
-		manager.useButton.BackgroundTransparency = 0.2
-		manager.useButton.BorderSizePixel = 0
-		manager.useButton.Font = currentGlobalFont
-		manager.useButton.Text = "Usar configuração"
-		manager.useButton.TextColor3 = currentTextColor
-		manager.useButton.TextSize = 10
-		manager.useButton.Parent = profileSection
-		Instance.new("UICorner", manager.useButton).CornerRadius = UDim.new(0, 5)
-		table.insert(allTextLabels, manager.useButton)
-		table.insert(themeSliders, manager.useButton)
-		manager.status = Instance.new("TextLabel")
-		manager.status.Size = UDim2.new(1, 0, 0, 20)
-		manager.status.BackgroundTransparency = 1
-		manager.status.Font = currentGlobalFont
-		manager.status.Text = manager.fileIO and "Presets salvos no arquivo local do executor." or "Sem acesso a arquivo: presets valem nesta sessão."
-		manager.status.TextColor3 = Color3.fromRGB(165, 165, 185)
-		manager.status.TextSize = 9
-		manager.status.TextXAlignment = Enum.TextXAlignment.Left
-		manager.status.TextWrapped = true
-		manager.status.Parent = profileSection
-		table.insert(allTextLabels, manager.status)
-		manager.setStatus = function(text, isError)
-			manager.status.Text = text
-			manager.status.TextColor3 = isError and Color3.fromRGB(255, 135, 135) or currentThemeColor
+		-- ===== INTERFACE: duas sections (Salvar / Minhas configurações) =====
+		local function new(class, props, parent)
+			local o = Instance.new(class)
+			for k, v in pairs(props) do o[k] = v end
+			o.Parent = parent
+			return o
+		end
+		local function round(parent, r) return new("UICorner", {CornerRadius = UDim.new(0, r)}, parent) end
+		local GRAY = Color3.fromRGB(150, 150, 170)
+		local LINE = Color3.fromRGB(70, 70, 95)
+		local CARD = Color3.fromRGB(34, 34, 46)
+		local function hover(btn, base)
+			btn.MouseEnter:Connect(function()
+				TweenService:Create(btn, TweenInfo.new(0.12), {BackgroundColor3 = base:Lerp(currentThemeColor, 0.4)}):Play()
+			end)
+			btn.MouseLeave:Connect(function()
+				TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = base}):Play()
+			end)
+		end
+		local function caption(parent, text)
+			return new("TextLabel", {
+				Size = UDim2.new(1, 0, 0, 22), BackgroundTransparency = 1, Font = Enum.Font.Gotham, Text = text,
+				TextColor3 = Color3.fromRGB(125, 125, 145), TextSize = 9, TextWrapped = true,
+				TextXAlignment = Enum.TextXAlignment.Left
+			}, parent)
 		end
 
-		manager.confirmPanel = Instance.new("Frame")
-		manager.confirmPanel.Name = "DeleteConfigConfirmation"
-		manager.confirmPanel.Size = UDim2.new(0, 290, 0, 132)
-		manager.confirmPanel.AnchorPoint = Vector2.new(0.5, 0.5)
-		manager.confirmPanel.Position = UDim2.new(0.5, 0, 0.5, 0)
-		manager.confirmPanel.BackgroundColor3 = Color3.fromRGB(18, 18, 27)
-		manager.confirmPanel.BorderSizePixel = 0
-		manager.confirmPanel.Visible = false
-		manager.confirmPanel.ZIndex = 120
-		manager.confirmPanel.Parent = screenGui
-		Instance.new("UICorner", manager.confirmPanel).CornerRadius = UDim.new(0, 9)
-		manager.confirmStroke = Instance.new("UIStroke", manager.confirmPanel)
-		manager.confirmStroke.Color = currentThemeColor
-		manager.confirmStroke.Transparency = 0.25
-		table.insert(themeSections, manager.confirmStroke)
-		manager.confirmText = Instance.new("TextLabel")
-		manager.confirmText.Size = UDim2.new(1, -24, 0, 70)
-		manager.confirmText.Position = UDim2.new(0, 12, 0, 8)
-		manager.confirmText.BackgroundTransparency = 1
-		manager.confirmText.Font = currentGlobalFont
-		manager.confirmText.Text = ""
-		manager.confirmText.TextColor3 = currentTextColor
-		manager.confirmText.TextSize = 11
-		manager.confirmText.TextWrapped = true
-		manager.confirmText.ZIndex = 121
-		manager.confirmText.Parent = manager.confirmPanel
-		table.insert(allTextLabels, manager.confirmText)
-		manager.cancelDelete = Instance.new("TextButton")
-		manager.cancelDelete.Size = UDim2.new(0.5, -18, 0, 30)
-		manager.cancelDelete.Position = UDim2.new(0, 12, 1, -42)
-		manager.cancelDelete.BackgroundColor3 = Color3.fromRGB(48, 48, 62)
-		manager.cancelDelete.BorderSizePixel = 0
-		manager.cancelDelete.Font = currentGlobalFont
-		manager.cancelDelete.Text = "Cancelar"
-		manager.cancelDelete.TextColor3 = currentTextColor
-		manager.cancelDelete.TextSize = 10
-		manager.cancelDelete.ZIndex = 121
-		manager.cancelDelete.Parent = manager.confirmPanel
-		Instance.new("UICorner", manager.cancelDelete).CornerRadius = UDim.new(0, 5)
-		table.insert(allTextLabels, manager.cancelDelete)
-		manager.confirmDelete = Instance.new("TextButton")
-		manager.confirmDelete.Size = UDim2.new(0.5, -18, 0, 30)
-		manager.confirmDelete.Position = UDim2.new(0.5, 6, 1, -42)
-		manager.confirmDelete.BackgroundColor3 = Color3.fromRGB(150, 48, 58)
-		manager.confirmDelete.BorderSizePixel = 0
-		manager.confirmDelete.Font = currentGlobalFont
-		manager.confirmDelete.Text = "Excluir"
-		manager.confirmDelete.TextColor3 = Color3.fromRGB(255, 255, 255)
-		manager.confirmDelete.TextSize = 10
-		manager.confirmDelete.ZIndex = 121
-		manager.confirmDelete.Parent = manager.confirmPanel
-		Instance.new("UICorner", manager.confirmDelete).CornerRadius = UDim.new(0, 5)
-		table.insert(allTextLabels, manager.confirmDelete)
+		-- Section 1: salvar
+		local saveSection = createSection(configPage, "Salvar Configuração", sectionIcons.Theme)
+		manager.nameRow = new("Frame", {Size = UDim2.new(1, 0, 0, 34), BackgroundColor3 = CARD, BackgroundTransparency = 0.35, BorderSizePixel = 0}, saveSection)
+		round(manager.nameRow, 8)
+		local nameStroke = new("UIStroke", {Color = LINE, Transparency = 0.55, Thickness = 1}, manager.nameRow)
+		new("TextLabel", {
+			Size = UDim2.new(0, 24, 1, 0), Position = UDim2.new(0, 6, 0, 0), BackgroundTransparency = 1,
+			Font = Enum.Font.GothamBold, Text = "✎", TextColor3 = currentThemeColor, TextSize = 13
+		}, manager.nameRow)
+		manager.nameBox = new("TextBox", {
+			Size = UDim2.new(1, -118, 1, 0), Position = UDim2.new(0, 30, 0, 0), BackgroundTransparency = 1,
+			ClearTextOnFocus = false, Font = currentGlobalFont, PlaceholderText = "Nome da configuração...", Text = "",
+			TextColor3 = currentTextColor, PlaceholderColor3 = Color3.fromRGB(120, 120, 140), TextSize = 11,
+			TextXAlignment = Enum.TextXAlignment.Left, ClipsDescendants = true
+		}, manager.nameRow)
+		table.insert(allTextLabels, manager.nameBox)
+		manager.nameBox.Focused:Connect(function()
+			TweenService:Create(nameStroke, TweenInfo.new(0.15), {Color = currentThemeColor, Transparency = 0.1}):Play()
+		end)
+		manager.nameBox.FocusLost:Connect(function()
+			TweenService:Create(nameStroke, TweenInfo.new(0.2), {Color = LINE, Transparency = 0.55}):Play()
+		end)
+		manager.saveButton = new("TextButton", {
+			Size = UDim2.new(0, 76, 1, -8), Position = UDim2.new(1, -82, 0, 4), BackgroundColor3 = currentThemeColor,
+			BorderSizePixel = 0, AutoButtonColor = false, Font = Enum.Font.GothamBold, Text = "Salvar",
+			TextColor3 = Color3.fromRGB(255, 255, 255), TextSize = 10
+		}, manager.nameRow)
+		round(manager.saveButton, 6)
+		table.insert(themeSliders, manager.saveButton)
+		manager.saveButton.MouseEnter:Connect(function()
+			TweenService:Create(manager.saveButton, TweenInfo.new(0.12), {BackgroundTransparency = 0.2}):Play()
+		end)
+		manager.saveButton.MouseLeave:Connect(function()
+			TweenService:Create(manager.saveButton, TweenInfo.new(0.15), {BackgroundTransparency = 0}):Play()
+		end)
+		caption(saveSection, "Guarda o estado de todos os toggles, sliders, cores e teclas do hub.")
+
+		-- Section 2: minhas configurações
+		local profileSection = createSection(configPage, "Minhas Configurações", sectionIcons.Theme)
+		manager.selectButton = new("TextButton", {
+			Size = UDim2.new(1, 0, 0, 34), BackgroundColor3 = CARD, BackgroundTransparency = 0.35, BorderSizePixel = 0,
+			AutoButtonColor = false, Text = ""
+		}, profileSection)
+		round(manager.selectButton, 8)
+		local selectStroke = new("UIStroke", {Color = LINE, Transparency = 0.55, Thickness = 1}, manager.selectButton)
+		new("TextLabel", {
+			Size = UDim2.new(0, 24, 1, 0), Position = UDim2.new(0, 6, 0, 0), BackgroundTransparency = 1,
+			Font = Enum.Font.GothamBold, Text = "☰", TextColor3 = currentThemeColor, TextSize = 13
+		}, manager.selectButton)
+		manager.selectLabel = new("TextLabel", {
+			Size = UDim2.new(1, -112, 1, 0), Position = UDim2.new(0, 30, 0, 0), BackgroundTransparency = 1,
+			Font = currentGlobalFont, Text = "Selecione uma configuração", TextColor3 = GRAY, TextSize = 11,
+			TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd
+		}, manager.selectButton)
+		table.insert(allTextLabels, manager.selectLabel)
+		manager.countBadge = new("TextLabel", {
+			Size = UDim2.new(0, 52, 0, 18), Position = UDim2.new(1, -80, 0.5, -9), BackgroundColor3 = currentThemeColor,
+			BackgroundTransparency = 0.8, BorderSizePixel = 0, Font = Enum.Font.GothamBold, Text = "0 salvas",
+			TextColor3 = currentThemeColor, TextSize = 9
+		}, manager.selectButton)
+		round(manager.countBadge, 9)
+		manager.arrow = new("TextLabel", {
+			Size = UDim2.new(0, 20, 0, 20), Position = UDim2.new(1, -24, 0.5, -10), BackgroundTransparency = 1,
+			Font = Enum.Font.GothamBold, Text = "▼", TextColor3 = GRAY, TextSize = 10
+		}, manager.selectButton)
+		manager.selectButton.MouseEnter:Connect(function()
+			TweenService:Create(manager.selectButton, TweenInfo.new(0.12), {BackgroundTransparency = 0.15}):Play()
+		end)
+		manager.selectButton.MouseLeave:Connect(function()
+			TweenService:Create(manager.selectButton, TweenInfo.new(0.15), {BackgroundTransparency = 0.35}):Play()
+		end)
+
+		manager.listWrap = new("Frame", {Size = UDim2.new(1, 0, 0, 0), BackgroundTransparency = 1, BorderSizePixel = 0, ClipsDescendants = true, Visible = false}, profileSection)
+		manager.list = new("ScrollingFrame", {
+			Name = "SavedConfigDropdown", Size = UDim2.new(1, 0, 0, 124), Position = UDim2.new(0, 0, 0, 4),
+			BackgroundColor3 = Color3.fromRGB(14, 14, 21), BackgroundTransparency = 0.25, BorderSizePixel = 0,
+			ScrollBarThickness = 3, ScrollBarImageColor3 = currentThemeColor, CanvasSize = UDim2.new(0, 0, 0, 0)
+		}, manager.listWrap)
+		round(manager.list, 8)
+		new("UIStroke", {Color = LINE, Transparency = 0.6, Thickness = 1}, manager.list)
+		manager.listLayout = new("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 4)}, manager.list)
+		new("UIPadding", {PaddingTop = UDim.new(0, 5), PaddingLeft = UDim.new(0, 5), PaddingRight = UDim.new(0, 5)}, manager.list)
+		manager.listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+			manager.list.CanvasSize = UDim2.new(0, 0, 0, manager.listLayout.AbsoluteContentSize.Y + 10)
+		end)
+
+		manager.setListOpen = function(open)
+			manager.listOpen = open
+			TweenService:Create(manager.arrow, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {Rotation = open and 180 or 0}):Play()
+			TweenService:Create(selectStroke, TweenInfo.new(0.2), {Color = open and currentThemeColor or LINE, Transparency = open and 0.2 or 0.55}):Play()
+			manager.list.Visible = true
+			if open then
+				manager.listWrap.Visible = true
+				manager.refreshList()
+				TweenService:Create(manager.listWrap, TweenInfo.new(0.28, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 132)}):Play()
+			else
+				local t = TweenService:Create(manager.listWrap, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(1, 0, 0, 0)})
+				t:Play()
+				t.Completed:Connect(function()
+					if not manager.listOpen then manager.listWrap.Visible = false end
+				end)
+			end
+		end
+		manager.setSelected = function(name)
+			manager.selectedName = name
+			manager.selectLabel.Text = name or "Selecione uma configuração"
+			manager.selectLabel.TextColor3 = name and currentTextColor or GRAY
+		end
+
+		manager.useButton = new("TextButton", {
+			Size = UDim2.new(1, 0, 0, 32), BackgroundColor3 = currentThemeColor, BorderSizePixel = 0, AutoButtonColor = false,
+			Font = Enum.Font.GothamBold, Text = "✓  Usar configuração", TextColor3 = Color3.fromRGB(255, 255, 255), TextSize = 11
+		}, profileSection)
+		round(manager.useButton, 8)
+		table.insert(themeSliders, manager.useButton)
+		manager.useButton.MouseEnter:Connect(function()
+			TweenService:Create(manager.useButton, TweenInfo.new(0.12), {BackgroundTransparency = 0.2}):Play()
+		end)
+		manager.useButton.MouseLeave:Connect(function()
+			TweenService:Create(manager.useButton, TweenInfo.new(0.15), {BackgroundTransparency = 0}):Play()
+		end)
+
+		-- Cartão de status (ponto + mensagem)
+		manager.statusCard = new("Frame", {Size = UDim2.new(1, 0, 0, 28), BackgroundColor3 = Color3.fromRGB(24, 24, 36), BackgroundTransparency = 0.2, BorderSizePixel = 0}, profileSection)
+		round(manager.statusCard, 8)
+		new("UIStroke", {Color = LINE, Transparency = 0.65, Thickness = 1}, manager.statusCard)
+		manager.statusDot = new("Frame", {Size = UDim2.new(0, 8, 0, 8), Position = UDim2.new(0, 10, 0.5, -4), BackgroundColor3 = GRAY, BorderSizePixel = 0}, manager.statusCard)
+		round(manager.statusDot, 4)
+		manager.status = new("TextLabel", {
+			Size = UDim2.new(1, -30, 1, 0), Position = UDim2.new(0, 24, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.Gotham,
+			Text = manager.fileIO and "Presets salvos no arquivo local do executor." or "Sem acesso a arquivo: presets valem nesta sessão.",
+			TextColor3 = Color3.fromRGB(165, 165, 185), TextSize = 9, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left
+		}, manager.statusCard)
+		manager.setStatus = function(text, isError)
+			local color = isError and Color3.fromRGB(255, 135, 135) or currentThemeColor
+			manager.status.Text = text
+			manager.status.TextColor3 = color
+			manager.statusDot.BackgroundColor3 = color
+			manager.statusDot.Size = UDim2.new(0, 14, 0, 14)
+			manager.statusDot.Position = UDim2.new(0, 7, 0.5, -7)
+			TweenService:Create(manager.statusDot, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+				Size = UDim2.new(0, 8, 0, 8), Position = UDim2.new(0, 10, 0.5, -4)
+			}):Play()
+		end
+
+		-- Janela de confirmação de exclusão (com fundo escurecido)
+		manager.confirmPanel = new("Frame", {
+			Name = "DeleteConfigConfirmation", Size = UDim2.new(1, 0, 1, 0), BackgroundColor3 = Color3.new(0, 0, 0),
+			BackgroundTransparency = 1, BorderSizePixel = 0, Visible = false, ZIndex = 119, Active = true
+		}, screenGui)
+		local confirmCard = new("Frame", {
+			Size = UDim2.new(0, 290, 0, 142), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0),
+			BackgroundColor3 = Color3.fromRGB(18, 18, 27), BorderSizePixel = 0, ZIndex = 120
+		}, manager.confirmPanel)
+		round(confirmCard, 12)
+		manager.confirmStroke = new("UIStroke", {Color = Color3.fromRGB(235, 95, 105), Transparency = 0.2, Thickness = 1.4}, confirmCard)
+		manager.confirmScale = new("UIScale", {Scale = 1}, confirmCard)
+		local confirmIcon = new("TextLabel", {
+			Size = UDim2.new(0, 34, 0, 34), Position = UDim2.new(0, 14, 0, 14), BackgroundColor3 = Color3.fromRGB(235, 95, 105),
+			BackgroundTransparency = 0.8, BorderSizePixel = 0, Font = Enum.Font.GothamBold, Text = "!", TextColor3 = Color3.fromRGB(255, 120, 130),
+			TextSize = 18, ZIndex = 121
+		}, confirmCard)
+		round(confirmIcon, 17)
+		new("TextLabel", {
+			Size = UDim2.new(1, -66, 0, 18), Position = UDim2.new(0, 58, 0, 12), BackgroundTransparency = 1, Font = Enum.Font.GothamBold,
+			Text = "Excluir configuração", TextColor3 = Color3.fromRGB(240, 240, 250), TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 121
+		}, confirmCard)
+		manager.confirmText = new("TextLabel", {
+			Size = UDim2.new(1, -72, 0, 48), Position = UDim2.new(0, 58, 0, 32), BackgroundTransparency = 1, Font = Enum.Font.Gotham,
+			Text = "", TextColor3 = Color3.fromRGB(180, 180, 198), TextSize = 10, TextWrapped = true,
+			TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 121
+		}, confirmCard)
+		manager.cancelDelete = new("TextButton", {
+			Size = UDim2.new(0.5, -18, 0, 30), Position = UDim2.new(0, 14, 1, -42), BackgroundColor3 = Color3.fromRGB(48, 48, 62),
+			BorderSizePixel = 0, AutoButtonColor = false, Font = Enum.Font.GothamBold, Text = "Cancelar",
+			TextColor3 = Color3.fromRGB(230, 230, 240), TextSize = 10, ZIndex = 121
+		}, confirmCard)
+		round(manager.cancelDelete, 7)
+		hover(manager.cancelDelete, Color3.fromRGB(48, 48, 62))
+		manager.confirmDelete = new("TextButton", {
+			Size = UDim2.new(0.5, -18, 0, 30), Position = UDim2.new(0.5, 4, 1, -42), BackgroundColor3 = Color3.fromRGB(190, 60, 72),
+			BorderSizePixel = 0, AutoButtonColor = false, Font = Enum.Font.GothamBold, Text = "Excluir",
+			TextColor3 = Color3.fromRGB(255, 255, 255), TextSize = 10, ZIndex = 121
+		}, confirmCard)
+		round(manager.confirmDelete, 7)
+		manager.confirmDelete.MouseEnter:Connect(function()
+			TweenService:Create(manager.confirmDelete, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(225, 80, 92)}):Play()
+		end)
+		manager.confirmDelete.MouseLeave:Connect(function()
+			TweenService:Create(manager.confirmDelete, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(190, 60, 72)}):Play()
+		end)
+		manager.showConfirm = function(name)
+			manager.deleteName = name
+			manager.confirmText.Text = "Tem certeza de que deseja excluir \"" .. name .. "\"? Essa ação não pode ser desfeita."
+			manager.confirmPanel.BackgroundTransparency = 1
+			manager.confirmScale.Scale = 0.85
+			manager.confirmPanel.Visible = true
+			TweenService:Create(manager.confirmPanel, TweenInfo.new(0.2), {BackgroundTransparency = 0.45}):Play()
+			TweenService:Create(manager.confirmScale, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+		end
+		manager.hideConfirm = function()
+			manager.deleteName = nil
+			TweenService:Create(manager.confirmPanel, TweenInfo.new(0.15), {BackgroundTransparency = 1}):Play()
+			TweenService:Create(manager.confirmScale, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0.9}):Play()
+			task.delay(0.16, function()
+				if not manager.deleteName then manager.confirmPanel.Visible = false end
+			end)
+		end
 
 		manager.refreshList = function()
 			for _, child in ipairs(manager.list:GetChildren()) do
@@ -6493,72 +6591,75 @@ function showMainPanel()
 				if type(profileName) == "string" then table.insert(names, profileName) end
 			end
 			table.sort(names, function(a, b) return string.lower(a) < string.lower(b) end)
+			manager.countBadge.Text = #names .. (#names == 1 and " salva" or " salvas")
 			if #names == 0 then
-				local empty = Instance.new("TextLabel")
-				empty.Size = UDim2.new(1, -8, 0, 26)
-				empty.BackgroundTransparency = 1
-				empty.Font = currentGlobalFont
-				empty.Text = "Nenhuma configuração salva."
-				empty.TextColor3 = Color3.fromRGB(175, 175, 190)
-				empty.TextSize = 9
-				empty.ZIndex = 2
-				empty.Parent = manager.list
-				table.insert(allTextLabels, empty)
+				new("TextLabel", {
+					Size = UDim2.new(1, 0, 0, 60), BackgroundTransparency = 1, Font = Enum.Font.Gotham,
+					Text = "Nenhuma configuração salva ainda.", TextColor3 = GRAY, TextSize = 10, ZIndex = 2
+				}, manager.list)
 				return
 			end
 			for index, profileName in ipairs(names) do
-				local row = Instance.new("Frame")
-				row.Name = "SavedProfileRow"
-				row.LayoutOrder = index
-				row.Size = UDim2.new(1, -8, 0, 28)
-				row.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-				row.BorderSizePixel = 0
-				row.Parent = manager.list
-				Instance.new("UICorner", row).CornerRadius = UDim.new(0, 4)
-				local choose = Instance.new("TextButton")
-				choose.Size = UDim2.new(1, -38, 1, 0)
-				choose.BackgroundTransparency = 1
-				choose.Font = currentGlobalFont
-				choose.Text = "  " .. profileName
-				choose.TextColor3 = currentTextColor
-				choose.TextSize = 10
-				choose.TextXAlignment = Enum.TextXAlignment.Left
-				choose.TextTruncate = Enum.TextTruncate.AtEnd
-				choose.Parent = row
-				table.insert(allTextLabels, choose)
-				local delete = Instance.new("ImageButton")
-				delete.Name = "DeleteSavedProfile"
-				delete.Size = UDim2.new(0, 25, 0, 24)
-				delete.Position = UDim2.new(1, -29, 0.5, -12)
-				delete.BackgroundColor3 = Color3.fromRGB(58, 38, 48)
-				delete.BorderSizePixel = 0
-				delete.Image = "rbxassetid://7743873772"
-				delete.ImageColor3 = currentThemeColor
-				delete.ScaleType = Enum.ScaleType.Fit
-				delete.Parent = row
-				Instance.new("UICorner", delete).CornerRadius = UDim.new(0, 4)
-				table.insert(themeImages, delete)
-				choose.MouseButton1Click:Connect(function()
-					manager.selectedName = profileName
-					manager.selectButton.Text = profileName .. "  ▼"
-					manager.list.Visible = false
-					manager.list.Size = UDim2.new(1, 0, 0, 0)
+				local selected = manager.selectedName == profileName
+				local row = new("TextButton", {
+					Name = "SavedProfileRow", LayoutOrder = index, Size = UDim2.new(1, -4, 0, 30), AutoButtonColor = false, Text = "",
+					BackgroundColor3 = selected and currentThemeColor:Lerp(Color3.fromRGB(20, 20, 30), 0.78) or CARD,
+					BackgroundTransparency = 0.1, BorderSizePixel = 0
+				}, manager.list)
+				round(row, 7)
+				local rowStroke = new("UIStroke", {Color = currentThemeColor, Transparency = selected and 0.45 or 1, Thickness = 1}, row)
+				new("Frame", {
+					Size = UDim2.new(0, 3, 0, selected and 16 or 0), Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5),
+					BackgroundColor3 = currentThemeColor, BorderSizePixel = 0
+				}, row)
+				new("TextLabel", {
+					Size = UDim2.new(0, 20, 1, 0), Position = UDim2.new(0, 8, 0, 0), BackgroundTransparency = 1,
+					Font = Enum.Font.GothamBold, Text = "◆", TextColor3 = selected and currentThemeColor or GRAY, TextSize = 10
+				}, row)
+				local nameLabel = new("TextLabel", {
+					Size = UDim2.new(1, -74, 1, 0), Position = UDim2.new(0, 28, 0, 0), BackgroundTransparency = 1, Font = currentGlobalFont,
+					Text = profileName, TextColor3 = currentTextColor, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left,
+					TextTruncate = Enum.TextTruncate.AtEnd
+				}, row)
+				table.insert(allTextLabels, nameLabel)
+				local delete = new("ImageButton", {
+					Name = "DeleteSavedProfile", Size = UDim2.new(0, 24, 0, 22), Position = UDim2.new(1, -30, 0.5, -11),
+					BackgroundColor3 = Color3.fromRGB(58, 38, 48), BorderSizePixel = 0, AutoButtonColor = false,
+					Image = "rbxassetid://7743873772", ImageColor3 = Color3.fromRGB(255, 130, 140), ScaleType = Enum.ScaleType.Fit
+				}, row)
+				round(delete, 6)
+				new("UIPadding", {PaddingTop = UDim.new(0, 4), PaddingBottom = UDim.new(0, 4), PaddingLeft = UDim.new(0, 4), PaddingRight = UDim.new(0, 4)}, delete)
+				hover(delete, Color3.fromRGB(58, 38, 48))
+				row.MouseEnter:Connect(function()
+					if manager.selectedName ~= profileName then
+						TweenService:Create(row, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(44, 44, 62)}):Play()
+					end
+				end)
+				row.MouseLeave:Connect(function()
+					if manager.selectedName ~= profileName then
+						TweenService:Create(row, TweenInfo.new(0.15), {BackgroundColor3 = CARD}):Play()
+					end
+				end)
+				row.MouseButton1Click:Connect(function()
+					manager.setSelected(profileName)
+					manager.setListOpen(false)
 				end)
 				delete.MouseButton1Click:Connect(function()
-					manager.deleteName = profileName
-					manager.confirmText.Text = "Tem certeza de que deseja excluir a configuração \"" .. profileName .. "\"?"
-					manager.confirmPanel.Visible = true
+					manager.showConfirm(profileName)
+				end)
+				-- entrada em cascata
+				row.BackgroundTransparency = 1
+				nameLabel.TextTransparency = 1
+				task.delay(index * 0.03, function()
+					if not row.Parent then return end
+					TweenService:Create(row, TweenInfo.new(0.22), {BackgroundTransparency = 0.1}):Play()
+					TweenService:Create(nameLabel, TweenInfo.new(0.22), {TextTransparency = 0}):Play()
 				end)
 			end
 		end
+
 		manager.selectButton.MouseButton1Click:Connect(function()
-			manager.list.Visible = not manager.list.Visible
-			if manager.list.Visible then
-				manager.list.Size = UDim2.new(1, 0, 0, 120)
-				manager.refreshList()
-			else
-				manager.list.Size = UDim2.new(1, 0, 0, 0)
-			end
+			manager.setListOpen(not manager.listOpen)
 		end)
 		manager.saveButton.MouseButton1Click:Connect(function()
 			local profileName = string.match(manager.nameBox.Text, "^%s*(.-)%s*$") or ""
@@ -6573,8 +6674,7 @@ function showMainPanel()
 				end
 			end
 			manager.profiles[profileName] = {version = 1, settings = settings}
-			manager.selectedName = profileName
-			manager.selectButton.Text = profileName .. "  ▼"
+			manager.setSelected(profileName)
 			manager.nameBox.Text = ""
 			local stored = manager.persist()
 			manager.setStatus(stored and ("Configuração \"" .. profileName .. "\" salva.") or "Salva na sessão, mas não foi possível gravar o arquivo.", not stored)
@@ -6601,23 +6701,16 @@ function showMainPanel()
 			end
 			manager.setStatus("Configuração aplicada: " .. manager.selectedName .. " (" .. tostring(applied) .. " opções).", false)
 		end)
-		manager.cancelDelete.MouseButton1Click:Connect(function()
-			manager.confirmPanel.Visible = false
-			manager.deleteName = nil
-		end)
+		manager.cancelDelete.MouseButton1Click:Connect(manager.hideConfirm)
 		manager.confirmDelete.MouseButton1Click:Connect(function()
 			local profileName = manager.deleteName
 			if not profileName or manager.profiles[profileName] == nil then
-				manager.confirmPanel.Visible = false
+				manager.hideConfirm()
 				return
 			end
 			manager.profiles[profileName] = nil
-			if manager.selectedName == profileName then
-				manager.selectedName = nil
-				manager.selectButton.Text = "Selecione uma configuração  ▼"
-			end
-			manager.confirmPanel.Visible = false
-			manager.deleteName = nil
+			if manager.selectedName == profileName then manager.setSelected(nil) end
+			manager.hideConfirm()
 			local stored = manager.persist()
 			manager.refreshList()
 			manager.setStatus(stored and ("Configuração \"" .. profileName .. "\" excluída.") or "Excluída da sessão, mas não foi possível atualizar o arquivo.", not stored)
