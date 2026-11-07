@@ -2102,33 +2102,25 @@ function showMainPanel()
 			commit()
 		end
 
-		-- Diferença entre a posição do input e a posição na interface (barra superior do Roblox),
-		-- calibrada pelo clique no botão de cor. Usada só para converter a posição durante o arrasto.
-		local pointOffset = screenGui.IgnoreGuiInset and guiService:GetGuiInset() or Vector2.new(0, 0)
-		colorBtn.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-				local raw = Vector2.new(input.Position.X, input.Position.Y)
-				local inset = guiService:GetGuiInset()
-				local expected = screenGui.IgnoreGuiInset and inset or Vector2.new(0, 0)
-				for _, candidate in ipairs({expected, Vector2.new(0, 0), inset, -inset}) do
-					if isInside(colorBtn, raw + candidate) then
-						pointOffset = candidate
-						break
-					end
-				end
-			end
-		end)
+		-- Como a barra superior do Roblox desloca as coordenadas, testamos algumas conversões possíveis.
+		-- Cliques em botões/campos do picker (X, reset, cores rápidas, HEX) são marcados por seus próprios
+		-- eventos (controlStamp) e NUNCA iniciam arrasto no quadro de cores.
+		local controlStamp = -1
+		local function markControl() controlStamp = os.clock() end
+		local pressActive = false
 
-		-- "Dentro do picker?" é tolerante (testa todos os deslocamentos possíveis) para nunca fechar
-		-- por engano ao clicar em X, reset ou nas cores rápidas.
-		local function isPressInsidePicker(position)
+		local function findInputTarget(position)
 			local raw = Vector2.new(position.X, position.Y)
 			local inset = guiService:GetGuiInset()
-			for _, offset in ipairs({pointOffset, Vector2.new(0, 0), inset, -inset}) do
-				local point = raw + offset
-				if isInside(ui.modal, point) or isInside(colorBtn, point) then return true end
+			local points = {raw, raw + inset, raw - inset}
+			for _, point in ipairs(points) do
+				if isInside(ui.canvas, point) then return "sv", point - raw, true end
+				if isInside(ui.hueBar, point) then return "hue", point - raw, true end
 			end
-			return false
+			for _, point in ipairs(points) do
+				if isInside(ui.modal, point) or isInside(colorBtn, point) then return nil, nil, true end
+			end
+			return nil, nil, false
 		end
 
 		local function setDragging(mode)
@@ -2137,25 +2129,6 @@ function showMainPanel()
 			local grow = mode ~= nil
 			ColorPicker.tween(ui.cursorShadow, 0.12, {Size = grow and UDim2.fromOffset(26, 26) or UDim2.fromOffset(20, 20)}, Enum.EasingStyle.Back)
 			ColorPicker.tween(ui.cursorFill, 0.12, {Size = grow and UDim2.fromOffset(16, 16) or UDim2.fromOffset(12, 12)}, Enum.EasingStyle.Back)
-		end
-
-		-- O arrasto começa pelos eventos do próprio quadro / barra (o Roblox decide onde o clique caiu).
-		local function startDrag(mode, target, input)
-			if not state.open then return end
-			local raw = Vector2.new(input.Position.X, input.Position.Y)
-			local inset = guiService:GetGuiInset()
-			local chosen = pointOffset
-			if not isInside(target, raw + chosen) then
-				for _, candidate in ipairs({Vector2.new(0, 0), inset, -inset}) do
-					if isInside(target, raw + candidate) then chosen = candidate break end
-				end
-			end
-			inputOffset = chosen
-			setDragging(mode)
-			updateFromInput(input.Position)
-		end
-		local function isPress(input)
-			return input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch
 		end
 
 		local function build()
@@ -2226,6 +2199,7 @@ function showMainPanel()
 			closeX.Parent = modal
 			closeX.MouseEnter:Connect(function() ColorPicker.tween(closeX, 0.12, {TextColor3 = Color3.fromRGB(255, 100, 110)}) end)
 			closeX.MouseLeave:Connect(function() ColorPicker.tween(closeX, 0.12, {TextColor3 = Color3.fromRGB(160, 160, 180)}) end)
+			closeX.MouseButton1Down:Connect(markControl)
 			closeX.MouseButton1Click:Connect(function() picker.close() end)
 
 			-- Linha de destaque com brilho deslizante
@@ -2276,7 +2250,6 @@ function showMainPanel()
 			canvasStroke.Transparency = 0.3
 			canvasStroke.Parent = canvas
 			u.canvas = canvas
-			canvas.InputBegan:Connect(function(input) if isPress(input) then startDrag("sv", canvas, input) end end)
 
 			local whiteLayer = Instance.new("Frame")
 			whiteLayer.Size = UDim2.new(1, 0, 1, 0)
@@ -2366,7 +2339,6 @@ function showMainPanel()
 			thumbStroke.Thickness = 2
 			thumbStroke.Parent = hueThumb
 			u.hueBar, u.hueThumb = hueBar, hueThumb
-			hueBar.InputBegan:Connect(function(input) if isPress(input) then startDrag("hue", hueBar, input) end end)
 
 			-- Linha 2: pre-visualizacao | HEX | desfazer
 			local preview = Instance.new("CanvasGroup")
@@ -2407,6 +2379,10 @@ function showMainPanel()
 			hexStroke.Transparency = 0.4
 			hexStroke.Parent = hexBox
 			u.hexBox = hexBox
+			hexBox.Focused:Connect(markControl)
+			hexBox.InputBegan:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then markControl() end
+			end)
 			hexBox.Focused:Connect(function()
 				ColorPicker.tween(hexStroke, 0.15, {Color = currentThemeColor, Transparency = 0.05})
 			end)
@@ -2448,6 +2424,7 @@ function showMainPanel()
 			resetBtn.MouseLeave:Connect(function()
 				ColorPicker.tween(resetBtn, 0.15, {BackgroundColor3 = Color3.fromRGB(38, 36, 54)})
 			end)
+			resetBtn.MouseButton1Down:Connect(markControl)
 			resetBtn.MouseButton1Click:Connect(function()
 				ColorPicker.tween(resetIcon, 0.35, {Rotation = resetIcon.Rotation - 360}, Enum.EasingStyle.Back)
 				picker.animateTo(state.original)
@@ -2474,6 +2451,7 @@ function showMainPanel()
 				swScale.Parent = sw
 				sw.MouseEnter:Connect(function() ColorPicker.tween(swScale, 0.12, {Scale = 1.2}, Enum.EasingStyle.Back) end)
 				sw.MouseLeave:Connect(function() ColorPicker.tween(swScale, 0.12, {Scale = 1}) end)
+				sw.MouseButton1Down:Connect(markControl)
 				sw.MouseButton1Click:Connect(function()
 					swScale.Scale = 0.8
 					ColorPicker.tween(swScale, 0.25, {Scale = 1.2}, Enum.EasingStyle.Back)
@@ -2515,16 +2493,30 @@ function showMainPanel()
 				end
 			end))
 			table.insert(conns, UserInputService.InputEnded:Connect(function(input)
-				if dragMode and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-					setDragging(nil)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+					pressActive = false
+					if dragMode then setDragging(nil) end
 				end
 			end))
 			-- clicar fora fecha
 			table.insert(conns, UserInputService.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-					if not isPressInsidePicker(input.Position) then
-						picker.close()
-					end
+					pressActive = true
+					local pos = input.Position
+					task.spawn(function()
+						RunService.Heartbeat:Wait() -- deixa os botões do picker marcarem o clique antes
+						if not state.open then return end
+						if os.clock() - controlStamp < 0.3 then return end
+						local mode, offset, inside = findInputTarget(pos)
+						if mode then
+							inputOffset = offset
+							setDragging(mode)
+							updateFromInput(pos)
+							if not pressActive then setDragging(nil) end
+						elseif not inside then
+							picker.close()
+						end
+					end)
 				end
 			end))
 			-- acompanha o botao (painel arrastado / pagina rolando) e fecha se o hub sumir
