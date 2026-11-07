@@ -2102,10 +2102,8 @@ function showMainPanel()
 			commit()
 		end
 
-		-- Diferença entre a posição do input e a posição na interface (barra superior do Roblox).
-		-- Calibrada UMA vez pelo clique no botão de cor, que sabemos estar sobre o botão. Antes o código
-		-- testava vários deslocamentos de uma vez e, conforme o tamanho da barra, um clique nos botões
-		-- de baixo "caía" dentro do quadro de cores e sobrescrevia a cor escolhida.
+		-- Diferença entre a posição do input e a posição na interface (barra superior do Roblox),
+		-- calibrada pelo clique no botão de cor. Usada só para converter a posição durante o arrasto.
 		local pointOffset = screenGui.IgnoreGuiInset and guiService:GetGuiInset() or Vector2.new(0, 0)
 		colorBtn.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -2121,13 +2119,16 @@ function showMainPanel()
 			end
 		end)
 
-		local function findInputTarget(position)
+		-- "Dentro do picker?" é tolerante (testa todos os deslocamentos possíveis) para nunca fechar
+		-- por engano ao clicar em X, reset ou nas cores rápidas.
+		local function isPressInsidePicker(position)
 			local raw = Vector2.new(position.X, position.Y)
-			local point = raw + pointOffset
-			if isInside(ui.canvas, point) then return "sv", pointOffset, true end
-			if isInside(ui.hueBar, point) then return "hue", pointOffset, true end
-			if isInside(ui.modal, point) or isInside(colorBtn, point) then return nil, nil, true end
-			return nil, nil, false
+			local inset = guiService:GetGuiInset()
+			for _, offset in ipairs({pointOffset, Vector2.new(0, 0), inset, -inset}) do
+				local point = raw + offset
+				if isInside(ui.modal, point) or isInside(colorBtn, point) then return true end
+			end
+			return false
 		end
 
 		local function setDragging(mode)
@@ -2136,6 +2137,25 @@ function showMainPanel()
 			local grow = mode ~= nil
 			ColorPicker.tween(ui.cursorShadow, 0.12, {Size = grow and UDim2.fromOffset(26, 26) or UDim2.fromOffset(20, 20)}, Enum.EasingStyle.Back)
 			ColorPicker.tween(ui.cursorFill, 0.12, {Size = grow and UDim2.fromOffset(16, 16) or UDim2.fromOffset(12, 12)}, Enum.EasingStyle.Back)
+		end
+
+		-- O arrasto começa pelos eventos do próprio quadro / barra (o Roblox decide onde o clique caiu).
+		local function startDrag(mode, target, input)
+			if not state.open then return end
+			local raw = Vector2.new(input.Position.X, input.Position.Y)
+			local inset = guiService:GetGuiInset()
+			local chosen = pointOffset
+			if not isInside(target, raw + chosen) then
+				for _, candidate in ipairs({Vector2.new(0, 0), inset, -inset}) do
+					if isInside(target, raw + candidate) then chosen = candidate break end
+				end
+			end
+			inputOffset = chosen
+			setDragging(mode)
+			updateFromInput(input.Position)
+		end
+		local function isPress(input)
+			return input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch
 		end
 
 		local function build()
@@ -2256,6 +2276,7 @@ function showMainPanel()
 			canvasStroke.Transparency = 0.3
 			canvasStroke.Parent = canvas
 			u.canvas = canvas
+			canvas.InputBegan:Connect(function(input) if isPress(input) then startDrag("sv", canvas, input) end end)
 
 			local whiteLayer = Instance.new("Frame")
 			whiteLayer.Size = UDim2.new(1, 0, 1, 0)
@@ -2345,6 +2366,7 @@ function showMainPanel()
 			thumbStroke.Thickness = 2
 			thumbStroke.Parent = hueThumb
 			u.hueBar, u.hueThumb = hueBar, hueThumb
+			hueBar.InputBegan:Connect(function(input) if isPress(input) then startDrag("hue", hueBar, input) end end)
 
 			-- Linha 2: pre-visualizacao | HEX | desfazer
 			local preview = Instance.new("CanvasGroup")
@@ -2500,12 +2522,7 @@ function showMainPanel()
 			-- clicar fora fecha
 			table.insert(conns, UserInputService.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-					local mode, offset, inside = findInputTarget(input.Position)
-					if mode then
-						inputOffset = offset
-						setDragging(mode)
-						updateFromInput(input.Position)
-					elseif not inside then
+					if not isPressInsidePicker(input.Position) then
 						picker.close()
 					end
 				end
