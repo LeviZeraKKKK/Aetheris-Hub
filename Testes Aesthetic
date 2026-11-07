@@ -1961,7 +1961,7 @@ function showMainPanel()
 	local ColorPicker = {
 		active = nil,
 		width = 196,
-		height = 208,
+		height = 178,
 		presets = {
 			Color3.fromRGB(138, 43, 226),
 			Color3.fromRGB(255, 0, 128),
@@ -2361,7 +2361,7 @@ function showMainPanel()
 			u.oldHalf, u.newHalf = oldHalf, newHalf
 
 			local hexBox = Instance.new("TextBox")
-			hexBox.Size = UDim2.fromOffset(104, 24)
+			hexBox.Size = UDim2.fromOffset(132, 24)
 			hexBox.Position = UDim2.fromOffset(52, 146)
 			hexBox.BackgroundColor3 = Color3.fromRGB(26, 26, 38)
 			hexBox.BorderSizePixel = 0
@@ -2399,66 +2399,7 @@ function showMainPanel()
 				end
 			end)
 
-			local resetBtn = Instance.new("TextButton")
-			resetBtn.Size = UDim2.fromOffset(24, 24)
-			resetBtn.Position = UDim2.fromOffset(160, 146)
-			resetBtn.BackgroundColor3 = Color3.fromRGB(38, 36, 54)
-			resetBtn.BorderSizePixel = 0
-			resetBtn.AutoButtonColor = false
-			resetBtn.Text = ""
-			resetBtn.Parent = modal
-			Instance.new("UICorner", resetBtn).CornerRadius = UDim.new(0, 6)
-			local resetIcon = Instance.new("ImageLabel")
-			resetIcon.Size = UDim2.fromOffset(14, 14)
-			resetIcon.AnchorPoint = Vector2.new(0.5, 0.5)
-			resetIcon.Position = UDim2.new(0.5, 0, 0.5, 0)
-			resetIcon.BackgroundTransparency = 1
-			resetIcon.Image = "rbxassetid://7734051052"
-			resetIcon.ImageColor3 = currentThemeColor
-			resetIcon.ScaleType = Enum.ScaleType.Fit
-			resetIcon.Parent = resetBtn
-			table.insert(themeImages, resetIcon)
-			resetBtn.MouseEnter:Connect(function()
-				ColorPicker.tween(resetBtn, 0.12, {BackgroundColor3 = Color3.fromRGB(38, 36, 54):Lerp(currentThemeColor, 0.4)})
-			end)
-			resetBtn.MouseLeave:Connect(function()
-				ColorPicker.tween(resetBtn, 0.15, {BackgroundColor3 = Color3.fromRGB(38, 36, 54)})
-			end)
-			resetBtn.MouseButton1Down:Connect(markControl)
-			resetBtn.MouseButton1Click:Connect(function()
-				ColorPicker.tween(resetIcon, 0.35, {Rotation = resetIcon.Rotation - 360}, Enum.EasingStyle.Back)
-				picker.animateTo(state.original)
-			end)
 
-			-- Linha 3: cores rapidas
-			for index, presetColor in ipairs(ColorPicker.presets) do
-				local sw = Instance.new("TextButton")
-				sw.Size = UDim2.fromOffset(18, 18)
-				sw.AnchorPoint = Vector2.new(0.5, 0.5)
-				sw.Position = UDim2.fromOffset(21 + (index - 1) * 22, 187)
-				sw.BackgroundColor3 = presetColor
-				sw.BorderSizePixel = 0
-				sw.AutoButtonColor = false
-				sw.Text = ""
-				sw.Parent = modal
-				Instance.new("UICorner", sw).CornerRadius = UDim.new(1, 0)
-				local swStroke = Instance.new("UIStroke")
-				swStroke.Color = Color3.new(1, 1, 1)
-				swStroke.Thickness = 2
-				swStroke.Transparency = 1
-				swStroke.Parent = sw
-				local swScale = Instance.new("UIScale")
-				swScale.Parent = sw
-				sw.MouseEnter:Connect(function() ColorPicker.tween(swScale, 0.12, {Scale = 1.2}, Enum.EasingStyle.Back) end)
-				sw.MouseLeave:Connect(function() ColorPicker.tween(swScale, 0.12, {Scale = 1}) end)
-				sw.MouseButton1Down:Connect(markControl)
-				sw.MouseButton1Click:Connect(function()
-					swScale.Scale = 0.8
-					ColorPicker.tween(swScale, 0.25, {Scale = 1.2}, Enum.EasingStyle.Back)
-					picker.animateTo(presetColor)
-				end)
-				u.swatches[index] = {color = presetColor, stroke = swStroke}
-			end
 
 			return u
 		end
@@ -7494,6 +7435,8 @@ panelGradient.Parent = panel
 local viewScale = Instance.new("UIScale")
 viewScale.Scale = 0.94
 viewScale.Parent = panel
+-- Estado/animações do painel (uma só tabela para não gastar variáveis locais do script).
+local FVX = {closing = false, token = 0}
 
 local topAccent = Instance.new("Frame")
 topAccent.Name = "TopAccent"
@@ -7505,10 +7448,39 @@ topAccent.ZIndex = 12
 topAccent.Parent = panel
 Instance.new("UICorner", topAccent).CornerRadius = UDim.new(1, 0)
 table.insert(themeSliders, topAccent)
+do
+    local glow = Instance.new("Frame")
+    glow.Name = "HeaderGlow"
+    glow.Size = UDim2.new(1, 0, 0, 58)
+    glow.BackgroundColor3 = currentThemeColor
+    glow.BorderSizePixel = 0
+    glow.ZIndex = 10
+    glow.Parent = panel
+    Instance.new("UICorner", glow).CornerRadius = UDim.new(0, 14)
+    local glowGradient = Instance.new("UIGradient")
+    glowGradient.Rotation = 90
+    glowGradient.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.84), NumberSequenceKeypoint.new(1, 1)})
+    glowGradient.Parent = glow
+    table.insert(themeSliders, glow)
+
+    topAccent.ClipsDescendants = true
+    local shine = Instance.new("Frame")
+    shine.Size = UDim2.new(0.25, 0, 1, 0)
+    shine.Position = UDim2.new(-0.25, 0, 0, 0)
+    shine.BackgroundColor3 = Color3.new(1, 1, 1)
+    shine.BackgroundTransparency = 0.25
+    shine.BorderSizePixel = 0
+    shine.ZIndex = 13
+    shine.Parent = topAccent
+    local shineGradient = Instance.new("UIGradient")
+    shineGradient.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0), NumberSequenceKeypoint.new(1, 1)})
+    shineGradient.Parent = shine
+    FVX.shine = shine
+end
 
 local dragH = Instance.new("TextButton")
 dragH.Name = "DragHeader"
-dragH.Size = UDim2.new(1, -44, 0, 48)
+dragH.Size = UDim2.new(1, -78, 0, 48)
 dragH.BackgroundTransparency = 1
 dragH.Text = ""
 dragH.ZIndex = 12
@@ -7551,11 +7523,20 @@ closeB.Text = "×"
 closeB.TextColor3 = Color3.new(1, 1, 1)
 closeB.Font = Enum.Font.GothamBold
 closeB.TextSize = 15
-closeB.AutoButtonColor = true
+closeB.AutoButtonColor = false
 closeB.ZIndex = 13
 closeB.Parent = panel
 Instance.new("UICorner", closeB).CornerRadius = UDim.new(0, 7)
 table.insert(allTextLabels, closeB)
+do
+    local base = closeB.BackgroundColor3
+    closeB.MouseEnter:Connect(function()
+        TweenService:Create(closeB, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(225, 80, 92), Rotation = 90}):Play()
+    end)
+    closeB.MouseLeave:Connect(function()
+        TweenService:Create(closeB, TweenInfo.new(0.18), {BackgroundColor3 = base, Rotation = 0}):Play()
+    end)
+end
 
 local headerDivider = Instance.new("Frame")
 headerDivider.Size = UDim2.new(1, -28, 0, 1)
@@ -7596,6 +7577,28 @@ local function makeColumn(adv, x, label, accent, interval)
     head.ZIndex = 12
     head.Parent = col
     Instance.new("UICorner", head).CornerRadius = UDim.new(0, 7)
+    head.BackgroundColor3 = Color3.fromRGB(31, 35, 49):Lerp(accent, 0.1)
+    local headStroke = Instance.new("UIStroke", head)
+    headStroke.Color = accent
+    headStroke.Thickness = 1
+    headStroke.Transparency = 0.8
+
+    local progBack = Instance.new("Frame")
+    progBack.Name = "CycleProgress"
+    progBack.Size = UDim2.new(1, -16, 0, 2)
+    progBack.Position = UDim2.new(0, 8, 1, -5)
+    progBack.BackgroundColor3 = Color3.fromRGB(18, 20, 30)
+    progBack.BorderSizePixel = 0
+    progBack.ZIndex = 13
+    progBack.Parent = head
+    Instance.new("UICorner", progBack).CornerRadius = UDim.new(1, 0)
+    local progFill = Instance.new("Frame")
+    progFill.Size = UDim2.new(1, 0, 1, 0)
+    progFill.BackgroundColor3 = accent
+    progFill.BorderSizePixel = 0
+    progFill.ZIndex = 14
+    progFill.Parent = progBack
+    Instance.new("UICorner", progFill).CornerRadius = UDim.new(1, 0)
 
     local dot = Instance.new("Frame")
     dot.Size = UDim2.new(0, 6, 0, 6)
@@ -7605,6 +7608,7 @@ local function makeColumn(adv, x, label, accent, interval)
     dot.ZIndex = 13
     dot.Parent = head
     Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+    TweenService:Create(dot, TweenInfo.new(0.9, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {BackgroundTransparency = 0.65}):Play()
 
     local lbl = Instance.new("TextLabel")
     lbl.Size = UDim2.new(1, -80, 0, 17)
@@ -7667,7 +7671,8 @@ local function makeColumn(adv, x, label, accent, interval)
         lastStock = {},
         interval = interval,
         timer = timerLabel,
-        lastCycle = nil
+        lastCycle = nil,
+        progFill = progFill
     }
 end
 
@@ -7676,6 +7681,27 @@ makeColumn(true, colGap * 2 + colW, "AVANÇADO", Color3.fromRGB(120, 180, 255), 
 
 -- ============ LINHAS DE FRUTAS E PREÇOS ============
 local ROW_STEP = 30
+-- Entrada em cascata das linhas (desliza da direita e surge).
+function FVX.playRows(col)
+    for i, entry in ipairs(col.pool) do
+        if entry.row.Visible then
+            local targetY = (i - 1) * ROW_STEP
+            entry.row.Position = UDim2.new(0, 18, 0, targetY)
+            entry.row.BackgroundTransparency = 1
+            entry.name.TextTransparency = 1
+            entry.price.TextTransparency = 1
+            entry.pill.BackgroundTransparency = 1
+            task.delay((i - 1) * 0.035, function()
+                if not entry.row.Parent then return end
+                TweenService:Create(entry.row, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(0, 2, 0, targetY), BackgroundTransparency = 0}):Play()
+                TweenService:Create(entry.name, TweenInfo.new(0.3), {TextTransparency = 0}):Play()
+                TweenService:Create(entry.price, TweenInfo.new(0.3), {TextTransparency = 0}):Play()
+                TweenService:Create(entry.pill, TweenInfo.new(0.3), {BackgroundTransparency = 0.86}):Play()
+            end)
+        end
+    end
+end
+
 local function createRow(sc, accent)
     local row = Instance.new("Frame")
     row.Size = UDim2.new(1, -4, 0, 26)
@@ -7711,7 +7737,7 @@ local function createRow(sc, accent)
     local priceLabel = Instance.new("TextLabel")
     priceLabel.Name = "FruitPrice"
     priceLabel.Size = UDim2.new(0, 58, 1, 0)
-    priceLabel.Position = UDim2.new(1, -62, 0, 0)
+    priceLabel.Position = UDim2.new(1, -66, 0, 0)
     priceLabel.BackgroundTransparency = 1
     priceLabel.TextColor3 = Color3.fromRGB(255, 211, 112)
     priceLabel.Font = currentGlobalFont
@@ -7721,7 +7747,43 @@ local function createRow(sc, accent)
     priceLabel.ZIndex = 14
     priceLabel.Parent = row
     table.insert(allTextLabels, priceLabel)
-    return {row = row, name = name, price = priceLabel}
+
+    -- Pílula atrás do preço (acompanha a cor: verde = dá pra comprar, laranja = não dá)
+    local pill = Instance.new("Frame")
+    pill.Name = "PricePill"
+    pill.Size = UDim2.new(0, 62, 0, 18)
+    pill.Position = UDim2.new(1, -66, 0.5, -9)
+    pill.BackgroundColor3 = priceLabel.TextColor3
+    pill.BackgroundTransparency = 0.86
+    pill.BorderSizePixel = 0
+    pill.ZIndex = 13
+    pill.Parent = row
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(1, 0)
+    priceLabel:GetPropertyChangedSignal("TextColor3"):Connect(function()
+        pill.BackgroundColor3 = priceLabel.TextColor3
+    end)
+
+    -- Barra lateral que aparece ao passar o mouse
+    local bar = Instance.new("Frame")
+    bar.Size = UDim2.new(0, 3, 0, 0)
+    bar.AnchorPoint = Vector2.new(0, 0.5)
+    bar.Position = UDim2.new(0, 0, 0.5, 0)
+    bar.BackgroundColor3 = accent
+    bar.BorderSizePixel = 0
+    bar.ZIndex = 15
+    bar.Parent = row
+    Instance.new("UICorner", bar).CornerRadius = UDim.new(1, 0)
+
+    local entry = {row = row, name = name, price = priceLabel, pill = pill, baseColor = row.BackgroundColor3}
+    row.MouseEnter:Connect(function()
+        TweenService:Create(row, TweenInfo.new(0.12), {BackgroundColor3 = entry.baseColor:Lerp(accent, 0.18)}):Play()
+        TweenService:Create(bar, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 3, 0, 14)}):Play()
+    end)
+    row.MouseLeave:Connect(function()
+        TweenService:Create(row, TweenInfo.new(0.15), {BackgroundColor3 = entry.baseColor}):Play()
+        TweenService:Create(bar, TweenInfo.new(0.15), {Size = UDim2.new(0, 3, 0, 0)}):Play()
+    end)
+    return entry
 end
 
 local function setMessage(col, message)
@@ -7747,6 +7809,12 @@ local function setMessage(col, message)
     end
     col.emptyLbl.Text = message
     col.emptyLbl.Visible = true
+    if col.loadTween then col.loadTween:Cancel(); col.loadTween = nil end
+    col.emptyLbl.TextTransparency = 0
+    if string.find(message, "Carregando", 1, true) then
+        col.loadTween = TweenService:Create(col.emptyLbl, TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {TextTransparency = 0.65})
+        col.loadTween:Play()
+    end
     col.scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 end
 
@@ -7786,6 +7854,7 @@ local function render(adv, fruits)
             entry.row.Visible = true
             entry.row.Position = UDim2.new(0, 2, 0, (i - 1) * ROW_STEP)
             entry.row.BackgroundColor3 = (i % 2 == 0) and Color3.fromRGB(31, 35, 49) or Color3.fromRGB(37, 41, 57)
+            entry.baseColor = entry.row.BackgroundColor3
             entry.name.Text = fruit.Name
             local price = getFruitPrice(fruit)
             entry.price.Text = price and formatBeli(price) or "N/D"
@@ -7802,6 +7871,7 @@ local function render(adv, fruits)
         end
     end
     col.scroll.CanvasSize = UDim2.new(0, 0, 0, #stock * ROW_STEP + 4)
+    if not col.hasLoaded and #stock > 0 then FVX.playRows(col) end
     col.hasLoaded = true
 end
 
@@ -7856,6 +7926,9 @@ local function updateRefreshCountdown(now)
         col.lastCycle = cycle
         local remaining = col.interval - (now % col.interval)
         col.timer.Text = "Atualiza em " .. formatCountdown(remaining)
+        if col.progFill then
+            TweenService:Create(col.progFill, TweenInfo.new(0.95, Enum.EasingStyle.Linear), {Size = UDim2.new(math.clamp(remaining / col.interval, 0, 1), 0, 1, 0)}):Play()
+        end
     end
 end
 
@@ -7906,11 +7979,31 @@ task.spawn(function()
 end)
 
 panel:GetPropertyChangedSignal("Visible"):Connect(function()
+    FVX.token = FVX.token + 1
     if panel.Visible then
-        viewScale.Scale = 0.94
-        TweenService:Create(viewScale, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+        local token = FVX.token
+        viewScale.Scale = 0.86
+        panelStroke.Thickness = 3.5
+        TweenService:Create(viewScale, TweenInfo.new(0.34, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+        TweenService:Create(panelStroke, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Thickness = 1.5}):Play()
         updateRefreshCountdown(os.time())
+        for _, col in pairs(columns) do FVX.playRows(col) end
         refreshAll()
+        -- brilho: faixa de luz no topo + borda pulsando enquanto o painel está aberto
+        task.spawn(function()
+            while token == FVX.token and panel.Visible and sg.Parent do
+                if FVX.shine then
+                    FVX.shine.Position = UDim2.new(-0.25, 0, 0, 0)
+                    TweenService:Create(FVX.shine, TweenInfo.new(1.4, Enum.EasingStyle.Sine), {Position = UDim2.new(1, 0, 0, 0)}):Play()
+                end
+                TweenService:Create(panelStroke, TweenInfo.new(0.9, Enum.EasingStyle.Sine), {Transparency = 0.55}):Play()
+                task.wait(0.9)
+                if token ~= FVX.token then break end
+                TweenService:Create(panelStroke, TweenInfo.new(0.9, Enum.EasingStyle.Sine), {Transparency = 0.15}):Play()
+                task.wait(0.9)
+            end
+            panelStroke.Transparency = 0.18
+        end)
     else
         viewScale.Scale = 0.94
     end
@@ -7934,9 +8027,47 @@ task.spawn(function()
     end
 end)
 
-closeB.MouseButton1Click:Connect(function()
-    panel.Visible = false
-end)
+function FVX.close()
+    if not panel.Visible or FVX.closing then return end
+    FVX.closing = true
+    TweenService:Create(viewScale, TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0.88}):Play()
+    task.delay(0.16, function()
+        panel.Visible = false
+        FVX.closing = false
+    end)
+end
+closeB.MouseButton1Click:Connect(FVX.close)
+
+-- Botão de atualizar manualmente (gira ao clicar)
+do
+    local refreshB = Instance.new("TextButton")
+    refreshB.Name = "RefreshStock"
+    refreshB.Size = UDim2.new(0, 25, 0, 25)
+    refreshB.Position = UDim2.new(1, -62, 0, 10)
+    refreshB.BackgroundColor3 = Color3.fromRGB(38, 42, 58)
+    refreshB.BorderSizePixel = 0
+    refreshB.AutoButtonColor = false
+    refreshB.Text = "↻"
+    refreshB.TextColor3 = currentThemeColor
+    refreshB.Font = Enum.Font.GothamBold
+    refreshB.TextSize = 15
+    refreshB.ZIndex = 13
+    refreshB.Parent = panel
+    Instance.new("UICorner", refreshB).CornerRadius = UDim.new(0, 7)
+    table.insert(themeTexts, refreshB)
+    local base = refreshB.BackgroundColor3
+    refreshB.MouseEnter:Connect(function()
+        TweenService:Create(refreshB, TweenInfo.new(0.15), {BackgroundColor3 = base:Lerp(currentThemeColor, 0.35)}):Play()
+    end)
+    refreshB.MouseLeave:Connect(function()
+        TweenService:Create(refreshB, TweenInfo.new(0.15), {BackgroundColor3 = base}):Play()
+    end)
+    refreshB.MouseButton1Click:Connect(function()
+        refreshB.Rotation = 0
+        TweenService:Create(refreshB, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Rotation = 360}):Play()
+        refreshAll()
+    end)
+end
 
 -- ============ ARRASTAR PAINEL ============
 local dragging, dragStart, startPos = false, nil, nil
@@ -8041,6 +8172,6 @@ task.spawn(function()
         TweenService:Create(btnStroke, TweenInfo.new(0.15), {Transparency = 0.28, Thickness = 1.2}):Play()
     end)
     btn.MouseButton1Click:Connect(function()
-        panel.Visible = not panel.Visible
+        if panel.Visible then FVX.close() else panel.Visible = true end
     end)
 end)
