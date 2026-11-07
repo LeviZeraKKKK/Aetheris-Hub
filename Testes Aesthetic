@@ -2090,7 +2090,9 @@ function showMainPanel()
 		end
 
 		local function updateFromInput(position)
-			local p = Vector2.new(position.X, position.Y) + guiService:GetGuiInset()
+			-- O ScreenGui usa IgnoreGuiInset=true; mantenha Input.Position e AbsolutePosition
+			-- no mesmo espaço de coordenadas (sem somar o inset pela segunda vez).
+			local p = Vector2.new(position.X, position.Y)
 			if dragMode == "sv" then
 				local x = math.clamp((p.X - ui.canvas.AbsolutePosition.X) / ui.canvas.AbsoluteSize.X, 0, 1)
 				local y = math.clamp((p.Y - ui.canvas.AbsolutePosition.Y) / ui.canvas.AbsoluteSize.Y, 0, 1)
@@ -2218,6 +2220,7 @@ function showMainPanel()
 			canvas.Position = UDim2.fromOffset(12, 34)
 			canvas.BackgroundColor3 = Color3.fromHSV(state.h, 1, 1)
 			canvas.BorderSizePixel = 0
+			canvas.Active = true
 			canvas.Parent = modal
 			Instance.new("UICorner", canvas).CornerRadius = UDim.new(0, 6)
 			local canvasStroke = Instance.new("UIStroke")
@@ -2281,6 +2284,7 @@ function showMainPanel()
 			hueBar.Position = UDim2.fromOffset(168, 34)
 			hueBar.BackgroundColor3 = Color3.new(1, 1, 1)
 			hueBar.BorderSizePixel = 0
+			hueBar.Active = true
 			hueBar.Parent = modal
 			Instance.new("UICorner", hueBar).CornerRadius = UDim.new(0, 6)
 			local hueStroke = Instance.new("UIStroke")
@@ -2481,7 +2485,7 @@ function showMainPanel()
 			-- clicar fora fecha
 			table.insert(conns, UserInputService.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-					local p = Vector2.new(input.Position.X, input.Position.Y) + guiService:GetGuiInset()
+					local p = Vector2.new(input.Position.X, input.Position.Y)
 					if not isInside(ui.modal, p) and not isInside(colorBtn, p) then picker.close() end
 				end
 			end))
