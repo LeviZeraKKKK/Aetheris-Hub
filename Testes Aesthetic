@@ -5212,149 +5212,339 @@ function showMainPanel()
 			if silentGunEnabled then applyAimValues() end
 		end, 1, "x")
 
-		-- Dropdown de jogadores: cada clique alterna Neutro -> Foco -> Aliado -> Neutro.
+		-- Dropdown de jogadores (mesmo estilo do Lock-On): cada clique na linha alterna
+		-- Neutro -> Foco -> Aliado -> Neutro.
 		-- Foco = o aim assist só atua nele (e entra na lista manual do Lock-On).
 		-- Aliado = o aim assist não atua nele, e ele nunca é alvo do Lock-On.
-		local playerDropFrame = Instance.new("Frame")
-		playerDropFrame.Size = UDim2.new(1, 0, 0, 26)
-		playerDropFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-		playerDropFrame.BackgroundTransparency = 0.5
-		playerDropFrame.Parent = secSilentGun
-		local playerDropCorner = Instance.new("UICorner")
-		playerDropCorner.CornerRadius = UDim.new(0, 5)
-		playerDropCorner.Parent = playerDropFrame
+		do
+			local function new(class, props, parent)
+				local o = Instance.new(class)
+				for k, v in pairs(props) do o[k] = v end
+				o.Parent = parent
+				return o
+			end
+			local function round(parent, r) return new("UICorner", {CornerRadius = UDim.new(0, r)}, parent) end
+			local GRAY = Color3.fromRGB(150, 150, 170)
+			local OFFCOLOR = Color3.fromRGB(34, 34, 46)
+			local ALLY = Color3.fromRGB(46, 160, 90)
+			local LIST_HEIGHT = 158
+			local dropOpen = false
 
-		local playerDropLabel = Instance.new("TextLabel")
-		playerDropLabel.Size = UDim2.new(1, -34, 1, 0)
-		playerDropLabel.Position = UDim2.new(0, 8, 0, 0)
-		playerDropLabel.BackgroundTransparency = 1
-		playerDropLabel.Font = currentGlobalFont
-		playerDropLabel.Text = "Jogadores: Focar / Aliado"
-		playerDropLabel.TextColor3 = currentTextColor
-		playerDropLabel.TextSize = 11
-		playerDropLabel.TextXAlignment = Enum.TextXAlignment.Left
-		playerDropLabel.TextTruncate = Enum.TextTruncate.AtEnd
-		playerDropLabel.Parent = playerDropFrame
-		table.insert(allTextLabels, playerDropLabel)
+			local header = new("TextButton", {
+				Name = "AimPlayerDropdownHeader",
+				Size = UDim2.new(1, 0, 0, 32),
+				BackgroundColor3 = Color3.fromRGB(34, 34, 46),
+				BackgroundTransparency = 0.35,
+				BorderSizePixel = 0,
+				AutoButtonColor = false,
+				Text = ""
+			}, secSilentGun)
+			round(header, 7)
+			local headerStroke = new("UIStroke", {Color = Color3.fromRGB(70, 70, 95), Transparency = 0.55, Thickness = 1}, header)
+			local headerIcon = new("TextLabel", {
+				Size = UDim2.new(0, 22, 1, 0), Position = UDim2.new(0, 8, 0, 0),
+				BackgroundTransparency = 1, Font = Enum.Font.GothamBold, Text = "◎",
+				TextColor3 = currentThemeColor, TextSize = 15
+			}, header)
+			table.insert(themeTexts, headerIcon)
+			local headerLabel = new("TextLabel", {
+				Size = UDim2.new(1, -170, 1, 0), Position = UDim2.new(0, 32, 0, 0),
+				BackgroundTransparency = 1, Font = currentGlobalFont, Text = "Jogadores do Aim",
+				TextColor3 = currentTextColor, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left,
+				TextTruncate = Enum.TextTruncate.AtEnd
+			}, header)
+			table.insert(allTextLabels, headerLabel)
+			local badge = new("TextLabel", {
+				Size = UDim2.new(0, 96, 0, 18), Position = UDim2.new(1, -128, 0.5, -9),
+				BackgroundColor3 = currentThemeColor, BackgroundTransparency = 0.8, BorderSizePixel = 0,
+				Font = Enum.Font.GothamBold, Text = "Foco 0 · Aliados 0", TextColor3 = currentThemeColor, TextSize = 8
+			}, header)
+			round(badge, 9)
+			table.insert(themeTexts, badge)
+			local arrow = new("TextLabel", {
+				Size = UDim2.new(0, 20, 0, 20), Position = UDim2.new(1, -26, 0.5, -10),
+				BackgroundTransparency = 1, Font = Enum.Font.GothamBold, Text = "▼",
+				TextColor3 = GRAY, TextSize = 10, Rotation = 0
+			}, header)
 
-		local playerDropArrow = Instance.new("TextLabel")
-		playerDropArrow.Size = UDim2.new(0, 24, 1, 0)
-		playerDropArrow.Position = UDim2.new(1, -28, 0, 0)
-		playerDropArrow.BackgroundTransparency = 1
-		playerDropArrow.Font = currentGlobalFont
-		playerDropArrow.Text = "▼"
-		playerDropArrow.TextColor3 = currentTextColor
-		playerDropArrow.TextSize = 10
-		playerDropArrow.Parent = playerDropFrame
-		table.insert(allTextLabels, playerDropArrow)
+			local wrap = new("Frame", {
+				Name = "AimPlayerDropdownBody",
+				Size = UDim2.new(1, 0, 0, 0),
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				ClipsDescendants = true,
+				Visible = false
+			}, secSilentGun)
+			local body = new("Frame", {
+				Size = UDim2.new(1, 0, 0, LIST_HEIGHT),
+				Position = UDim2.new(0, 0, 0, 4),
+				BackgroundColor3 = Color3.fromRGB(14, 14, 21),
+				BackgroundTransparency = 0.25,
+				BorderSizePixel = 0
+			}, wrap)
+			round(body, 8)
+			new("UIStroke", {Color = Color3.fromRGB(70, 70, 95), Transparency = 0.6, Thickness = 1}, body)
 
-		local playerDropHit = Instance.new("TextButton")
-		playerDropHit.Size = UDim2.new(1, 0, 1, 0)
-		playerDropHit.BackgroundTransparency = 1
-		playerDropHit.Text = ""
-		playerDropHit.ZIndex = 5
-		playerDropHit.Parent = playerDropFrame
+			local searchBack = new("Frame", {
+				Size = UDim2.new(1, -42, 0, 24), Position = UDim2.new(0, 6, 0, 6),
+				BackgroundColor3 = Color3.fromRGB(26, 26, 38), BorderSizePixel = 0
+			}, body)
+			round(searchBack, 6)
+			local searchStroke = new("UIStroke", {Color = Color3.fromRGB(70, 70, 95), Transparency = 0.6, Thickness = 1}, searchBack)
+			local searchIcon = new("ImageLabel", {
+				Size = UDim2.new(0, 14, 0, 14), Position = UDim2.new(0, 4, 0.5, -7),
+				BackgroundTransparency = 1, Image = "rbxassetid://7734052925",
+				ImageColor3 = currentThemeColor, ScaleType = Enum.ScaleType.Fit
+			}, searchBack)
+			table.insert(themeImages, searchIcon)
+			local searchBox = new("TextBox", {
+				Size = UDim2.new(1, -24, 1, 0), Position = UDim2.new(0, 21, 0, 0), BackgroundTransparency = 1,
+				ClearTextOnFocus = false, Font = Enum.Font.Gotham, PlaceholderText = "Buscar jogador...",
+				PlaceholderColor3 = Color3.fromRGB(110, 110, 130), Text = "", TextColor3 = Color3.fromRGB(235, 235, 245),
+				TextSize = 10, TextXAlignment = Enum.TextXAlignment.Left
+			}, searchBack)
+			searchBox.Focused:Connect(function()
+				TweenService:Create(searchStroke, TweenInfo.new(0.15), {Color = currentThemeColor, Transparency = 0.2}):Play()
+			end)
+			searchBox.FocusLost:Connect(function()
+				TweenService:Create(searchStroke, TweenInfo.new(0.15), {Color = Color3.fromRGB(70, 70, 95), Transparency = 0.6}):Play()
+			end)
 
-		local playerDropList = Instance.new("ScrollingFrame")
-		playerDropList.Size = UDim2.new(1, 0, 0, 130)
-		playerDropList.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
-		playerDropList.BackgroundTransparency = 0.5
-		playerDropList.BorderSizePixel = 0
-		playerDropList.CanvasSize = UDim2.new(0, 0, 0, 0)
-		playerDropList.ScrollBarThickness = 3
-		playerDropList.Visible = false
-		playerDropList.Parent = secSilentGun
-		local playerDropListCorner = Instance.new("UICorner")
-		playerDropListCorner.CornerRadius = UDim.new(0, 5)
-		playerDropListCorner.Parent = playerDropList
-		local playerDropListLayout = Instance.new("UIListLayout")
-		playerDropListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		playerDropListLayout.Padding = UDim.new(0, 4)
-		playerDropListLayout.Parent = playerDropList
-
-		local focusColor = currentThemeColor
-		local allyColor = Color3.fromRGB(46, 160, 90)
-		local neutralColor = Color3.fromRGB(34, 34, 46)
-
-		local function renderAimPlayers()
-			for _, child in ipairs(playerDropList:GetChildren()) do
-				if child:IsA("TextButton") then child:Destroy() end
+			local refreshButton = new("TextButton", {
+				Size = UDim2.new(0, 24, 0, 24), Position = UDim2.new(1, -30, 0, 6),
+				BackgroundColor3 = Color3.fromRGB(38, 36, 54), BorderSizePixel = 0, AutoButtonColor = false, Text = ""
+			}, body)
+			round(refreshButton, 6)
+			local refreshIcon = new("ImageLabel", {
+				Size = UDim2.new(0, 14, 0, 14), Position = UDim2.new(0.5, -7, 0.5, -7),
+				BackgroundTransparency = 1, Image = "rbxassetid://7734051052",
+				ImageColor3 = currentThemeColor, ScaleType = Enum.ScaleType.Fit
+			}, refreshButton)
+			table.insert(themeImages, refreshIcon)
+			do
+				local base = refreshButton.BackgroundColor3
+				refreshButton.MouseEnter:Connect(function()
+					TweenService:Create(refreshButton, TweenInfo.new(0.12), {BackgroundColor3 = base:Lerp(currentThemeColor, 0.4)}):Play()
+				end)
+				refreshButton.MouseLeave:Connect(function()
+					TweenService:Create(refreshButton, TweenInfo.new(0.15), {BackgroundColor3 = base}):Play()
+				end)
 			end
 
-			local count, focusCount, allyCount = 0, 0, 0
-			for _, p in ipairs(Players:GetPlayers()) do
-				if p ~= player then
-					count = count + 1
-					local isAlly = aimAllies[p] == true
-					local isFocus = (not isAlly) and selectedManualTargets[p] == true
-					if isAlly then allyCount = allyCount + 1 end
-					if isFocus then focusCount = focusCount + 1 end
+			local list = new("ScrollingFrame", {
+				Size = UDim2.new(1, -12, 1, -42), Position = UDim2.new(0, 6, 0, 36),
+				BackgroundTransparency = 1, BorderSizePixel = 0, ScrollBarThickness = 3,
+				ScrollBarImageColor3 = currentThemeColor, CanvasSize = UDim2.new(0, 0, 0, 0)
+			}, body)
+			local listLayout = new("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 4)}, list)
+			listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+				list.CanvasSize = UDim2.new(0, 0, 0, AetherisLayoutHeight(listLayout) + 2)
+			end)
 
-					local item = Instance.new("TextButton")
-					item.Size = UDim2.new(1, -6, 0, 24)
-					item.BackgroundColor3 = isAlly and allyColor or (isFocus and currentThemeColor or neutralColor)
-					item.Font = currentGlobalFont
-					item.Text = "  " .. p.DisplayName .. " (@" .. p.Name .. ")"
-					item.TextColor3 = currentTextColor
-					item.TextSize = 10
-					item.TextXAlignment = Enum.TextXAlignment.Left
-					item.TextTruncate = Enum.TextTruncate.AtEnd
-					item.Parent = playerDropList
-					local itemPadding = Instance.new("UIPadding")
-					itemPadding.PaddingRight = UDim.new(0, 62)
-					itemPadding.Parent = item
-					local itemCorner = Instance.new("UICorner")
-					itemCorner.CornerRadius = UDim.new(0, 4)
-					itemCorner.Parent = item
+			local function stateOf(p)
+				if aimAllies[p] then return "ally" end
+				if selectedManualTargets[p] then return "focus" end
+				return "neutral"
+			end
 
-					local tag = Instance.new("TextLabel")
-					tag.Size = UDim2.new(0, 56, 1, 0)
-					tag.Position = UDim2.new(1, 62 - 58, 0, 0)
-					tag.BackgroundTransparency = 1
-					tag.Font = Enum.Font.GothamBold
-					tag.Text = isAlly and "ALIADO" or (isFocus and "FOCO" or "NEUTRO")
-					tag.TextColor3 = (isAlly or isFocus) and Color3.new(1, 1, 1) or Color3.fromRGB(140, 140, 160)
-					tag.TextSize = 9
-					tag.TextXAlignment = Enum.TextXAlignment.Right
-					tag.Parent = item
+			local function updateBadge()
+				local focusCount, allyCount = 0, 0
+				for _, p in ipairs(Players:GetPlayers()) do
+					if p ~= player then
+						local st = stateOf(p)
+						if st == "ally" then allyCount = allyCount + 1 elseif st == "focus" then focusCount = focusCount + 1 end
+					end
+				end
+				badge.Text = string.format("Foco %d · Aliados %d", focusCount, allyCount)
+				TweenService:Create(badge, TweenInfo.new(0.2), {BackgroundTransparency = (focusCount + allyCount) > 0 and 0.6 or 0.85}):Play()
+			end
 
-					item.MouseButton1Click:Connect(function()
-						if aimAllies[p] then
-							aimAllies[p] = nil                  -- Aliado -> Neutro
-						elseif selectedManualTargets[p] then
-							selectedManualTargets[p] = nil      -- Foco -> Aliado
-							aimAllies[p] = true
+			local function renderAimPlayers(animateIn)
+				for _, child in ipairs(list:GetChildren()) do
+					if child:IsA("GuiObject") then child:Destroy() end
+				end
+				local query = string.lower(searchBox.Text or "")
+				local shown = {}
+				for _, p in ipairs(Players:GetPlayers()) do
+					if p ~= player then
+						local hay = string.lower(p.DisplayName .. " " .. p.Name)
+						if query == "" or string.find(hay, query, 1, true) then table.insert(shown, p) end
+					end
+				end
+				table.sort(shown, function(x, y) return string.lower(x.DisplayName) < string.lower(y.DisplayName) end)
+				updateBadge()
+
+				if #shown == 0 then
+					new("TextLabel", {
+						Size = UDim2.new(1, 0, 0, 60), BackgroundTransparency = 1, Font = Enum.Font.Gotham,
+						Text = (query == "") and "Nenhum outro jogador no servidor." or "Nenhum jogador encontrado.",
+						TextColor3 = GRAY, TextSize = 10
+					}, list)
+					return
+				end
+
+				for index, p in ipairs(shown) do
+					local target = p
+					local row = new("TextButton", {
+						LayoutOrder = index, Size = UDim2.new(1, -6, 0, 32),
+						BackgroundColor3 = OFFCOLOR, BackgroundTransparency = 0.2, BorderSizePixel = 0,
+						AutoButtonColor = false, Text = ""
+					}, list)
+					round(row, 7)
+					local rowStroke = new("UIStroke", {Color = currentThemeColor, Transparency = 1, Thickness = 1}, row)
+					local avatar = new("Frame", {
+						Size = UDim2.new(0, 22, 0, 22), Position = UDim2.new(0, 6, 0.5, -11),
+						BackgroundColor3 = Color3.fromRGB(52, 52, 74), BorderSizePixel = 0
+					}, row)
+					round(avatar, 11)
+					local initial = new("TextLabel", {
+						Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, Font = Enum.Font.GothamBold,
+						Text = string.upper(string.sub(target.DisplayName, 1, 1)), TextColor3 = Color3.fromRGB(225, 225, 240), TextSize = 11
+					}, avatar)
+					-- foto do avatar (skin); a inicial fica de fallback enquanto carrega
+					do
+						AetherisAvatarCache = AetherisAvatarCache or {}
+						local avatarImg = new("ImageLabel", {
+							Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, BorderSizePixel = 0,
+							ScaleType = Enum.ScaleType.Crop, Image = "", Visible = false
+						}, avatar)
+						round(avatarImg, 11)
+						local userId = target.UserId
+						local function applyAvatar(img)
+							if img and img ~= "" and avatarImg.Parent then
+								avatarImg.Image = img
+								avatarImg.Visible = true
+								initial.Visible = false
+							end
+						end
+						if AetherisAvatarCache[userId] then
+							applyAvatar(AetherisAvatarCache[userId])
 						else
-							selectedManualTargets[p] = true     -- Neutro -> Foco
+							task.spawn(function()
+								local ok, img = pcall(function()
+									return Players:GetUserThumbnailAsync(userId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+								end)
+								if ok and img then
+									AetherisAvatarCache[userId] = img
+									applyAvatar(img)
+								end
+							end)
+						end
+					end
+					local nameLabel = new("TextLabel", {
+						Size = UDim2.new(1, -104, 0, 14), Position = UDim2.new(0, 34, 0, 3), BackgroundTransparency = 1,
+						Font = currentGlobalFont, Text = target.DisplayName, TextColor3 = currentTextColor, TextSize = 10,
+						TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd
+					}, row)
+					table.insert(allTextLabels, nameLabel)
+					new("TextLabel", {
+						Size = UDim2.new(1, -104, 0, 11), Position = UDim2.new(0, 34, 0, 17), BackgroundTransparency = 1,
+						Font = Enum.Font.Gotham, Text = "@" .. target.Name, TextColor3 = GRAY, TextSize = 8,
+						TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd
+					}, row)
+					local pill = new("TextLabel", {
+						Size = UDim2.new(0, 58, 0, 18), Position = UDim2.new(1, -64, 0.5, -9),
+						BackgroundColor3 = Color3.fromRGB(52, 52, 72), BorderSizePixel = 0,
+						Font = Enum.Font.GothamBold, Text = "NEUTRO", TextColor3 = Color3.fromRGB(150, 150, 170), TextSize = 8
+					}, row)
+					round(pill, 9)
+
+					local function setVisual(animate)
+						local st = stateOf(target)
+						local info = TweenInfo.new(animate and 0.2 or 0)
+						local accent = (st == "ally") and ALLY or currentThemeColor
+						local active = st ~= "neutral"
+						TweenService:Create(row, info, {BackgroundColor3 = active and accent:Lerp(Color3.fromRGB(20, 20, 30), 0.78) or OFFCOLOR}):Play()
+						TweenService:Create(rowStroke, info, {Color = accent, Transparency = active and 0.45 or 1}):Play()
+						TweenService:Create(avatar, info, {BackgroundColor3 = active and accent or Color3.fromRGB(52, 52, 74)}):Play()
+						TweenService:Create(pill, info, {
+							BackgroundColor3 = active and accent or Color3.fromRGB(52, 52, 72),
+							TextColor3 = active and Color3.new(1, 1, 1) or Color3.fromRGB(150, 150, 170)
+						}):Play()
+						pill.Text = (st == "ally") and "ALIADO" or ((st == "focus") and "FOCO" or "NEUTRO")
+						if animate and active then
+							pill.Size = UDim2.new(0, 66, 0, 22)
+							pill.Position = UDim2.new(1, -68, 0.5, -11)
+							TweenService:Create(pill, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+								Size = UDim2.new(0, 58, 0, 18), Position = UDim2.new(1, -64, 0.5, -9)
+							}):Play()
+						end
+					end
+					setVisual(false)
+
+					row.MouseEnter:Connect(function()
+						if stateOf(target) == "neutral" then
+							TweenService:Create(row, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(44, 44, 62)}):Play()
+						end
+					end)
+					row.MouseLeave:Connect(function()
+						if stateOf(target) == "neutral" then
+							TweenService:Create(row, TweenInfo.new(0.15), {BackgroundColor3 = OFFCOLOR}):Play()
+						end
+					end)
+					row.MouseButton1Click:Connect(function()
+						if aimAllies[target] then
+							aimAllies[target] = nil                  -- Aliado -> Neutro
+						elseif selectedManualTargets[target] then
+							selectedManualTargets[target] = nil      -- Foco -> Aliado
+							aimAllies[target] = true
+						else
+							selectedManualTargets[target] = true     -- Neutro -> Foco
 							lockOnMode = "Manual"
 							modeSwitchBtn.Text = lockOnMode
 						end
 						updateServerList()
-						renderAimPlayers()
+						setVisual(true)
+						updateBadge()
+					end)
+
+					if animateIn then
+						row.BackgroundTransparency = 1
+						nameLabel.TextTransparency = 1
+						task.delay(index * 0.03, function()
+							if not row.Parent then return end
+							TweenService:Create(row, TweenInfo.new(0.25), {BackgroundTransparency = 0.2}):Play()
+							TweenService:Create(nameLabel, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
+						end)
+					end
+				end
+			end
+
+			local function setDropdown(open)
+				dropOpen = open
+				TweenService:Create(arrow, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {Rotation = open and 180 or 0}):Play()
+				TweenService:Create(headerStroke, TweenInfo.new(0.2), {Color = open and currentThemeColor or Color3.fromRGB(70, 70, 95), Transparency = open and 0.2 or 0.55}):Play()
+				if open then
+					wrap.Visible = true
+					renderAimPlayers(true)
+					TweenService:Create(wrap, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, LIST_HEIGHT + 8)}):Play()
+				else
+					local t = TweenService:Create(wrap, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(1, 0, 0, 0)})
+					t:Play()
+					t.Completed:Connect(function()
+						if not dropOpen then wrap.Visible = false end
 					end)
 				end
 			end
 
-			playerDropList.CanvasSize = UDim2.new(0, 0, 0, count * 28)
-			playerDropLabel.Text = string.format("Jogadores  (Foco: %d · Aliados: %d)", focusCount, allyCount)
-		end
-
-		playerDropHit.MouseButton1Click:Connect(function()
-			playerDropList.Visible = not playerDropList.Visible
-			playerDropArrow.Text = playerDropList.Visible and "▲" or "▼"
-			if playerDropList.Visible then renderAimPlayers() end
-		end)
-
-		Players.PlayerAdded:Connect(function()
-			if playerDropList.Visible then renderAimPlayers() end
-		end)
-		Players.PlayerRemoving:Connect(function(leavingPlayer)
-			aimAllies[leavingPlayer] = nil
-			task.defer(function()
-				if playerDropList.Parent then renderAimPlayers() end
+			header.MouseEnter:Connect(function()
+				TweenService:Create(header, TweenInfo.new(0.12), {BackgroundTransparency = 0.15}):Play()
 			end)
+			header.MouseLeave:Connect(function()
+				TweenService:Create(header, TweenInfo.new(0.15), {BackgroundTransparency = 0.35}):Play()
 			end)
-			renderAimPlayers()
+			header.MouseButton1Click:Connect(function() setDropdown(not dropOpen) end)
+			refreshButton.MouseButton1Click:Connect(function() renderAimPlayers(false) end)
+			searchBox:GetPropertyChangedSignal("Text"):Connect(function() renderAimPlayers(false) end)
+			Players.PlayerAdded:Connect(function() if dropOpen then renderAimPlayers(false) else updateBadge() end end)
+			Players.PlayerRemoving:Connect(function(leavingPlayer)
+				aimAllies[leavingPlayer] = nil
+				task.defer(function()
+					if dropOpen then renderAimPlayers(false) else updateBadge() end
+				end)
+			end)
+			updateBadge()
+
 			registerConfigBinding(secSilentGun, "Jogadores aliados do Aim", function()
 				local userIds = {}
 				for target, isAlly in pairs(aimAllies) do
@@ -5377,9 +5567,10 @@ function showMainPanel()
 						selectedManualTargets[target] = nil
 					end
 				end
-				if playerDropList.Visible then renderAimPlayers() end
+				if dropOpen then renderAimPlayers(false) else updateBadge() end
 				updateServerList(false)
 			end)
+		end
 		end
 
 	-----------------------------------------------------------------
@@ -5685,7 +5876,7 @@ function showMainPanel()
 	do
 		local secAFL = createSection(secFarm.Parent.Parent, "Auto Farm Level", sectionIcons.FarmAutomation)
 		local Q = {
-			enabled = false, hitDelay = 0.1, aoeRange = 80, flySpeed = 60, hoverHeight = 6,
+			enabled = false, hitDelay = 0.05, aoeRange = 80, flySpeed = 120, hoverHeight = 6,
 			lastHit = 0, combo = 1, questName = "?", questCat = nil, taskType = nil, questIndex = 1,
 			phase = "idle", acceptedAt = 0, noEnemySince = 0, method = 1, weapon = "Any",
 			lastEquip = 0, completed = false, origCollision = {}, busy = false, ready = false,
@@ -5738,12 +5929,15 @@ function showMainPanel()
 			return box
 		end
 
-		-- Seletor com botões lado a lado; a opção escolhida usa a cor do tema
-		local function makeSelector(title, options, defaultValue, onChange)
+		-- Dropdown: cabeçalho com a opção atual; ao clicar abre a lista logo abaixo
+		local function makeDropdown(title, options, defaultValue, onChange)
+			local HEADER, ROW = 44, 24
+			local openHeight = HEADER + #options * ROW + 6
 			local frame = Instance.new("Frame")
-			frame.Size = UDim2.new(1, 0, 0, 46)
+			frame.Size = UDim2.new(1, 0, 0, HEADER)
 			frame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
 			frame.BackgroundTransparency = 0.5
+			frame.ClipsDescendants = true
 			frame.Parent = secAFL
 			local fc = Instance.new("UICorner")
 			fc.CornerRadius = UDim.new(0, 5)
@@ -5758,53 +5952,95 @@ function showMainPanel()
 			lbl.TextSize = 9
 			lbl.TextXAlignment = Enum.TextXAlignment.Left
 			lbl.Parent = frame
-			local row = Instance.new("Frame")
-			row.Size = UDim2.new(1, -12, 0, 22)
-			row.Position = UDim2.new(0, 6, 0, 20)
-			row.BackgroundTransparency = 1
-			row.Parent = frame
-			local layout = Instance.new("UIListLayout")
-			layout.FillDirection = Enum.FillDirection.Horizontal
-			layout.Padding = UDim.new(0, 4)
-			layout.SortOrder = Enum.SortOrder.LayoutOrder
-			layout.Parent = row
-			local buttons = {}
-			local sel = {value = defaultValue}
+			local head = Instance.new("TextButton")
+			head.Size = UDim2.new(1, -12, 0, 22)
+			head.Position = UDim2.new(0, 6, 0, 18)
+			head.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+			head.BorderSizePixel = 0
+			head.AutoButtonColor = false
+			head.Font = currentGlobalFont
+			head.TextSize = 10
+			head.TextColor3 = currentTextColor
+			head.TextXAlignment = Enum.TextXAlignment.Left
+			head.Text = ""
+			head.Parent = frame
+			local hc = Instance.new("UICorner")
+			hc.CornerRadius = UDim.new(0, 4)
+			hc.Parent = head
+			local hp = Instance.new("UIPadding")
+			hp.PaddingLeft = UDim.new(0, 8)
+			hp.Parent = head
+			local arrow = Instance.new("TextLabel")
+			arrow.Size = UDim2.new(0, 18, 1, 0)
+			arrow.Position = UDim2.new(1, -20, 0, 0)
+			arrow.BackgroundTransparency = 1
+			arrow.Font = Enum.Font.GothamBold
+			arrow.Text = "v"
+			arrow.TextColor3 = currentThemeColor
+			arrow.TextSize = 10
+			arrow.Parent = head
+			table.insert(themeTexts, arrow)
+			local list = Instance.new("Frame")
+			list.Size = UDim2.new(1, -12, 0, #options * ROW)
+			list.Position = UDim2.new(0, 6, 0, HEADER + 2)
+			list.BackgroundTransparency = 1
+			list.Parent = frame
+			local ll = Instance.new("UIListLayout")
+			ll.SortOrder = Enum.SortOrder.LayoutOrder
+			ll.Parent = list
+			local sel = {value = defaultValue, open = false}
+			local buttons, labels = {}, {}
+			for _, opt in ipairs(options) do labels[opt.value] = opt.label end
 			local function paint()
+				head.Text = labels[sel.value] or "?"
 				for value, b in pairs(buttons) do
 					local on = value == sel.value
-					TweenService:Create(b, TweenInfo.new(0.18), {
-						BackgroundColor3 = on and currentThemeColor or Color3.fromRGB(50, 50, 70),
-						TextColor3 = on and Color3.new(1, 1, 1) or Color3.fromRGB(180, 180, 200)
+					TweenService:Create(b, TweenInfo.new(0.15), {
+						BackgroundColor3 = on and currentThemeColor or Color3.fromRGB(40, 40, 58),
+						BackgroundTransparency = on and 0.35 or 0.2
 					}):Play()
 				end
 			end
+			local function setOpen(open)
+				sel.open = open
+				TweenService:Create(frame, TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+					Size = UDim2.new(1, 0, 0, open and openHeight or HEADER)
+				}):Play()
+				TweenService:Create(arrow, TweenInfo.new(0.22), {Rotation = open and 180 or 0}):Play()
+			end
 			for i, opt in ipairs(options) do
 				local b = Instance.new("TextButton")
-				b.Size = UDim2.new(1 / #options, -4 * (#options - 1) / #options, 1, 0)
+				b.Size = UDim2.new(1, 0, 0, ROW - 2)
 				b.LayoutOrder = i
-				b.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+				b.BackgroundColor3 = Color3.fromRGB(40, 40, 58)
+				b.BackgroundTransparency = 0.2
 				b.BorderSizePixel = 0
 				b.AutoButtonColor = false
 				b.Font = currentGlobalFont
 				b.Text = opt.label
-				b.TextSize = 9
-				b.TextColor3 = Color3.fromRGB(180, 180, 200)
-				b.Parent = row
+				b.TextSize = 10
+				b.TextColor3 = currentTextColor
+				b.TextXAlignment = Enum.TextXAlignment.Left
+				b.Parent = list
 				local bc = Instance.new("UICorner")
 				bc.CornerRadius = UDim.new(0, 4)
 				bc.Parent = b
+				local bp = Instance.new("UIPadding")
+				bp.PaddingLeft = UDim.new(0, 8)
+				bp.Parent = b
 				buttons[opt.value] = b
 				b.MouseButton1Click:Connect(function()
 					sel.value = opt.value
 					paint()
+					setOpen(false)
 					onChange(opt.value)
 				end)
 			end
+			head.MouseButton1Click:Connect(function() setOpen(not sel.open) end)
 			paint()
 			return {
 				set = function(value)
-					if buttons[value] then sel.value = value; paint(); onChange(value) end
+					if labels[value] then sel.value = value; paint(); onChange(value) end
 				end,
 				get = function() return sel.value end,
 			}
@@ -6218,6 +6454,15 @@ function showMainPanel()
 			return list
 		end
 
+		-- Segura o boneco parado no lugar (zera a velocidade; o BodyVelocity evita cair com o noclip)
+		function Q.hold()
+			local char = player.Character
+			local hrp = char and char:FindFirstChild("HumanoidRootPart")
+			if not hrp then return end
+			Q.fly(hrp, Vector3.zero)
+			hrp.AssemblyLinearVelocity = Vector3.zero
+		end
+
 		function Q.step()
 			local phase = Q.phase
 			if phase == "accepting" then
@@ -6240,6 +6485,7 @@ function showMainPanel()
 						Q.disableNoclip()
 						Q.updateStatus("🏃 Quest completa!\nEntregando...", Color3.fromRGB(100, 200, 255))
 					else
+						Q.hold()
 						Q.updateStatus("🔍 " .. tostring(Q.questName) .. "\nProcurando inimigos...", Color3.fromRGB(200, 200, 100))
 						task.wait(0.4)
 					end
@@ -6294,6 +6540,7 @@ function showMainPanel()
 						Q.noEnemySince = 0
 						return
 					end
+					Q.hold()
 					Q.updateStatus("⏳ " .. tostring(Q.questName) .. "\nRespawn " .. math.floor(waited) .. "s...", Color3.fromRGB(200, 200, 100))
 					task.wait(0.3)
 					return
@@ -6425,26 +6672,29 @@ function showMainPanel()
 			end
 		end, false)
 
-		local methodSel = makeSelector("MÉTODO DE ACEITAR QUEST", {
-			{label = "🟢 Direto", value = 1}, {label = "🔵 Diálogo", value = 2},
-		}, 1, function(v) Q.method = v; Q.updateLevelInfo() end)
-
-		local weaponSel = makeSelector("ARMA PARA FARMAR", {
+		local weaponWarn = nil
+		local weaponSel = makeDropdown("ARMA PARA FARMAR", {
 			{label = "🎲 Qualquer", value = "Any"}, {label = "🥊 Punho", value = "Melee"},
 			{label = "🍎 Fruta", value = "Fruit"}, {label = "⚔️ Espada", value = "Sword"},
-		}, "Any", function(v) Q.weapon = v; Q.updateLevelInfo() end)
-
-		registerConfigBinding(secAFL, "Farm Level: método", function() return methodSel.get() end, function(v)
-			if v == 1 or v == 2 then methodSel.set(v) end
+		}, "Any", function(v)
+			Q.weapon = v
+			if weaponWarn then weaponWarn.Visible = (v == "Fruit") end
+			Q.updateLevelInfo()
 		end)
+		-- aviso logo abaixo do dropdown (só aparece com Fruta selecionada)
+		weaponWarn = makeInfoBox(40, "⚠️ Para usar a Fruta, ela precisa ter CLICK (a habilidade de clique/ataque básico). Fruta sem click não ataca.")
+		weaponWarn.TextColor3 = Color3.fromRGB(255, 205, 110)
+		weaponWarn.TextSize = 9
+		weaponWarn.BackgroundColor3 = Color3.fromRGB(60, 46, 16)
+		weaponWarn.Visible = false
+
 		registerConfigBinding(secAFL, "Farm Level: arma", function() return weaponSel.get() end, function(v)
 			if v == "Any" or v == "Melee" or v == "Fruit" or v == "Sword" then weaponSel.set(v) end
 		end)
 
 		addSlider(secAFL, "Range AOE", 10, 300, 80, function(val) Q.aoeRange = val end, 0, " studs")
-		addSlider(secAFL, "Velocidade de voo", 10, 300, 60, function(val) Q.flySpeed = val end, 0)
+		addSlider(secAFL, "Velocidade de voo", 10, 300, 120, function(val) Q.flySpeed = val end, 0)
 		addSlider(secAFL, "Altura sobre o inimigo", 2, 30, 6, function(val) Q.hoverHeight = val end, 0, " studs")
-		addSlider(secAFL, "Delay entre hits", 0.05, 1, 0.1, function(val) Q.hitDelay = math.max(0.05, val) end, 2, "s")
 
 		local debugRow = Instance.new("TextButton")
 		debugRow.Size = UDim2.new(1, 0, 0, 24)
