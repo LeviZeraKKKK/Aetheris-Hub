@@ -8038,10 +8038,9 @@ function showMainPanel()
 		manager.useButton = new("TextButton", {
 			Size = UDim2.new(1, 0, 0, 32), BackgroundColor3 = currentThemeColor, BorderSizePixel = 0, AutoButtonColor = false,
 			Font = Enum.Font.GothamBold, Text = "Usar configuração", TextColor3 = Color3.fromRGB(255, 255, 255),
-			TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left
+			TextSize = 11, TextXAlignment = Enum.TextXAlignment.Center
 		}, profileSection)
 		round(manager.useButton, 8)
-		new("UIPadding", {PaddingLeft = UDim.new(0, 36)}, manager.useButton)
 		new("ImageLabel", {
 			Name = "ApplyConfigIcon", Size = UDim2.new(0, 15, 0, 15), Position = UDim2.new(0, 12, 0.5, -7.5),
 			BackgroundTransparency = 1, Image = "rbxassetid://7733715400", ImageColor3 = Color3.fromRGB(255, 255, 255),
