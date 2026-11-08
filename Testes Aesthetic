@@ -7926,10 +7926,12 @@ function showMainPanel()
 		manager.nameRow = new("Frame", {Size = UDim2.new(1, 0, 0, 34), BackgroundColor3 = CARD, BackgroundTransparency = 0.35, BorderSizePixel = 0}, saveSection)
 		round(manager.nameRow, 8)
 		local nameStroke = new("UIStroke", {Color = LINE, Transparency = 0.55, Thickness = 1}, manager.nameRow)
-		new("TextLabel", {
-			Size = UDim2.new(0, 24, 1, 0), Position = UDim2.new(0, 6, 0, 0), BackgroundTransparency = 1,
-			Font = Enum.Font.GothamBold, Text = "✎", TextColor3 = currentThemeColor, TextSize = 13
+		local nameIcon = new("ImageLabel", {
+			Name = "SaveConfigIcon", Size = UDim2.new(0, 16, 0, 16), Position = UDim2.new(0, 10, 0.5, -8),
+			BackgroundTransparency = 1, Image = "rbxassetid://7734022107", ImageColor3 = currentThemeColor,
+			ScaleType = Enum.ScaleType.Fit
 		}, manager.nameRow)
+		table.insert(themeImages, nameIcon)
 		manager.nameBox = new("TextBox", {
 			Size = UDim2.new(1, -118, 1, 0), Position = UDim2.new(0, 30, 0, 0), BackgroundTransparency = 1,
 			ClearTextOnFocus = false, Font = currentGlobalFont, PlaceholderText = "Nome da configuração...", Text = "",
@@ -7966,10 +7968,12 @@ function showMainPanel()
 		}, profileSection)
 		round(manager.selectButton, 8)
 		local selectStroke = new("UIStroke", {Color = LINE, Transparency = 0.55, Thickness = 1}, manager.selectButton)
-		new("TextLabel", {
-			Size = UDim2.new(0, 24, 1, 0), Position = UDim2.new(0, 6, 0, 0), BackgroundTransparency = 1,
-			Font = Enum.Font.GothamBold, Text = "☰", TextColor3 = currentThemeColor, TextSize = 13
+		local listIcon = new("ImageLabel", {
+			Name = "SavedConfigsIcon", Size = UDim2.new(0, 16, 0, 16), Position = UDim2.new(0, 10, 0.5, -8),
+			BackgroundTransparency = 1, Image = "rbxassetid://7733970442", ImageColor3 = currentThemeColor,
+			ScaleType = Enum.ScaleType.Fit
 		}, manager.selectButton)
+		table.insert(themeImages, listIcon)
 		manager.selectLabel = new("TextLabel", {
 			Size = UDim2.new(1, -112, 1, 0), Position = UDim2.new(0, 30, 0, 0), BackgroundTransparency = 1,
 			Font = currentGlobalFont, Text = "Selecione uma configuração", TextColor3 = GRAY, TextSize = 11,
@@ -7982,9 +7986,10 @@ function showMainPanel()
 			TextColor3 = currentThemeColor, TextSize = 9
 		}, manager.selectButton)
 		round(manager.countBadge, 9)
-		manager.arrow = new("TextLabel", {
-			Size = UDim2.new(0, 20, 0, 20), Position = UDim2.new(1, -24, 0.5, -10), BackgroundTransparency = 1,
-			Font = Enum.Font.GothamBold, Text = "▼", TextColor3 = GRAY, TextSize = 10
+		manager.arrow = new("ImageLabel", {
+			Name = "SavedConfigsArrow", Size = UDim2.new(0, 14, 0, 14), Position = UDim2.new(1, -21, 0.5, -7),
+			BackgroundTransparency = 1, Image = "rbxassetid://7733717447", ImageColor3 = GRAY,
+			ScaleType = Enum.ScaleType.Fit
 		}, manager.selectButton)
 		manager.selectButton.MouseEnter:Connect(function()
 			TweenService:Create(manager.selectButton, TweenInfo.new(0.12), {BackgroundTransparency = 0.15}):Play()
@@ -8032,9 +8037,16 @@ function showMainPanel()
 
 		manager.useButton = new("TextButton", {
 			Size = UDim2.new(1, 0, 0, 32), BackgroundColor3 = currentThemeColor, BorderSizePixel = 0, AutoButtonColor = false,
-			Font = Enum.Font.GothamBold, Text = "✓  Usar configuração", TextColor3 = Color3.fromRGB(255, 255, 255), TextSize = 11
+			Font = Enum.Font.GothamBold, Text = "Usar configuração", TextColor3 = Color3.fromRGB(255, 255, 255),
+			TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left
 		}, profileSection)
 		round(manager.useButton, 8)
+		new("UIPadding", {PaddingLeft = UDim.new(0, 36)}, manager.useButton)
+		new("ImageLabel", {
+			Name = "ApplyConfigIcon", Size = UDim2.new(0, 15, 0, 15), Position = UDim2.new(0, 12, 0.5, -7.5),
+			BackgroundTransparency = 1, Image = "rbxassetid://7733715400", ImageColor3 = Color3.fromRGB(255, 255, 255),
+			ScaleType = Enum.ScaleType.Fit
+		}, manager.useButton)
 		table.insert(themeSliders, manager.useButton)
 		manager.useButton.MouseEnter:Connect(function()
 			TweenService:Create(manager.useButton, TweenInfo.new(0.12), {BackgroundTransparency = 0.2}):Play()
@@ -8078,12 +8090,11 @@ function showMainPanel()
 		round(confirmCard, 12)
 		manager.confirmStroke = new("UIStroke", {Color = Color3.fromRGB(235, 95, 105), Transparency = 0.2, Thickness = 1.4}, confirmCard)
 		manager.confirmScale = new("UIScale", {Scale = 1}, confirmCard)
-		local confirmIcon = new("TextLabel", {
-			Size = UDim2.new(0, 34, 0, 34), Position = UDim2.new(0, 14, 0, 14), BackgroundColor3 = Color3.fromRGB(235, 95, 105),
-			BackgroundTransparency = 0.8, BorderSizePixel = 0, Font = Enum.Font.GothamBold, Text = "!", TextColor3 = Color3.fromRGB(255, 120, 130),
-			TextSize = 18, ZIndex = 121
+		new("ImageLabel", {
+			Name = "DeleteWarningIcon", Size = UDim2.new(0, 26, 0, 26), Position = UDim2.new(0, 18, 0, 18),
+			BackgroundTransparency = 1, Image = "rbxassetid://7733658504", ImageColor3 = Color3.fromRGB(255, 120, 130),
+			ScaleType = Enum.ScaleType.Fit, ZIndex = 121
 		}, confirmCard)
-		round(confirmIcon, 17)
 		new("TextLabel", {
 			Size = UDim2.new(1, -66, 0, 18), Position = UDim2.new(0, 58, 0, 12), BackgroundTransparency = 1, Font = Enum.Font.GothamBold,
 			Text = "Excluir configuração", TextColor3 = Color3.fromRGB(240, 240, 250), TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 121
@@ -8160,9 +8171,10 @@ function showMainPanel()
 					Size = UDim2.new(0, 3, 0, selected and 16 or 0), Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5),
 					BackgroundColor3 = currentThemeColor, BorderSizePixel = 0
 				}, row)
-				new("TextLabel", {
-					Size = UDim2.new(0, 20, 1, 0), Position = UDim2.new(0, 8, 0, 0), BackgroundTransparency = 1,
-					Font = Enum.Font.GothamBold, Text = "◆", TextColor3 = selected and currentThemeColor or GRAY, TextSize = 10
+				new("ImageLabel", {
+					Name = "SavedConfigFileIcon", Size = UDim2.new(0, 15, 0, 15), Position = UDim2.new(0, 10, 0.5, -7.5),
+					BackgroundTransparency = 1, Image = "rbxassetid://7733779610",
+					ImageColor3 = selected and currentThemeColor or GRAY, ScaleType = Enum.ScaleType.Fit
 				}, row)
 				local nameLabel = new("TextLabel", {
 					Size = UDim2.new(1, -74, 1, 0), Position = UDim2.new(0, 28, 0, 0), BackgroundTransparency = 1, Font = currentGlobalFont,
