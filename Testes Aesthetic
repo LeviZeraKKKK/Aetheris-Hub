@@ -5879,7 +5879,7 @@ function showMainPanel()
 			enabled = false, hitDelay = 0.05, aoeRange = 80, flySpeed = 120, hoverHeight = 6,
 			lastHit = 0, combo = 1, questName = "?", questCat = nil, taskType = nil, questIndex = 1,
 			phase = "idle", acceptedAt = 0, noEnemySince = 0, method = 1, weapon = "Any",
-			lastEquip = 0, completed = false, origCollision = {}, busy = false, ready = false,
+			lastEquip = 0, completed = false, searchSince = 0, fallback = nil, curLevelReq = 0, wanderAngle = 0, wanderAt = 0, origCollision = {}, busy = false, ready = false,
 			npcMap = {
 				BanditQuest1 = "Bandit Quest Giver", MarineQuest = "Marine Leader", JungleQuest = "Adventurer",
 				SnowQuest = "Villager", DesertQuest = "Desert Adventurer", SkyQuest = "Sky Adventurer",
@@ -6121,14 +6121,15 @@ function showMainPanel()
 			return 0
 		end
 
-		function Q.pickBest()
+		function Q.pickBest(ceilExclusive)
 			if not Q.quests then return nil end
 			local level = Q.getLevel()
 			local best = nil
 			for catName, entries in pairs(Q.quests) do
 				if type(entries) == "table" then
 					for idx, q in ipairs(entries) do
-						if type(q) == "table" and type(q.LevelReq) == "number" and q.LevelReq <= level then
+						if type(q) == "table" and type(q.LevelReq) == "number" and q.LevelReq <= level
+							and (not ceilExclusive or q.LevelReq < ceilExclusive) then
 							if not best or q.LevelReq > best.levelReq then
 								local taskType = nil
 								for t in pairs(q.Task or {}) do taskType = t; break end
@@ -6143,7 +6144,11 @@ function showMainPanel()
 
 		function Q.updateSelection()
 			local best = Q.pickBest()
+			-- missão anterior ativa: só volta para a melhor quando o level muda de faixa ou ela termina
+			if Q.fallback and best and best.levelReq == Q.fallback.bestReq then return best end
+			Q.fallback = nil
 			if best then
+				Q.curLevelReq = best.levelReq
 				Q.questCat = best.category
 				Q.questName = best.questName
 				Q.taskType = best.taskType
@@ -6454,6 +6459,50 @@ function showMainPanel()
 			return list
 		end
 
+		-- Procura inimigos sem ficar parado: vai até o spawn da missão, se achar; senão vagueia
+		function Q.findSpawn(hrp)
+			if tick() - (Q.spawnCheckAt or 0) < 3 then return Q.spawnPart end
+			Q.spawnCheckAt = tick()
+			Q.spawnPart = nil
+			pcall(function()
+				local origin = workspace:FindFirstChild("_WorldOrigin")
+				local folder = origin and origin:FindFirstChild("EnemySpawns")
+				if not folder or not Q.taskType then return end
+				local key = Q.taskType:lower()
+				local bestD = math.huge
+				for _, obj in ipairs(folder:GetChildren()) do
+					if obj.Name:lower():find(key, 1, true) then
+						local part = obj:IsA("BasePart") and obj or obj:FindFirstChildWhichIsA("BasePart", true)
+						if part then
+							local d = (part.Position - hrp.Position).Magnitude
+							if d < bestD then bestD = d; Q.spawnPart = part end
+						end
+					end
+				end
+			end)
+			return Q.spawnPart
+		end
+
+		function Q.searchMove()
+			local char = player.Character
+			local hrp = char and char:FindFirstChild("HumanoidRootPart")
+			if not hrp then return end
+			local spawn = Q.findSpawn(hrp)
+			if spawn and spawn.Parent then
+				local offset = (spawn.Position + Vector3.new(0, Q.hoverHeight + 4, 0)) - hrp.Position
+				if offset.Magnitude > 12 then
+					Q.fly(hrp, offset.Unit * Q.flySpeed)
+					return
+				end
+			end
+			-- vagueia: troca de direção a cada 2s
+			if tick() - Q.wanderAt > 2 then
+				Q.wanderAt = tick()
+				Q.wanderAngle = math.random() * math.pi * 2
+			end
+			Q.fly(hrp, Vector3.new(math.cos(Q.wanderAngle), 0, math.sin(Q.wanderAngle)) * Q.flySpeed)
+		end
+
 		-- Segura o boneco parado no lugar (zera a velocidade; o BodyVelocity evita cair com o noclip)
 		function Q.hold()
 			local char = player.Character
@@ -6471,6 +6520,7 @@ function showMainPanel()
 				Q.acceptQuest()
 				Q.acceptedAt = tick()
 				Q.noEnemySince = 0
+				Q.searchSince = 0
 				Q.completed = false
 				Q.clearCompletedFlag()
 				Q.phase = "flying"
@@ -6485,14 +6535,32 @@ function showMainPanel()
 						Q.disableNoclip()
 						Q.updateStatus("🏃 Quest completa!\nEntregando...", Color3.fromRGB(100, 200, 255))
 					else
-						Q.hold()
-						Q.updateStatus("🔍 " .. tostring(Q.questName) .. "\nProcurando inimigos...", Color3.fromRGB(200, 200, 100))
-						task.wait(0.4)
+						if Q.searchSince == 0 then Q.searchSince = tick() end
+						local searched = tick() - Q.searchSince
+						if searched > 10 then
+							-- não achou ninguém em 10s: pega a missão anterior a esta
+							local prev = Q.pickBest(Q.curLevelReq)
+							Q.searchSince = 0
+							if prev then
+								local current = Q.pickBest()
+								Q.fallback = {bestReq = current and current.levelReq or Q.curLevelReq}
+								Q.questCat, Q.questName = prev.category, prev.questName
+								Q.taskType, Q.questIndex, Q.curLevelReq = prev.taskType, prev.index, prev.levelReq
+								Q.stopFly()
+								Q.phase = "accepting"
+								Q.updateStatus("↩️ Sem inimigos em 10s\nIndo para: " .. tostring(Q.questName), Color3.fromRGB(255, 200, 120))
+								Q.updateLevelInfo()
+								return
+							end
+						end
+						Q.updateStatus("🔍 " .. tostring(Q.questName) .. "\nProcurando inimigos... " .. math.floor(searched) .. "s", Color3.fromRGB(200, 200, 100))
+						Q.searchMove()
 					end
 				else
 					local char = player.Character
 					local hrp = char and char:FindFirstChild("HumanoidRootPart")
 					if not hrp then return end
+					Q.searchSince = 0
 					local nearest, nd = nil, math.huge
 					for _, e in ipairs(enemies) do
 						local d = (e.part.Position - hrp.Position).Magnitude
@@ -6519,6 +6587,8 @@ function showMainPanel()
 					Q.updateStatus("✅ Completa!\nCompletando...", Color3.fromRGB(100, 255, 100))
 					Q.completeQuest()
 					task.wait(0.8)
+					Q.fallback = nil
+					Q.updateSelection()
 					Q.updateStatus("🔄 Reaceitando...", Color3.fromRGB(180, 255, 200))
 					Q.acceptQuest()
 					Q.completed = false
@@ -6574,6 +6644,7 @@ function showMainPanel()
 				Q.updateStatus("🏃 Entregando...", Color3.fromRGB(100, 200, 255))
 				Q.completeQuest()
 				task.wait(1)
+				Q.fallback = nil
 				Q.updateSelection()
 				Q.completed = false
 				Q.acceptedAt = 0
@@ -6590,6 +6661,8 @@ function showMainPanel()
 			end
 			Q.stop()
 			Q.enabled = true
+			Q.fallback = nil
+			Q.searchSince = 0
 			Q.updateSelection()
 			Q.completed = false
 			Q.phase = "accepting"
