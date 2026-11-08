@@ -3426,9 +3426,9 @@ function showMainPanel()
 		local news = makeTile(content, 4)
 		news.Name = "News"
 		news.Size = UDim2.new(1, -20, 0, 44)
-		makeInfoText(news, "NOVIDADES  /  AETHERIS HUB  V2", 8, UDim2.new(0, 10, 0, 4), UDim2.new(1, -20, 0, 12), currentThemeColor, Enum.Font.GothamBold)
-		makeInfoText(news, "✦  Level ESP, Andar sobre a Água e Remover Neblina", 9, UDim2.new(0, 10, 0, 18), UDim2.new(1, -20, 0, 12), currentTextColor)
-		makeInfoText(news, "✦  Tema dinâmico e controles de ESP unificados", 9, UDim2.new(0, 10, 0, 30), UDim2.new(1, -20, 0, 12), currentTextColor)
+		makeInfoText(news, "NOVIDADES  /  AETHERIS HUB  V1", 8, UDim2.new(0, 10, 0, 4), UDim2.new(1, -20, 0, 12), currentThemeColor, Enum.Font.GothamBold)
+		makeInfoText(news, "+ Auto Farm Level, Fast Attack, Esp Level, Direct Attack...", 9, UDim2.new(0, 10, 0, 18), UDim2.new(1, -20, 0, 12), currentTextColor)
+		makeInfoText(news, "+ Bug Fixes, Design Advanced", 9, UDim2.new(0, 10, 0, 30), UDim2.new(1, -20, 0, 12), currentTextColor)
 
 		-----------------------------------------------------------------
 		-- Atualização ao vivo (FPS, ping, jogadores)
