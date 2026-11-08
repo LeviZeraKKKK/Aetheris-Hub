@@ -4800,12 +4800,12 @@ function showMainPanel()
 		}, secCombat)
 		round(header, 7)
 		local headerStroke = new("UIStroke", {Color = Color3.fromRGB(70, 70, 95), Transparency = 0.55, Thickness = 1}, header)
-		local headerIcon = new("TextLabel", {
-			Size = UDim2.new(0, 22, 1, 0), Position = UDim2.new(0, 8, 0, 0),
-			BackgroundTransparency = 1, Font = Enum.Font.GothamBold, Text = "◎",
-			TextColor3 = currentThemeColor, TextSize = 15
+		local headerIcon = new("ImageLabel", {
+			Size = UDim2.new(0, 16, 0, 16), Position = UDim2.new(0, 11, 0.5, -8),
+			BackgroundTransparency = 1, Image = "rbxassetid://7743876054",
+			ImageColor3 = currentThemeColor, ScaleType = Enum.ScaleType.Fit
 		}, header)
-		table.insert(themeTexts, headerIcon)
+		table.insert(themeImages, headerIcon)
 		local headerLabel = new("TextLabel", {
 			Size = UDim2.new(1, -150, 1, 0), Position = UDim2.new(0, 32, 0, 0),
 			BackgroundTransparency = 1, Font = currentGlobalFont, Text = "Jogadores do Lock-On",
@@ -5394,16 +5394,16 @@ function showMainPanel()
 				BorderSizePixel = 0,
 				AutoButtonColor = false,
 				Text = ""
-			}, secSilentGun)
-			round(header, 7)
-			local headerStroke = new("UIStroke", {Color = Color3.fromRGB(70, 70, 95), Transparency = 0.55, Thickness = 1}, header)
-			local headerIcon = new("TextLabel", {
-				Size = UDim2.new(0, 22, 1, 0), Position = UDim2.new(0, 8, 0, 0),
-				BackgroundTransparency = 1, Font = Enum.Font.GothamBold, Text = "◎",
-				TextColor3 = currentThemeColor, TextSize = 15
-			}, header)
-			table.insert(themeTexts, headerIcon)
-			local headerLabel = new("TextLabel", {
+				}, secSilentGun)
+				round(header, 7)
+				local headerStroke = new("UIStroke", {Color = Color3.fromRGB(70, 70, 95), Transparency = 0.55, Thickness = 1}, header)
+				local headerIcon = new("ImageLabel", {
+					Size = UDim2.new(0, 16, 0, 16), Position = UDim2.new(0, 11, 0.5, -8),
+					BackgroundTransparency = 1, Image = "rbxassetid://7743875759",
+					ImageColor3 = currentThemeColor, ScaleType = Enum.ScaleType.Fit
+				}, header)
+				table.insert(themeImages, headerIcon)
+				local headerLabel = new("TextLabel", {
 				Size = UDim2.new(1, -170, 1, 0), Position = UDim2.new(0, 32, 0, 0),
 				BackgroundTransparency = 1, Font = currentGlobalFont, Text = "Jogadores do Aim",
 				TextColor3 = currentTextColor, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left,
@@ -6033,9 +6033,9 @@ function showMainPanel()
 		local secAFL = createSection(secFarm.Parent.Parent, "Auto Farm Level", sectionIcons.FarmAutomation)
 		local Q = {
 			enabled = false, hitDelay = 0.05, aoeRange = 80, flySpeed = 120, hoverHeight = 6,
-			lastHit = 0, combo = 1, questName = "?", questCat = nil, taskType = nil, questIndex = 1,
-			phase = "idle", acceptedAt = 0, noEnemySince = 0, method = 1, weapon = "Any",
-			lastEquip = 0, completed = false, searchSince = 0, fallback = nil, curLevelReq = 0, wanderAngle = 0, wanderAt = 0, origCollision = {}, busy = false, ready = false,
+				lastHit = 0, combo = 1, questName = "?", questCat = nil, taskType = nil, questIndex = 1,
+				phase = "idle", acceptedAt = 0, noEnemySince = 0, method = 1, weapon = "Melee",
+				lastEquip = 0, completed = false, searchSince = 0, fallback = nil, curLevelReq = 0, wanderAngle = 0, wanderAt = 0, origCollision = {}, busy = false, ready = false,
 			npcMap = {
 				BanditQuest1 = "Bandit Quest Giver", MarineQuest = "Marine Leader", JungleQuest = "Adventurer",
 				SnowQuest = "Villager", DesertQuest = "Desert Adventurer", SkyQuest = "Sky Adventurer",
@@ -6784,9 +6784,8 @@ function showMainPanel()
 		end, false)
 
 		local weaponWarn = nil
-		local weaponLabels = {Any = "Qualquer", Melee = "Punho", Fruit = "Fruta", Sword = "Espada"}
+		local weaponLabels = {Melee = "Punho", Fruit = "Fruta", Sword = "Espada"}
 		local weaponIcons = {
-			Any = {Image = "rbxassetid://7734057059"}, -- shuffle / escolha aleatória
 			Melee = {Image = "rbxassetid://7733955664"}, -- mão de combate
 			Fruit = {Image = "rbxassetid://16898612629", Offset = Vector2.new(563, 869), RectSize = Vector2.new(48, 48)}, -- fruta
 			Sword = {Image = "rbxassetid://16898613777", Offset = Vector2.new(967, 759), RectSize = Vector2.new(48, 48)}, -- espadas
@@ -6798,16 +6797,15 @@ function showMainPanel()
 		end
 		local weaponDD = AetherisDropdown(secAFL, {
 			prefix = "Arma para farmar: ",
-			label = weaponLabels.Any,
-			icon = weaponIcons.Any,
-			value = "Any",
-			maxRows = 4,
+			label = weaponLabels.Melee,
+			icon = weaponIcons.Melee,
+			value = "Melee",
+			maxRows = 3,
 			getOptions = function()
 				return {
-						{label = weaponLabels.Any, value = "Any", icon = weaponIcons.Any},
-						{label = weaponLabels.Melee, value = "Melee", icon = weaponIcons.Melee},
-						{label = weaponLabels.Fruit, value = "Fruit", icon = weaponIcons.Fruit},
-						{label = weaponLabels.Sword, value = "Sword", icon = weaponIcons.Sword},
+					{label = weaponLabels.Melee, value = "Melee", icon = weaponIcons.Melee},
+					{label = weaponLabels.Fruit, value = "Fruit", icon = weaponIcons.Fruit},
+					{label = weaponLabels.Sword, value = "Sword", icon = weaponIcons.Sword},
 				}
 			end,
 			onSelect = applyWeapon,
@@ -6819,9 +6817,10 @@ function showMainPanel()
 		weaponWarn.BackgroundColor3 = Color3.fromRGB(60, 46, 16)
 		weaponWarn.Visible = false
 
-		registerConfigBinding(secAFL, "Farm Level: arma", function() return Q.weapon end, function(v)
-				if weaponLabels[v] then weaponDD.setValue(v, weaponLabels[v], weaponIcons[v]); applyWeapon(v) end
-		end)
+			registerConfigBinding(secAFL, "Farm Level: arma", function() return Q.weapon end, function(v)
+					if v == "Any" then v = "Melee" end -- migra presets antigos da opção removida
+					if weaponLabels[v] then weaponDD.setValue(v, weaponLabels[v], weaponIcons[v]); applyWeapon(v) end
+			end)
 
 		addSlider(secAFL, "Range AOE", 10, 300, 80, function(val) Q.aoeRange = val end, 0, " studs")
 		addSlider(secAFL, "Velocidade de voo", 10, 300, 120, function(val) Q.flySpeed = val end, 0)
