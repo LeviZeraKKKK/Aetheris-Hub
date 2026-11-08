@@ -6022,8 +6022,7 @@ function showMainPanel()
 		end
 
 		Q.levelLabel = makeInfoBox(34, "👤 Lv -- | 🎯 Quest: --")
-		Q.statusLabel = makeInfoBox(44, "💤 Aguardando...")
-		Q.statusLabel.TextColor3 = Color3.fromRGB(150, 150, 180)
+		-- (sem caixa de status: Q.updateStatus fica inerte quando Q.statusLabel é nil)
 
 		function Q.updateStatus(txt, color)
 			if Q.statusLabel and Q.statusLabel.Parent then
@@ -6754,25 +6753,6 @@ function showMainPanel()
 		addSlider(secAFL, "Range AOE", 10, 300, 80, function(val) Q.aoeRange = val end, 0, " studs")
 		addSlider(secAFL, "Velocidade de voo", 10, 300, 120, function(val) Q.flySpeed = val end, 0)
 		addSlider(secAFL, "Altura sobre o inimigo", 2, 30, 6, function(val) Q.hoverHeight = val end, 0, " studs")
-
-		local debugRow = Instance.new("TextButton")
-		debugRow.Size = UDim2.new(1, 0, 0, 24)
-		debugRow.BackgroundColor3 = Color3.fromRGB(70, 55, 120)
-		debugRow.BackgroundTransparency = 0.2
-		debugRow.BorderSizePixel = 0
-		debugRow.AutoButtonColor = true
-		debugRow.Font = currentGlobalFont
-		debugRow.Text = "🔍 Debug (imprime no F9)"
-		debugRow.TextColor3 = Color3.new(1, 1, 1)
-		debugRow.TextSize = 10
-		debugRow.Parent = secAFL
-		local dc = Instance.new("UICorner")
-		dc.CornerRadius = UDim.new(0, 5)
-		dc.Parent = debugRow
-		debugRow.MouseButton1Click:Connect(function()
-			Q.debug()
-			Q.updateStatus("🔍 Veja o Output (F9)", Color3.fromRGB(180, 180, 255))
-		end)
 
 		task.spawn(function()
 			task.wait(1)
