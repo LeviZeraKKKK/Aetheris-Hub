@@ -2447,6 +2447,9 @@ function showMainPanel()
 			local inset = guiService:GetGuiInset()
 			local points = {raw, raw + inset, raw - inset}
 			for _, point in ipairs(points) do
+				if ui.closeX and isInside(ui.closeX, point) then return "close", nil, true end
+			end
+			for _, point in ipairs(points) do
 				if isInside(ui.canvas, point) then return "sv", point - raw, true end
 				if isInside(ui.hueBar, point) then return "hue", point - raw, true end
 			end
@@ -2522,14 +2525,19 @@ function showMainPanel()
 			table.insert(themeTexts, titleLabel)
 
 			local closeX = Instance.new("TextButton")
-			closeX.Size = UDim2.fromOffset(20, 18)
-			closeX.Position = UDim2.new(1, -30, 0, 6)
+			closeX.Name = "ColorPickerClose"
+			closeX.Size = UDim2.fromOffset(28, 22)
+			closeX.Position = UDim2.new(1, -34, 0, 3)
+			closeX.ZIndex = 20
+			closeX.Active = true
+			closeX.AutoButtonColor = false
 			closeX.BackgroundTransparency = 1
 			closeX.Font = Enum.Font.GothamBold
 			closeX.Text = "×"
 			closeX.TextColor3 = Color3.fromRGB(160, 160, 180)
 			closeX.TextSize = 16
 			closeX.Parent = modal
+			u.closeX = closeX
 			closeX.MouseEnter:Connect(function() ColorPicker.tween(closeX, 0.12, {TextColor3 = Color3.fromRGB(255, 100, 110)}) end)
 			closeX.MouseLeave:Connect(function() ColorPicker.tween(closeX, 0.12, {TextColor3 = Color3.fromRGB(160, 160, 180)}) end)
 			closeX.MouseButton1Down:Connect(markControl)
@@ -2780,8 +2788,10 @@ function showMainPanel()
 					task.spawn(function()
 						RunService.Heartbeat:Wait() -- deixa os botões do picker marcarem o clique antes
 						if not state.open then return end
-						if os.clock() - controlStamp < 0.3 then return end
 						local mode, offset, inside = findInputTarget(pos)
+						-- clique no X: fecha mesmo que o evento do botão não dispare
+						if mode == "close" then picker.close() return end
+						if os.clock() - controlStamp < 0.3 then return end
 						if mode then
 							inputOffset = offset
 							setDragging(mode)
@@ -6030,7 +6040,7 @@ function showMainPanel()
 	-- AUTO FARM LEVEL (aceita a melhor quest do seu level, voa até os inimigos e ataca)
 	-----------------------------------------------------------------
 	do
-		local secAFL = createSection(secFarm.Parent.Parent, "Auto Farm Level", sectionIcons.FarmAutomation)
+		local secAFL = createSection(secFarm.Parent.Parent, "Auto  Farm  Level", sectionIcons.FarmAutomation)
 		local Q = {
 			enabled = false, hitDelay = 0.05, aoeRange = 80, flySpeed = 120, hoverHeight = 6,
 				lastHit = 0, combo = 1, questName = "?", questCat = nil, taskType = nil, questIndex = 1,
@@ -6085,7 +6095,7 @@ function showMainPanel()
 			return box
 		end
 
-		Q.levelLabel = makeInfoBox(34, "👤 Lv -- | 🎯 Quest: --")
+		-- (sem caixa de level/quest: Q.updateLevelInfo fica inerte quando Q.levelLabel é nil)
 		-- (sem caixa de status: Q.updateStatus fica inerte quando Q.statusLabel é nil)
 
 		function Q.updateStatus(txt, color)
@@ -6776,7 +6786,7 @@ function showMainPanel()
 		end)
 
 		-- ===== CONFIGURAÇÕES NA INTERFACE =====
-		addToggle(secAFL, "Auto Farm Level", function(state)
+		addToggle(secAFL, "Auto  Farm  Level", function(state)
 			if state then Q.start() else
 				Q.stop()
 				Q.updateStatus("💤 Desligado", Color3.fromRGB(150, 150, 180))
