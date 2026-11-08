@@ -1920,7 +1920,7 @@ function showMainPanel()
 	local tabs = {
 		{Name = "Info", Image = "rbxassetid://16898613509", Offset = Vector2.new(612, 869)},
 		{Name = "Player", Image = "rbxassetid://16898613044", Offset = Vector2.new(0, 869)},
-		{Name = "Combate", Image = "rbxassetid://16898613044", Offset = Vector2.new(453, 869)},
+		{Name = "Combate", Image = "rbxassetid://16898613777", Offset = Vector2.new(967, 759)},
 		{Name = "Visual", Image = "rbxassetid://16898613353", Offset = Vector2.new(771, 563)},
 		{Name = "Farming", Image = "rbxassetid://16898613777", Offset = Vector2.new(918, 306)},
 		{Name = "Fruta", Image = "rbxassetid://16898612629", Offset = Vector2.new(563, 869)},
@@ -1935,7 +1935,11 @@ function showMainPanel()
 		EspPlayers = {Image = "rbxassetid://16898613699", Offset = Vector2.new(869, 759)}, -- scan-eye
 		EspEnemies = {Image = "rbxassetid://16898612819", Offset = Vector2.new(869, 98)}, -- bot
 		World = {Image = "rbxassetid://16898613509", Offset = Vector2.new(771, 563)}, -- globe
-		Combat = {Image = "rbxassetid://16898613777", Offset = Vector2.new(967, 759)}, -- swords
+		LockOn = {Image = "rbxassetid://7733765307", Offset = Vector2.new(0, 0), RectSize = Vector2.new(0, 0)}, -- mira
+		SilentGun = {Image = "rbxassetid://8997386772", Offset = Vector2.new(0, 0), RectSize = Vector2.new(0, 0)}, -- varredura
+		AutoAttack = {Image = "rbxassetid://7733798747", Offset = Vector2.new(0, 0), RectSize = Vector2.new(0, 0)}, -- chama/ataque
+		AttackSpeed = {Image = "rbxassetid://7733799969", Offset = Vector2.new(0, 0), RectSize = Vector2.new(0, 0)}, -- velocímetro
+		AttackDirect = {Image = "rbxassetid://7733955740", Offset = Vector2.new(0, 0), RectSize = Vector2.new(0, 0)}, -- mão
 		Filters = {Image = "rbxassetid://16898613869", Offset = Vector2.new(514, 771)}, -- target
 		Chest = {Image = "rbxassetid://7734021469", Offset = Vector2.new(0, 0), RectSize = Vector2.new(0, 0)}, -- package/baú
 		FarmAutomation = {Image = "rbxassetid://16898613869", Offset = Vector2.new(918, 906)}, -- zap
@@ -4716,8 +4720,8 @@ function showMainPanel()
 	-----------------------------------------------------------------
 	-- ABA COMBATE
 	-----------------------------------------------------------------
-	local aimLockPage = pages["Combate"]
-	local secCombat = createSection(aimLockPage, "Sistema Lock-On", sectionIcons.Combat)
+		local aimLockPage = pages["Combate"]
+		local secCombat = createSection(aimLockPage, "Sistema Lock-On", sectionIcons.LockOn)
 
 	addToggle(secCombat, "Ativar Lock-On", function(state)
 		isLockOnEnabled = state
@@ -5336,7 +5340,7 @@ function showMainPanel()
 			end
 		end)
 
-		local secSilentGun = createSection(aimLockPage, "Aim Silent Gun", sectionIcons.Combat)
+		local secSilentGun = createSection(aimLockPage, "Aim Silent Gun", sectionIcons.SilentGun)
 
 		addToggle(secSilentGun, "Aim Silent Gun", function(state)
 			silentGunEnabled = state
@@ -6839,7 +6843,7 @@ function showMainPanel()
 	-- AUTO ATTACK (ataca automaticamente quem estiver ao redor)
 	-----------------------------------------------------------------
 	do
-		local secAutoAttack = createSection(aimLockPage, "Atacar Automáticamente", sectionIcons.Combat)
+		local secAutoAttack = createSection(aimLockPage, "Atacar Automáticamente", sectionIcons.AutoAttack)
 		local AA = {
 			enabled = false, players = true, npcs = true, range = 25, delay = 0.15,
 			lastAttack = 0, conn = nil, loaded = false
@@ -6974,7 +6978,7 @@ function showMainPanel()
 	-- VELOCIDADE DE ATAQUE (aba Combate)
 	-----------------------------------------------------------------
 	do
-		local secAttackSpeed = createSection(aimLockPage, "Velocidade de Ataque", sectionIcons.Combat)
+		local secAttackSpeed = createSection(aimLockPage, "Velocidade de Ataque", sectionIcons.AttackSpeed)
 		local AS = {enabled = false, mult = 1.5, conn = nil, charConn = nil, loaded = false, orig = {}}
 
 		local function loadModules()
@@ -7071,7 +7075,7 @@ function showMainPanel()
 	-- ATTACK DIRECT (dano direto nos alvos ao redor, sem animação)
 	-----------------------------------------------------------------
 	do
-		local secAttackDirect = createSection(aimLockPage, "Ataque direto", sectionIcons.Combat)
+		local secAttackDirect = createSection(aimLockPage, "Ataque direto", sectionIcons.AttackDirect)
 		local AD = {
 			enabled = false, players = true, npcs = true, useAttackEvent = true,
 			range = 20, delay = 0.1, lastHit = 0, combo = 1, conn = nil, resolved = false
