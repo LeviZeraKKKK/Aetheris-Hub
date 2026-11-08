@@ -63,6 +63,9 @@ function AetherisLayoutHeight(layout)
 	return total + layout.Padding.Offset * math.max(count - 1, 0)
 end
 
+-- Reações extras à troca de cor do tema (listas, selos, dropdowns recriam o que usa a cor).
+AetherisThemeHooks = AetherisThemeHooks or {}
+
 -- Dropdown único do hub: cabeçalho com a opção atual + lista que abre por baixo (com animação).
 -- cfg = {prefix, placeholder, label, value, maxRows, getOptions = function() -> {{label, value, font?}}, onSelect = function(value, option)}
 -- Retorna {setValue(value, label), close(), frame}
@@ -276,6 +279,14 @@ function AetherisDropdown(parent, cfg)
 		TweenService:Create(frame, TweenInfo.new(0.15), {BackgroundTransparency = 0.35}):Play()
 	end)
 	header.MouseButton1Click:Connect(function() setOpen(not state.open) end)
+	table.insert(AetherisThemeHooks, function(color)
+		if not frame.Parent then return end
+		list.ScrollBarImageColor3 = color
+		if state.open then
+			frameStroke.Color = color
+			build()
+		end
+	end)
 
 	return {
 		frame = frame,
@@ -365,6 +376,10 @@ local function updateGlobalTheme(newColor)
 		if part and part.Parent then
 			part.BackgroundColor3 = newColor
 		end
+	end
+
+	for _, hook in pairs(AetherisThemeHooks) do
+		pcall(hook, newColor)
 	end
 end
 
@@ -4485,6 +4500,7 @@ function showMainPanel()
 			hint.Text = (fog.enabled and "● Neblina removida" or "○ Neblina restaurada") .. "  •  " .. count .. (count == 1 and " camada marcada" or " camadas marcadas")
 			TweenService:Create(hint, TweenInfo.new(0.2), {TextColor3 = fog.enabled and currentThemeColor or Color3.fromRGB(175, 175, 190)}):Play()
 		end
+		table.insert(AetherisThemeHooks, function() updateFogStatus() end)
 		local function setFogEnabled(enabled)
 			fog.enabled = enabled
 			toggleState.isToggled = enabled
@@ -4830,6 +4846,7 @@ function showMainPanel()
 		}, header)
 		round(badge, 9)
 		table.insert(themeTexts, badge)
+		table.insert(themeSliders, badge)
 		local arrow = new("TextLabel", {
 			Size = UDim2.new(0, 20, 0, 20), Position = UDim2.new(1, -26, 0.5, -10),
 			BackgroundTransparency = 1, Font = Enum.Font.GothamBold, Text = "▼",
@@ -5138,6 +5155,9 @@ function showMainPanel()
 			updateBadge()
 		end)
 		searchBox:GetPropertyChangedSignal("Text"):Connect(function() updateServerList(false) end)
+		table.insert(AetherisThemeHooks, function()
+			if dropOpen then updateServerList(false) end
+		end)
 		Players.PlayerAdded:Connect(function() if dropOpen then updateServerList(false) end end)
 		Players.PlayerRemoving:Connect(function(leavingPlayer)
 			selectedManualTargets[leavingPlayer] = nil
@@ -5427,6 +5447,7 @@ function showMainPanel()
 			}, header)
 			round(badge, 9)
 			table.insert(themeTexts, badge)
+			table.insert(themeSliders, badge)
 			local arrow = new("TextLabel", {
 				Size = UDim2.new(0, 20, 0, 20), Position = UDim2.new(1, -26, 0.5, -10),
 				BackgroundTransparency = 1, Font = Enum.Font.GothamBold, Text = "▼",
@@ -5702,6 +5723,9 @@ function showMainPanel()
 			header.MouseButton1Click:Connect(function() setDropdown(not dropOpen) end)
 			refreshButton.MouseButton1Click:Connect(function() renderAimPlayers(false) end)
 			searchBox:GetPropertyChangedSignal("Text"):Connect(function() renderAimPlayers(false) end)
+			table.insert(AetherisThemeHooks, function()
+				if dropOpen then renderAimPlayers(false) else updateBadge() end
+			end)
 			Players.PlayerAdded:Connect(function() if dropOpen then renderAimPlayers(false) else updateBadge() end end)
 			Players.PlayerRemoving:Connect(function(leavingPlayer)
 				aimAllies[leavingPlayer] = nil
@@ -6832,7 +6856,7 @@ function showMainPanel()
 					if weaponLabels[v] then weaponDD.setValue(v, weaponLabels[v], weaponIcons[v]); applyWeapon(v) end
 			end)
 
-		addSlider(secAFL, "Range AOE", 10, 300, 80, function(val) Q.aoeRange = val end, 0, " studs")
+		addSlider(secAFL, "Ataque Range", 10, 300, 80, function(val) Q.aoeRange = val end, 0, " studs")
 		addSlider(secAFL, "Velocidade de voo", 10, 300, 120, function(val) Q.flySpeed = val end, 0)
 		addSlider(secAFL, "Altura sobre o inimigo", 2, 30, 6, function(val) Q.hoverHeight = val end, 0, " studs")
 
@@ -9728,37 +9752,6 @@ function FVX.close()
     end)
 end
 closeB.MouseButton1Click:Connect(FVX.close)
-
--- Botão de atualizar manualmente (gira ao clicar)
-do
-    local refreshB = Instance.new("TextButton")
-    refreshB.Name = "RefreshStock"
-    refreshB.Size = UDim2.new(0, 25, 0, 25)
-    refreshB.Position = UDim2.new(1, -62, 0, 10)
-    refreshB.BackgroundColor3 = Color3.fromRGB(38, 42, 58)
-    refreshB.BorderSizePixel = 0
-    refreshB.AutoButtonColor = false
-    refreshB.Text = "↻"
-    refreshB.TextColor3 = currentThemeColor
-    refreshB.Font = Enum.Font.GothamBold
-    refreshB.TextSize = 15
-    refreshB.ZIndex = 13
-    refreshB.Parent = panel
-    Instance.new("UICorner", refreshB).CornerRadius = UDim.new(0, 7)
-    table.insert(themeTexts, refreshB)
-    local base = refreshB.BackgroundColor3
-    refreshB.MouseEnter:Connect(function()
-        TweenService:Create(refreshB, TweenInfo.new(0.15), {BackgroundColor3 = base:Lerp(currentThemeColor, 0.35)}):Play()
-    end)
-    refreshB.MouseLeave:Connect(function()
-        TweenService:Create(refreshB, TweenInfo.new(0.15), {BackgroundColor3 = base}):Play()
-    end)
-    refreshB.MouseButton1Click:Connect(function()
-        refreshB.Rotation = 0
-        TweenService:Create(refreshB, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Rotation = 360}):Play()
-        refreshAll()
-    end)
-end
 
 -- ============ ARRASTAR PAINEL ============
 local dragging, dragStart, startPos = false, nil, nil
