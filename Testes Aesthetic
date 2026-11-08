@@ -4500,7 +4500,11 @@ function showMainPanel()
 			hint.Text = (fog.enabled and "● Neblina removida" or "○ Neblina restaurada") .. "  •  " .. count .. (count == 1 and " camada marcada" or " camadas marcadas")
 			TweenService:Create(hint, TweenInfo.new(0.2), {TextColor3 = fog.enabled and currentThemeColor or Color3.fromRGB(175, 175, 190)}):Play()
 		end
-		table.insert(AetherisThemeHooks, function() updateFogStatus() end)
+		scroll.ScrollBarImageColor3 = currentThemeColor
+		table.insert(AetherisThemeHooks, function(color)
+			scroll.ScrollBarImageColor3 = color
+			updateFogStatus()
+		end)
 		local function setFogEnabled(enabled)
 			fog.enabled = enabled
 			toggleState.isToggled = enabled
@@ -5155,7 +5159,10 @@ function showMainPanel()
 			updateBadge()
 		end)
 		searchBox:GetPropertyChangedSignal("Text"):Connect(function() updateServerList(false) end)
-		table.insert(AetherisThemeHooks, function()
+		table.insert(AetherisThemeHooks, function(color)
+			badge.BackgroundColor3 = color
+			badge.TextColor3 = color
+			list.ScrollBarImageColor3 = color
 			if dropOpen then updateServerList(false) end
 		end)
 		Players.PlayerAdded:Connect(function() if dropOpen then updateServerList(false) end end)
@@ -5723,7 +5730,10 @@ function showMainPanel()
 			header.MouseButton1Click:Connect(function() setDropdown(not dropOpen) end)
 			refreshButton.MouseButton1Click:Connect(function() renderAimPlayers(false) end)
 			searchBox:GetPropertyChangedSignal("Text"):Connect(function() renderAimPlayers(false) end)
-			table.insert(AetherisThemeHooks, function()
+			table.insert(AetherisThemeHooks, function(color)
+				badge.BackgroundColor3 = color
+				badge.TextColor3 = color
+				list.ScrollBarImageColor3 = color
 				if dropOpen then renderAimPlayers(false) else updateBadge() end
 			end)
 			Players.PlayerAdded:Connect(function() if dropOpen then renderAimPlayers(false) else updateBadge() end end)
@@ -8092,6 +8102,8 @@ function showMainPanel()
 			TextColor3 = currentThemeColor, TextSize = 9
 		}, manager.selectButton)
 		round(manager.countBadge, 9)
+		table.insert(themeTexts, manager.countBadge)
+		table.insert(themeSliders, manager.countBadge)
 		manager.arrow = new("ImageLabel", {
 			Name = "SavedConfigsArrow", Size = UDim2.new(0, 14, 0, 14), Position = UDim2.new(1, -21, 0.5, -7),
 			BackgroundTransparency = 1, Image = "rbxassetid://7733717447", ImageColor3 = GRAY,
@@ -8135,6 +8147,17 @@ function showMainPanel()
 				end)
 			end
 		end
+		-- troca de tema: contorno aberto, barra de rolagem e linhas da lista acompanham a nova cor
+		table.insert(AetherisThemeHooks, function(color)
+			if not manager.list or not manager.list.Parent then return end
+			manager.countBadge.BackgroundColor3 = color
+			manager.countBadge.TextColor3 = color
+			manager.list.ScrollBarImageColor3 = color
+			if manager.listOpen then
+				selectStroke.Color = color
+				manager.refreshList()
+			end
+		end)
 		manager.setSelected = function(name)
 			manager.selectedName = name
 			manager.selectLabel.Text = name or "Selecione uma configuração"
