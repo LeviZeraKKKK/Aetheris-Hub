@@ -69,7 +69,7 @@ end
 function AetherisDropdown(parent, cfg)
 	local HEADER, ROW, GAP = 28, 24, 4
 	local GRAYSTROKE = Color3.fromRGB(70, 70, 95)
-	local state = {open = false, value = cfg.value, label = cfg.label, options = {}}
+	local state = {open = false, value = cfg.value, label = cfg.label, icon = cfg.icon, options = {}}
 
 	local frame = Instance.new("Frame")
 	frame.Size = UDim2.new(1, 0, 0, HEADER)
@@ -105,6 +105,32 @@ function AetherisDropdown(parent, cfg)
 	label.TextTruncate = Enum.TextTruncate.AtEnd
 	label.Parent = header
 	table.insert(allTextLabels, label)
+	local headerIcon = Instance.new("ImageLabel")
+	headerIcon.Name = "DropdownOptionIcon"
+	headerIcon.Size = UDim2.new(0, 16, 0, 16)
+	headerIcon.Position = UDim2.new(0, 9, 0.5, -8)
+	headerIcon.BackgroundTransparency = 1
+	headerIcon.Visible = false
+	headerIcon.ScaleType = Enum.ScaleType.Fit
+	headerIcon.Parent = header
+	table.insert(themeImages, headerIcon)
+	local function applyHeaderIcon(icon)
+		state.icon = icon
+		if type(icon) == "table" and icon.Image then
+			headerIcon.Image = icon.Image
+			headerIcon.ImageColor3 = currentThemeColor
+			headerIcon.ImageRectOffset = icon.Offset or Vector2.new(0, 0)
+			headerIcon.ImageRectSize = icon.RectSize or Vector2.new(0, 0)
+			headerIcon.Visible = true
+			label.Position = UDim2.new(0, 31, 0, 0)
+			label.Size = UDim2.new(1, -55, 1, 0)
+		else
+			headerIcon.Visible = false
+			label.Position = UDim2.new(0, 10, 0, 0)
+			label.Size = UDim2.new(1, -34, 1, 0)
+		end
+	end
+	applyHeaderIcon(state.icon)
 
 	local arrow = Instance.new("TextLabel")
 	arrow.Size = UDim2.new(0, 18, 1, 0)
@@ -169,10 +195,37 @@ function AetherisDropdown(parent, cfg)
 			b.Font = opt.font or currentGlobalFont
 			b.Text = opt.label
 			b.TextColor3 = currentTextColor
-			b.TextSize = 10
-			b.TextXAlignment = Enum.TextXAlignment.Left
-			b.Parent = list
-			if not opt.font then table.insert(allTextLabels, b) end
+				b.TextSize = 10
+				b.TextXAlignment = Enum.TextXAlignment.Left
+				b.Parent = list
+				if not opt.font then table.insert(allTextLabels, b) end
+				if type(opt.icon) == "table" and opt.icon.Image then
+					b.Text = ""
+					local optionIcon = Instance.new("ImageLabel")
+					optionIcon.Name = "DropdownOptionIcon"
+					optionIcon.Size = UDim2.new(0, 14, 0, 14)
+					optionIcon.Position = UDim2.new(0, 8, 0.5, -7)
+					optionIcon.BackgroundTransparency = 1
+					optionIcon.Image = opt.icon.Image
+					optionIcon.ImageRectOffset = opt.icon.Offset or Vector2.new(0, 0)
+					optionIcon.ImageRectSize = opt.icon.RectSize or Vector2.new(0, 0)
+					optionIcon.ImageColor3 = currentThemeColor
+					optionIcon.ScaleType = Enum.ScaleType.Fit
+					optionIcon.Parent = b
+					table.insert(themeImages, optionIcon)
+					local optionLabel = Instance.new("TextLabel")
+					optionLabel.Size = UDim2.new(1, -32, 1, 0)
+					optionLabel.Position = UDim2.new(0, 28, 0, 0)
+					optionLabel.BackgroundTransparency = 1
+					optionLabel.Font = opt.font or currentGlobalFont
+					optionLabel.Text = opt.label
+					optionLabel.TextColor3 = currentTextColor
+					optionLabel.TextSize = 10
+					optionLabel.TextXAlignment = Enum.TextXAlignment.Left
+					optionLabel.TextTruncate = Enum.TextTruncate.AtEnd
+					optionLabel.Parent = b
+					if not opt.font then table.insert(allTextLabels, optionLabel) end
+				end
 			local bc = Instance.new("UICorner")
 			bc.CornerRadius = UDim.new(0, 5)
 			bc.Parent = b
@@ -190,9 +243,10 @@ function AetherisDropdown(parent, cfg)
 				end
 			end)
 			b.MouseButton1Click:Connect(function()
-				state.value = opt.value
-				state.label = opt.label
-				setLabelText()
+					state.value = opt.value
+					state.label = opt.label
+					applyHeaderIcon(opt.icon)
+					setLabelText()
 				close()
 				if cfg.onSelect then cfg.onSelect(opt.value, opt) end
 			end)
@@ -226,10 +280,11 @@ function AetherisDropdown(parent, cfg)
 	return {
 		frame = frame,
 		close = close,
-		setValue = function(value, text)
-			state.value = value
-			state.label = text
-			setLabelText()
+			setValue = function(value, text, icon)
+				state.value = value
+				state.label = text
+				applyHeaderIcon(icon)
+				setLabelText()
 		end,
 	}
 end
@@ -6725,7 +6780,13 @@ function showMainPanel()
 		end, false)
 
 		local weaponWarn = nil
-		local weaponLabels = {Any = "🎲 Qualquer", Melee = "🥊 Punho", Fruit = "🍎 Fruta", Sword = "⚔️ Espada"}
+		local weaponLabels = {Any = "Qualquer", Melee = "Punho", Fruit = "Fruta", Sword = "Espada"}
+		local weaponIcons = {
+			Any = {Image = "rbxassetid://7734057059"}, -- shuffle / escolha aleatória
+			Melee = {Image = "rbxassetid://7733955664"}, -- mão de combate
+			Fruit = {Image = "rbxassetid://16898612629", Offset = Vector2.new(563, 869), RectSize = Vector2.new(48, 48)}, -- fruta
+			Sword = {Image = "rbxassetid://16898613777", Offset = Vector2.new(967, 759), RectSize = Vector2.new(48, 48)}, -- espadas
+		}
 		local function applyWeapon(v)
 			Q.weapon = v
 			if weaponWarn then weaponWarn.Visible = (v == "Fruit") end
@@ -6734,12 +6795,15 @@ function showMainPanel()
 		local weaponDD = AetherisDropdown(secAFL, {
 			prefix = "Arma para farmar: ",
 			label = weaponLabels.Any,
+			icon = weaponIcons.Any,
 			value = "Any",
 			maxRows = 4,
 			getOptions = function()
 				return {
-					{label = weaponLabels.Any, value = "Any"}, {label = weaponLabels.Melee, value = "Melee"},
-					{label = weaponLabels.Fruit, value = "Fruit"}, {label = weaponLabels.Sword, value = "Sword"},
+						{label = weaponLabels.Any, value = "Any", icon = weaponIcons.Any},
+						{label = weaponLabels.Melee, value = "Melee", icon = weaponIcons.Melee},
+						{label = weaponLabels.Fruit, value = "Fruit", icon = weaponIcons.Fruit},
+						{label = weaponLabels.Sword, value = "Sword", icon = weaponIcons.Sword},
 				}
 			end,
 			onSelect = applyWeapon,
@@ -6752,7 +6816,7 @@ function showMainPanel()
 		weaponWarn.Visible = false
 
 		registerConfigBinding(secAFL, "Farm Level: arma", function() return Q.weapon end, function(v)
-			if weaponLabels[v] then weaponDD.setValue(v, weaponLabels[v]); applyWeapon(v) end
+				if weaponLabels[v] then weaponDD.setValue(v, weaponLabels[v], weaponIcons[v]); applyWeapon(v) end
 		end)
 
 		addSlider(secAFL, "Range AOE", 10, 300, 80, function(val) Q.aoeRange = val end, 0, " studs")
