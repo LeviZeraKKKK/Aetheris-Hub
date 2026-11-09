@@ -6855,6 +6855,7 @@ function showMainPanel()
 
 		function Q.isComplete()
 			if tick() - Q.acceptedAt < 4 then return false end
+			if not Q.engaged then return false end -- ignora "completa" velho: só vale depois de atacar
 			return Q.completed
 		end
 
@@ -6932,14 +6933,18 @@ function showMainPanel()
 			if phase == "accepting" then
 				Q.updateStatus("📜 " .. tostring(Q.questName) .. "\nAceitando (" .. (Q.method == 1 and "direto" or "diálogo") .. ")...", Color3.fromRGB(255, 200, 100))
 				if Q.weapon ~= "Any" then Q.ensureWeapon() end
+				-- continua voando (noclip + parado no ar) enquanto aceita, sem cair nem parar de vez
+				Q.enableNoclip()
+				Q.hold()
+				Q.spawnPart, Q.spawnCheckAt = nil, 0 -- esquece o spawn da quest/sessão anterior
 				Q.acceptQuest()
 				Q.acceptedAt = tick()
 				Q.noEnemySince = 0
 				Q.searchSince = 0
 				Q.completed = false
+				Q.engaged = false
 				Q.clearCompletedFlag()
 				Q.phase = "flying"
-				Q.enableNoclip()
 				Q.updateStatus("🕊️ Voando...", Color3.fromRGB(150, 200, 255))
 
 			elseif phase == "flying" then
@@ -6947,27 +6952,10 @@ function showMainPanel()
 				if #enemies == 0 then
 					if Q.isComplete() then
 						Q.phase = "returning"
-						Q.disableNoclip()
 						Q.updateStatus("🏃 Quest completa!\nEntregando...", Color3.fromRGB(100, 200, 255))
 					else
 						if Q.searchSince == 0 then Q.searchSince = tick() end
 						local searched = tick() - Q.searchSince
-						if searched > 10 then
-							-- não achou ninguém em 10s: pega a missão anterior a esta
-							local prev = Q.pickBest(Q.curLevelReq)
-							Q.searchSince = 0
-							if prev then
-								local current = Q.pickBest()
-								Q.fallback = {bestReq = current and current.levelReq or Q.curLevelReq}
-								Q.questCat, Q.questName = prev.category, prev.questName
-								Q.taskType, Q.questIndex, Q.curLevelReq = prev.taskType, prev.index, prev.levelReq
-								Q.stopFly()
-								Q.phase = "accepting"
-								Q.updateStatus("↩️ Sem inimigos em 10s\nIndo para: " .. tostring(Q.questName), Color3.fromRGB(255, 200, 120))
-								Q.updateLevelInfo()
-								return
-							end
-						end
 						Q.updateStatus("🔍 " .. tostring(Q.questName) .. "\nProcurando inimigos... " .. math.floor(searched) .. "s", Color3.fromRGB(200, 200, 100))
 						Q.searchMove()
 					end
@@ -6984,6 +6972,7 @@ function showMainPanel()
 					Q.updateStatus("🕊️ Voando até " .. tostring(Q.taskType or "?") .. "\nDist: " .. math.floor(nd), Color3.fromRGB(150, 200, 255))
 					if nd <= Q.hoverHeight + 4 then
 						Q.stopFly()
+						Q.engaged = true
 						Q.phase = "farming"
 						Q.updateStatus("⚔️ Atacando...", Color3.fromRGB(255, 100, 200))
 					else
@@ -6998,7 +6987,7 @@ function showMainPanel()
 				local enemies = Q.questEnemies()
 
 				if Q.isComplete() then
-					Q.stopFly()
+					Q.hold()
 					Q.updateStatus("✅ Completa!\nCompletando...", Color3.fromRGB(100, 255, 100))
 					Q.completeQuest()
 					task.wait(0.8)
@@ -7007,6 +6996,8 @@ function showMainPanel()
 					Q.updateStatus("🔄 Reaceitando...", Color3.fromRGB(180, 255, 200))
 					Q.acceptQuest()
 					Q.completed = false
+					Q.engaged = false
+					Q.spawnPart, Q.spawnCheckAt = nil, 0
 					Q.noEnemySince = 0
 					Q.acceptedAt = tick()
 					Q.clearCompletedFlag()
@@ -7055,7 +7046,8 @@ function showMainPanel()
 				end
 
 			elseif phase == "returning" then
-				Q.stopFly()
+				Q.enableNoclip()
+				Q.hold()
 				Q.updateStatus("🏃 Entregando...", Color3.fromRGB(100, 200, 255))
 				Q.completeQuest()
 				task.wait(1)
@@ -7080,6 +7072,8 @@ function showMainPanel()
 			Q.searchSince = 0
 			Q.updateSelection()
 			Q.completed = false
+			Q.engaged = false
+			Q.spawnPart, Q.spawnCheckAt = nil, 0
 			Q.phase = "accepting"
 			Q.acceptedAt = 0
 			Q.noEnemySince = 0
@@ -7102,8 +7096,6 @@ function showMainPanel()
 						if oldCat ~= Q.questCat then
 							Q.updateStatus("🆙 Level up! " .. tostring(Q.questName), Color3.fromRGB(150, 255, 200))
 							Q.updateLevelInfo()
-							Q.stopFly()
-							Q.disableNoclip()
 							Q.phase = "accepting"
 						end
 					end
