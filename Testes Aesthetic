@@ -2580,6 +2580,44 @@ function showMainPanel()
 			section.Size = UDim2.new(1, -4, 0, AetherisLayoutHeight(sLayout) + 28)
 		end)
 
+		-- Divisórias: uma linha fina sob o título da seção e outra entre cada função.
+		local function makeDivider(parent, pos, size)
+			local line = Instance.new("Frame")
+			line.Name = "RowDivider"
+			line.Position = pos
+			line.Size = size
+			line.BackgroundColor3 = Color3.fromRGB(52, 64, 92)
+			line.BorderSizePixel = 0
+			line.Active = false
+			local g = Instance.new("UIGradient")
+			g.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 1),
+				NumberSequenceKeypoint.new(0.12, 0.35),
+				NumberSequenceKeypoint.new(0.88, 0.35),
+				NumberSequenceKeypoint.new(1, 1)
+			})
+			g.Parent = line
+			line.Parent = parent
+			return line
+		end
+		makeDivider(section, UDim2.new(0, 8, 0, 22), UDim2.new(1, -16, 0, 1))
+
+		sContainer.ChildAdded:Connect(function(row)
+			if not row:IsA("GuiObject") then return end
+			local count = 0
+			for _, ch in ipairs(sContainer:GetChildren()) do
+				if ch:IsA("GuiObject") then count = count + 1 end
+			end
+			if count <= 1 then return end
+			task.defer(function()
+				if not row.Parent then return end
+				-- Linhas com layout próprio (listas, grades) não recebem divisória para não desorganizar.
+				if row:FindFirstChildOfClass("UIListLayout") or row:FindFirstChildOfClass("UIGridLayout") or row:IsA("ScrollingFrame") then return end
+				local line = makeDivider(row, UDim2.new(0, 6, 0, row.ClipsDescendants and 0 or -2), UDim2.new(1, -12, 0, 1))
+				line.ZIndex = row.ZIndex
+			end)
+		end)
+
 		return sContainer
 	end
 
