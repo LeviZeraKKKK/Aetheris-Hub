@@ -1736,8 +1736,8 @@ function showMainPanel()
 	table.insert(themeTexts, versionBadgeText)
 
 	local controlsContainer = Instance.new("Frame")
-	controlsContainer.Size = UDim2.new(0, 50, 0, 22)
-	controlsContainer.Position = UDim2.new(1, -58, 0, 10)
+	controlsContainer.Size = UDim2.new(0, 78, 0, 22)
+	controlsContainer.Position = UDim2.new(1, -86, 0, 10)
 	controlsContainer.BackgroundTransparency = 1
 	controlsContainer.Parent = mainPanel
 
@@ -1785,15 +1785,180 @@ function showMainPanel()
 		task.delay(0.6, function() ring:Destroy() end)
 	end
 
-	local function toggleMinimizePanel()
+	-----------------------------------------------------------------
+	-- Modo 2 de minimizar: pílula no topo da tela (logo + nome + FPS), igual ao exemplo.
+	-- Modo 1 continua sendo o botão flutuante.
+	-----------------------------------------------------------------
+	local minimizeMode = "float"
+	local PILL_W, PILL_H, PILL_TOP = 190, 34, 12
+	local pillGood, pillWarn, pillBad = Color3.fromRGB(80, 220, 130), Color3.fromRGB(240, 190, 70), Color3.fromRGB(240, 85, 85)
+	local pillIdle = Color3.fromRGB(52, 64, 92)
+
+	local pillFrame = Instance.new("TextButton")
+	pillFrame.Name = "MinimizedPill"
+	pillFrame.AnchorPoint = Vector2.new(0.5, 0)
+	pillFrame.Position = UDim2.new(0.5, 0, 0, PILL_TOP)
+	pillFrame.Size = UDim2.new(0, 0, 0, PILL_H)
+	pillFrame.BackgroundColor3 = Color3.fromRGB(16, 20, 32)
+	pillFrame.BackgroundTransparency = 0.04
+	pillFrame.BorderSizePixel = 0
+	pillFrame.AutoButtonColor = false
+	pillFrame.Text = ""
+	pillFrame.ClipsDescendants = true
+	pillFrame.Visible = false
+	pillFrame.ZIndex = 20
+	pillFrame.Parent = screenGui
+	local pillCorner = Instance.new("UICorner")
+	pillCorner.CornerRadius = UDim.new(0, PILL_H / 2)
+	pillCorner.Parent = pillFrame
+	local pillStroke = Instance.new("UIStroke")
+	pillStroke.Color = Color3.new(1, 1, 1)
+	pillStroke.Thickness = 1.2
+	pillStroke.Transparency = 0.4
+	pillStroke.Parent = pillFrame
+	local pillStrokeGrad = Instance.new("UIGradient")
+	pillStrokeGrad.Color = ColorSequence.new(currentThemeColor, accentBlue)
+	pillStrokeGrad.Rotation = 20
+	pillStrokeGrad.Parent = pillStroke
+	table.insert(AetherisThemeHooks, function(c) pillStrokeGrad.Color = ColorSequence.new(c, accentBlue) end)
+
+	local pillLogo = Instance.new("Frame")
+	pillLogo.Size = UDim2.new(0, 24, 0, 24)
+	pillLogo.Position = UDim2.new(0, 6, 0.5, -12)
+	pillLogo.BackgroundColor3 = Color3.fromRGB(24, 30, 48)
+	pillLogo.BorderSizePixel = 0
+	pillLogo.ZIndex = 21
+	pillLogo.Parent = pillFrame
+	local pillLogoCorner = Instance.new("UICorner")
+	pillLogoCorner.CornerRadius = UDim.new(1, 0)
+	pillLogoCorner.Parent = pillLogo
+	local pillLetter = Instance.new("TextLabel")
+	pillLetter.Size = UDim2.new(1, 0, 1, 0)
+	pillLetter.BackgroundTransparency = 1
+	pillLetter.Font = Enum.Font.GothamBold
+	pillLetter.Text = "A"
+	pillLetter.TextColor3 = Color3.new(1, 1, 1)
+	pillLetter.TextSize = 13
+	pillLetter.ZIndex = 22
+	pillLetter.Parent = pillLogo
+	local pillLetterGrad = Instance.new("UIGradient")
+	pillLetterGrad.Color = ColorSequence.new(currentThemeColor, accentBlue)
+	pillLetterGrad.Rotation = 45
+	pillLetterGrad.Parent = pillLetter
+	table.insert(AetherisThemeHooks, function(c) pillLetterGrad.Color = ColorSequence.new(c, accentBlue) end)
+
+	local pillName = Instance.new("TextLabel")
+	pillName.Size = UDim2.new(0, 92, 1, 0)
+	pillName.Position = UDim2.new(0, 38, 0, 0)
+	pillName.BackgroundTransparency = 1
+	pillName.Font = Enum.Font.GothamBold
+	pillName.Text = "Aetheris Hub"
+	pillName.TextColor3 = Color3.fromRGB(170, 180, 202)
+	pillName.TextSize = 10
+	pillName.TextXAlignment = Enum.TextXAlignment.Left
+	pillName.TextTruncate = Enum.TextTruncate.AtEnd
+	pillName.ZIndex = 21
+	pillName.Parent = pillFrame
+
+	local pillBars = {}
+	for i = 1, 4 do
+		local b = Instance.new("Frame")
+		local h = 3 + i * 2
+		b.AnchorPoint = Vector2.new(0, 1)
+		b.Size = UDim2.new(0, 3, 0, h)
+		b.Position = UDim2.new(0, 136 + (i - 1) * 5, 0.5, 6)
+		b.BackgroundColor3 = pillIdle
+		b.BorderSizePixel = 0
+		b.ZIndex = 21
+		b.Parent = pillFrame
+		local bc = Instance.new("UICorner")
+		bc.CornerRadius = UDim.new(0, 1)
+		bc.Parent = b
+		pillBars[i] = b
+	end
+	local pillFps = Instance.new("TextLabel")
+	pillFps.Size = UDim2.new(0, 24, 1, 0)
+	pillFps.Position = UDim2.new(0, 160, 0, 0)
+	pillFps.BackgroundTransparency = 1
+	pillFps.Font = Enum.Font.GothamBold
+	pillFps.Text = "--"
+	pillFps.TextColor3 = pillGood
+	pillFps.TextSize = 11
+	pillFps.TextXAlignment = Enum.TextXAlignment.Left
+	pillFps.ZIndex = 21
+	pillFps.Parent = pillFrame
+
+	-- FPS ao vivo só enquanto a pílula está na tela.
+	local pillConn
+	local function startPillStats()
+		if pillConn then return end
+		local frames, elapsed = 0, 0
+		pillConn = RunService.RenderStepped:Connect(function(dt)
+			frames += 1
+			elapsed += dt
+			if elapsed >= 0.5 then
+				local fps = math.floor(frames / elapsed + 0.5)
+				frames, elapsed = 0, 0
+				local col = fps >= 50 and pillGood or (fps >= 30 and pillWarn or pillBad)
+				pillFps.Text = tostring(fps)
+				pillFps.TextColor3 = col
+				local lit = fps >= 50 and 4 or (fps >= 40 and 3 or (fps >= 25 and 2 or 1))
+				for i, b in ipairs(pillBars) do
+					b.BackgroundColor3 = (i <= lit) and col or pillIdle
+				end
+			end
+		end)
+	end
+	local function stopPillStats()
+		if pillConn then pillConn:Disconnect() pillConn = nil end
+	end
+	screenGui.Destroying:Connect(stopPillStats)
+
+	local function minimizeCenter()
+		if minimizeMode == "pill" then
+			return Vector2.new(screenGui.AbsoluteSize.X / 2, PILL_TOP + PILL_H / 2)
+		end
+		return floatingCenter(40)
+	end
+
+	local function showMini(target)
+		if minimizeMode == "pill" then
+			pillFrame.Size = UDim2.new(0, 0, 0, PILL_H)
+			pillFrame.Visible = true
+			startPillStats()
+			TweenService:Create(pillFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, PILL_W, 0, PILL_H)}):Play()
+		else
+			floatingBtn.Size = UDim2.new(0, 0, 0, 0)
+			floatingBtn.Visible = true
+			TweenService:Create(floatingBtn, TweenInfo.new(0.34, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 40, 0, 40)}):Play()
+		end
+		rippleAt(target, currentThemeColor)
+	end
+
+	local function hideMini(from)
+		if minimizeMode == "pill" then
+			TweenService:Create(pillFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, PILL_H)}):Play()
+			task.delay(0.2, function()
+				pillFrame.Visible = false
+				stopPillStats()
+			end)
+		else
+			TweenService:Create(floatingBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+			task.delay(0.2, function() floatingBtn.Visible = false end)
+		end
+		rippleAt(from, currentThemeColor)
+	end
+
+	local function toggleMinimizePanel(requestedMode)
 		if panelAnimating then return end
 		panelAnimating = true
 
 		if mainPanel.Visible then
 			-- ===== MINIMIZAR =====
+			if requestedMode == "pill" or requestedMode == "float" then minimizeMode = requestedMode end
 			currentPanelSize = mainPanel.Size
 			savedPanelPosition = mainPanel.Position
-			local target = floatingCenter(40)
+			local target = minimizeCenter()
 			local dur = 0.46
 			local flyInfo = TweenInfo.new(dur, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut)
 			TweenService:Create(mainPanel, flyInfo, {
@@ -1805,10 +1970,7 @@ function showMainPanel()
 
 			-- o botão surge um pouco antes do painel terminar de chegar
 			task.delay(dur * 0.72, function()
-				floatingBtn.Size = UDim2.new(0, 0, 0, 0)
-				floatingBtn.Visible = true
-				TweenService:Create(floatingBtn, TweenInfo.new(0.34, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 40, 0, 40)}):Play()
-				rippleAt(target, currentThemeColor)
+				showMini(target)
 			end)
 
 			task.wait(dur)
@@ -1820,13 +1982,11 @@ function showMainPanel()
 			panelStroke.Transparency = 0.45
 		else
 			-- ===== MAXIMIZAR =====
-			local from = floatingCenter(40)
+			local from = minimizeCenter()
 			local target = savedPanelPosition or mainPanel.Position
 			local dur = 0.55
-			-- o botão encolhe enquanto o painel já está nascendo dele
-			TweenService:Create(floatingBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)}):Play()
-			task.delay(0.2, function() floatingBtn.Visible = false end)
-			rippleAt(from, currentThemeColor)
+			-- o botão/pílula encolhe enquanto o painel já está nascendo dele
+			hideMini(from)
 
 			panelAnimScale.Scale = 0.04
 			mainPanel.Position = UDim2.fromOffset(from.X, from.Y)
@@ -1885,10 +2045,27 @@ function showMainPanel()
 	end
 
 		-- Ordem invertida: minimizar à esquerda e fechar à direita.
-		createControlButton("Minimize", toggleMinimizePanel, "—", Color3.fromRGB(58, 61, 80), 1)
+		local pillBtn = createControlButton("Pill", function() toggleMinimizePanel("pill") end, "", Color3.fromRGB(58, 61, 80), 0)
+		-- ícone de "pílula" desenhado (um capsulazinho), para minimizar no topo da tela
+		local pillGlyph = Instance.new("Frame")
+		pillGlyph.AnchorPoint = Vector2.new(0.5, 0.5)
+		pillGlyph.Position = UDim2.new(0.5, 0, 0.5, 0)
+		pillGlyph.Size = UDim2.new(0, 12, 0, 6)
+		pillGlyph.BackgroundTransparency = 1
+		pillGlyph.Active = false
+		pillGlyph.Parent = pillBtn
+		local pgCorner = Instance.new("UICorner")
+		pgCorner.CornerRadius = UDim.new(1, 0)
+		pgCorner.Parent = pillGlyph
+		local pgStroke = Instance.new("UIStroke")
+		pgStroke.Color = Color3.fromRGB(180, 182, 198)
+		pgStroke.Thickness = 1.4
+		pgStroke.Parent = pillGlyph
+		createControlButton("Minimize", function() toggleMinimizePanel("float") end, "—", Color3.fromRGB(58, 61, 80), 1)
 		createControlButton("Close", function() screenGui:Destroy() end, "×", Color3.fromRGB(190, 60, 72), 2)
 
-	floatingBtn.MouseButton1Click:Connect(toggleMinimizePanel)
+	floatingBtn.MouseButton1Click:Connect(function() toggleMinimizePanel() end)
+	pillFrame.MouseButton1Click:Connect(function() toggleMinimizePanel() end)
 
 	UserInputService.InputBegan:Connect(function(input, gameProcessed)
 		if not gameProcessed and hideKeybindEnabled and input.UserInputType == Enum.UserInputType.Keyboard then
@@ -2427,7 +2604,7 @@ function showMainPanel()
 		local searchWrap = Instance.new("Frame")
 		searchWrap.Name = "SearchBox"
 		searchWrap.Size = UDim2.new(0, 100, 0, 22)
-		searchWrap.Position = UDim2.new(1, -216, 0, 11)
+		searchWrap.Position = UDim2.new(1, -244, 0, 11)
 		searchWrap.BackgroundColor3 = Color3.fromRGB(17, 23, 36)
 		searchWrap.BorderSizePixel = 0
 		searchWrap.Parent = body
@@ -8391,7 +8568,7 @@ function showMainPanel()
 	local secKeybind = createSection(configPage, "Atalhos (PC)", sectionIcons.Keybind)
 	
 	local kbFrame = Instance.new("Frame")
-	kbFrame.Size = UDim2.new(1, 0, 0, 32)
+	kbFrame.Size = UDim2.new(1, 0, 0, 26)
 	kbFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
 	kbFrame.BackgroundTransparency = 0.5
 	kbFrame.Parent = secKeybind
@@ -8411,11 +8588,11 @@ function showMainPanel()
 	kbLedCorner.Parent = kbLed
 
 	local kbLabel = Instance.new("TextLabel")
-	kbLabel.Size = UDim2.new(1, -110, 1, 0)
+	kbLabel.Size = UDim2.new(1, -50, 1, 0)
 	kbLabel.Position = UDim2.new(0, 20, 0, 0)
 	kbLabel.BackgroundTransparency = 1
 	kbLabel.Font = currentGlobalFont
-	kbLabel.Text = "Keybind Esconder Painel (PC)"
+	kbLabel.Text = "Atalho para Esconder Painel (PC)"
 	kbLabel.TextColor3 = currentTextColor
 	kbLabel.TextSize = 10
 	kbLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -8424,7 +8601,7 @@ function showMainPanel()
 
 	local kbToggleBtn = Instance.new("TextButton")
 	kbToggleBtn.Size = UDim2.new(0, 28, 0, 16)
-	kbToggleBtn.Position = UDim2.new(1, -104, 0.5, -8)
+	kbToggleBtn.Position = UDim2.new(1, -34, 0.5, -8)
 	kbToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
 	kbToggleBtn.Text = ""
 	kbToggleBtn.Parent = kbFrame
@@ -8446,16 +8623,37 @@ function showMainPanel()
 	local keybindStateRef = {isToggled = false, circle = kbCircle, button = kbToggleBtn, led = kbLed}
 	table.insert(themeToggles, keybindStateRef)
 
+	-- Linha de baixo: escolher a tecla do atalho.
+	local keyFrame = Instance.new("Frame")
+	keyFrame.Size = UDim2.new(1, 0, 0, 26)
+	keyFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+	keyFrame.BackgroundTransparency = 0.5
+	keyFrame.Parent = secKeybind
+	local keyFrameCorner = Instance.new("UICorner")
+	keyFrameCorner.CornerRadius = UDim.new(0, 5)
+	keyFrameCorner.Parent = keyFrame
+	local keyFrameLabel = Instance.new("TextLabel")
+	keyFrameLabel.Size = UDim2.new(1, -90, 1, 0)
+	keyFrameLabel.Position = UDim2.new(0, 20, 0, 0)
+	keyFrameLabel.BackgroundTransparency = 1
+	keyFrameLabel.Font = currentGlobalFont
+	keyFrameLabel.Text = "Tecla do atalho"
+	keyFrameLabel.TextColor3 = currentTextColor
+	keyFrameLabel.TextSize = 10
+	keyFrameLabel.TextXAlignment = Enum.TextXAlignment.Left
+	keyFrameLabel.Parent = keyFrame
+	table.insert(allTextLabels, keyFrameLabel)
+
 	local keyBox = Instance.new("TextBox")
 	keyBox.Size = UDim2.new(0, 64, 0, 20)
-	keyBox.Position = UDim2.new(1, -68, 0.5, -10)
+	keyBox.Position = UDim2.new(1, -70, 0.5, -10)
 	keyBox.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
 	keyBox.Font = currentGlobalFont
 	keyBox.Text = hideKeybindKey.Name
 	keyBox.TextColor3 = currentTextColor
 	keyBox.TextSize = 10
 	keyBox.ClearTextOnFocus = true
-	keyBox.Parent = kbFrame
+	keyBox.Parent = keyFrame
 	table.insert(themeTexts, keyBox)
 	table.insert(allTextLabels, keyBox)
 
@@ -8583,7 +8781,7 @@ function showMainPanel()
 		end
 
 		-- Section 1: salvar
-		local saveSection = createSection(configPage, "Salvar Configuração", sectionIcons.Theme)
+		local saveSection = createSection(configPage, "Salvar e Usar Configuração", sectionIcons.Theme)
 		manager.nameRow = new("Frame", {Size = UDim2.new(1, 0, 0, 34), BackgroundColor3 = CARD, BackgroundTransparency = 0.35, BorderSizePixel = 0}, saveSection)
 		round(manager.nameRow, 8)
 		local nameStroke = new("UIStroke", {Color = LINE, Transparency = 0.55, Thickness = 1}, manager.nameRow)
@@ -8622,7 +8820,7 @@ function showMainPanel()
 		caption(saveSection, "Guarda o estado de todos os toggles, sliders, cores e teclas do hub.")
 
 		-- Section 2: minhas configurações
-		local profileSection = createSection(configPage, "Minhas Configurações", sectionIcons.Theme)
+		local profileSection = saveSection -- mesma seção do "Salvar"
 		manager.selectButton = new("TextButton", {
 			Size = UDim2.new(1, 0, 0, 34), BackgroundColor3 = CARD, BackgroundTransparency = 0.35, BorderSizePixel = 0,
 			AutoButtonColor = false, Text = ""
@@ -10359,7 +10557,7 @@ task.spawn(function()
     local btn = Instance.new("ImageButton")
     btn.Name = "FruitShopButton"
     btn.Size = UDim2.new(0, 24, 0, 24)
-    btn.Position = UDim2.new(1, -104, 0, 8)
+    btn.Position = UDim2.new(1, -132, 0, 8)
     btn.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
     btn.BackgroundTransparency = 0.12
     btn.AutoButtonColor = true
