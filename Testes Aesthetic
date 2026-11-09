@@ -2665,6 +2665,27 @@ function showMainPanel()
 			section.Size = UDim2.new(1, sectionW, 0, AetherisLayoutHeight(sLayout) + 28)
 		end)
 
+		-- Rótulos nunca passam por baixo dos controles: nomes longos quebram em 2 linhas pequenas
+		-- (linhas de 26px) ou são cortados com "…", sem aumentar a altura das funções.
+		sContainer.ChildAdded:Connect(function(row)
+			if not row:IsA("GuiObject") then return end
+			task.defer(function()
+				if not row.Parent then return end
+				local rowH = row.Size.Y.Offset
+				if rowH <= 0 or rowH > 44 then return end
+				for _, d in ipairs(row:GetChildren()) do
+					if d:IsA("TextLabel") and d.TextXAlignment == Enum.TextXAlignment.Left and d.Text ~= "" and not d.TextWrapped then
+						d.TextTruncate = Enum.TextTruncate.AtEnd
+						if d.Size.Y.Scale >= 1 or d.Size.Y.Offset >= 22 then
+							d.TextWrapped = true
+							d.TextSize = math.min(d.TextSize, 10)
+							d.LineHeight = 0.9
+						end
+					end
+				end
+			end)
+		end)
+
 		return sContainer
 	end
 
@@ -3293,7 +3314,7 @@ function showMainPanel()
 		ledCorner.Parent = ledIndicator
 
 		local label = Instance.new("TextLabel")
-		label.Size = UDim2.new(1, modeCallback and -145 or -85, 1, 0)
+		label.Size = UDim2.new(1, modeCallback and -134 or -84, 1, 0)
 		label.Position = UDim2.new(0, 20, 0, 0)
 		label.BackgroundTransparency = 1
 		label.Font = currentGlobalFont
@@ -3344,8 +3365,8 @@ function showMainPanel()
 		if modeCallback then
 			local modeBtn = Instance.new("TextButton")
 			modeBtn.Name = "TracerOriginButton"
-			modeBtn.Size = UDim2.new(0, 52, 0, 16)
-			modeBtn.Position = UDim2.new(1, -114, 0.5, -8)
+			modeBtn.Size = UDim2.new(0, 46, 0, 16)
+			modeBtn.Position = UDim2.new(1, -110, 0.5, -8)
 			modeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
 			modeBtn.Font = currentGlobalFont
 			modeBtn.Text = modeText or "Bottom"
