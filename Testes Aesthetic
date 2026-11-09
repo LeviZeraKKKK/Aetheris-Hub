@@ -850,56 +850,36 @@ end
 -- são liberadas no final e não pesam no limite de 200 locals do script.
 do
 	local WHITE = Color3.new(1, 1, 1)
-	local themeLight = currentThemeColor:Lerp(WHITE, 0.45)
+	local PURPLE, BLUE = currentThemeColor, accentBlue
 
-	-- Fundo escurecido + blur leve atrás do card para dar foco (removidos no final).
-	local backdrop = Instance.new("Frame")
-	backdrop.Name = "LoadingBackdrop"
-	backdrop.Size = UDim2.new(1, 0, 1, 0)
-	backdrop.BackgroundColor3 = Color3.fromRGB(5, 5, 10)
-	backdrop.BackgroundTransparency = 1
-	backdrop.BorderSizePixel = 0
-	backdrop.Parent = screenGui
-
-	local blur
-	pcall(function()
-		local oldBlur = Lighting:FindFirstChild("AetherisLoadingBlur")
-		if oldBlur then oldBlur:Destroy() end
-		blur = Instance.new("BlurEffect")
-		blur.Name = "AetherisLoadingBlur"
-		blur.Size = 0
-		blur.Parent = Lighting
-	end)
-	screenGui.Destroying:Connect(function()
-		if blur then blur:Destroy() end
-	end)
-
-	-- Card central. O UIScale ajusta o tamanho à tela (celular, janela pequena etc.).
-	local loadWrapper = Instance.new("Frame")
+	-- Cápsula compacta no centro da tela (sem escurecer o fundo e sem blur).
+	-- CanvasGroup: o fade de entrada e saída é um único valor (GroupTransparency).
+	local loadWrapper = Instance.new("CanvasGroup")
 	loadWrapper.Name = "LoadingCard"
-	loadWrapper.Size = UDim2.new(0, 360, 0, 188)
+	loadWrapper.Size = UDim2.new(0, 250, 0, 56)
 	loadWrapper.AnchorPoint = Vector2.new(0.5, 0.5)
 	loadWrapper.Position = UDim2.new(0.5, 0, 0.5, 0)
 	loadWrapper.BackgroundColor3 = Color3.fromRGB(12, 16, 26)
-	loadWrapper.BackgroundTransparency = 0.06
+	loadWrapper.BackgroundTransparency = 0
 	loadWrapper.BorderSizePixel = 0
-	loadWrapper.ClipsDescendants = true
+	loadWrapper.GroupTransparency = 1
 	loadWrapper.Parent = screenGui
+
+	local loadCorner = Instance.new("UICorner")
+	loadCorner.CornerRadius = UDim.new(0, 28)
+	loadCorner.Parent = loadWrapper
 
 	local function computeBaseScale()
 		local viewport = camera and camera.ViewportSize or Vector2.new(1280, 720)
-		local fit = math.min(viewport.X / 400, viewport.Y / 250)
-		return math.clamp(math.min(isMobile and 1.1 or 1, fit), 0.55, 1.15)
+		return math.clamp(viewport.X / 330, 0.7, isMobile and 1.05 or 1.1)
 	end
 	local baseScale = computeBaseScale()
 	local leaving = false
-
 	local loadScale = Instance.new("UIScale")
-	loadScale.Scale = baseScale * 0.94
+	loadScale.Scale = baseScale * 0.85
 	loadScale.Parent = loadWrapper
-
-	local resizeConn
 	if camera then
+		local resizeConn
 		resizeConn = camera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
 			if not loadWrapper.Parent then
 				resizeConn:Disconnect()
@@ -910,124 +890,40 @@ do
 		end)
 	end
 
-	local loadCorner = Instance.new("UICorner")
-	loadCorner.CornerRadius = UDim.new(0, 14)
-	loadCorner.Parent = loadWrapper
-
-	-- Contorno com degradê (mais forte no topo, mais suave embaixo).
+	-- Contorno em degradê roxo -> azul.
 	local loadStroke = Instance.new("UIStroke")
 	loadStroke.Color = WHITE
-	loadStroke.Transparency = 0.2
-	loadStroke.Thickness = 1.5
+	loadStroke.Thickness = 1.4
+	loadStroke.Transparency = 0.15
 	loadStroke.Parent = loadWrapper
-	local strokeGradient = Instance.new("UIGradient")
-	strokeGradient.Color = ColorSequence.new(currentThemeColor, accentBlue)
-	strokeGradient.Rotation = 45
-	strokeGradient.Parent = loadStroke
+	local loadStrokeGrad = Instance.new("UIGradient")
+	loadStrokeGrad.Color = ColorSequence.new(PURPLE, BLUE)
+	loadStrokeGrad.Rotation = 20
+	loadStrokeGrad.Parent = loadStroke
 
-	-- Linha superior animada.
-	local loadAccent = Instance.new("Frame")
-	loadAccent.Name = "LoadingAccent"
-	loadAccent.Size = UDim2.new(0.18, 0, 0, 2)
-	loadAccent.Position = UDim2.new(0.41, 0, 0, 0)
-	loadAccent.BackgroundColor3 = WHITE
-	loadAccent.BorderSizePixel = 0
-	loadAccent.Parent = loadWrapper
-	local accentGrad = Instance.new("UIGradient")
-	accentGrad.Color = ColorSequence.new(currentThemeColor, accentBlue)
-	accentGrad.Parent = loadAccent
-	local accentCorner = Instance.new("UICorner")
-	accentCorner.CornerRadius = UDim.new(1, 0)
-	accentCorner.Parent = loadAccent
+	-- Esquerda: logo dentro de um aro que gira.
+	local logoHolder = Instance.new("Frame")
+	logoHolder.Size = UDim2.new(0, 38, 0, 38)
+	logoHolder.Position = UDim2.new(0, 12, 0.5, -19)
+	logoHolder.BackgroundColor3 = Color3.fromRGB(20, 26, 42)
+	logoHolder.BorderSizePixel = 0
+	logoHolder.Parent = loadWrapper
+	local logoCorner = Instance.new("UICorner")
+	logoCorner.CornerRadius = UDim.new(1, 0)
+	logoCorner.Parent = logoHolder
 
-	-- Partículas discretas ficam na camada de fundo, atrás dos textos.
-	local loadingParticles = {}
-	local loadingColumns = 5
-	local loadingRows = 4
-	for i = 1, loadingColumns * loadingRows do
-		local column = (i - 1) % loadingColumns
-		local row = math.floor((i - 1) / loadingColumns)
-		local baseX = (column + 0.5) / loadingColumns + (math.random(0, 100) / 100 - 0.5) * 0.07
-		local baseY = (row + 0.5) / loadingRows + (math.random(0, 100) / 100 - 0.5) * 0.12
-		local particle = Instance.new("Frame")
-		local particleSize = math.random(2, 4)
-		particle.Size = UDim2.new(0, particleSize, 0, particleSize)
-		particle.Position = UDim2.new(baseX, 0, baseY, 0)
-		particle.BackgroundColor3 = (i % 2 == 0) and accentBlue or currentThemeColor
-		particle.BackgroundTransparency = 0.78
-		particle.BorderSizePixel = 0
-		particle.ZIndex = 1
-		particle.Parent = loadWrapper
-		local particleCorner = Instance.new("UICorner")
-		particleCorner.CornerRadius = UDim.new(1, 0)
-		particleCorner.Parent = particle
-		table.insert(loadingParticles, particle)
-
-		local driftX = (math.random(0, 100) / 100 - 0.5) * 0.05
-		local driftY = (math.random(0, 100) / 100 - 0.5) * 0.08
-		TweenService:Create(particle, TweenInfo.new(2.0 + (i % 5) * 0.24, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true, (i - 1) * 0.07), {
-			Position = UDim2.new(baseX + driftX, 0, baseY + driftY, 0),
-			BackgroundTransparency = 0.54
-		}):Play()
-	end
-
-	-- Aro: uma trilha fraca fixa + um arco com degradê de transparência que gira de verdade.
-	local ringTrack = Instance.new("Frame")
-	ringTrack.Size = UDim2.new(0, 42, 0, 42)
-	ringTrack.Position = UDim2.new(0.5, -21, 0, 14)
-	ringTrack.BackgroundTransparency = 1
-	ringTrack.ZIndex = 2
-	ringTrack.Parent = loadWrapper
-	local trackStroke = Instance.new("UIStroke")
-	trackStroke.Color = accentBlue
-	trackStroke.Transparency = 0.85
-	trackStroke.Thickness = 2
-	trackStroke.Parent = ringTrack
-	local trackCorner = Instance.new("UICorner")
-	trackCorner.CornerRadius = UDim.new(1, 0)
-	trackCorner.Parent = ringTrack
-
-	local sciFiRing = Instance.new("Frame")
-	sciFiRing.Size = UDim2.new(0, 42, 0, 42)
-	sciFiRing.Position = UDim2.new(0.5, -21, 0, 14)
-	sciFiRing.BackgroundTransparency = 1
-	sciFiRing.ZIndex = 2
-	sciFiRing.Parent = loadWrapper
 	local ringStroke = Instance.new("UIStroke")
 	ringStroke.Color = WHITE
-	ringStroke.Transparency = 1
-	ringStroke.Thickness = 2
-	ringStroke.Parent = sciFiRing
+	ringStroke.Thickness = 2.2
+	ringStroke.Parent = logoHolder
 	local ringGradient = Instance.new("UIGradient")
-	ringGradient.Color = ColorSequence.new(currentThemeColor, accentBlue)
+	ringGradient.Color = ColorSequence.new(PURPLE, BLUE)
 	ringGradient.Transparency = NumberSequence.new({
 		NumberSequenceKeypoint.new(0, 0),
-		NumberSequenceKeypoint.new(0.6, 1),
-		NumberSequenceKeypoint.new(1, 1)
+		NumberSequenceKeypoint.new(0.55, 0.9),
+		NumberSequenceKeypoint.new(1, 0.9)
 	})
 	ringGradient.Parent = ringStroke
-	local ringCorner = Instance.new("UICorner")
-	ringCorner.CornerRadius = UDim.new(1, 0)
-	ringCorner.Parent = sciFiRing
-
-	-- Ícone: caixa escura com a letra em degradê (cor do tema).
-	local iconBox = Instance.new("Frame")
-	iconBox.Size = UDim2.new(0, 32, 0, 32)
-	iconBox.Position = UDim2.new(0.5, -16, 0, 19)
-	iconBox.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
-	iconBox.BackgroundTransparency = 1
-	iconBox.BorderSizePixel = 0
-	iconBox.ZIndex = 3
-	iconBox.Parent = loadWrapper
-	local iconCorner = Instance.new("UICorner")
-	iconCorner.CornerRadius = UDim.new(0, 10)
-	iconCorner.Parent = iconBox
-	local iconBoxStroke = Instance.new("UIStroke")
-	iconBoxStroke.Color = currentThemeColor
-	iconBoxStroke.Transparency = 1
-	iconBoxStroke.Thickness = 1
-	iconBoxStroke.Parent = iconBox
-	table.insert(themeSections, iconBoxStroke)
 
 	local loadIcon = Instance.new("TextLabel")
 	loadIcon.Size = UDim2.new(1, 0, 1, 0)
@@ -1035,158 +931,84 @@ do
 	loadIcon.Font = Enum.Font.GothamBold
 	loadIcon.Text = "A"
 	loadIcon.TextColor3 = WHITE
-	loadIcon.TextSize = 18
-	loadIcon.TextTransparency = 1
-	loadIcon.ZIndex = 4
-	loadIcon.Parent = iconBox
+	loadIcon.TextSize = 17
+	loadIcon.Parent = logoHolder
 	local iconGradient = Instance.new("UIGradient")
-	iconGradient.Color = ColorSequence.new(currentThemeColor, accentBlue)
-	iconGradient.Rotation = 90
+	iconGradient.Color = ColorSequence.new(PURPLE, BLUE)
+	iconGradient.Rotation = 45
 	iconGradient.Parent = loadIcon
 
+	-- Meio: nome + status.
 	local loadTitle = Instance.new("TextLabel")
-	loadTitle.Size = UDim2.new(1, -24, 0, 22)
-	loadTitle.Position = UDim2.new(0, 12, 0, 62)
+	loadTitle.Size = UDim2.new(1, -128, 0, 18)
+	loadTitle.Position = UDim2.new(0, 60, 0, 11)
 	loadTitle.BackgroundTransparency = 1
 	loadTitle.Font = Enum.Font.GothamBold
-	loadTitle.Text = "AETHERIS HUB"
-	loadTitle.TextColor3 = Color3.fromRGB(250, 250, 255)
-	loadTitle.TextSize = 17
-	loadTitle.TextTransparency = 1
+	loadTitle.Text = "Aetheris Hub"
+	loadTitle.TextColor3 = WHITE
+	loadTitle.TextSize = 13
+	loadTitle.TextXAlignment = Enum.TextXAlignment.Left
 	loadTitle.Parent = loadWrapper
 	local titleGradient = Instance.new("UIGradient")
-	titleGradient.Color = ColorSequence.new(themeLight, accentBlue:Lerp(WHITE, 0.25))
+	titleGradient.Color = ColorSequence.new(PURPLE:Lerp(WHITE, 0.35), BLUE:Lerp(WHITE, 0.2))
 	titleGradient.Parent = loadTitle
 
-	local loadSubtitle = Instance.new("TextLabel")
-	loadSubtitle.Name = "LoadingSubtitle"
-	loadSubtitle.Size = UDim2.new(1, -24, 0, 16)
-	loadSubtitle.Position = UDim2.new(0, 12, 0, 85)
-	loadSubtitle.BackgroundTransparency = 1
-	loadSubtitle.Font = Enum.Font.GothamMedium
-	loadSubtitle.Text = "Preparando sua interface"
-	loadSubtitle.TextColor3 = accentBlue
-	loadSubtitle.TextSize = 11
-	loadSubtitle.TextTransparency = 1
-	loadSubtitle.Parent = loadWrapper
-
-	-- Status à esquerda e porcentagem à direita, na mesma linha acima da barra.
 	local loadStatus = Instance.new("TextLabel")
-	loadStatus.Size = UDim2.new(1, -90, 0, 16)
-	loadStatus.Position = UDim2.new(0, 16, 0, 122)
+	loadStatus.Size = UDim2.new(1, -128, 0, 14)
+	loadStatus.Position = UDim2.new(0, 60, 0, 29)
 	loadStatus.BackgroundTransparency = 1
 	loadStatus.Font = Enum.Font.GothamMedium
-	loadStatus.Text = ""
-	loadStatus.TextColor3 = Color3.fromRGB(175, 175, 195)
-	loadStatus.TextSize = 12
+	loadStatus.Text = "Iniciando..."
+	loadStatus.TextColor3 = Color3.fromRGB(130, 140, 165)
+	loadStatus.TextSize = 10
 	loadStatus.TextXAlignment = Enum.TextXAlignment.Left
-	loadStatus.TextTransparency = 1
+	loadStatus.TextTruncate = Enum.TextTruncate.AtEnd
 	loadStatus.Parent = loadWrapper
 
+	-- Direita: porcentagem.
 	local percentLabel = Instance.new("TextLabel")
-	percentLabel.Size = UDim2.new(0, 56, 0, 16)
-	percentLabel.Position = UDim2.new(1, -72, 0, 122)
+	percentLabel.Size = UDim2.new(0, 48, 1, -4)
+	percentLabel.Position = UDim2.new(1, -62, 0, 0)
 	percentLabel.BackgroundTransparency = 1
 	percentLabel.Font = Enum.Font.GothamBold
 	percentLabel.Text = "0%"
-	percentLabel.TextColor3 = accentBlue
-	percentLabel.TextSize = 12
+	percentLabel.TextColor3 = BLUE
+	percentLabel.TextSize = 13
 	percentLabel.TextXAlignment = Enum.TextXAlignment.Right
-	percentLabel.TextTransparency = 1
 	percentLabel.Parent = loadWrapper
 
-	-- Barra de progresso com degradê e brilho deslizante.
+	-- Barra de progresso fina colada na base da cápsula.
 	local loadBarBg = Instance.new("Frame")
-	loadBarBg.Size = UDim2.new(1, -32, 0, 6)
-	loadBarBg.Position = UDim2.new(0, 16, 0, 144)
-	loadBarBg.BackgroundColor3 = Color3.fromRGB(31, 31, 42)
+	loadBarBg.Size = UDim2.new(1, 0, 0, 3)
+	loadBarBg.Position = UDim2.new(0, 0, 1, -3)
+	loadBarBg.BackgroundColor3 = Color3.fromRGB(26, 34, 52)
 	loadBarBg.BorderSizePixel = 0
 	loadBarBg.Parent = loadWrapper
-	local loadBarCorner = Instance.new("UICorner")
-	loadBarCorner.CornerRadius = UDim.new(1, 0)
-	loadBarCorner.Parent = loadBarBg
-
 	local loadBarFill = Instance.new("Frame")
 	loadBarFill.Size = UDim2.new(0, 0, 1, 0)
 	loadBarFill.BackgroundColor3 = WHITE
 	loadBarFill.BorderSizePixel = 0
-	loadBarFill.ClipsDescendants = true
 	loadBarFill.Parent = loadBarBg
-	local loadBarFillCorner = Instance.new("UICorner")
-	loadBarFillCorner.CornerRadius = UDim.new(1, 0)
-	loadBarFillCorner.Parent = loadBarFill
 	local fillGradient = Instance.new("UIGradient")
-	fillGradient.Color = ColorSequence.new(currentThemeColor, accentBlue)
+	fillGradient.Color = ColorSequence.new(PURPLE, BLUE)
 	fillGradient.Parent = loadBarFill
 
-	local shimmer = Instance.new("Frame")
-	shimmer.Size = UDim2.new(0.4, 0, 1, 0)
-	shimmer.Position = UDim2.new(-0.5, 0, 0, 0)
-	shimmer.BackgroundColor3 = WHITE
-	shimmer.BorderSizePixel = 0
-	shimmer.ZIndex = 2
-	shimmer.Parent = loadBarFill
-	local shimmerGradient = Instance.new("UIGradient")
-	shimmerGradient.Transparency = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 1),
-		NumberSequenceKeypoint.new(0.5, 0.55),
-		NumberSequenceKeypoint.new(1, 1)
-	})
-	shimmerGradient.Parent = shimmer
-	TweenService:Create(shimmer, TweenInfo.new(1.0, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, false, 0.3), {
-		Position = UDim2.new(1.1, 0, 0, 0)
-	}):Play()
+	-- Entrada: aparece e cresce suavemente.
+	TweenService:Create(loadWrapper, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {GroupTransparency = 0}):Play()
+	TweenService:Create(loadScale, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = baseScale}):Play()
 
-	-- Rodapé discreto.
-	local loadFooter = Instance.new("TextLabel")
-	loadFooter.Size = UDim2.new(1, -24, 0, 14)
-	loadFooter.Position = UDim2.new(0, 12, 0, 164)
-	loadFooter.BackgroundTransparency = 1
-	loadFooter.Font = Enum.Font.GothamMedium
-	loadFooter.Text = "V1  ·  AETHERIS"
-	loadFooter.TextColor3 = Color3.fromRGB(110, 110, 130)
-	loadFooter.TextSize = 10
-	loadFooter.TextTransparency = 1
-	loadFooter.Parent = loadWrapper
-
-	-- Entrada em cascata: cada elemento sobe 8px enquanto aparece, com pequeno atraso entre eles.
-	local function reveal(obj, delay, goal)
-		local finalPosition = obj.Position
-		obj.Position = finalPosition + UDim2.new(0, 0, 0, 8)
-		goal.Position = finalPosition
-		TweenService:Create(obj, TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, delay), goal):Play()
-	end
-
-	local introInfo = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-	TweenService:Create(backdrop, introInfo, {BackgroundTransparency = 0.5}):Play()
-	if blur then TweenService:Create(blur, TweenInfo.new(0.5), {Size = 8}):Play() end
-	TweenService:Create(loadScale, introInfo, {Scale = baseScale}):Play()
-	TweenService:Create(ringStroke, introInfo, {Transparency = 0}):Play()
-	TweenService:Create(loadAccent, TweenInfo.new(0.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-		Size = UDim2.new(0.62, 0, 0, 2), Position = UDim2.new(0.19, 0, 0, 0)
-	}):Play()
-
-	reveal(iconBox, 0.05, {BackgroundTransparency = 0})
-	TweenService:Create(iconBoxStroke, TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, 0.05), {Transparency = 0.55}):Play()
-	TweenService:Create(loadIcon, TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, 0.1), {TextTransparency = 0}):Play()
-	reveal(loadTitle, 0.12, {TextTransparency = 0})
-	reveal(loadSubtitle, 0.2, {TextTransparency = 0})
-	reveal(loadStatus, 0.28, {TextTransparency = 0})
-	reveal(percentLabel, 0.28, {TextTransparency = 0})
-	reveal(loadFooter, 0.36, {TextTransparency = 0.25})
-
-	-- Um único loop por frame: gira o arco e mantém a porcentagem sincronizada com a barra.
+	-- Um loop por frame: gira o aro e mantém a porcentagem sincronizada com a barra.
 	local frameConn
 	frameConn = RunService.RenderStepped:Connect(function(dt)
 		if not loadWrapper.Parent then
 			frameConn:Disconnect()
 			return
 		end
-		ringGradient.Rotation = (ringGradient.Rotation + dt * 270) % 360
+		ringGradient.Rotation = (ringGradient.Rotation + dt * 300) % 360
 		percentLabel.Text = string.format("%d%%", math.floor(loadBarFill.Size.X.Scale * 100 + 0.5))
 	end)
 
-	-- Texto de status com pontinhos animados e troca suave entre as etapas.
+	-- Status com pontinhos animados.
 	local statusBase = "Iniciando"
 	local statusAnimated = true
 	task.spawn(function()
@@ -1202,15 +1024,6 @@ do
 		end
 	end)
 
-	local function setStatus(base, animated)
-		TweenService:Create(loadStatus, TweenInfo.new(0.1), {TextTransparency = 1}):Play()
-		task.wait(0.1)
-		statusBase = base
-		statusAnimated = animated
-		loadStatus.Text = animated and (base .. "...") or base
-		TweenService:Create(loadStatus, TweenInfo.new(0.14), {TextTransparency = 0}):Play()
-	end
-
 	task.spawn(function()
 		local steps = {
 			{progress = 0.20, text = "Carregando recursos", animated = true},
@@ -1220,9 +1033,11 @@ do
 			{progress = 1.00, text = "Tudo pronto!", animated = false}
 		}
 		local stepTime = 0.34
-		task.wait(0.55) -- deixa a entrada em cascata terminar
+		task.wait(0.45)
 		for _, step in ipairs(steps) do
-			task.spawn(setStatus, step.text, step.animated)
+			statusBase = step.text
+			statusAnimated = step.animated
+			loadStatus.Text = step.animated and (step.text .. "...") or step.text
 			TweenService:Create(loadBarFill, TweenInfo.new(stepTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 				Size = UDim2.new(step.progress, 0, 1, 0)
 			}):Play()
@@ -1230,40 +1045,13 @@ do
 		end
 		task.wait(0.25)
 
-		-- Saída: o card encolhe levemente enquanto tudo some.
+		-- Saída: some e encolhe levemente.
 		leaving = true
-		local fadeOut = TweenInfo.new(0.34, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-		local fades = {
-			{loadScale, {Scale = baseScale * 0.94}},
-			{loadWrapper, {BackgroundTransparency = 1}},
-			{loadStroke, {Transparency = 1}},
-			{trackStroke, {Transparency = 1}},
-			{ringStroke, {Transparency = 1}},
-			{iconBox, {BackgroundTransparency = 1}},
-			{iconBoxStroke, {Transparency = 1}},
-			{loadIcon, {TextTransparency = 1}},
-			{loadTitle, {TextTransparency = 1}},
-			{loadSubtitle, {TextTransparency = 1}},
-			{loadStatus, {TextTransparency = 1}},
-			{percentLabel, {TextTransparency = 1}},
-			{loadFooter, {TextTransparency = 1}},
-			{loadBarBg, {BackgroundTransparency = 1}},
-			{loadBarFill, {BackgroundTransparency = 1}},
-			{shimmer, {BackgroundTransparency = 1}},
-			{loadAccent, {BackgroundTransparency = 1}},
-			{backdrop, {BackgroundTransparency = 1}},
-		}
-		for _, fade in ipairs(fades) do
-			TweenService:Create(fade[1], fadeOut, fade[2]):Play()
-		end
-		for _, particle in ipairs(loadingParticles) do
-			if particle.Parent then TweenService:Create(particle, fadeOut, {BackgroundTransparency = 1}):Play() end
-		end
-		if blur then TweenService:Create(blur, fadeOut, {Size = 0}):Play() end
-		task.wait(0.36)
+		local fadeOut = TweenInfo.new(0.32, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+		TweenService:Create(loadWrapper, fadeOut, {GroupTransparency = 1}):Play()
+		TweenService:Create(loadScale, fadeOut, {Scale = baseScale * 0.9}):Play()
+		task.wait(0.34)
 		loadWrapper:Destroy()
-		backdrop:Destroy()
-		if blur then blur:Destroy() end
 		if screenGui.Parent then showMainPanel() end
 	end)
 end
