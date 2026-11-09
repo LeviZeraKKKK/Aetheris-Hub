@@ -8391,7 +8391,7 @@ function showMainPanel()
 	local secKeybind = createSection(configPage, "Atalhos (PC)", sectionIcons.Keybind)
 	
 	local kbFrame = Instance.new("Frame")
-	kbFrame.Size = UDim2.new(1, 0, 0, 32)
+	kbFrame.Size = UDim2.new(1, 0, 0, 26)
 	kbFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
 	kbFrame.BackgroundTransparency = 0.5
 	kbFrame.Parent = secKeybind
@@ -8411,11 +8411,11 @@ function showMainPanel()
 	kbLedCorner.Parent = kbLed
 
 	local kbLabel = Instance.new("TextLabel")
-	kbLabel.Size = UDim2.new(1, -110, 1, 0)
+	kbLabel.Size = UDim2.new(1, -50, 1, 0)
 	kbLabel.Position = UDim2.new(0, 20, 0, 0)
 	kbLabel.BackgroundTransparency = 1
 	kbLabel.Font = currentGlobalFont
-	kbLabel.Text = "Keybind Esconder Painel (PC)"
+	kbLabel.Text = "Atalho para Esconder Painel (PC)"
 	kbLabel.TextColor3 = currentTextColor
 	kbLabel.TextSize = 10
 	kbLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -8424,7 +8424,7 @@ function showMainPanel()
 
 	local kbToggleBtn = Instance.new("TextButton")
 	kbToggleBtn.Size = UDim2.new(0, 28, 0, 16)
-	kbToggleBtn.Position = UDim2.new(1, -104, 0.5, -8)
+	kbToggleBtn.Position = UDim2.new(1, -34, 0.5, -8)
 	kbToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
 	kbToggleBtn.Text = ""
 	kbToggleBtn.Parent = kbFrame
@@ -8446,16 +8446,37 @@ function showMainPanel()
 	local keybindStateRef = {isToggled = false, circle = kbCircle, button = kbToggleBtn, led = kbLed}
 	table.insert(themeToggles, keybindStateRef)
 
+	-- Linha de baixo: escolher a tecla do atalho.
+	local keyFrame = Instance.new("Frame")
+	keyFrame.Size = UDim2.new(1, 0, 0, 26)
+	keyFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+	keyFrame.BackgroundTransparency = 0.5
+	keyFrame.Parent = secKeybind
+	local keyFrameCorner = Instance.new("UICorner")
+	keyFrameCorner.CornerRadius = UDim.new(0, 5)
+	keyFrameCorner.Parent = keyFrame
+	local keyFrameLabel = Instance.new("TextLabel")
+	keyFrameLabel.Size = UDim2.new(1, -90, 1, 0)
+	keyFrameLabel.Position = UDim2.new(0, 20, 0, 0)
+	keyFrameLabel.BackgroundTransparency = 1
+	keyFrameLabel.Font = currentGlobalFont
+	keyFrameLabel.Text = "Tecla do atalho"
+	keyFrameLabel.TextColor3 = currentTextColor
+	keyFrameLabel.TextSize = 10
+	keyFrameLabel.TextXAlignment = Enum.TextXAlignment.Left
+	keyFrameLabel.Parent = keyFrame
+	table.insert(allTextLabels, keyFrameLabel)
+
 	local keyBox = Instance.new("TextBox")
 	keyBox.Size = UDim2.new(0, 64, 0, 20)
-	keyBox.Position = UDim2.new(1, -68, 0.5, -10)
+	keyBox.Position = UDim2.new(1, -70, 0.5, -10)
 	keyBox.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
 	keyBox.Font = currentGlobalFont
 	keyBox.Text = hideKeybindKey.Name
 	keyBox.TextColor3 = currentTextColor
 	keyBox.TextSize = 10
 	keyBox.ClearTextOnFocus = true
-	keyBox.Parent = kbFrame
+	keyBox.Parent = keyFrame
 	table.insert(themeTexts, keyBox)
 	table.insert(allTextLabels, keyBox)
 
@@ -8583,7 +8604,7 @@ function showMainPanel()
 		end
 
 		-- Section 1: salvar
-		local saveSection = createSection(configPage, "Salvar Configuração", sectionIcons.Theme)
+		local saveSection = createSection(configPage, "Salvar e Usar Configuração", sectionIcons.Theme)
 		manager.nameRow = new("Frame", {Size = UDim2.new(1, 0, 0, 34), BackgroundColor3 = CARD, BackgroundTransparency = 0.35, BorderSizePixel = 0}, saveSection)
 		round(manager.nameRow, 8)
 		local nameStroke = new("UIStroke", {Color = LINE, Transparency = 0.55, Thickness = 1}, manager.nameRow)
@@ -8622,7 +8643,7 @@ function showMainPanel()
 		caption(saveSection, "Guarda o estado de todos os toggles, sliders, cores e teclas do hub.")
 
 		-- Section 2: minhas configurações
-		local profileSection = createSection(configPage, "Minhas Configurações", sectionIcons.Theme)
+		local profileSection = saveSection -- mesma seção do "Salvar"
 		manager.selectButton = new("TextButton", {
 			Size = UDim2.new(1, 0, 0, 34), BackgroundColor3 = CARD, BackgroundTransparency = 0.35, BorderSizePixel = 0,
 			AutoButtonColor = false, Text = ""
