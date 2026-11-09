@@ -3514,218 +3514,380 @@ function showMainPanel()
 			return label
 		end
 
-		-- Card gigante que ocupa a página inteira.
-		local card = Instance.new("Frame")
-		card.Name = "InfoCard"
-		card.Size = UDim2.new(1, 0, 1, 0)
-		card.Position = UDim2.new(0, 0, 0, 0)
-		card.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
-		card.BackgroundTransparency = 0.12
-		card.BorderSizePixel = 0
-		card.ClipsDescendants = true
-		card.Parent = infoPage
-		local cardCorner = Instance.new("UICorner")
-		cardCorner.CornerRadius = UDim.new(0, 12)
-		cardCorner.Parent = card
-		local cardStroke = Instance.new("UIStroke")
-		cardStroke.Color = currentThemeColor
-		cardStroke.Transparency = 0.5
-		cardStroke.Thickness = 1.3
-		cardStroke.Parent = card
-		table.insert(themeSections, cardStroke)
+		-----------------------------------------------------------------
+		-- HOME: boas-vindas, FPS/ping com gráfico e card do servidor
+		-----------------------------------------------------------------
+		local TeleportService = game:GetService("TeleportService")
+		local MarketplaceService = game:GetService("MarketplaceService")
+		local CARD_BG = Color3.fromRGB(15, 21, 33)
+		local CARD_STROKE = Color3.fromRGB(30, 38, 56)
+		local GRAY = Color3.fromRGB(110, 120, 145)
+		local GOOD, WARN, BAD = Color3.fromRGB(80, 220, 130), Color3.fromRGB(240, 190, 70), Color3.fromRGB(240, 85, 85)
 
-		-- Faixa degradê no topo (acompanha a cor do tema).
-		local banner = Instance.new("Frame")
-		banner.Name = "Banner"
-		banner.Size = UDim2.new(1, 0, 0, 64)
-		banner.BackgroundColor3 = currentThemeColor
-		banner.BorderSizePixel = 0
-		banner.Parent = card
-		table.insert(themeSliders, banner)
-		local bannerGradient = Instance.new("UIGradient")
-		bannerGradient.Rotation = 90
-		bannerGradient.Transparency = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 0.62),
-			NumberSequenceKeypoint.new(1, 1)
-		})
-		bannerGradient.Parent = banner
+		local scroll = Instance.new("ScrollingFrame")
+		scroll.Name = "HomeScroll"
+		scroll.Size = UDim2.new(1, 0, 1, 0)
+		scroll.BackgroundTransparency = 1
+		scroll.BorderSizePixel = 0
+		scroll.ScrollBarThickness = 2
+		scroll.ScrollBarImageColor3 = Color3.fromRGB(70, 80, 105)
+		scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+		scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+		scroll.Parent = infoPage
+		local scrollLayout = Instance.new("UIListLayout")
+		scrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		scrollLayout.Padding = UDim.new(0, 8)
+		scrollLayout.Parent = scroll
 
-		local topLine = Instance.new("Frame")
-		topLine.Size = UDim2.new(0.5, 0, 0, 2)
-		topLine.Position = UDim2.new(0.25, 0, 0, 0)
-		topLine.BackgroundColor3 = currentThemeColor
-		topLine.BorderSizePixel = 0
-		topLine.Parent = card
-		table.insert(themeSliders, topLine)
-		local topLineCorner = Instance.new("UICorner")
-		topLineCorner.CornerRadius = UDim.new(1, 0)
-		topLineCorner.Parent = topLine
+		local function makeCard(order, height)
+			local c = Instance.new("Frame")
+			c.Size = UDim2.new(1, -6, 0, height)
+			c.BackgroundColor3 = CARD_BG
+			c.BackgroundTransparency = 0.05
+			c.BorderSizePixel = 0
+			c.ClipsDescendants = true
+			c.LayoutOrder = order
+			c.Parent = scroll
+			local cc = Instance.new("UICorner")
+			cc.CornerRadius = UDim.new(0, 10)
+			cc.Parent = c
+			local cs = Instance.new("UIStroke")
+			cs.Color = CARD_STROKE
+			cs.Thickness = 1
+			cs.Parent = c
+			return c
+		end
 
-		-- Conteúdo empilhado e centralizado verticalmente (preenche o card no celular, centraliza no PC).
-		local content = Instance.new("Frame")
-		content.Name = "Content"
-		content.Size = UDim2.new(1, 0, 1, 0)
-		content.BackgroundTransparency = 1
-		content.Parent = card
-		local contentLayout = Instance.new("UIListLayout")
-		contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		contentLayout.Padding = UDim.new(0, 6)
-		contentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-		contentLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-		contentLayout.Parent = content
+		local function lbl(parent, text, size, pos, dim, color, font, align)
+			local l = Instance.new("TextLabel")
+			l.BackgroundTransparency = 1
+			l.Position = pos
+			l.Size = dim
+			l.Font = font or Enum.Font.GothamMedium
+			l.Text = text
+			l.TextColor3 = color or Color3.new(1, 1, 1)
+			l.TextSize = size
+			l.TextXAlignment = align or Enum.TextXAlignment.Left
+			l.TextYAlignment = Enum.TextYAlignment.Center
+			l.TextTruncate = Enum.TextTruncate.AtEnd
+			l.Parent = parent
+			return l
+		end
 
-		local function makeTile(parent, order)
-			local tile = Instance.new("Frame")
-			tile.BackgroundColor3 = Color3.fromRGB(32, 32, 46)
-			tile.BackgroundTransparency = 0.25
-			tile.BorderSizePixel = 0
-			tile.LayoutOrder = order or 0
-			tile.Parent = parent
-			local tileCorner = Instance.new("UICorner")
-			tileCorner.CornerRadius = UDim.new(0, 8)
-			tileCorner.Parent = tile
-			local tileStroke = Instance.new("UIStroke")
-			tileStroke.Color = currentThemeColor
-			tileStroke.Transparency = 0.82
-			tileStroke.Thickness = 1
-			tileStroke.Parent = tile
-			table.insert(themeSections, tileStroke)
-			return tile
+		local function pill(parent, text, x, width, dotColor)
+			local f = Instance.new("Frame")
+			f.Position = UDim2.new(0, x, 0, 58)
+			f.Size = UDim2.new(0, width, 0, 16)
+			f.BackgroundColor3 = Color3.fromRGB(22, 30, 48)
+			f.BorderSizePixel = 0
+			f.Parent = parent
+			local fc = Instance.new("UICorner")
+			fc.CornerRadius = UDim.new(0, 5)
+			fc.Parent = f
+			local fs = Instance.new("UIStroke")
+			fs.Color = Color3.fromRGB(40, 52, 76)
+			fs.Thickness = 1
+			fs.Parent = f
+			local tx = 8
+			if dotColor then
+				local d = Instance.new("Frame")
+				d.Size = UDim2.new(0, 5, 0, 5)
+				d.Position = UDim2.new(0, 7, 0.5, -2)
+				d.BackgroundColor3 = dotColor
+				d.BorderSizePixel = 0
+				d.Parent = f
+				local dc = Instance.new("UICorner")
+				dc.CornerRadius = UDim.new(1, 0)
+				dc.Parent = d
+				tx = 16
+			end
+			return lbl(f, text, 8, UDim2.new(0, tx, 0, 0), UDim2.new(1, -tx - 4, 1, 0), Color3.fromRGB(190, 200, 220), Enum.Font.GothamMedium)
 		end
 
 		-----------------------------------------------------------------
-		-- 1) Perfil
+		-- 1) Boas-vindas
 		-----------------------------------------------------------------
-		local header = Instance.new("Frame")
-		header.Name = "Header"
-		header.Size = UDim2.new(1, -20, 0, 44)
-		header.BackgroundTransparency = 1
-		header.LayoutOrder = 1
-		header.Parent = content
+		local welcome = makeCard(1, 82)
+		welcome.Name = "Welcome"
+		local glow = Instance.new("Frame")
+		glow.Size = UDim2.new(0.6, 0, 1, 0)
+		glow.Position = UDim2.new(0.4, 0, 0, 0)
+		glow.BackgroundColor3 = currentThemeColor
+		glow.BorderSizePixel = 0
+		glow.Active = false
+		glow.Parent = welcome
+		table.insert(themeSliders, glow)
+		local glowGrad = Instance.new("UIGradient")
+		glowGrad.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0.82)})
+		glowGrad.Parent = glow
 
 		local avatar = Instance.new("ImageLabel")
 		avatar.Name = "PlayerAvatar"
-		avatar.Size = UDim2.new(0, 42, 0, 42)
-		avatar.Position = UDim2.new(0, 0, 0, 1)
-		avatar.BackgroundColor3 = Color3.fromRGB(38, 38, 52)
-		avatar.BorderSizePixel = 0
+		avatar.AnchorPoint = Vector2.new(1, 1)
+		avatar.Size = UDim2.new(0, 74, 0, 74)
+		avatar.Position = UDim2.new(1, -8, 1, 0)
+		avatar.BackgroundTransparency = 1
 		avatar.Image = ""
-		avatar.Parent = header
-		local avatarCorner = Instance.new("UICorner")
-		avatarCorner.CornerRadius = UDim.new(1, 0)
-		avatarCorner.Parent = avatar
-		local avatarStroke = Instance.new("UIStroke")
-		avatarStroke.Color = currentThemeColor
-		avatarStroke.Thickness = 1.8
-		avatarStroke.Transparency = 0.1
-		avatarStroke.Parent = avatar
-		table.insert(themeSections, avatarStroke)
+		avatar.ScaleType = Enum.ScaleType.Fit
+		avatar.Parent = welcome
 
-		makeInfoText(header, "PERFIL DO JOGADOR", 8, UDim2.new(0, 52, 0, 0), UDim2.new(1, -120, 0, 11), currentThemeColor, Enum.Font.GothamBold)
-		makeInfoText(header, player.DisplayName or player.Name, 14, UDim2.new(0, 52, 0, 11), UDim2.new(1, -120, 0, 18), currentTextColor, Enum.Font.GothamBold)
-		makeInfoText(header, "@" .. player.Name .. "  •  ID " .. tostring(player.UserId), 9, UDim2.new(0, 52, 0, 29), UDim2.new(1, -60, 0, 13), Color3.fromRGB(175, 175, 195))
-
-		-- Selo "ONLINE" no canto direito.
-		local online = Instance.new("Frame")
-		online.Size = UDim2.new(0, 56, 0, 16)
-		online.Position = UDim2.new(1, -56, 0, 2)
-		online.BackgroundColor3 = Color3.fromRGB(46, 160, 90)
-		online.BackgroundTransparency = 0.82
-		online.BorderSizePixel = 0
-		online.Parent = header
-		local onlineCorner = Instance.new("UICorner")
-		onlineCorner.CornerRadius = UDim.new(1, 0)
-		onlineCorner.Parent = online
-		local onlineDot = Instance.new("Frame")
-		onlineDot.Size = UDim2.new(0, 6, 0, 6)
-		onlineDot.Position = UDim2.new(0, 8, 0.5, -3)
-		onlineDot.BackgroundColor3 = Color3.fromRGB(80, 220, 130)
-		onlineDot.BorderSizePixel = 0
-		onlineDot.Parent = online
-		local onlineDotCorner = Instance.new("UICorner")
-		onlineDotCorner.CornerRadius = UDim.new(1, 0)
-		onlineDotCorner.Parent = onlineDot
-		makeInfoText(online, "ONLINE", 8, UDim2.new(0, 18, 0, 0), UDim2.new(1, -20, 1, 0), Color3.fromRGB(120, 235, 160), Enum.Font.GothamBold)
-		TweenService:Create(onlineDot, TweenInfo.new(0.9, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
-			BackgroundTransparency = 0.7
-		}):Play()
+		lbl(welcome, "BEM-VINDO DE VOLTA", 8, UDim2.new(0, 14, 0, 9), UDim2.new(1, -100, 0, 10), GRAY, Enum.Font.GothamBold)
+		lbl(welcome, player.DisplayName or player.Name, 19, UDim2.new(0, 14, 0, 20), UDim2.new(1, -100, 0, 26), Color3.new(1, 1, 1), Enum.Font.GothamBold)
+		lbl(welcome, "@" .. player.Name, 9, UDim2.new(0, 14, 0, 45), UDim2.new(1, -100, 0, 11), GRAY)
+		pill(welcome, "Aetheris Hub", 14, 74).TextColor3 = accentBlue
+		pill(welcome, "Online", 94, 52, GOOD)
 
 		task.spawn(function()
 			local ok, image = pcall(function()
-				return Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+				return Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.AvatarBust, Enum.ThumbnailSize.Size150x150)
 			end)
 			if ok and avatar.Parent then avatar.Image = image end
 		end)
 
 		-----------------------------------------------------------------
-		-- 2) Métricas ao vivo (3 mini cards lado a lado)
+		-- 2) FPS / Ping + gráfico
 		-----------------------------------------------------------------
-		local statsRow = Instance.new("Frame")
-		statsRow.Name = "Stats"
-		statsRow.Size = UDim2.new(1, -20, 0, 34)
-		statsRow.BackgroundTransparency = 1
-		statsRow.LayoutOrder = 2
-		statsRow.Parent = content
-		local statsGrid = Instance.new("UIGridLayout")
-		statsGrid.CellSize = UDim2.new(0.3333, -6, 1, 0)
-		statsGrid.CellPadding = UDim2.new(0, 8, 0, 0)
-		statsGrid.SortOrder = Enum.SortOrder.LayoutOrder
-		statsGrid.Parent = statsRow
+		local perf = makeCard(2, 116)
+		perf.Name = "Performance"
+		lbl(perf, "FPS", 8, UDim2.new(0, 14, 0, 9), UDim2.new(0.5, -14, 0, 10), GRAY, Enum.Font.GothamBold)
+		local fpsLabel = lbl(perf, "--", 20, UDim2.new(0, 14, 0, 19), UDim2.new(0.5, -14, 0, 26), GOOD, Enum.Font.GothamBold)
+		lbl(perf, "PING", 8, UDim2.new(0.5, 0, 0, 9), UDim2.new(0.5, -14, 0, 10), GRAY, Enum.Font.GothamBold)
+		local pingLabel = lbl(perf, "-- ms", 20, UDim2.new(0.5, 0, 0, 19), UDim2.new(0.5, -14, 0, 26), GOOD, Enum.Font.GothamBold)
 
-		local function makeStat(title, initialValue, order)
-			local tile = makeTile(statsRow, order)
-			makeInfoText(tile, title, 8, UDim2.new(0, 0, 0, 4), UDim2.new(1, 0, 0, 10), Color3.fromRGB(165, 165, 185), Enum.Font.GothamBold, Enum.TextXAlignment.Center)
-			return makeInfoText(tile, initialValue, 13, UDim2.new(0, 0, 0, 14), UDim2.new(1, 0, 0, 18), currentTextColor, Enum.Font.GothamBold, Enum.TextXAlignment.Center)
+		local graph = Instance.new("Frame")
+		graph.Name = "FpsGraph"
+		graph.Position = UDim2.new(0, 14, 0, 52)
+		graph.Size = UDim2.new(1, -28, 0, 28)
+		graph.BackgroundTransparency = 1
+		graph.Parent = perf
+		local BARS = 30
+		local fpsHistory, bars = {}, {}
+		local BAR_IDLE = Color3.fromRGB(44, 54, 76)
+		for i = 1, BARS do
+			fpsHistory[i] = 0
+			local b = Instance.new("Frame")
+			b.AnchorPoint = Vector2.new(0, 1)
+			b.Position = UDim2.new((i - 1) / BARS, 0, 1, 0)
+			b.Size = UDim2.new(1 / BARS, -2, 0.12, 0)
+			b.BackgroundColor3 = BAR_IDLE
+			b.BorderSizePixel = 0
+			b.Parent = graph
+			local bc = Instance.new("UICorner")
+			bc.CornerRadius = UDim.new(0, 2)
+			bc.Parent = b
+			bars[i] = b
 		end
 
-		local fpsLabel = makeStat("FPS", "--", 1)
-		local pingLabel = makeStat("PING", "-- ms", 2)
-		local playerCount = makeStat("JOGADORES", "-- / " .. tostring(Players.MaxPlayers), 3)
+		lbl(perf, "JOGADORES", 8, UDim2.new(0, 14, 0, 87), UDim2.new(0.5, -14, 0, 10), GRAY, Enum.Font.GothamBold)
+		local playerCount = lbl(perf, "-- / " .. tostring(Players.MaxPlayers), 11, UDim2.new(0, 14, 0, 97), UDim2.new(0.5, -14, 0, 14), Color3.new(1, 1, 1), Enum.Font.GothamBold)
+		lbl(perf, "SESSÃO", 8, UDim2.new(0.5, 0, 0, 87), UDim2.new(0.5, -14, 0, 10), GRAY, Enum.Font.GothamBold)
+		local sessionLabel = lbl(perf, "0s", 11, UDim2.new(0.5, 0, 0, 97), UDim2.new(0.5, -14, 0, 14), Color3.new(1, 1, 1), Enum.Font.GothamBold)
 
 		-----------------------------------------------------------------
-		-- 3) Sessão atual
+		-- 3) Servidor atual
 		-----------------------------------------------------------------
-		local session = makeTile(content, 3)
-		session.Name = "Session"
-		session.Size = UDim2.new(1, -20, 0, 48)
-		makeInfoText(session, "SESSÃO ATUAL", 8, UDim2.new(0, 10, 0, 4), UDim2.new(1, -20, 0, 12), currentThemeColor, Enum.Font.GothamBold)
+		local server = makeCard(3, 108)
+		server.Name = "ServerCard"
+		local gameIcon = Instance.new("ImageLabel")
+		gameIcon.Size = UDim2.new(0, 32, 0, 32)
+		gameIcon.Position = UDim2.new(0, 14, 0, 12)
+		gameIcon.BackgroundColor3 = Color3.fromRGB(26, 34, 52)
+		gameIcon.BorderSizePixel = 0
+		gameIcon.Image = "rbxthumb://type=GameIcon&id=" .. tostring(game.GameId) .. "&w=150&h=150"
+		gameIcon.Parent = server
+		local gic = Instance.new("UICorner")
+		gic.CornerRadius = UDim.new(0, 8)
+		gic.Parent = gameIcon
+		local gameTitle = lbl(server, "Blox Fruits", 11, UDim2.new(0, 54, 0, 12), UDim2.new(1, -68, 0, 15), Color3.new(1, 1, 1), Enum.Font.GothamBold)
+		local gameSub = lbl(server, tostring(#Players:GetPlayers()) .. "/" .. tostring(Players.MaxPlayers) .. " jogadores", 9, UDim2.new(0, 54, 0, 28), UDim2.new(1, -68, 0, 13), GRAY)
+		local creatorName = ""
+		task.spawn(function()
+			local ok, info = pcall(function() return MarketplaceService:GetProductInfo(game.PlaceId) end)
+			if ok and info and gameTitle.Parent then
+				gameTitle.Text = info.Name or gameTitle.Text
+				creatorName = info.Creator and info.Creator.Name or ""
+			end
+		end)
 
-		local serverType = game.PrivateServerId ~= "" and "Privado" or "Público"
-		local jobText = game.JobId ~= "" and (string.sub(game.JobId, 1, 8) .. "…") or "Local"
-		makeInfoText(session, "Servidor  " .. jobText, 9, UDim2.new(0, 10, 0, 18), UDim2.new(0.58, -10, 0, 12), currentTextColor)
-		makeInfoText(session, "Acesso  " .. serverType, 9, UDim2.new(0.58, 0, 0, 18), UDim2.new(0.42, -10, 0, 12), Color3.fromRGB(185, 185, 205))
-		local placeMetric = makeInfoText(session, "Place  " .. tostring(game.PlaceId), 9, UDim2.new(0, 10, 0, 32), UDim2.new(0.58, -10, 0, 12), Color3.fromRGB(160, 160, 180))
-		makeInfoText(session, "Limite  " .. tostring(Players.MaxPlayers) .. " jogadores", 9, UDim2.new(0.58, 0, 0, 32), UDim2.new(0.42, -10, 0, 12), Color3.fromRGB(160, 160, 180))
+		local actions = Instance.new("Frame")
+		actions.Position = UDim2.new(0, 14, 0, 52)
+		actions.Size = UDim2.new(1, -28, 0, 30)
+		actions.BackgroundTransparency = 1
+		actions.Parent = server
+		local actionsGrid = Instance.new("UIGridLayout")
+		actionsGrid.CellSize = UDim2.new(0.25, -6, 1, 0)
+		actionsGrid.CellPadding = UDim2.new(0, 8, 0, 0)
+		actionsGrid.SortOrder = Enum.SortOrder.LayoutOrder
+		actionsGrid.Parent = actions
+
+		local function makeAction(text, order, callback)
+			local b = Instance.new("TextButton")
+			b.LayoutOrder = order
+			b.BackgroundColor3 = Color3.fromRGB(20, 28, 44)
+			b.BorderSizePixel = 0
+			b.AutoButtonColor = false
+			b.Font = Enum.Font.GothamMedium
+			b.Text = text
+			b.TextColor3 = Color3.fromRGB(180, 190, 212)
+			b.TextSize = 9
+			b.Parent = actions
+			local bc = Instance.new("UICorner")
+			bc.CornerRadius = UDim.new(0, 7)
+			bc.Parent = b
+			local bs = Instance.new("UIStroke")
+			bs.Color = Color3.fromRGB(34, 44, 66)
+			bs.Thickness = 1
+			bs.Parent = b
+			b.MouseEnter:Connect(function()
+				TweenService:Create(bs, TweenInfo.new(0.12), {Color = accentBlue}):Play()
+				TweenService:Create(b, TweenInfo.new(0.12), {TextColor3 = Color3.new(1, 1, 1)}):Play()
+			end)
+			b.MouseLeave:Connect(function()
+				TweenService:Create(bs, TweenInfo.new(0.12), {Color = Color3.fromRGB(34, 44, 66)}):Play()
+				TweenService:Create(b, TweenInfo.new(0.12), {TextColor3 = Color3.fromRGB(180, 190, 212)}):Play()
+			end)
+			local busy = false
+			local function flash(msg)
+				b.Text = msg
+				task.delay(1.4, function()
+					if b.Parent then b.Text = text end
+					busy = false
+				end)
+			end
+			b.MouseButton1Click:Connect(function()
+				if busy then return end
+				busy = true
+				b.Text = "..."
+				task.spawn(function() callback(flash) end)
+			end)
+			return b
+		end
+
+		local function httpGet(url)
+			local req = (syn and syn.request) or request or http_request or (http and http.request)
+			if req then
+				local ok, res = pcall(req, {Url = url, Method = "GET"})
+				if ok and res and res.Body then return res.Body end
+			end
+			local ok, body = pcall(function() return game:HttpGet(url) end)
+			if ok then return body end
+			return nil
+		end
+
+		local function pickServer(lowest)
+			local body = httpGet("https://games.roblox.com/v1/games/" .. tostring(game.PlaceId) .. "/servers/Public?sortOrder=Asc&limit=100")
+			if not body then return nil end
+			local ok, data = pcall(function() return HttpService:JSONDecode(body) end)
+			if not ok or type(data) ~= "table" or type(data.data) ~= "table" then return nil end
+			local list = {}
+			for _, sv in ipairs(data.data) do
+				if sv.id ~= game.JobId and (sv.playing or 0) < (sv.maxPlayers or 0) then
+					table.insert(list, sv)
+				end
+			end
+			if #list == 0 then return nil end
+			if lowest then
+				table.sort(list, function(a, b) return (a.playing or 0) < (b.playing or 0) end)
+				return list[1].id
+			end
+			return list[math.random(1, #list)].id
+		end
+
+		local function teleportTo(jobId)
+			local ok = pcall(function()
+				TeleportService:TeleportToPlaceInstance(game.PlaceId, jobId, player)
+			end)
+			return ok
+		end
+
+		makeAction("Rejoin", 1, function(flash)
+			local ok
+			if game.JobId ~= "" then
+				ok = teleportTo(game.JobId)
+			else
+				ok = pcall(function() TeleportService:Teleport(game.PlaceId, player) end)
+			end
+			flash(ok and "Indo..." or "Falhou")
+		end)
+		makeAction("Hop", 2, function(flash)
+			local id = pickServer(false)
+			if not id then flash("Sem server") return end
+			flash(teleportTo(id) and "Indo..." or "Falhou")
+		end)
+		makeAction("Lowest", 3, function(flash)
+			local id = pickServer(true)
+			if not id then flash("Sem server") return end
+			flash(teleportTo(id) and "Indo..." or "Falhou")
+		end)
+		makeAction("Job ID", 4, function(flash)
+			if setclipboard then
+				pcall(setclipboard, game.JobId)
+				flash("Copiado!")
+			elseif toclipboard then
+				pcall(toclipboard, game.JobId)
+				flash("Copiado!")
+			else
+				flash("Sem clipboard")
+			end
+		end)
+
+		local jobShort = game.JobId ~= "" and (string.sub(game.JobId, 1, 8) .. "…") or "Local"
+		local jobInfo = lbl(server, "Job  " .. jobShort .. "   •   Place  " .. tostring(game.PlaceId), 8, UDim2.new(0, 14, 0, 88), UDim2.new(1, -28, 0, 12), GRAY)
 
 		-----------------------------------------------------------------
-		-- 4) Novidades
+		-- Atualização ao vivo
 		-----------------------------------------------------------------
-		local news = makeTile(content, 4)
-		news.Name = "News"
-		news.Size = UDim2.new(1, -20, 0, 44)
-		makeInfoText(news, "NOVIDADES  /  AETHERIS HUB  V1", 8, UDim2.new(0, 10, 0, 4), UDim2.new(1, -20, 0, 12), currentThemeColor, Enum.Font.GothamBold)
-		makeInfoText(news, "+ Auto Farm Level, Fast Attack, Esp Level, Direct Attack...", 9, UDim2.new(0, 10, 0, 18), UDim2.new(1, -20, 0, 12), currentTextColor)
-		makeInfoText(news, "+ Bug Fixes, Design Advanced", 9, UDim2.new(0, 10, 0, 30), UDim2.new(1, -20, 0, 12), currentTextColor)
+		local sessionStart = os.clock()
+		local function fmtSession(t)
+			t = math.floor(t)
+			if t >= 3600 then return string.format("%dh %02dm", t // 3600, (t % 3600) // 60) end
+			if t >= 60 then return string.format("%dm %02ds", t // 60, t % 60) end
+			return t .. "s"
+		end
+		local function fpsColor(v) return v >= 50 and GOOD or (v >= 30 and WARN or BAD) end
 
-		-----------------------------------------------------------------
-		-- Atualização ao vivo (FPS, ping, jogadores)
-		-----------------------------------------------------------------
 		local fpsFrames, fpsElapsed = 0, 0
 		local infoPerfConnection = RunService.RenderStepped:Connect(function(dt)
 			fpsFrames += 1
 			fpsElapsed += dt
 			if fpsElapsed >= 1 then
-				fpsLabel.Text = tostring(math.floor(fpsFrames / fpsElapsed + 0.5))
+				local fps = math.floor(fpsFrames / fpsElapsed + 0.5)
 				fpsFrames, fpsElapsed = 0, 0
-				playerCount.Text = tostring(#Players:GetPlayers()) .. " / " .. tostring(Players.MaxPlayers)
-				placeMetric.Text = "Place  " .. tostring(game.PlaceId)
-				local pingText = "--"
+				fpsLabel.Text = tostring(fps)
+				fpsLabel.TextColor3 = fpsColor(fps)
+
+				table.remove(fpsHistory, 1)
+				table.insert(fpsHistory, fps)
+				for i = 1, BARS do
+					local v = fpsHistory[i]
+					local bar = bars[i]
+					bar.Size = UDim2.new(1 / BARS, -2, math.clamp(v / 60, 0.1, 1), 0)
+					if i == BARS then
+						bar.BackgroundColor3 = fpsColor(v)
+					elseif v > 0 and v < 30 then
+						bar.BackgroundColor3 = Color3.fromRGB(150, 70, 80)
+					else
+						bar.BackgroundColor3 = BAR_IDLE
+					end
+				end
+
+				local count = #Players:GetPlayers()
+				playerCount.Text = tostring(count) .. " / " .. tostring(Players.MaxPlayers)
+				gameSub.Text = (creatorName ~= "" and ("por " .. creatorName .. "  •  ") or "") .. tostring(count) .. "/" .. tostring(Players.MaxPlayers) .. " jogadores"
+				sessionLabel.Text = fmtSession(os.clock() - sessionStart)
+
+				local pingValue
 				pcall(function()
 					local item = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]
-					local value = item and item:GetValue()
-					if value then pingText = tostring(math.floor(value + 0.5)) end
+					pingValue = item and item:GetValue()
 				end)
-				pingLabel.Text = pingText .. " ms"
+				if pingValue then
+					pingValue = math.floor(pingValue + 0.5)
+					pingLabel.Text = pingValue .. " ms"
+					pingLabel.TextColor3 = pingValue < 100 and GOOD or (pingValue < 200 and WARN or BAD)
+				else
+					pingLabel.Text = "-- ms"
+				end
 			end
 		end)
 		screenGui.Destroying:Connect(function()
