@@ -410,7 +410,7 @@ end
 -- DETECÇÃO DE PLATAFORMA & TAMANHO DINÂMICO
 -----------------------------------------------------------------
 local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
-local currentPanelSize = isMobile and UDim2.new(0, 440, 0, 290) or UDim2.new(0, 600, 0, 390)
+local currentPanelSize = isMobile and UDim2.new(0, 580, 0, 300) or UDim2.new(0, 660, 0, 400)
 
 -----------------------------------------------------------------
 -- ESTADOS GLOBAIS & CORES ESP / FOV
@@ -1932,6 +1932,7 @@ function showMainPanel()
 	contentStroke.Parent = contentContainer
 
 	local pages = {}
+	local pageColumns = {}
 	local function createPage(name)
 		local page = Instance.new("ScrollingFrame")
 		page.Size = UDim2.new(1, -8, 1, -8)
@@ -1951,6 +1952,66 @@ function showMainPanel()
 		layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 			page.CanvasSize = UDim2.new(0, 0, 0, AetherisLayoutHeight(layout) + 10)
 		end)
+
+		-- Duas colunas com uma linha vertical no meio (a aba Info tem layout próprio).
+		if name ~= "Info" then
+			local holder = Instance.new("Frame")
+			holder.Name = "Columns"
+			holder.Size = UDim2.new(1, -4, 0, 0)
+			holder.BackgroundTransparency = 1
+			holder.BorderSizePixel = 0
+			holder.LayoutOrder = -1
+			holder.Parent = page
+
+			local function makeColumn(x)
+				-- O nome da coluna é o da página: o sistema de presets usa esse nome para as chaves.
+				local col = Instance.new("Frame")
+				col.Name = name
+				col.Size = UDim2.new(0.5, -7, 1, 0)
+				col.Position = UDim2.new(x, x == 0 and 0 or 7, 0, 0)
+				col.BackgroundTransparency = 1
+				col.BorderSizePixel = 0
+				col.Parent = holder
+				local cl = Instance.new("UIListLayout")
+				cl.SortOrder = Enum.SortOrder.LayoutOrder
+				cl.Padding = UDim.new(0, 6)
+				cl.Parent = col
+				return col, cl
+			end
+			local leftCol, leftLayout = makeColumn(0)
+			local rightCol, rightLayout = makeColumn(0.5)
+
+			local divider = Instance.new("Frame")
+			divider.Name = "ColumnDivider"
+			divider.AnchorPoint = Vector2.new(0.5, 0)
+			divider.Position = UDim2.new(0.5, 0, 0, 2)
+			divider.Size = UDim2.new(0, 1, 1, -4)
+			divider.BackgroundColor3 = Color3.fromRGB(58, 70, 100)
+			divider.BorderSizePixel = 0
+			divider.Active = false
+			divider.Parent = holder
+			local dg = Instance.new("UIGradient")
+			dg.Rotation = 90
+			dg.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 1),
+				NumberSequenceKeypoint.new(0.08, 0.3),
+				NumberSequenceKeypoint.new(0.92, 0.3),
+				NumberSequenceKeypoint.new(1, 1)
+			})
+			dg.Parent = divider
+
+			local function refreshHolder()
+				holder.Size = UDim2.new(1, -4, 0, math.max(AetherisLayoutHeight(leftLayout), AetherisLayoutHeight(rightLayout)))
+			end
+			leftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(refreshHolder)
+			rightLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(refreshHolder)
+
+			local entry = {left = leftCol, right = rightCol, count = 0}
+			pageColumns[page] = entry
+			-- createSection também aceita uma coluna como destino (ex.: secFarm.Parent.Parent).
+			pageColumns[leftCol] = entry
+			pageColumns[rightCol] = entry
+		end
 
 		pages[name] = page
 		return page
@@ -2249,8 +2310,8 @@ function showMainPanel()
 			end
 		end
 
-		local baseW = isMobile and 440 or 600
-		local baseH = isMobile and 290 or 390
+		local baseW = isMobile and 580 or 660
+		local baseH = isMobile and 300 or 400
 		local function applyPanelScale()
 			-- usa o Size configurado (e não o AbsoluteSize) para não somar com a animação de escala
 			local w, h = mainPanel.Size.X.Offset, mainPanel.Size.Y.Offset
@@ -2419,8 +2480,22 @@ function showMainPanel()
 			if q == "" then return end
 			local page = activePage
 			if not page or not page:FindFirstChildOfClass("UIListLayout") then return end
+			local candidates = {}
 			for _, child in ipairs(page:GetChildren()) do
-				if child:IsA("Frame") and child.Visible and not string.find(frameText(child), q, 1, true) then
+				if child.Name == "Columns" then
+					for _, col in ipairs(child:GetChildren()) do
+						if col:IsA("Frame") and col.Name ~= "ColumnDivider" then
+							for _, sec in ipairs(col:GetChildren()) do
+								if sec:IsA("Frame") then candidates[#candidates + 1] = sec end
+							end
+						end
+					end
+				elseif child:IsA("Frame") then
+					candidates[#candidates + 1] = child
+				end
+			end
+			for _, child in ipairs(candidates) do
+				if child.Visible and not string.find(frameText(child), q, 1, true) then
 					child.Visible = false
 					hiddenBySearch[#hiddenBySearch + 1] = child
 				end
@@ -2521,11 +2596,21 @@ function showMainPanel()
 	end
 
 	local function createSection(pageTarget, title, iconSymbol)
+		-- Páginas em duas colunas: as seções se alternam entre esquerda e direita.
+		local colEntry = pageColumns[pageTarget]
+		local parentFrame = pageTarget
+		local sectionW = -4
+		if colEntry then
+			colEntry.count = colEntry.count + 1
+			parentFrame = (colEntry.count % 2 == 1) and colEntry.left or colEntry.right
+			sectionW = 0
+		end
+
 		local section = Instance.new("Frame")
-		section.Size = UDim2.new(1, -4, 0, 0)
+		section.Size = UDim2.new(1, sectionW, 0, 0)
 		section.BackgroundColor3 = Color3.fromRGB(17, 23, 36)
 		section.BackgroundTransparency = 0.1
-		section.Parent = pageTarget
+		section.Parent = parentFrame
 
 		local sCorner = Instance.new("UICorner")
 		sCorner.CornerRadius = UDim.new(0, 6)
@@ -2566,61 +2651,18 @@ function showMainPanel()
 		table.insert(allTextLabels, sTitle)
 
 		local sContainer = Instance.new("Frame")
-		sContainer.Size = UDim2.new(1, -10, 1, -31)
-		sContainer.Position = UDim2.new(0, 5, 0, 28)
+		sContainer.Size = UDim2.new(1, -10, 1, -26)
+		sContainer.Position = UDim2.new(0, 5, 0, 23)
 		sContainer.BackgroundTransparency = 1
 		sContainer.Parent = section
 
 		local sLayout = Instance.new("UIListLayout")
 		sLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		sLayout.Padding = UDim.new(0, 7)
+		sLayout.Padding = UDim.new(0, 4)
 		sLayout.Parent = sContainer
 
 		sLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			section.Size = UDim2.new(1, -4, 0, AetherisLayoutHeight(sLayout) + 33)
-		end)
-
-		-- Divisórias: uma linha fina sob o título da seção e outra entre cada função.
-		local function makeDivider(parent, pos, size)
-			local line = Instance.new("Frame")
-			line.Name = "RowDivider"
-			line.Position = pos
-			line.Size = size
-			line.BackgroundColor3 = Color3.fromRGB(52, 64, 92)
-			line.BorderSizePixel = 0
-			line.Active = false
-			local g = Instance.new("UIGradient")
-			g.Transparency = NumberSequence.new({
-				NumberSequenceKeypoint.new(0, 1),
-				NumberSequenceKeypoint.new(0.12, 0.35),
-				NumberSequenceKeypoint.new(0.88, 0.35),
-				NumberSequenceKeypoint.new(1, 1)
-			})
-			g.Parent = line
-			line.Parent = parent
-			return line
-		end
-		makeDivider(section, UDim2.new(0, 8, 0, 25), UDim2.new(1, -16, 0, 1))
-
-		-- A linha fica exatamente no meio do espaço entre duas funções (7px de intervalo: 3 acima, 3 abaixo).
-		-- Ela mora na própria seção (não dentro da linha da função), então funciona com qualquer tipo de linha.
-		sContainer.ChildAdded:Connect(function(row)
-			if not row:IsA("GuiObject") then return end
-			local count = 0
-			for _, ch in ipairs(sContainer:GetChildren()) do
-				if ch:IsA("GuiObject") then count = count + 1 end
-			end
-			if count <= 1 then return end
-			local line = makeDivider(section, UDim2.new(0, 11, 0, 0), UDim2.new(1, -22, 0, 1))
-			local function place()
-				if not row.Parent then return end
-				line.Position = UDim2.new(0, 11, 0, 28 + row.Position.Y.Offset - 4)
-				line.Visible = row.Visible
-			end
-			row:GetPropertyChangedSignal("Position"):Connect(place)
-			row:GetPropertyChangedSignal("Visible"):Connect(place)
-			row.Destroying:Connect(function() line:Destroy() end)
-			task.defer(place)
+			section.Size = UDim2.new(1, sectionW, 0, AetherisLayoutHeight(sLayout) + 28)
 		end)
 
 		return sContainer
