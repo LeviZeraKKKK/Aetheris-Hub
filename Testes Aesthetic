@@ -2566,18 +2566,18 @@ function showMainPanel()
 		table.insert(allTextLabels, sTitle)
 
 		local sContainer = Instance.new("Frame")
-		sContainer.Size = UDim2.new(1, -10, 1, -26)
-		sContainer.Position = UDim2.new(0, 5, 0, 23)
+		sContainer.Size = UDim2.new(1, -10, 1, -31)
+		sContainer.Position = UDim2.new(0, 5, 0, 28)
 		sContainer.BackgroundTransparency = 1
 		sContainer.Parent = section
 
 		local sLayout = Instance.new("UIListLayout")
 		sLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		sLayout.Padding = UDim.new(0, 4)
+		sLayout.Padding = UDim.new(0, 7)
 		sLayout.Parent = sContainer
 
 		sLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			section.Size = UDim2.new(1, -4, 0, AetherisLayoutHeight(sLayout) + 28)
+			section.Size = UDim2.new(1, -4, 0, AetherisLayoutHeight(sLayout) + 33)
 		end)
 
 		-- Divisórias: uma linha fina sob o título da seção e outra entre cada função.
@@ -2600,8 +2600,10 @@ function showMainPanel()
 			line.Parent = parent
 			return line
 		end
-		makeDivider(section, UDim2.new(0, 8, 0, 22), UDim2.new(1, -16, 0, 1))
+		makeDivider(section, UDim2.new(0, 8, 0, 25), UDim2.new(1, -16, 0, 1))
 
+		-- A linha fica exatamente no meio do espaço entre duas funções (7px de intervalo: 3 acima, 3 abaixo).
+		-- Ela mora na própria seção (não dentro da linha da função), então funciona com qualquer tipo de linha.
 		sContainer.ChildAdded:Connect(function(row)
 			if not row:IsA("GuiObject") then return end
 			local count = 0
@@ -2609,13 +2611,16 @@ function showMainPanel()
 				if ch:IsA("GuiObject") then count = count + 1 end
 			end
 			if count <= 1 then return end
-			task.defer(function()
+			local line = makeDivider(section, UDim2.new(0, 11, 0, 0), UDim2.new(1, -22, 0, 1))
+			local function place()
 				if not row.Parent then return end
-				-- Linhas com layout próprio (listas, grades) não recebem divisória para não desorganizar.
-				if row:FindFirstChildOfClass("UIListLayout") or row:FindFirstChildOfClass("UIGridLayout") or row:IsA("ScrollingFrame") then return end
-				local line = makeDivider(row, UDim2.new(0, 6, 0, row.ClipsDescendants and 0 or -2), UDim2.new(1, -12, 0, 1))
-				line.ZIndex = row.ZIndex
-			end)
+				line.Position = UDim2.new(0, 11, 0, 28 + row.Position.Y.Offset - 4)
+				line.Visible = row.Visible
+			end
+			row:GetPropertyChangedSignal("Position"):Connect(place)
+			row:GetPropertyChangedSignal("Visible"):Connect(place)
+			row.Destroying:Connect(function() line:Destroy() end)
+			task.defer(place)
 		end)
 
 		return sContainer
