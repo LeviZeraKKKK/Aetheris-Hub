@@ -2519,8 +2519,71 @@ function showMainPanel()
 		sLayout.Padding = UDim.new(0, 4)
 		sLayout.Parent = sContainer
 
+		-- Seção recolhível: a setinha no canto do cabeçalho esconde/mostra as funções dela.
+		local collapsed, animating, collapseToken = false, false, 0
+		local COLLAPSED_H = 26
 		sLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+			if collapsed or animating then return end
 			section.Size = UDim2.new(1, sectionW, 0, AetherisLayoutHeight(sLayout) + 28)
+		end)
+
+		local sArrow = Instance.new("TextLabel")
+		sArrow.Name = "SectionCollapseArrow"
+		sArrow.Size = UDim2.new(0, 18, 0, 20)
+		sArrow.Position = UDim2.new(1, -24, 0, 3)
+		sArrow.BackgroundTransparency = 1
+		sArrow.Font = Enum.Font.GothamBold
+		sArrow.Text = "▼"
+		sArrow.TextColor3 = currentThemeColor
+		sArrow.TextSize = 10
+		sArrow.Parent = section
+		table.insert(themeTexts, sArrow)
+
+		local sHeaderBtn = Instance.new("TextButton")
+		sHeaderBtn.Name = "SectionHeaderButton"
+		sHeaderBtn.Size = UDim2.new(1, 0, 0, 24)
+		sHeaderBtn.BackgroundTransparency = 1
+		sHeaderBtn.Text = ""
+		sHeaderBtn.AutoButtonColor = false
+		sHeaderBtn.Parent = section
+
+		local function setCollapsed(state)
+			collapsed = state
+			collapseToken = collapseToken + 1
+			local token = collapseToken
+			animating = true
+			section.ClipsDescendants = true
+			TweenService:Create(sArrow, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {Rotation = state and -90 or 0}):Play()
+			if state then
+				local t = TweenService:Create(section, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+					Size = UDim2.new(1, sectionW, 0, COLLAPSED_H)
+				})
+				t:Play()
+				t.Completed:Connect(function()
+					if token ~= collapseToken then return end
+					sContainer.Visible = false
+					animating = false
+				end)
+			else
+				sContainer.Visible = true
+				local t = TweenService:Create(section, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+					Size = UDim2.new(1, sectionW, 0, AetherisLayoutHeight(sLayout) + 28)
+				})
+				t:Play()
+				t.Completed:Connect(function()
+					if token ~= collapseToken then return end
+					animating = false
+					section.ClipsDescendants = false
+					section.Size = UDim2.new(1, sectionW, 0, AetherisLayoutHeight(sLayout) + 28)
+				end)
+			end
+		end
+		sHeaderBtn.MouseButton1Click:Connect(function() setCollapsed(not collapsed) end)
+		sHeaderBtn.MouseEnter:Connect(function()
+			TweenService:Create(sTitle, TweenInfo.new(0.12), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+		end)
+		sHeaderBtn.MouseLeave:Connect(function()
+			TweenService:Create(sTitle, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(220, 220, 220)}):Play()
 		end)
 
 		-- Rótulos nunca passam por baixo dos controles: nomes longos quebram em 2 linhas pequenas
