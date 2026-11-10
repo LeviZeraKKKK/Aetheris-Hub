@@ -3364,6 +3364,7 @@ function showMainPanel()
 		end
 		toggleBtn.MouseButton1Click:Connect(function() setEspToggleState(not toggleStateRef.isToggled) end)
 		registerConfigBinding(parent, name .. " Ativado", function() return toggleStateRef.isToggled end, setEspToggleState)
+		return colorBtn
 	end
 
 	local function addToggle(parent, name, callback, defaultState, configName)
@@ -4729,14 +4730,21 @@ function showMainPanel()
 
 	local secEspChests = createSection(visualPage, "ESP Baú", sectionIcons.World)
 	addToggle(secEspChests, "Ativar ESP Baú", function(state) chestEspEnabled = state end, false)
-	addEspToggleWithColor(secEspChests, "Chams", chestEspChamsColor, function(c) chestEspChamsColor = c end, function(s) chestEspChams = s end)
-	addEspToggleWithColor(secEspChests, "Nome (Baú)", chestEspNameColor, function(c) chestEspNameColor = c end, function(s) chestEspName = s end)
+	local chestColorBtns = {}
+	chestColorBtns.chams = addEspToggleWithColor(secEspChests, "Chams", chestEspChamsColor, function(c) chestEspChamsColor = c end, function(s) chestEspChams = s end)
+	chestColorBtns.name = addEspToggleWithColor(secEspChests, "Nome (Baú)", chestEspNameColor, function(c) chestEspNameColor = c end, function(s) chestEspName = s end)
 	addEspToggleWithColor(secEspChests, "Distância", chestEspDistanceColor, function(c) chestEspDistanceColor = c end, function(s) chestEspDistance = s end)
 	-- Modo de busca: ChestModels (só a pasta de baús, mostra "[Diamond] Chest" colorido) ou Map.
 	AetherisChestCfg = AetherisChestCfg or {rangeOn = false, range = 500}
 	AetherisChestCfg.mode = AetherisChestCfg.mode or "ChestModels"
 	do
-		local modeLabels = {ChestModels = "ChestModels", Map = "Mapa (Map)"}
+		local modeLabels = {ChestModels = "Baús próximos", Map = "Baú de mapa todo (não consegue pegar o tipo)"}
+		-- Em "Baús próximos" as cores vêm do tipo do baú, então os seletores de cor somem.
+		local function applyColorButtons()
+			local show = AetherisChestCfg.mode == "Map"
+			chestColorBtns.chams.Visible = show
+			chestColorBtns.name.Visible = show
+		end
 		local modeDD = AetherisDropdown(secEspChests, {
 			prefix = "Modo: ",
 			label = modeLabels[AetherisChestCfg.mode],
@@ -4745,18 +4753,17 @@ function showMainPanel()
 			getOptions = function()
 				return {{label = modeLabels.ChestModels, value = "ChestModels"}, {label = modeLabels.Map, value = "Map"}}
 			end,
-			onSelect = function(value) AetherisChestCfg.mode = value end,
+			onSelect = function(value) AetherisChestCfg.mode = value; applyColorButtons() end,
 		})
 		registerConfigBinding(secEspChests, "ESP Baú: modo", function() return AetherisChestCfg.mode end, function(v)
 			if modeLabels[v] then
 				AetherisChestCfg.mode = v
 				modeDD.setValue(v, modeLabels[v])
+				applyColorButtons()
 			end
 		end)
+		applyColorButtons()
 	end
-	-- Alcance: desligado = mapa todo (como era antes); ligado = só baús dentro do alcance (mais leve).
-	addToggle(secEspChests, "Limitar por alcance", function(state) AetherisChestCfg.rangeOn = state end, false)
-	addSlider(secEspChests, "Alcance do ESP Baú", 50, 5000, 500, function(val) AetherisChestCfg.range = val end, 0, " studs")
 	-- ESP Berries: procura em Workspace.Map objetos "{...}" que tenham o filho "Berries"
 	-- e usa o primeiro atributo dele como nome da berry. Tudo fica dentro deste bloco
 	-- para não criar variáveis locais novas no nível superior do script.
@@ -9307,13 +9314,15 @@ end
 --  * o Highlight é limitado aos 30 baús mais próximos (o Roblox nem desenha mais que isso);
 --  * a atualização por frame virou ~10 vezes por segundo e só escreve o que mudou.
 AetherisChestCfg = AetherisChestCfg or {rangeOn = false, range = 500}
-AetherisChestCfg.mode = AetherisChestCfg.mode or "ChestModels" -- "ChestModels" ou "Map"
+AetherisChestCfg.mode = AetherisChestCfg.mode or "ChestModels" -- "ChestModels" (Baús próximos) ou "Map" (mapa todo)
+AetherisChestCfg.rangeOn = false -- alcance removido do menu
 do -- bloco próprio: não gasta variáveis locais do nível superior
 local chestKnown = {main = {}, map = {}}
 local chestScanAt = {main = 0, map = 0}
 -- Modo ChestModels: cada filho da pasta é um baú (Diamond, Gold...). O rótulo vira "[Diamond] Chest"
 -- com a cor do tipo; tipos desconhecidos usam o nome do filho e a cor padrão do nome.
 local chestTiers = {
+    {key = "fragment", name = "Fragment", color = Color3.fromRGB(170, 90, 255)},
     {key = "diamond", name = "Diamond", color = Color3.fromRGB(70, 170, 255)},
     {key = "gold", name = "Gold", color = Color3.fromRGB(255, 200, 50)},
     {key = "silver", name = "Silver", color = Color3.fromRGB(205, 210, 222)},
@@ -9434,12 +9443,6 @@ RunService.Heartbeat:Connect(function(dt)
     for target, data in pairs(chestEspObjects) do
         local part = data.billboard.Adornee
         if target.Parent and part and part.Parent then
-            local showChams = chestEspChams and data.near ~= false
-            if data.highlight.Enabled ~= showChams then data.highlight.Enabled = showChams end
-            if showChams then
-                data.highlight.FillColor = chestEspChamsColor
-                data.highlight.OutlineColor = chestEspChamsColor
-            end
             if data.mode ~= AetherisChestCfg.mode then
                 data.mode = AetherisChestCfg.mode
                 if data.mode == "ChestModels" then
@@ -9447,6 +9450,15 @@ RunService.Heartbeat:Connect(function(dt)
                 else
                     data.label, data.labelColor = "Baú", nil
                 end
+            end
+            -- Baús próximos: Chams e Nome usam a cor do tipo (Silver, Gold, Diamond, Fragment...);
+            -- as cores escolhidas no menu valem para o modo de mapa todo e para tipos desconhecidos.
+            local showChams = chestEspChams and data.near ~= false
+            if data.highlight.Enabled ~= showChams then data.highlight.Enabled = showChams end
+            if showChams then
+                local chamsColor = data.labelColor or chestEspChamsColor
+                data.highlight.FillColor = chamsColor
+                data.highlight.OutlineColor = chamsColor
             end
             local showInfo = chestEspName or chestEspDistance
             if data.billboard.Enabled ~= showInfo then data.billboard.Enabled = showInfo end
