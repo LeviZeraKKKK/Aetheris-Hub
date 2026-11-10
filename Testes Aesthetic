@@ -4473,8 +4473,29 @@ function showMainPanel()
 	addEspToggleWithColor(secEspChests, "Chams", chestEspChamsColor, function(c) chestEspChamsColor = c end, function(s) chestEspChams = s end)
 	addEspToggleWithColor(secEspChests, "Nome (Baú)", chestEspNameColor, function(c) chestEspNameColor = c end, function(s) chestEspName = s end)
 	addEspToggleWithColor(secEspChests, "Distância", chestEspDistanceColor, function(c) chestEspDistanceColor = c end, function(s) chestEspDistance = s end)
-	-- Alcance: desligado = mapa todo (como era antes); ligado = só baús dentro do alcance (mais leve).
+	-- Modo de busca: ChestModels (só a pasta de baús, mostra "[Diamond] Chest" colorido) ou Map.
 	AetherisChestCfg = AetherisChestCfg or {rangeOn = false, range = 500}
+	AetherisChestCfg.mode = AetherisChestCfg.mode or "ChestModels"
+	do
+		local modeLabels = {ChestModels = "ChestModels", Map = "Mapa (Map)"}
+		local modeDD = AetherisDropdown(secEspChests, {
+			prefix = "Modo: ",
+			label = modeLabels[AetherisChestCfg.mode],
+			value = AetherisChestCfg.mode,
+			maxRows = 2,
+			getOptions = function()
+				return {{label = modeLabels.ChestModels, value = "ChestModels"}, {label = modeLabels.Map, value = "Map"}}
+			end,
+			onSelect = function(value) AetherisChestCfg.mode = value end,
+		})
+		registerConfigBinding(secEspChests, "ESP Baú: modo", function() return AetherisChestCfg.mode end, function(v)
+			if modeLabels[v] then
+				AetherisChestCfg.mode = v
+				modeDD.setValue(v, modeLabels[v])
+			end
+		end)
+	end
+	-- Alcance: desligado = mapa todo (como era antes); ligado = só baús dentro do alcance (mais leve).
 	addToggle(secEspChests, "Limitar por alcance", function(state) AetherisChestCfg.rangeOn = state end, false)
 	addSlider(secEspChests, "Alcance do ESP Baú", 50, 5000, 500, function(val) AetherisChestCfg.range = val end, 0, " studs")
 	-- ESP Berries: procura em Workspace.Map objetos "{...}" que tenham o filho "Berries"
@@ -6716,7 +6737,9 @@ function showMainPanel()
 				if type(entries) == "table" then
 					for idx, q in ipairs(entries) do
 						if type(q) == "table" and type(q.LevelReq) == "number" and q.LevelReq <= level
-							and (not ceilExclusive or q.LevelReq < ceilExclusive) then
+							and (not ceilExclusive or q.LevelReq < ceilExclusive)
+							and not q.MeetsRequirements
+							and not q.OnComplete then
 							if not best or q.LevelReq > best.levelReq then
 								local taskType = nil
 								for t in pairs(q.Task or {}) do taskType = t; break end
@@ -6915,15 +6938,17 @@ function showMainPanel()
 				function() return commF:InvokeServer(cat, idx) end,
 				function() return commF:InvokeServer("Quest", cat, name) end,
 			}
+			-- Permissivo: o StartQuest costuma devolver nil quando dá certo, então qualquer chamada
+			-- que não der erro de execução já conta como missão aceita (assim ele pega e já vai direto).
 			for _, fn in ipairs(attempts) do
 				local ok, result = pcall(fn)
-				if ok and result ~= nil then
-					if type(result) == "string" and (result:lower():find("start") or result:lower():find("accept") or result:lower():find("good")) then return true end
-					if result == true then return true end
-					if type(result) == "table" and result.Success then return true end
+				if ok then
+					print("[AutoFarm] StartQuest " .. tostring(cat) .. " #" .. tostring(idx) .. " -> " .. tostring(result))
+					return true
 				end
-				task.wait(0.15)
+				task.wait(0.1)
 			end
+			-- todas deram erro de execução (raro): abandona e tenta de novo
 			pcall(function() commF:InvokeServer("AbandonQuest") end)
 			task.wait(0.3)
 			return (pcall(function() commF:InvokeServer("StartQuest", cat, idx) end))
@@ -9001,9 +9026,43 @@ end
 --  * o Highlight é limitado aos 30 baús mais próximos (o Roblox nem desenha mais que isso);
 --  * a atualização por frame virou ~10 vezes por segundo e só escreve o que mudou.
 AetherisChestCfg = AetherisChestCfg or {rangeOn = false, range = 500}
+AetherisChestCfg.mode = AetherisChestCfg.mode or "ChestModels" -- "ChestModels" ou "Map"
 do -- bloco próprio: não gasta variáveis locais do nível superior
 local chestKnown = {main = {}, map = {}}
 local chestScanAt = {main = 0, map = 0}
+-- Modo ChestModels: cada filho da pasta é um baú (Diamond, Gold...). O rótulo vira "[Diamond] Chest"
+-- com a cor do tipo; tipos desconhecidos usam o nome do filho e a cor padrão do nome.
+local chestTiers = {
+    {key = "diamond", name = "Diamond", color = Color3.fromRGB(70, 170, 255)},
+    {key = "gold", name = "Gold", color = Color3.fromRGB(255, 200, 50)},
+    {key = "silver", name = "Silver", color = Color3.fromRGB(205, 210, 222)},
+    {key = "bronze", name = "Bronze", color = Color3.fromRGB(205, 127, 50)},
+    {key = "copper", name = "Copper", color = Color3.fromRGB(205, 127, 50)},
+    {key = "emerald", name = "Emerald", color = Color3.fromRGB(70, 220, 120)},
+    {key = "ruby", name = "Ruby", color = Color3.fromRGB(235, 70, 80)},
+}
+local function chestTierInfo(instanceName)
+    local lower = string.lower(instanceName or "")
+    for _, tier in ipairs(chestTiers) do
+        if lower:find(tier.key, 1, true) then return "[" .. tier.name .. "] Chest", tier.color end
+    end
+    local clean = (instanceName or ""):gsub("[Cc]hest", ""):gsub("[Mm]odel", ""):gsub("[_%-%d]+", " "):gsub("^%s+", ""):gsub("%s+$", "")
+    if clean == "" then clean = "Normal" end
+    return "[" .. clean .. "] Chest", nil
+end
+local function scanChestModels(root)
+    local found = {}
+    for _, child in ipairs(root:GetChildren()) do
+        if child:IsA("Model") or child:IsA("BasePart") then
+            if getChestPart(child) then found[child] = true end
+        elseif child:IsA("Folder") then
+            for _, inner in ipairs(child:GetChildren()) do
+                if (inner:IsA("Model") or inner:IsA("BasePart")) and getChestPart(inner) then found[inner] = true end
+            end
+        end
+    end
+    return found
+end
 local function scanChestRoot(root)
     local found = {}
     local count = 0
@@ -9025,24 +9084,29 @@ task.spawn(function()
         if not active then
             for target in pairs(chestEspObjects) do removeChestESP(target) end
         else
-            -- Os baús do jogo ficam em workspace.ChestModels (a coleta de baú do Farming usa essa pasta);
-            -- Map entra também por garantia, com busca bem mais espaçada porque é grande.
-            local chestModelsRoot = workspace:FindFirstChild("ChestModels")
-            local mapRoot = workspace:FindFirstChild("Map") or map
-            if mapRoot == workspace then mapRoot = nil end
-            if chestModelsRoot and tick() - chestScanAt.main > 4 then
-                chestScanAt.main = tick()
-                chestKnown.main = scanChestRoot(chestModelsRoot)
-            elseif not chestModelsRoot then
+            -- Dois modos: "ChestModels" (só a pasta workspace.ChestModels, leve, com nome por tipo)
+            -- e "Map" (procura baús dentro do Map, busca bem mais espaçada porque é grande).
+            if cfg.mode == "Map" then
                 chestKnown.main = {}
-            end
-            if mapRoot and tick() - chestScanAt.map > 20 then
-                chestScanAt.map = tick()
-                chestKnown.map = scanChestRoot(mapRoot)
-            end
-            if not chestModelsRoot and not mapRoot and tick() - chestScanAt.map > 20 then
-                chestScanAt.map = tick()
-                chestKnown.map = scanChestRoot(workspace)
+                local mapRoot = workspace:FindFirstChild("Map") or map
+                if not mapRoot or mapRoot == workspace then mapRoot = workspace end
+                if tick() - chestScanAt.map > 20 or chestScanAt.mapMode ~= "Map" then
+                    chestScanAt.map = tick()
+                    chestScanAt.mapMode = "Map"
+                    chestKnown.map = scanChestRoot(mapRoot)
+                end
+            else
+                chestKnown.map = {}
+                chestScanAt.mapMode = "ChestModels"
+                local chestModelsRoot = workspace:FindFirstChild("ChestModels")
+                if chestModelsRoot then
+                    if tick() - chestScanAt.main > 2 then
+                        chestScanAt.main = tick()
+                        chestKnown.main = scanChestModels(chestModelsRoot)
+                    end
+                else
+                    chestKnown.main = {}
+                end
             end
 
             local character = player.Character
@@ -9095,11 +9159,22 @@ RunService.Heartbeat:Connect(function(dt)
                 data.highlight.FillColor = chestEspChamsColor
                 data.highlight.OutlineColor = chestEspChamsColor
             end
+            if data.mode ~= AetherisChestCfg.mode then
+                data.mode = AetherisChestCfg.mode
+                if data.mode == "ChestModels" then
+                    data.label, data.labelColor = chestTierInfo(target.Name)
+                else
+                    data.label, data.labelColor = "Baú", nil
+                end
+            end
             local showInfo = chestEspName or chestEspDistance
             if data.billboard.Enabled ~= showInfo then data.billboard.Enabled = showInfo end
             if showInfo then
                 if data.nameLabel.Visible ~= chestEspName then data.nameLabel.Visible = chestEspName end
-                if chestEspName then data.nameLabel.TextColor3 = chestEspNameColor end
+                if chestEspName then
+                    if data.nameLabel.Text ~= data.label then data.nameLabel.Text = data.label end
+                    data.nameLabel.TextColor3 = data.labelColor or chestEspNameColor
+                end
                 if data.distanceLabel.Visible ~= chestEspDistance then data.distanceLabel.Visible = chestEspDistance end
                 if chestEspDistance then
                     data.distanceLabel.Text = string.format("%.0f studs", (part.Position - rootPos).Magnitude)
