@@ -4233,6 +4233,265 @@ function showMainPanel()
 		end)
 	end
 
+	-- Auto Aura, Auto Observação (Ken) e Auto Habilidade da Raça (V3), todos na aba Player.
+	-- Tudo dentro de do...end e em tabelas (A e K) para não gastar variáveis locais (limite de 200).
+	do
+		local secAuto = createSection(playerPage, "Auto Habilidades", sectionIcons.Physical)
+		local CollectionSvc = game:GetService("CollectionService")
+		local ContextSvc = game:GetService("ContextActionService")
+		local A = {auraToken = 0, raceToken = 0}
+
+		local function getRemote(name)
+			local folder = ReplicatedStorage:FindFirstChild("Remotes") or ReplicatedStorage:WaitForChild("Remotes", 3)
+			return folder and (folder:FindFirstChild(name) or folder:WaitForChild(name, 3)) or nil
+		end
+
+		---------------------------------------------------------------
+		-- AUTO AURA (Buso): confere a cada 0.2s e liga se não estiver ativa
+		---------------------------------------------------------------
+		function A.setAura(state)
+			A.auraToken = A.auraToken + 1
+			if not state then return end
+			local token = A.auraToken
+			task.spawn(function()
+				local remote = getRemote("CommF_")
+				if not remote then warn("[Aetheris] Auto Aura: CommF_ não encontrado"); return end
+				while A.auraToken == token and screenGui.Parent do
+					local char = player.Character
+					if char and char.Parent and not char:FindFirstChild("HasBuso") then
+						pcall(function() remote:InvokeServer("Buso") end)
+					end
+					task.wait(0.2)
+				end
+			end)
+		end
+
+		---------------------------------------------------------------
+		-- AUTO HABILIDADE DA RAÇA (V3): usa a habilidade quando ela não está ativa (confere a cada 2s)
+		---------------------------------------------------------------
+		A.raceTools = {"Last Resort", "Agility", "Water Body", "Heavenly Blood", "Heightened Senses", "Energy Core", "Primordial Reign"}
+		A.raceAttrs = {"RaceAbilityActive", "LastResortActive", "AgilityActive", "WaterBodyActive", "HeavenlyBloodActive",
+			"HeightenedSensesActive", "EnergyCoreActive", "PrimordialReignActive"}
+		function A.raceActive()
+			local c = player.Character
+			if not c or not c.Parent then return false end
+			for _, attr in ipairs(A.raceAttrs) do
+				if c:GetAttribute(attr) then return true end
+			end
+			local backpack = player:FindFirstChild("Backpack")
+			for _, name in ipairs(A.raceTools) do
+				local tool = (backpack and backpack:FindFirstChild(name)) or c:FindFirstChild(name)
+				if tool then
+					local cd = tool:GetAttribute("Cooldown")
+					if cd and cd > 0 then return true end
+					if tool:GetAttribute("Active") or tool:GetAttribute("OnCooldown") then return true end
+				end
+			end
+			return false
+		end
+
+		function A.setRace(state)
+			A.raceToken = A.raceToken + 1
+			if not state then return end
+			local token = A.raceToken
+			task.spawn(function()
+				local commE = getRemote("CommE")
+				if not commE then warn("[Aetheris] Auto Habilidade da Raça: CommE não encontrado"); return end
+				while A.raceToken == token and screenGui.Parent do
+					local char = player.Character
+					if char and char.Parent and not A.raceActive() then
+						pcall(function() commE:FireServer("ActivateAbility") end)
+					end
+					task.wait(2)
+				end
+			end)
+		end
+
+		---------------------------------------------------------------
+		-- AUTO OBSERVAÇÃO (Ken): mesma lógica do seu script, sem o botão na tela.
+		-- Na primeira ativação ele assume o controle do botão de Ken do jogo (como o seu script fazia)
+		-- e passa a ligar o Ken sozinho sempre que estiver desligado.
+		---------------------------------------------------------------
+		local K = {auto = false, autoToken = 0, radiusToken = 0, n1 = 0, ready = false}
+
+		function K.loadModules()
+			if K.mods then return true end
+			pcall(function()
+				K.mobile = require(ReplicatedStorage.Controllers.UI.MobileUIController)
+				K.observationManager = require(ReplicatedStorage.ObservationManager)
+				K.anims = require(ReplicatedStorage.Util.Anims)
+				K.global = require(ReplicatedStorage.Global)
+				K.disableKen = ReplicatedStorage.Remotes.DisableKen
+				K.commE = ReplicatedStorage.Remotes.CommE
+				K.visionRadius = player:WaitForChild("VisionRadius", 5)
+			end)
+			K.mods = K.mobile ~= nil and K.observationManager ~= nil and K.global ~= nil
+				and K.disableKen ~= nil and K.commE ~= nil and K.visionRadius ~= nil
+			if not K.mods then warn("[Aetheris] Auto Observação: módulos do Ken não encontrados") end
+			return K.mods
+		end
+
+		function K.handleAction(actionName, inputState, input)
+			local om, char, hum = K.om, K.char, K.humanoid
+			if not om or not char or not hum then return end
+			if not om.active and char:FindFirstChild("KenDisabled") then return end
+			if inputState ~= Enum.UserInputState.Begin then return end
+			if input and input.UserInputState ~= Enum.UserInputState.Begin then return end
+			if hum.Health <= 0 or tick() - K.n1 <= 0.4 then return end
+			K.n1 = tick()
+			om.radius = 0
+			om:setActive(not om.active)
+			K.commE:FireServer("Ken", om.active)
+			local kenButton = K.mobile:GetContextButton(actionName)
+			if kenButton then kenButton:SetAttribute("Selected", om.active) end
+		end
+
+		function K.refreshDodgeInfo()
+			local om = K.om
+			if not om then return end
+			local maxDodges = player:GetAttribute("KenMaxDodges") or 8
+			local dodgesLeft = player:GetAttribute("KenDodgesLeft")
+			local kenButton = K.mobile:GetContextButton("BoundActionKen")
+			local label = kenButton and kenButton:FindFirstChild("DodgesLeftLabel")
+			if label then
+				label.Text = string.format("%s/%s", dodgesLeft or maxDodges, maxDodges)
+				local textLabel = label:FindFirstChild("TextLabel")
+				if textLabel then textLabel.Text = label.Text end
+				label.Visible = om.active
+			end
+		end
+
+		-- laço que atualiza o alcance/visão do Observation (um por personagem)
+		function K.radiusLoop(char, hum, token)
+			while K.radiusToken == token and K.ready and char:IsDescendantOf(workspace) and hum.Health > 0 do
+				task.wait(0.3)
+				if K.radiusToken ~= token or not char:IsDescendantOf(workspace) or hum.Health <= 0 then break end
+				local om = K.om
+				if om then
+					pcall(function()
+						om.radius = math.clamp(om.radius + K.visionRadius.Value * 0.2, 0, K.visionRadius.Value)
+						om:refresh()
+						if om.active and char:FindFirstChild("KenDisabled") then om:setActive(false) end
+					end)
+				end
+			end
+		end
+
+		function K.setupCharacter(char)
+			if not K.ready then return end
+			K.char = char
+			K.humanoid = char:WaitForChild("Humanoid")
+			if K.charConns then
+				for _, c in ipairs(K.charConns) do c:Disconnect() end
+			end
+			K.charConns = {}
+			if K.om then pcall(function() K.om:destroy() end) end
+			K.om = K.observationManager.new(player)
+			K.global.OM = K.om
+			local hum = K.humanoid
+			table.insert(K.charConns, hum.Died:Connect(function()
+				if K.om then pcall(function() K.om:destroy() end) end
+			end))
+
+			for i = 1, 2 do
+				for j = 1, 3 do pcall(function() K.anims:Preload("Instinct" .. i .. "_" .. j) end) end
+			end
+
+			-- troca o botão original de Ken pelo nosso (mesmo comportamento de alternar Ken)
+			pcall(function() K.mobile:UnbindContextButton("BoundActionKen") end)
+			pcall(function() ContextSvc:UnbindAction("BoundActionKen") end)
+			local button = K.mobile:CreateContextButton("BoundActionKen", K.handleAction, Enum.KeyCode.DPadLeft, Enum.KeyCode.E)
+			if not button then
+				ContextSvc:BindAction("BoundActionKen", K.handleAction, false, Enum.KeyCode.DPadLeft, Enum.KeyCode.E)
+			else
+				K.refreshDodgeInfo()
+				table.insert(K.charConns, player:GetAttributeChangedSignal("KenDodgesLeft"):Connect(K.refreshDodgeInfo))
+				table.insert(K.charConns, player:GetAttributeChangedSignal("KenMaxDodges"):Connect(K.refreshDodgeInfo))
+				table.insert(K.charConns, button:GetAttributeChangedSignal("Selected"):Connect(K.refreshDodgeInfo))
+			end
+			table.insert(K.charConns, char.ChildAdded:Connect(K.refreshDodgeInfo))
+			table.insert(K.charConns, char.ChildRemoved:Connect(K.refreshDodgeInfo))
+
+			K.radiusToken = K.radiusToken + 1
+			task.spawn(K.radiusLoop, char, hum, K.radiusToken)
+		end
+
+		-- só configura quando o personagem tem a tag "Ken" (Ken liberado)
+		function K.hookCharacter(char)
+			if not char then return end
+			if K.tagConn then K.tagConn:Disconnect(); K.tagConn = nil end
+			if char:HasTag("Ken") then
+				task.spawn(K.setupCharacter, char)
+			else
+				K.tagConn = CollectionSvc:GetInstanceAddedSignal("Ken"):Connect(function(instance)
+					if instance == char then
+						if K.tagConn then K.tagConn:Disconnect(); K.tagConn = nil end
+						task.spawn(K.setupCharacter, char)
+					end
+				end)
+			end
+		end
+
+		function K.init()
+			if K.ready then return true end
+			if not K.loadModules() then return false end
+			if K.global.connection then K.global.connection:Disconnect() end
+			-- desativação imposta pelo jogo
+			K.global.connection = K.disableKen.OnClientEvent:Connect(function()
+				K.n1 = tick() + 5
+				if K.om then K.om:setActive(false); K.om.radius = 0 end
+				local kenButton = K.mobile:GetContextButton("BoundActionKen")
+				if kenButton then kenButton:SetAttribute("Selected", false) end
+			end)
+			pcall(function()
+				ReplicatedStorage.Events.IsObservationActive.OnInvoke = function()
+					return K.om and K.om.active or false
+				end
+			end)
+			K.ready = true
+			K.hookCharacter(player.Character)
+			K.charSignal = player.CharacterAdded:Connect(function(char) K.hookCharacter(char) end)
+			return true
+		end
+
+		function K.setAuto(state)
+			K.autoToken = K.autoToken + 1
+			K.auto = state
+			if not state then return end
+			if not K.init() then return end
+			local token = K.autoToken
+			task.spawn(function()
+				while K.autoToken == token and screenGui.Parent do
+					local char, hum, om = K.char, K.humanoid, K.om
+					if char and char:IsDescendantOf(workspace) and hum and hum.Health > 0 and om and not om.active
+						and not char:FindFirstChild("KenDisabled") and tick() - K.n1 > 0.4 then
+						K.n1 = tick()
+						om.radius = 0
+						pcall(function() om:setActive(true) end)
+						K.commE:FireServer("Ken", true)
+						local kenButton = K.mobile:GetContextButton("BoundActionKen")
+						if kenButton then kenButton:SetAttribute("Selected", true) end
+					end
+					task.wait(0.2)
+				end
+			end)
+		end
+
+		addToggle(secAuto, "Auto Aura", function(state) A.setAura(state) end, false)
+		addToggle(secAuto, "Auto Observação", function(state) K.setAuto(state) end, false)
+		addToggle(secAuto, "Auto Habilidade da Raça (V3)", function(state) A.setRace(state) end, false)
+
+		screenGui.Destroying:Connect(function()
+			A.auraToken = A.auraToken + 1
+			A.raceToken = A.raceToken + 1
+			K.autoToken = K.autoToken + 1
+			K.radiusToken = K.radiusToken + 1
+			K.ready = false
+			if K.charSignal then K.charSignal:Disconnect(); K.charSignal = nil end
+			if K.tagConn then K.tagConn:Disconnect(); K.tagConn = nil end
+		end)
+	end
+
 		-- Andar sobre a Água: barreira invisível que segue o jogador (X e Z) sobre a água.
 	-- Fica dentro de do...end para não gastar variáveis locais (limite de 200).
 	do
@@ -7258,6 +7517,26 @@ function showMainPanel()
 			end
 		end
 
+		-- Aura (Buso): enquanto o Auto Farm Level estiver ligado, confere a cada 0.2s e liga a aura
+		-- se ela não estiver ativa (também religa depois de morrer). Ao desligar o farm, desliga o laço.
+		function Q.startAura()
+			Q.auraToken = (Q.auraToken or 0) + 1
+			local token = Q.auraToken
+			task.spawn(function()
+				while Q.auraToken == token and screenGui.Parent do
+					local char = player.Character
+					if Q.commF and char and char.Parent and not char:FindFirstChild("HasBuso") then
+						pcall(function() Q.commF:InvokeServer("Buso") end)
+					end
+					task.wait(0.2)
+				end
+			end)
+		end
+
+		function Q.stopAura()
+			Q.auraToken = (Q.auraToken or 0) + 1 -- invalida o laço atual
+		end
+
 		function Q.start()
 			if not Q.init() then
 				Q.updateStatus("❌ Módulos não encontrados\n(veja o F9)", Color3.fromRGB(255, 120, 120))
@@ -7265,6 +7544,7 @@ function showMainPanel()
 			end
 			Q.stop()
 			Q.enabled = true
+			Q.startAura()
 			Q.fallback = nil
 			Q.searchSince = 0
 			Q.updateSelection()
@@ -7302,6 +7582,7 @@ function showMainPanel()
 
 		function Q.stop()
 			Q.enabled = false
+			Q.stopAura()
 			if Q.conn then Q.conn:Disconnect(); Q.conn = nil end
 			Q.stopFly()
 			Q.disableNoclip()
