@@ -2481,6 +2481,41 @@ function showMainPanel()
 		sStroke.Parent = section
 		table.insert(themeSections, sStroke)
 
+		-- Faixa do cabeçalho: cor diferente do corpo da seção (onde ficam as funções).
+		local function headerTint(color) return color:Lerp(Color3.fromRGB(10, 13, 22), 0.78) end
+		local headerBand = Instance.new("Frame")
+		headerBand.Name = "SectionHeaderBand"
+		headerBand.Size = UDim2.new(1, 0, 0, 24)
+		headerBand.BackgroundColor3 = headerTint(currentThemeColor)
+		headerBand.BackgroundTransparency = 0.05
+		headerBand.BorderSizePixel = 0
+		headerBand.Parent = section
+		local bandCorner = Instance.new("UICorner")
+		bandCorner.CornerRadius = UDim.new(0, 6)
+		bandCorner.Parent = headerBand
+		local bandFill = Instance.new("Frame") -- tampa os cantos de baixo: só o topo fica arredondado
+		bandFill.Size = UDim2.new(1, 0, 0, 8)
+		bandFill.Position = UDim2.new(0, 0, 1, -8)
+		bandFill.BackgroundColor3 = headerBand.BackgroundColor3
+		bandFill.BackgroundTransparency = headerBand.BackgroundTransparency
+		bandFill.BorderSizePixel = 0
+		bandFill.Parent = headerBand
+		local bandLine = Instance.new("Frame")
+		bandLine.Name = "SectionHeaderLine"
+		bandLine.Size = UDim2.new(1, 0, 0, 1)
+		bandLine.Position = UDim2.new(0, 0, 1, -1)
+		bandLine.BackgroundColor3 = currentThemeColor
+		bandLine.BackgroundTransparency = 0.45
+		bandLine.BorderSizePixel = 0
+		bandLine.Parent = headerBand
+		table.insert(themeSliders, bandLine)
+		table.insert(AetherisThemeHooks, function(color)
+			if not headerBand.Parent then return end
+			local tint = headerTint(color)
+			headerBand.BackgroundColor3 = tint
+			bandFill.BackgroundColor3 = tint
+		end)
+
 		local iconInfo = (type(iconSymbol) == "table" and iconSymbol) or tabs[1]
 		local iconLabel = Instance.new("ImageLabel")
 		iconLabel.Name = "SectionImageIcon"
@@ -4438,6 +4473,10 @@ function showMainPanel()
 	addEspToggleWithColor(secEspChests, "Chams", chestEspChamsColor, function(c) chestEspChamsColor = c end, function(s) chestEspChams = s end)
 	addEspToggleWithColor(secEspChests, "Nome (Baú)", chestEspNameColor, function(c) chestEspNameColor = c end, function(s) chestEspName = s end)
 	addEspToggleWithColor(secEspChests, "Distância", chestEspDistanceColor, function(c) chestEspDistanceColor = c end, function(s) chestEspDistance = s end)
+	-- Alcance: desligado = mapa todo (como era antes); ligado = só baús dentro do alcance (mais leve).
+	AetherisChestCfg = AetherisChestCfg or {rangeOn = false, range = 500}
+	addToggle(secEspChests, "Limitar por alcance", function(state) AetherisChestCfg.rangeOn = state end, false)
+	addSlider(secEspChests, "Alcance do ESP Baú", 50, 5000, 500, function(val) AetherisChestCfg.range = val end, 0, " studs")
 	-- ESP Berries: procura em Workspace.Map objetos "{...}" que tenham o filho "Berries"
 	-- e usa o primeiro atributo dele como nome da berry. Tudo fica dentro deste bloco
 	-- para não criar variáveis locais novas no nível superior do script.
@@ -8955,59 +8994,122 @@ local function removeChestESP(target)
     if data.billboard then data.billboard:Destroy() end
     chestEspObjects[target] = nil
 end
+-- ESP Baú otimizado:
+--  * só cria os objetos (Highlight/Billboard) se o ESP estiver ligado E algum efeito (Chams/Nome/Distância) ativo;
+--  * a busca de baús é feita em fatias (sem travar) e em intervalos longos, guardando o resultado;
+--  * o modo "Limitar por alcance" só cria ESP para os baús dentro do alcance;
+--  * o Highlight é limitado aos 30 baús mais próximos (o Roblox nem desenha mais que isso);
+--  * a atualização por frame virou ~10 vezes por segundo e só escreve o que mudou.
+AetherisChestCfg = AetherisChestCfg or {rangeOn = false, range = 500}
+do -- bloco próprio: não gasta variáveis locais do nível superior
+local chestKnown = {main = {}, map = {}}
+local chestScanAt = {main = 0, map = 0}
+local function scanChestRoot(root)
+    local found = {}
+    local count = 0
+    for _, instance in ipairs(root:GetDescendants()) do
+        count = count + 1
+        if count % 1500 == 0 then task.wait() end
+        if isChestName(instance.Name) then
+            local target = getChestTarget(instance)
+            if target and target:IsDescendantOf(root) and getChestPart(target) then found[target] = true end
+        end
+    end
+    return found
+end
 task.spawn(function()
     while screenGui.Parent do
-        task.wait(0.5)
-        if chestEspEnabled then
-            local found = {}
-            -- Os baús do jogo ficam em workspace.ChestModels (a coleta de baú do Farming usa essa
-            -- pasta); Map entra também por garantia. Sem nenhuma das duas, varre o workspace.
-            local searchRoots = {}
+        task.wait(1)
+        local cfg = AetherisChestCfg
+        local active = chestEspEnabled and (chestEspChams or chestEspName or chestEspDistance)
+        if not active then
+            for target in pairs(chestEspObjects) do removeChestESP(target) end
+        else
+            -- Os baús do jogo ficam em workspace.ChestModels (a coleta de baú do Farming usa essa pasta);
+            -- Map entra também por garantia, com busca bem mais espaçada porque é grande.
             local chestModelsRoot = workspace:FindFirstChild("ChestModels")
-            if chestModelsRoot then table.insert(searchRoots, chestModelsRoot) end
             local mapRoot = workspace:FindFirstChild("Map") or map
-            if mapRoot and mapRoot ~= workspace then table.insert(searchRoots, mapRoot) end
-            if #searchRoots == 0 then table.insert(searchRoots, workspace) end
-            for _, searchRoot in ipairs(searchRoots) do
-                for _, instance in ipairs(searchRoot:GetDescendants()) do
-                    if isChestName(instance.Name) then
-                        local target = getChestTarget(instance)
-                        if target and target:IsDescendantOf(searchRoot) and getChestPart(target) then
-                            found[target] = true
-                            if not chestEspObjects[target] then createChestESP(target) end
+            if mapRoot == workspace then mapRoot = nil end
+            if chestModelsRoot and tick() - chestScanAt.main > 4 then
+                chestScanAt.main = tick()
+                chestKnown.main = scanChestRoot(chestModelsRoot)
+            elseif not chestModelsRoot then
+                chestKnown.main = {}
+            end
+            if mapRoot and tick() - chestScanAt.map > 20 then
+                chestScanAt.map = tick()
+                chestKnown.map = scanChestRoot(mapRoot)
+            end
+            if not chestModelsRoot and not mapRoot and tick() - chestScanAt.map > 20 then
+                chestScanAt.map = tick()
+                chestKnown.map = scanChestRoot(workspace)
+            end
+
+            local character = player.Character
+            local root = character and character:FindFirstChild("HumanoidRootPart")
+            local wanted, ranked = {}, {}
+            for _, set in pairs(chestKnown) do
+                for target in pairs(set) do
+                    if target.Parent then
+                        local part = getChestPart(target)
+                        if part then
+                            local dist = root and (part.Position - root.Position).Magnitude or 0
+                            local limit = cfg.range * (chestEspObjects[target] and 1.1 or 1)
+                            if not cfg.rangeOn or dist <= limit then
+                                wanted[target] = dist
+                                table.insert(ranked, {target = target, dist = dist})
+                            end
                         end
                     end
                 end
             end
+            table.sort(ranked, function(a, b) return a.dist < b.dist end)
             for target in pairs(chestEspObjects) do
-                if not found[target] or not target.Parent then removeChestESP(target) end
+                if not wanted[target] or not target.Parent then removeChestESP(target) end
             end
-        else
-            for target in pairs(chestEspObjects) do removeChestESP(target) end
+            for rank, entry in ipairs(ranked) do
+                if not chestEspObjects[entry.target] then createChestESP(entry.target) end
+                local data = chestEspObjects[entry.target]
+                if data then data.near = rank <= 30 end
+                if rank % 25 == 0 then task.wait() end
+            end
         end
     end
 end)
-RunService.Heartbeat:Connect(function()
+local chestEspAccum = 0
+RunService.Heartbeat:Connect(function(dt)
     if not chestEspEnabled then return end
+    chestEspAccum = chestEspAccum + dt
+    if chestEspAccum < 0.1 then return end
+    chestEspAccum = 0
     local character = player.Character
     local root = character and character:FindFirstChild("HumanoidRootPart")
     if not root then return end
+    local rootPos = root.Position
     for target, data in pairs(chestEspObjects) do
         local part = data.billboard.Adornee
         if target.Parent and part and part.Parent then
-            data.highlight.FillColor = chestEspChamsColor
-            data.highlight.OutlineColor = chestEspChamsColor
-            data.highlight.Enabled = chestEspChams
-            data.nameLabel.Text = "Baú"
-            data.nameLabel.TextColor3 = chestEspNameColor
-            data.distanceLabel.Text = string.format("%.0f studs", (part.Position - root.Position).Magnitude)
-            data.distanceLabel.TextColor3 = chestEspDistanceColor
-            data.nameLabel.Visible = chestEspName
-            data.distanceLabel.Visible = chestEspDistance
-            data.billboard.Enabled = chestEspName or chestEspDistance
+            local showChams = chestEspChams and data.near ~= false
+            if data.highlight.Enabled ~= showChams then data.highlight.Enabled = showChams end
+            if showChams then
+                data.highlight.FillColor = chestEspChamsColor
+                data.highlight.OutlineColor = chestEspChamsColor
+            end
+            local showInfo = chestEspName or chestEspDistance
+            if data.billboard.Enabled ~= showInfo then data.billboard.Enabled = showInfo end
+            if showInfo then
+                if data.nameLabel.Visible ~= chestEspName then data.nameLabel.Visible = chestEspName end
+                if chestEspName then data.nameLabel.TextColor3 = chestEspNameColor end
+                if data.distanceLabel.Visible ~= chestEspDistance then data.distanceLabel.Visible = chestEspDistance end
+                if chestEspDistance then
+                    data.distanceLabel.Text = string.format("%.0f studs", (part.Position - rootPos).Magnitude)
+                    data.distanceLabel.TextColor3 = chestEspDistanceColor
+                end
+            end
         end
     end
 end)
+end
 local function createEnemyESP(enemy)
 	if enemyObjects[enemy] then return end
 	local root = getEnemyRoot(enemy)
