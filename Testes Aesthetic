@@ -856,7 +856,7 @@ do
 	-- CanvasGroup: o fade de entrada e saída é um único valor (GroupTransparency).
 	local loadWrapper = Instance.new("CanvasGroup")
 	loadWrapper.Name = "LoadingCard"
-	loadWrapper.Size = UDim2.new(0, 250, 0, 56)
+	loadWrapper.Size = UDim2.new(0, 250, 0, 134)
 	loadWrapper.AnchorPoint = Vector2.new(0.5, 0.5)
 	loadWrapper.Position = UDim2.new(0.5, 0, 0.5, 0)
 	loadWrapper.BackgroundColor3 = Color3.fromRGB(12, 16, 26)
@@ -866,7 +866,7 @@ do
 	loadWrapper.Parent = screenGui
 
 	local loadCorner = Instance.new("UICorner")
-	loadCorner.CornerRadius = UDim.new(0, 28)
+	loadCorner.CornerRadius = UDim.new(0, 22)
 	loadCorner.Parent = loadWrapper
 
 	local function computeBaseScale()
@@ -904,7 +904,7 @@ do
 	-- Esquerda: logo dentro de um aro que gira.
 	local logoHolder = Instance.new("Frame")
 	logoHolder.Size = UDim2.new(0, 38, 0, 38)
-	logoHolder.Position = UDim2.new(0, 12, 0.5, -19)
+	logoHolder.Position = UDim2.new(0, 12, 0, 9)
 	logoHolder.BackgroundColor3 = Color3.fromRGB(20, 26, 42)
 	logoHolder.BorderSizePixel = 0
 	logoHolder.Parent = loadWrapper
@@ -967,7 +967,7 @@ do
 
 	-- Direita: porcentagem.
 	local percentLabel = Instance.new("TextLabel")
-	percentLabel.Size = UDim2.new(0, 48, 1, -4)
+	percentLabel.Size = UDim2.new(0, 48, 0, 52)
 	percentLabel.Position = UDim2.new(1, -62, 0, 0)
 	percentLabel.BackgroundTransparency = 1
 	percentLabel.Font = Enum.Font.GothamBold
@@ -977,10 +977,10 @@ do
 	percentLabel.TextXAlignment = Enum.TextXAlignment.Right
 	percentLabel.Parent = loadWrapper
 
-	-- Barra de progresso fina colada na base da cápsula.
+	-- Barra de progresso fina separando o cabeçalho da lista de etapas.
 	local loadBarBg = Instance.new("Frame")
 	loadBarBg.Size = UDim2.new(1, 0, 0, 3)
-	loadBarBg.Position = UDim2.new(0, 0, 1, -3)
+	loadBarBg.Position = UDim2.new(0, 0, 0, 56)
 	loadBarBg.BackgroundColor3 = Color3.fromRGB(26, 34, 52)
 	loadBarBg.BorderSizePixel = 0
 	loadBarBg.Parent = loadWrapper
@@ -992,6 +992,73 @@ do
 	local fillGradient = Instance.new("UIGradient")
 	fillGradient.Color = ColorSequence.new(PURPLE, BLUE)
 	fillGradient.Parent = loadBarFill
+
+	-- Lista de etapas lá embaixo: o certo começa branco e, ao completar cada item (um de cada vez),
+	-- vira degradê roxo -> azul.
+	local DIM = Color3.fromRGB(120, 130, 155)
+	local checklist = {}
+	do
+		local labels = {"Script Preparado", "Lógicas Carregadas", "Módulos Carregados"}
+		for index, text in ipairs(labels) do
+			local row = Instance.new("Frame")
+			row.Size = UDim2.new(1, -36, 0, 20)
+			row.Position = UDim2.new(0, 18, 0, 68 + (index - 1) * 21)
+			row.BackgroundTransparency = 1
+			row.Parent = loadWrapper
+
+			-- certo (✔) desenhado com duas barras: não depende de a fonte ter o símbolo
+			local check = Instance.new("Frame")
+			check.Size = UDim2.new(0, 16, 0, 16)
+			check.Position = UDim2.new(0, 0, 0.5, -8)
+			check.BackgroundTransparency = 1
+			check.Parent = row
+			local checkScale = Instance.new("UIScale")
+			checkScale.Parent = check
+			local gradients = {}
+			local function stroke(cx, cy, length, rotation)
+				local bar = Instance.new("Frame")
+				bar.AnchorPoint = Vector2.new(0.5, 0.5)
+				bar.Position = UDim2.new(0, cx, 0, cy)
+				bar.Size = UDim2.new(0, 2.4, 0, length)
+				bar.Rotation = rotation
+				bar.BackgroundColor3 = WHITE
+				bar.BorderSizePixel = 0
+				bar.Parent = check
+				local barCorner = Instance.new("UICorner")
+				barCorner.CornerRadius = UDim.new(1, 0)
+				barCorner.Parent = bar
+				local g = Instance.new("UIGradient")
+				g.Color = ColorSequence.new(PURPLE, BLUE)
+				g.Rotation = 90
+				g.Enabled = false
+				g.Parent = bar
+				table.insert(gradients, g)
+			end
+			stroke(4.8, 10, 5.5, -45)
+			stroke(9.8, 8, 10.5, 42)
+
+			local label = Instance.new("TextLabel")
+			label.Size = UDim2.new(1, -26, 1, 0)
+			label.Position = UDim2.new(0, 26, 0, 0)
+			label.BackgroundTransparency = 1
+			label.Font = Enum.Font.GothamMedium
+			label.Text = text
+			label.TextColor3 = DIM
+			label.TextSize = 11
+			label.TextXAlignment = Enum.TextXAlignment.Left
+			label.Parent = row
+
+			checklist[index] = {gradients = gradients, scale = checkScale, label = label}
+		end
+	end
+	local function completeItem(index)
+		local item = checklist[index]
+		if not item then return end
+		for _, g in ipairs(item.gradients) do g.Enabled = true end
+		item.scale.Scale = 1.6
+		TweenService:Create(item.scale, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+		TweenService:Create(item.label, TweenInfo.new(0.25), {TextColor3 = WHITE}):Play()
+	end
 
 	-- Entrada: aparece e cresce suavemente.
 	TweenService:Create(loadWrapper, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {GroupTransparency = 0}):Play()
@@ -1026,23 +1093,26 @@ do
 
 	task.spawn(function()
 		local steps = {
-			{progress = 0.20, text = "Carregando recursos", animated = true},
-			{progress = 0.40, text = "Preparando componentes", animated = true},
-			{progress = 0.60, text = "Organizando a interface", animated = true},
-			{progress = 0.80, text = "Aplicando o tema", animated = true},
-			{progress = 1.00, text = "Tudo pronto!", animated = false}
+			{progress = 0.33, text = "Preparando o script"},
+			{progress = 0.66, text = "Carregando as lógicas"},
+			{progress = 1.00, text = "Carregando os módulos"}
 		}
-		local stepTime = 0.34
+		local stepTime = 0.5
 		task.wait(0.45)
-		for _, step in ipairs(steps) do
+		for index, step in ipairs(steps) do
 			statusBase = step.text
-			statusAnimated = step.animated
-			loadStatus.Text = step.animated and (step.text .. "...") or step.text
+			statusAnimated = true
+			loadStatus.Text = step.text .. "..."
 			TweenService:Create(loadBarFill, TweenInfo.new(stepTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 				Size = UDim2.new(step.progress, 0, 1, 0)
 			}):Play()
 			task.wait(stepTime)
+			completeItem(index)
+			task.wait(0.12)
 		end
+		statusBase = "Tudo pronto!"
+		statusAnimated = false
+		loadStatus.Text = statusBase
 		task.wait(0.25)
 
 		-- Saída: some e encolhe levemente.
