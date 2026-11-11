@@ -1140,6 +1140,27 @@ function showMainPanel()
 	mainPanel.ClipsDescendants = false
 	mainPanel.Parent = screenGui
 
+	-- Fundo escurecido enquanto o painel está aberto (não bloqueia cliques; some ao minimizar).
+	do
+		local dim = Instance.new("Frame")
+		dim.Name = "AetherisBackdropDim"
+		dim.Size = UDim2.new(1, 0, 1, 0)
+		dim.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		dim.BackgroundTransparency = 1
+		dim.BorderSizePixel = 0
+		dim.Active = false
+		dim.ZIndex = 0
+		dim.Parent = screenGui
+		local function fadeDim()
+			local open = mainPanel.Visible
+			TweenService:Create(dim, TweenInfo.new(open and 0.45 or 0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				BackgroundTransparency = open and 0.45 or 1
+			}):Play()
+		end
+		mainPanel:GetPropertyChangedSignal("Visible"):Connect(fadeDim)
+		fadeDim()
+	end
+
 	local panelCorner = Instance.new("UICorner")
 	panelCorner.CornerRadius = UDim.new(0, 12)
 	panelCorner.Parent = mainPanel
