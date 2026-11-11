@@ -2544,8 +2544,8 @@ function showMainPanel()
 		table.insert(allTextLabels, sTitle)
 
 		local sContainer = Instance.new("Frame")
-		sContainer.Size = UDim2.new(1, -10, 1, -26)
-		sContainer.Position = UDim2.new(0, 5, 0, 23)
+		sContainer.Size = UDim2.new(1, -12, 1, -34)
+		sContainer.Position = UDim2.new(0, 6, 0, 29)
 		sContainer.BackgroundTransparency = 1
 		sContainer.Parent = section
 
@@ -2559,7 +2559,7 @@ function showMainPanel()
 		local COLLAPSED_H = 26
 		sLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 			if collapsed or animating then return end
-			section.Size = UDim2.new(1, sectionW, 0, AetherisLayoutHeight(sLayout) + 28)
+			section.Size = UDim2.new(1, sectionW, 0, AetherisLayoutHeight(sLayout) + 34)
 		end)
 
 		local sArrow = Instance.new("TextLabel")
@@ -2602,14 +2602,14 @@ function showMainPanel()
 			else
 				sContainer.Visible = true
 				local t = TweenService:Create(section, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-					Size = UDim2.new(1, sectionW, 0, AetherisLayoutHeight(sLayout) + 28)
+					Size = UDim2.new(1, sectionW, 0, AetherisLayoutHeight(sLayout) + 34)
 				})
 				t:Play()
 				t.Completed:Connect(function()
 					if token ~= collapseToken then return end
 					animating = false
 					section.ClipsDescendants = false
-					section.Size = UDim2.new(1, sectionW, 0, AetherisLayoutHeight(sLayout) + 28)
+					section.Size = UDim2.new(1, sectionW, 0, AetherisLayoutHeight(sLayout) + 34)
 				end)
 			end
 		end
