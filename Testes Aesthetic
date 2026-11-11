@@ -8865,7 +8865,7 @@ function showMainPanel()
 		end
 
 		-- Section 1: salvar
-		local saveSection = createSection(configPage, "Salvar Configuração", sectionIcons.Theme)
+		local saveSection = createSection(configPage, "Save", sectionIcons.Theme)
 		manager.nameRow = new("Frame", {Size = UDim2.new(1, 0, 0, 34), BackgroundColor3 = CARD, BackgroundTransparency = 0.35, BorderSizePixel = 0}, saveSection)
 		round(manager.nameRow, 8)
 		local nameStroke = new("UIStroke", {Color = LINE, Transparency = 0.55, Thickness = 1}, manager.nameRow)
@@ -8904,7 +8904,7 @@ function showMainPanel()
 		caption(saveSection, "Guarda o estado de todos os toggles, sliders, cores e teclas do hub.")
 
 		-- Section 2: minhas configurações
-		local profileSection = createSection(configPage, "Minhas Configurações", sectionIcons.Theme)
+		local profileSection = saveSection -- salvar e usar na mesma seção "Save"
 		manager.selectButton = new("TextButton", {
 			Size = UDim2.new(1, 0, 0, 34), BackgroundColor3 = CARD, BackgroundTransparency = 0.35, BorderSizePixel = 0,
 			AutoButtonColor = false, Text = ""
