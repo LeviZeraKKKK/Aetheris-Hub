@@ -5618,6 +5618,7 @@ function showMainPanel()
 
 	-- Dropdown de jogadores (alvos manuais do Lock-On)
 	local updateServerList
+	local applyLockOnListVisibility -- mostra a lista de jogadores só no modo Manual
 	do
 		local function new(class, props, parent)
 			local o = Instance.new(class)
@@ -5958,6 +5959,20 @@ function showMainPanel()
 			end
 		end
 
+		-- A lista de jogadores só existe no modo Manual; no Nearest ela some por completo.
+		function applyLockOnListVisibility()
+			local show = (lockOnMode == "Manual")
+			header.Visible = show
+			if show then
+				wrap.Visible = dropOpen
+			else
+				dropOpen = false
+				wrap.Visible = false
+				wrap.Size = UDim2.new(1, 0, 0, 0)
+				arrow.Rotation = 0
+			end
+		end
+
 		header.MouseEnter:Connect(function()
 			TweenService:Create(header, TweenInfo.new(0.12), {BackgroundTransparency = 0.15}):Play()
 		end)
@@ -5986,10 +6001,19 @@ function showMainPanel()
 			end)
 		end)
 		updateBadge()
+		applyLockOnListVisibility()
 	end
 
 	-- Filtros e FOV ficam dentro da própria section "Sistema Lock-On".
 	local secFilters = secCombat
+	local filterRows = {}
+	local function setFiltersVisible(show)
+		for _, row in ipairs(filterRows) do row.Visible = show end
+	end
+	addToggle(secFilters, "Filtros", function(state) setFiltersVisible(state) end, false)
+	local knownRows = {}
+	for _, c in ipairs(secFilters:GetChildren()) do knownRows[c] = true end
+
 	addToggle(secFilters, "Ativar Círculo FOV", function(state) _G_FovVisible = state end, false)
 	addSlider(secFilters, "Raio do FOV", 50, 500, 150, function(val) _G_FovRadius = val end)
 	addSlider(secFilters, "Grossura do FOV", 1, 5, 1, function(val) _G_FovThickness = val end)
@@ -6003,6 +6027,12 @@ function showMainPanel()
 	addToggle(secFilters, "Mais Perto da Mira (Crosshair)", function(state) _G_FilterCrosshair = state end, false)
 	addToggle(secFilters, "Apenas se EU Estiver com Item", function(state) _G_FilterHoldingItem = state end, false)
 
+	-- Tudo que foi criado depois do toggle "Filtros" fica escondido até ele ser ligado.
+	for _, c in ipairs(secFilters:GetChildren()) do
+		if c:IsA("GuiObject") and not knownRows[c] then table.insert(filterRows, c) end
+	end
+	setFiltersVisible(false)
+
 	modeSwitchBtn.MouseButton1Click:Connect(function()
 		if lockOnMode == "Nearest" then
 			lockOnMode = "Manual"
@@ -6010,12 +6040,14 @@ function showMainPanel()
 			lockOnMode = "Nearest"
 		end
 		modeSwitchBtn.Text = lockOnMode
+		applyLockOnListVisibility()
 		updateServerList()
 	end)
 	registerConfigBinding(secCombat, "Modo Lock-On", function() return lockOnMode end, function(savedMode)
 		if savedMode == "Nearest" or savedMode == "Manual" then
 			lockOnMode = savedMode
 			modeSwitchBtn.Text = lockOnMode
+			applyLockOnListVisibility()
 			updateServerList(false)
 		end
 	end)
@@ -6131,10 +6163,13 @@ function showMainPanel()
 			return UserInputService:GetMouseLocation()
 		end
 
+		-- Lista de foco do Aim Silent Gun: independente da lista do Lock-On.
+		local silentFocusTargets = setmetatable({}, {__mode = "k"})
+
 		local function computeAimGate()
 			local hasAllies = next(aimAllies) ~= nil
 			local hasFocus = false
-			for focusedPlayer, selected in pairs(selectedManualTargets) do
+			for focusedPlayer, selected in pairs(silentFocusTargets) do
 				if selected and focusedPlayer.Parent and not aimAllies[focusedPlayer] then
 					hasFocus = true
 					break
@@ -6172,7 +6207,7 @@ function showMainPanel()
 
 			if not nearestPlayer then return true end
 			if aimAllies[nearestPlayer] then return false end
-			if hasFocus and not selectedManualTargets[nearestPlayer] then return false end
+			if hasFocus and not silentFocusTargets[nearestPlayer] then return false end
 			return true
 		end
 
@@ -6350,7 +6385,7 @@ function showMainPanel()
 
 			local function stateOf(p)
 				if aimAllies[p] then return "ally" end
-				if selectedManualTargets[p] then return "focus" end
+				if silentFocusTargets[p] then return "focus" end
 				return "neutral"
 			end
 
@@ -6492,15 +6527,12 @@ function showMainPanel()
 					row.MouseButton1Click:Connect(function()
 						if aimAllies[target] then
 							aimAllies[target] = nil                  -- Aliado -> Neutro
-						elseif selectedManualTargets[target] then
-							selectedManualTargets[target] = nil      -- Foco -> Aliado
+						elseif silentFocusTargets[target] then
+							silentFocusTargets[target] = nil         -- Foco -> Aliado
 							aimAllies[target] = true
 						else
-							selectedManualTargets[target] = true     -- Neutro -> Foco
-							lockOnMode = "Manual"
-							modeSwitchBtn.Text = lockOnMode
+							silentFocusTargets[target] = true        -- Neutro -> Foco
 						end
-						updateServerList()
 						setVisual(true)
 						updateBadge()
 					end)
@@ -6552,6 +6584,7 @@ function showMainPanel()
 			Players.PlayerAdded:Connect(function() if dropOpen then renderAimPlayers(false) else updateBadge() end end)
 			Players.PlayerRemoving:Connect(function(leavingPlayer)
 				aimAllies[leavingPlayer] = nil
+				silentFocusTargets[leavingPlayer] = nil
 				task.defer(function()
 					if dropOpen then renderAimPlayers(false) else updateBadge() end
 				end)
@@ -6577,11 +6610,35 @@ function showMainPanel()
 				for _, target in ipairs(Players:GetPlayers()) do
 					if target ~= player and wanted[target.UserId] then
 						aimAllies[target] = true
-						selectedManualTargets[target] = nil
+						silentFocusTargets[target] = nil
 					end
 				end
 				if dropOpen then renderAimPlayers(false) else updateBadge() end
-				updateServerList(false)
+			end)
+
+			-- Salva/carrega também o foco do Aim Silent Gun (lista própria).
+			registerConfigBinding(secSilentGun, "Jogadores foco do Aim", function()
+				local userIds = {}
+				for target, isFocus in pairs(silentFocusTargets) do
+					if isFocus and target and target.UserId then table.insert(userIds, target.UserId) end
+				end
+				table.sort(userIds)
+				return userIds
+			end, function(savedUserIds)
+				local wanted = {}
+				if type(savedUserIds) == "table" then
+					for _, userId in ipairs(savedUserIds) do
+						local numericId = tonumber(userId)
+						if numericId then wanted[numericId] = true end
+					end
+				end
+				for target in pairs(silentFocusTargets) do silentFocusTargets[target] = nil end
+				for _, target in ipairs(Players:GetPlayers()) do
+					if target ~= player and wanted[target.UserId] and not aimAllies[target] then
+						silentFocusTargets[target] = true
+					end
+				end
+				if dropOpen then renderAimPlayers(false) else updateBadge() end
 			end)
 		end
 		end
@@ -8876,7 +8933,7 @@ function showMainPanel()
 		}, manager.nameRow)
 		table.insert(themeImages, nameIcon)
 		manager.nameBox = new("TextBox", {
-			Size = UDim2.new(1, -118, 1, 0), Position = UDim2.new(0, 30, 0, 0), BackgroundTransparency = 1,
+			Size = UDim2.new(1, -96, 1, 0), Position = UDim2.new(0, 30, 0, 0), BackgroundTransparency = 1,
 			ClearTextOnFocus = false, Font = currentGlobalFont, PlaceholderText = "Nome da configuração...", Text = "",
 			TextColor3 = currentTextColor, PlaceholderColor3 = Color3.fromRGB(120, 120, 140), TextSize = 11,
 			TextXAlignment = Enum.TextXAlignment.Left, ClipsDescendants = true
@@ -8889,9 +8946,9 @@ function showMainPanel()
 			TweenService:Create(nameStroke, TweenInfo.new(0.2), {Color = LINE, Transparency = 0.55}):Play()
 		end)
 		manager.saveButton = new("TextButton", {
-			Size = UDim2.new(0, 76, 1, -8), Position = UDim2.new(1, -82, 0, 4), BackgroundColor3 = currentThemeColor,
+			Size = UDim2.new(0, 50, 1, -12), Position = UDim2.new(1, -56, 0, 6), BackgroundColor3 = currentThemeColor,
 			BorderSizePixel = 0, AutoButtonColor = false, Font = Enum.Font.GothamBold, Text = "Salvar",
-			TextColor3 = Color3.fromRGB(255, 255, 255), TextSize = 10
+			TextColor3 = Color3.fromRGB(255, 255, 255), TextSize = 9
 		}, manager.nameRow)
 		round(manager.saveButton, 6)
 		table.insert(themeSliders, manager.saveButton)
@@ -9617,7 +9674,7 @@ local function getAdvancedTarget()
 
 	if _G_LockOnPlayers then
 		for _, p in ipairs(Players:GetPlayers()) do
-			if p ~= player and not aimAllies[p] and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Head") then
+			if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Head") then
 				local hum = p.Character:FindFirstChild("Humanoid")
 				if hum and hum.Health > 0 then
 					local hrp = p.Character.HumanoidRootPart
@@ -9689,7 +9746,7 @@ local function getManualTarget()
 	local myPos = myChar.HumanoidRootPart.Position
 
 	for p, isSelected in pairs(selectedManualTargets) do
-		if isSelected and p and not aimAllies[p] and p.Character and p.Character:FindFirstChild("Head") then
+		if isSelected and p and p.Character and p.Character:FindFirstChild("Head") then
 			local hum = p.Character:FindFirstChild("Humanoid")
 			if hum and hum.Health > 0 then
 				local headPos = p.Character.Head.Position
