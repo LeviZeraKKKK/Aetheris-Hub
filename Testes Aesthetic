@@ -320,6 +320,10 @@ local function registerConfigBinding(parent, name, getter, setter)
 	if pageName == "Farming" and sectionTitle == "Baú" then
 		sectionTitle = "Automação"
 	end
+	-- A seção "Design" juntou "Tema do Hub" e "Customização de Textos": mantenha as chaves antigas dos presets.
+	if pageName == "Config" and sectionTitle == "Design" then
+		sectionTitle = (name == "Fonte do Hub") and "Customização de Textos" or "Tema do Hub"
+	end
 	local baseKey = pageName .. "|" .. sectionTitle .. "|" .. name
     configBindingCounts[baseKey] = (configBindingCounts[baseKey] or 0) + 1
     local key = baseKey
@@ -1644,7 +1648,7 @@ function showMainPanel()
 
 	-- Modo "Barra superior": pílula pequena no topo da tela (arrastável) que substitui o botão flutuante.
 	-- Fica numa tabela global (AetherisMinimize) para não gastar variáveis locais.
-	AetherisMinimize = AetherisMinimize or {mode = "Botão"}
+	AetherisMinimize = AetherisMinimize or {mode = "Barra"}
 	do
 		local M = AetherisMinimize
 		local BAR_W, BAR_H = 196, 36
@@ -8897,7 +8901,7 @@ function showMainPanel()
 	-- ABA CONFIG
 	-----------------------------------------------------------------
 	local configPage = pages["Config"]
-	local secConfig = createSection(configPage, "Tema do Hub", sectionIcons.Theme)
+	local secConfig = createSection(configPage, "Design", sectionIcons.Theme)
 	
 	addSlider(secConfig, "Transparência do Painel", 0, 80, 20, function(val)
 		panelTransparencyValue = val / 100
@@ -8905,6 +8909,12 @@ function showMainPanel()
 		floatingBtn.BackgroundTransparency = panelTransparencyValue
 		if AetherisMinimize.bar then AetherisMinimize.bar.BackgroundTransparency = math.min(panelTransparencyValue, 0.15) end
 	end)
+
+	-- Arredondamento dos cantos (corner) do painel e da área de conteúdo
+	addSlider(secConfig, "Cantos do Painel", 0, 24, 12, function(val)
+		panelCorner.CornerRadius = UDim.new(0, val)
+		contentCorner.CornerRadius = UDim.new(0, math.min(val, 16))
+	end, 0, " px")
 
 	-- Como o painel minimiza: botão flutuante (padrão) ou barra pequena no topo da tela, arrastável.
 	do
@@ -8927,12 +8937,6 @@ function showMainPanel()
 		end)
 	end
 
-	local secTextConfig = createSection(configPage, "Customização de Textos", sectionIcons.TextConfig)
-
-	addColorPicker(secTextConfig, "Cor dos Textos do Hub", currentTextColor, function(color)
-		updateGlobalTextColor(color)
-	end)
-
 	local safeFonts = {
 		{Name = "Gotham Medium", Enum = Enum.Font.GothamMedium},
 		{Name = "Gotham Bold", Enum = Enum.Font.GothamBold},
@@ -8950,7 +8954,7 @@ function showMainPanel()
 	for _, fontInfo in ipairs(safeFonts) do
 		table.insert(fontOptions, {label = fontInfo.Name, value = fontInfo.Enum, font = fontInfo.Enum})
 	end
-	local fontDD = AetherisDropdown(secTextConfig, {
+	local fontDD = AetherisDropdown(secConfig, {
 		prefix = "Fonte: ",
 		label = safeFonts[currentFontIndex].Name,
 		value = safeFonts[currentFontIndex].Enum,
@@ -8961,7 +8965,7 @@ function showMainPanel()
 			updateGlobalTextFont(fontEnum)
 		end,
 	})
-	registerConfigBinding(secTextConfig, "Fonte do Hub", function() return currentGlobalFont end, function(savedFont)
+	registerConfigBinding(secConfig, "Fonte do Hub", function() return currentGlobalFont end, function(savedFont)
 		if typeof(savedFont) ~= "EnumItem" then return end
 		for index, fontInfo in ipairs(safeFonts) do
 			if fontInfo.Enum == savedFont then
