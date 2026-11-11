@@ -1642,6 +1642,166 @@ function showMainPanel()
 		return Vector2.new(pos.X.Scale * screen.X + pos.X.Offset + size / 2, pos.Y.Scale * screen.Y + pos.Y.Offset + size / 2)
 	end
 
+	-- Modo "Barra superior": pílula pequena no topo da tela (arrastável) que substitui o botão flutuante.
+	-- Fica numa tabela global (AetherisMinimize) para não gastar variáveis locais.
+	AetherisMinimize = AetherisMinimize or {mode = "Botão"}
+	do
+		local M = AetherisMinimize
+		local BAR_W, BAR_H = 196, 36
+		local bar = Instance.new("TextButton")
+		bar.Name = "MinimizedTopBar"
+		bar.AnchorPoint = Vector2.new(0.5, 0.5)
+		bar.Position = UDim2.new(0.5, 0, 0, 30)
+		bar.Size = UDim2.new(0, 0, 0, 0)
+		bar.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
+		bar.BackgroundTransparency = math.min(panelTransparencyValue, 0.15)
+		bar.AutoButtonColor = false
+		bar.Text = ""
+		bar.ClipsDescendants = true
+		bar.Visible = false
+		bar.ZIndex = 20
+		bar.Parent = screenGui
+		local barCorner = Instance.new("UICorner")
+		barCorner.CornerRadius = UDim.new(1, 0)
+		barCorner.Parent = bar
+		local barStroke = Instance.new("UIStroke")
+		barStroke.Color = currentThemeColor
+		barStroke.Thickness = 1.4
+		barStroke.Transparency = 0.35
+		barStroke.Parent = bar
+		table.insert(themeSections, barStroke)
+
+		local avatar = Instance.new("Frame")
+		avatar.Size = UDim2.fromOffset(26, 26)
+		avatar.Position = UDim2.new(0, 6, 0.5, -13)
+		avatar.BackgroundColor3 = Color3.fromRGB(26, 30, 44)
+		avatar.BorderSizePixel = 0
+		avatar.ZIndex = 21
+		avatar.Parent = bar
+		local avatarCorner = Instance.new("UICorner")
+		avatarCorner.CornerRadius = UDim.new(1, 0)
+		avatarCorner.Parent = avatar
+		local avatarLetter = Instance.new("TextLabel")
+		avatarLetter.Size = UDim2.new(1, 0, 1, 0)
+		avatarLetter.BackgroundTransparency = 1
+		avatarLetter.Font = Enum.Font.GothamBold
+		avatarLetter.Text = "A"
+		avatarLetter.TextSize = 15
+		avatarLetter.TextColor3 = currentThemeColor
+		avatarLetter.ZIndex = 22
+		avatarLetter.Parent = avatar
+		table.insert(themeTexts, avatarLetter)
+
+		local nameLabel = Instance.new("TextLabel")
+		nameLabel.Size = UDim2.new(0, 78, 1, 0)
+		nameLabel.Position = UDim2.new(0, 40, 0, 0)
+		nameLabel.BackgroundTransparency = 1
+		nameLabel.Font = Enum.Font.GothamBold
+		nameLabel.Text = player.DisplayName or player.Name
+		nameLabel.TextSize = 11
+		nameLabel.TextColor3 = Color3.fromRGB(205, 208, 222)
+		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+		nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+		nameLabel.ZIndex = 21
+		nameLabel.Parent = bar
+
+		-- ícone de barrinhas + FPS
+		local meterBars = {}
+		for i = 1, 4 do
+			local mb = Instance.new("Frame")
+			mb.Size = UDim2.fromOffset(3, 6 + i * 2)
+			mb.AnchorPoint = Vector2.new(0, 0.5)
+			mb.Position = UDim2.new(0, 126 + (i - 1) * 5, 0.5, 0)
+			mb.BackgroundColor3 = currentThemeColor
+			mb.BackgroundTransparency = 0.15
+			mb.BorderSizePixel = 0
+			mb.ZIndex = 21
+			mb.Parent = bar
+			local mbc = Instance.new("UICorner")
+			mbc.CornerRadius = UDim.new(0, 1)
+			mbc.Parent = mb
+			table.insert(meterBars, mb)
+		end
+		table.insert(AetherisThemeHooks, function(color)
+			if not bar.Parent then return end
+			for _, mb in ipairs(meterBars) do mb.BackgroundColor3 = color end
+		end)
+		local fpsLabel = Instance.new("TextLabel")
+		fpsLabel.Size = UDim2.new(0, 36, 1, 0)
+		fpsLabel.Position = UDim2.new(1, -48, 0, 0)
+		fpsLabel.BackgroundTransparency = 1
+		fpsLabel.Font = Enum.Font.GothamBold
+		fpsLabel.Text = "--"
+		fpsLabel.TextSize = 12
+		fpsLabel.TextColor3 = Color3.fromRGB(235, 237, 245)
+		fpsLabel.TextXAlignment = Enum.TextXAlignment.Right
+		fpsLabel.ZIndex = 21
+		fpsLabel.Parent = bar
+
+		-- FPS: conta quadros só enquanto a barra está visível
+		local frames = 0
+		RunService.Heartbeat:Connect(function()
+			if bar.Visible then frames = frames + 1 end
+		end)
+		task.spawn(function()
+			while screenGui.Parent do
+				task.wait(0.5)
+				if bar.Visible then
+					fpsLabel.Text = tostring(math.floor(frames * 2 + 0.5))
+				end
+				frames = 0
+			end
+		end)
+
+		-- Arrastar (e clique simples para abrir o painel)
+		local dragging, moved, dragStart, startPos = false, false, nil, nil
+		bar.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				dragging, moved = true, false
+				dragStart = input.Position
+				startPos = bar.Position
+				input.Changed:Connect(function()
+					if input.UserInputState == Enum.UserInputState.End then dragging = false end
+				end)
+			end
+		end)
+		UserInputService.InputChanged:Connect(function(input)
+			if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+				local delta = input.Position - dragStart
+				if delta.Magnitude > 6 then moved = true end
+				if moved then
+					local screen = screenGui.AbsoluteSize
+					local nx = math.clamp(startPos.X.Scale * screen.X + startPos.X.Offset + delta.X, BAR_W / 2, screen.X - BAR_W / 2)
+					local ny = math.clamp(startPos.Y.Scale * screen.Y + startPos.Y.Offset + delta.Y, BAR_H / 2, screen.Y - BAR_H / 2)
+					bar.Position = UDim2.fromOffset(nx, ny)
+				end
+			end
+		end)
+		bar.MouseButton1Click:Connect(function()
+			if moved then moved = false return end
+			if M.onClick then M.onClick() end
+		end)
+
+		M.bar = bar
+		function M.center()
+			if M.mode == "Barra" then
+				local screen = screenGui.AbsoluteSize
+				local pos = bar.Position
+				return Vector2.new(pos.X.Scale * screen.X + pos.X.Offset, pos.Y.Scale * screen.Y + pos.Y.Offset)
+			end
+			return floatingCenter(40)
+		end
+		function M.showBar()
+			bar.Size = UDim2.new(0, 0, 0, 0)
+			bar.Visible = true
+			TweenService:Create(bar, TweenInfo.new(0.34, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, BAR_W, 0, BAR_H)}):Play()
+		end
+		function M.hideBar()
+			TweenService:Create(bar, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+			task.delay(0.2, function() bar.Visible = false end)
+		end
+	end
+
 	local function rippleAt(center, color)
 		local ring = Instance.new("Frame")
 		ring.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -1672,7 +1832,7 @@ function showMainPanel()
 			-- ===== MINIMIZAR =====
 			currentPanelSize = mainPanel.Size
 			savedPanelPosition = mainPanel.Position
-			local target = floatingCenter(40)
+			local target = AetherisMinimize.center()
 			local dur = 0.46
 			local flyInfo = TweenInfo.new(dur, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut)
 			TweenService:Create(mainPanel, flyInfo, {
@@ -1684,9 +1844,13 @@ function showMainPanel()
 
 			-- o botão surge um pouco antes do painel terminar de chegar
 			task.delay(dur * 0.72, function()
-				floatingBtn.Size = UDim2.new(0, 0, 0, 0)
-				floatingBtn.Visible = true
-				TweenService:Create(floatingBtn, TweenInfo.new(0.34, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 40, 0, 40)}):Play()
+				if AetherisMinimize.mode == "Barra" then
+					AetherisMinimize.showBar()
+				else
+					floatingBtn.Size = UDim2.new(0, 0, 0, 0)
+					floatingBtn.Visible = true
+					TweenService:Create(floatingBtn, TweenInfo.new(0.34, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 40, 0, 40)}):Play()
+				end
 				rippleAt(target, currentThemeColor)
 			end)
 
@@ -1699,12 +1863,16 @@ function showMainPanel()
 			panelStroke.Transparency = 0.45
 		else
 			-- ===== MAXIMIZAR =====
-			local from = floatingCenter(40)
+			local from = AetherisMinimize.center()
 			local target = savedPanelPosition or mainPanel.Position
 			local dur = 0.55
 			-- o botão encolhe enquanto o painel já está nascendo dele
-			TweenService:Create(floatingBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)}):Play()
-			task.delay(0.2, function() floatingBtn.Visible = false end)
+			if AetherisMinimize.mode == "Barra" then
+				AetherisMinimize.hideBar()
+			else
+				TweenService:Create(floatingBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+				task.delay(0.2, function() floatingBtn.Visible = false end)
+			end
 			rippleAt(from, currentThemeColor)
 
 			panelAnimScale.Scale = 0.04
@@ -1768,6 +1936,7 @@ function showMainPanel()
 		createControlButton("Close", function() screenGui:Destroy() end, "×", Color3.fromRGB(190, 60, 72), 2)
 
 	floatingBtn.MouseButton1Click:Connect(toggleMinimizePanel)
+	AetherisMinimize.onClick = toggleMinimizePanel
 
 	UserInputService.InputBegan:Connect(function(input, gameProcessed)
 		if not gameProcessed and hideKeybindEnabled and input.UserInputType == Enum.UserInputType.Keyboard then
@@ -6010,7 +6179,63 @@ function showMainPanel()
 	local function setFiltersVisible(show)
 		for _, row in ipairs(filterRows) do row.Visible = show end
 	end
-	addToggle(secFilters, "Filtros", function(state) setFiltersVisible(state) end, false)
+
+	-- Cabeçalho "Mostrar Filtros": abre e fecha os filtros (mesmo estilo do dropdown de jogadores).
+	local filtersOpen = false
+	local filtersHeader = Instance.new("TextButton")
+	filtersHeader.Name = "FiltersDropdownHeader"
+	filtersHeader.Size = UDim2.new(1, 0, 0, 32)
+	filtersHeader.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+	filtersHeader.BackgroundTransparency = 0.35
+	filtersHeader.BorderSizePixel = 0
+	filtersHeader.AutoButtonColor = false
+	filtersHeader.Text = ""
+	filtersHeader.Parent = secFilters
+	local fhCorner = Instance.new("UICorner")
+	fhCorner.CornerRadius = UDim.new(0, 7)
+	fhCorner.Parent = filtersHeader
+	local fhStroke = Instance.new("UIStroke")
+	fhStroke.Color = Color3.fromRGB(70, 70, 95)
+	fhStroke.Transparency = 0.55
+	fhStroke.Thickness = 1
+	fhStroke.Parent = filtersHeader
+	local fhLabel = Instance.new("TextLabel")
+	fhLabel.Size = UDim2.new(1, -44, 1, 0)
+	fhLabel.Position = UDim2.new(0, 12, 0, 0)
+	fhLabel.BackgroundTransparency = 1
+	fhLabel.Font = currentGlobalFont
+	fhLabel.Text = "Mostrar Filtros"
+	fhLabel.TextColor3 = currentTextColor
+	fhLabel.TextSize = 11
+	fhLabel.TextXAlignment = Enum.TextXAlignment.Left
+	fhLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	fhLabel.Parent = filtersHeader
+	table.insert(allTextLabels, fhLabel)
+	local fhArrow = Instance.new("TextLabel")
+	fhArrow.Size = UDim2.new(0, 16, 1, 0)
+	fhArrow.Position = UDim2.new(1, -26, 0, 0)
+	fhArrow.BackgroundTransparency = 1
+	fhArrow.Font = Enum.Font.GothamBold
+	fhArrow.Text = "▼"
+	fhArrow.TextColor3 = currentThemeColor
+	fhArrow.TextSize = 10
+	fhArrow.Parent = filtersHeader
+	table.insert(themeTexts, fhArrow)
+	filtersHeader.MouseEnter:Connect(function()
+		TweenService:Create(filtersHeader, TweenInfo.new(0.12), {BackgroundTransparency = 0.15}):Play()
+	end)
+	filtersHeader.MouseLeave:Connect(function()
+		TweenService:Create(filtersHeader, TweenInfo.new(0.15), {BackgroundTransparency = 0.35}):Play()
+	end)
+	filtersHeader.MouseButton1Click:Connect(function()
+		filtersOpen = not filtersOpen
+		setFiltersVisible(filtersOpen)
+		TweenService:Create(fhArrow, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {Rotation = filtersOpen and 180 or 0}):Play()
+		TweenService:Create(fhStroke, TweenInfo.new(0.2), {
+			Color = filtersOpen and currentThemeColor or Color3.fromRGB(70, 70, 95),
+			Transparency = filtersOpen and 0.2 or 0.55
+		}):Play()
+	end)
 	local knownRows = {}
 	for _, c in ipairs(secFilters:GetChildren()) do knownRows[c] = true end
 
@@ -8678,7 +8903,29 @@ function showMainPanel()
 		panelTransparencyValue = val / 100
 		mainPanel.BackgroundTransparency = panelTransparencyValue
 		floatingBtn.BackgroundTransparency = panelTransparencyValue
+		if AetherisMinimize.bar then AetherisMinimize.bar.BackgroundTransparency = math.min(panelTransparencyValue, 0.15) end
 	end)
+
+	-- Como o painel minimiza: botão flutuante (padrão) ou barra pequena no topo da tela, arrastável.
+	do
+		local minLabels = {["Botão"] = "Botão flutuante", ["Barra"] = "Barra superior"}
+		local minDD = AetherisDropdown(secConfig, {
+			prefix = "Minimizar: ",
+			label = minLabels[AetherisMinimize.mode],
+			value = AetherisMinimize.mode,
+			maxRows = 2,
+			getOptions = function()
+				return {{label = minLabels["Botão"], value = "Botão"}, {label = minLabels["Barra"], value = "Barra"}}
+			end,
+			onSelect = function(value) AetherisMinimize.mode = value end,
+		})
+		registerConfigBinding(secConfig, "Modo de minimizar", function() return AetherisMinimize.mode end, function(v)
+			if minLabels[v] then
+				AetherisMinimize.mode = v
+				minDD.setValue(v, minLabels[v])
+			end
+		end)
+	end
 
 	local secTextConfig = createSection(configPage, "Customização de Textos", sectionIcons.TextConfig)
 
