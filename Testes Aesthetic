@@ -26,197 +26,6 @@ screenGui.DisplayOrder = 999999
 screenGui.Parent = playerGui
 
 -----------------------------------------------------------------
--- IDIOMA DO PAINEL (English padrão / Português)
--- Os textos do hub são escritos em português; o tradutor troca os textos visíveis (TextLabel,
--- TextButton e placeholders) pelo equivalente em inglês e guarda o original para voltar.
------------------------------------------------------------------
-AetherisI18n = {lang = "en", orig = setmetatable({}, {__mode = "k"}), origPh = setmetatable({}, {__mode = "k"}),
-	shown = setmetatable({}, {__mode = "k"}), shownPh = setmetatable({}, {__mode = "k"}),
-	hooked = setmetatable({}, {__mode = "k"}), memo = {}, memoCount = 0}
-do
-	local I = AetherisI18n
-	local raw = {
-		{"Automático", "Auto"}, {"Combate", "Combat"}, {"Mundo", "World"}, {"Fruta", "Fruit"}, {"Movimento", "Movement"},
-		{"Habilidades Físicas", "Physical Abilities"}, {"Auto Habilidades", "Auto Abilities"},
-		{"Auto Habilidade da Raça (V3)", "Auto Race Ability (V3)"}, {"Auto Observação", "Auto Observation"},
-		{"Observação range [INF]", "Observation range [INF]"},
-		{"Viajar para Ilhas", "Travel to Islands"}, {"Viajar", "Travel"}, {"Selecione a Ilha", "Select the Island"},
-		{"Ilha selecionada", "Selected island"}, {"Ilha", "Island"}, {"Indo...", "Going..."},
-		{"Visual do Mapa", "Map Visuals"}, {"Remover Neblina ativo", "Remove Fog active"}, {"Remover Neblina", "Remove Fog"},
-		{"Camadas de iluminação", "Lighting layers"}, {"Camadas de neblina marcadas", "Fog layers selected"},
-		{"camada marcada", "layer selected"}, {"camadas marcadas", "layers selected"},
-		{"Nenhuma camada encontrada.", "No layers found."},
-		{"Ative o toggle principal e marque as camadas a remover.", "Turn on the main toggle and select the layers to remove."},
-		{"Neblina removida", "Fog removed"}, {"Neblina restaurada", "Fog restored"},
-		{"Fullbright (Remover Escuridão)", "Fullbright (Remove Darkness)"}, {"Andar sobre a Água", "Walk on Water"},
-		{"Noclip (Atravessar Paredes)", "Noclip (Walk Through Walls)"}, {"Pulo Infinito", "Infinite Jump"},
-		{"Energia Infinita", "Infinite Energy"}, {"Força do Pulo", "Jump Power"},
-		{"Flashstep sem cooldown", "Flashstep without cooldown"},
-		{"Velocidade do Chest Collector", "Chest Collector Speed"}, {"Velocidade de Viagem", "Travel Speed"},
-		{"Velocidade de Ataque", "Attack Speed"}, {"Velocidade de voo", "Fly speed"}, {"Velocidade", "Speed"},
-		{"Multiplicador", "Multiplier"},
-		{"Atacar Automáticamente", "Auto Attack"}, {"Ataque direto", "Direct Attack"}, {"Ataque Range", "Attack Range"},
-		{"Delay entre ataques", "Delay between attacks"}, {"Delay entre hits", "Delay between hits"},
-		{"Atacar NPCs", "Attack NPCs"}, {"Atacar Players", "Attack Players"},
-		{"Altura sobre o inimigo", "Height above enemy"}, {"Arma para farmar: ", "Farm weapon: "},
-		{"Punho", "Fist"}, {"Espada", "Sword"},
-		{"⚠️ Para usar a Fruta, ela precisa ter CLICK (a habilidade de clique/ataque básico). Fruta sem click não ataca.",
-			"⚠️ To use the Fruit, it needs CLICK (the click/basic attack ability). A fruit without click doesn't attack."},
-		{"Auto Coletar Frutas", "Auto Collect Fruits"}, {"Auto Roletar Frutas", "Auto Roll Fruits"},
-		{"Roletar fruta", "Roll fruit"}, {"ESTOQUE DE FRUTAS", "FRUIT STOCK"},
-		{"Sistema Lock-On", "Lock-On System"}, {"Ativar Lock inimigos (NPC)", "Enable Lock on enemies (NPC)"},
-		{"Modo Lock-On", "Lock-On Mode"}, {"Alvos manuais do Lock-On", "Manual Lock-On targets"},
-		{"Jogadores do Lock-On", "Lock-On Players"}, {"Jogadores aliados do Aim", "Aim Allied Players"},
-		{"Jogadores foco do Aim", "Aim Focus Players"}, {"Jogadores do Aim", "Aim Players"}, {"JOGADORES", "PLAYERS"},
-		{"Buscar jogador...", "Search player..."}, {"Buscar...", "Search..."}, {"Pesquisar...", "Search..."},
-		{"Atualizar lista", "Refresh list"}, {"Nenhum jogador encontrado.", "No players found."},
-		{"Nenhum outro jogador no servidor.", "No other players on the server."},
-		{"Foco ", "Focus "}, {" · Aliados ", " · Allies "}, {"FOCO", "FOCUS"}, {"ALIADO", "ALLY"}, {"NEUTRO", "NEUTRAL"},
-		{"Mostrar Filtros", "Show Filters"}, {"Filtro por Distância Máxima", "Max Distance Filter"},
-		{"Distância Máxima", "Max Distance"}, {"Apenas se EU Estiver com Item", "Only if I Have the Item"},
-		{"Mais Perto de Mim (Mais Próximo)", "Closest to Me (Nearest)"}, {"Priorizar Menor Vida (HP)", "Prioritize Lowest HP"},
-		{"Mais Perto da Mira (Crosshair)", "Closest to Crosshair"},
-		{"Ativar Círculo FOV", "Enable FOV Circle"}, {"Cor do Círculo FOV", "FOV Circle Color"},
-		{"Raio do FOV", "FOV Radius"}, {"Grossura do FOV", "FOV Thickness"},
-		{"Transparência do FOV (%)", "FOV Transparency (%)"}, {"Transparência do Painel", "Panel Transparency"},
-		{"Cantos do Painel", "Panel Corners"}, {"Alcance", "Range"}, {"Raio", "Radius"},
-		{"Baús próximos", "Nearby Chests"}, {"Baú de mapa todo (não consegue pegar o tipo)", "Whole-map chests (can't detect the type)"},
-		{"ESP Nome (Berry)", "ESP Name (Berry)"}, {"ESP Nome", "ESP Name"}, {"ESP Distância", "ESP Distance"},
-		{"Nome (Baú)", "Name (Chest)"}, {"Baú", "Chest"}, {"baú", "chest"}, {"Distância", "Distance"},
-		{"Ativar ", "Enable "}, {"Modo: ", "Mode: "}, {"Modo", "Mode"}, {"Ativado", "Enabled"},
-		{"Tema do Hub", "Hub Theme"}, {"Customização de Textos", "Text Customization"}, {"Fonte do Hub", "Hub Font"},
-		{"Fonte: ", "Font: "}, {"Minimizar: ", "Minimize: "}, {"Botão flutuante", "Floating button"},
-		{"Barra superior", "Top bar"}, {"Idioma", "Language"},
-		{"Atalhos (PC)", "Shortcuts (PC)"}, {"Esconder Painel por Tecla (PC)", "Hide Panel by Key (PC)"}, {"Tecla", "Key"},
-		{"Salvar", "Save"}, {"Usar configuração", "Use config"}, {"Excluir configuração", "Delete config"},
-		{"Excluir", "Delete"}, {"Cancelar", "Cancel"}, {"Selecione uma configuração", "Select a config"},
-		{"Nome da configuração...", "Config name..."}, {"Nenhuma configuração salva ainda.", "No saved configs yet."},
-		{"Presets salvos no arquivo local do executor.", "Presets saved to the executor's local file."},
-		{"Guarda o estado de todos os toggles, sliders, cores e teclas do hub.", "Stores the state of all hub toggles, sliders, colors and keys."},
-		{"Digite um nome para a configuração.", "Enter a name for the config."},
-		{"Escolha uma configuração na lista primeiro.", "Pick a config from the list first."},
-		{"A configuração salva está inválida.", "The saved config is invalid."},
-		{"Excluída da sessão, mas não foi possível atualizar o arquivo.", "Deleted from the session, but the file couldn't be updated."},
-		{"Salva na sessão, mas não foi possível gravar o arquivo.", "Saved in the session, but the file couldn't be written."},
-		{"Sem acesso a arquivo: presets valem nesta sessão.", "No file access: presets only last this session."},
-		{"O nome pode ter no máximo 40 caracteres.", "The name can have at most 40 characters."},
-		{"Configuração aplicada: ", "Config applied: "}, {"Configuração \"", "Config \""},
-		{"\" salva.", "\" saved."}, {"\" excluída.", "\" deleted."},
-		{"Tem certeza de que deseja excluir \"", "Are you sure you want to delete \""},
-		{"\"? Essa ação não pode ser desfeita.", "\"? This action cannot be undone."},
-		{"salvas", "saved"}, {"salva", "saved"},
-		{"Carregando estoque...", "Loading stock..."}, {"Atualiza em ", "Updates in "}, {"SEU SALDO  •  ", "YOUR BALANCE  •  "},
-		{"PREÇO", "PRICE"}, {"EM MÃOS", "IN HAND"}, {"SESSÃO", "SESSION"}, {"EQUIPADA", "EQUIPPED"},
-		{"Roletando...", "Rolling..."}, {"Roletagem concluída", "Roll complete"}, {"Falha na roletagem", "Roll failed"},
-		{"Uma roletagem já está em andamento", "A roll is already in progress"},
-		{"Status: aguardando roletagem", "Status: waiting to roll"}, {"Status: tentando roletar...", "Status: trying to roll..."},
-		{"Compra recusada", "Purchase declined"}, {"Nenhuma fruta disponível no momento", "No fruit available right now"},
-		{"Não foi possível carregar. Toque em atualizar.", "Couldn't load. Tap refresh."},
-		{"Copiado!", "Copied!"}, {"Sem clipboard", "No clipboard"}, {"Sem server", "No server"},
-		{"Falha: ", "Failed: "}, {"Sucesso: ", "Success: "}, {"Falhou", "Failed"},
-		{"Tudo pronto!", "All set!"}, {"Preparando o script", "Preparing the script"},
-		{"Carregando as lógicas", "Loading logic"}, {"Carregando os módulos", "Loading modules"},
-		{"Script Preparado", "Script Ready"}, {"Lógicas Carregadas", "Logic Loaded"}, {"Módulos Carregados", "Modules Loaded"},
-		{"Carregando", "Loading"}, {"Iniciando", "Starting"}, {"Concluído", "Done"},
-		{"BEM-VINDO DE VOLTA", "WELCOME BACK"}, {"AVANÇADO", "ADVANCED"},
-		{"Aceitando (", "Accepting ("}, {"Procurando inimigos... ", "Searching for enemies... "},
-		{"Procurando\noutro canto...", "Looking\nelsewhere..."}, {"Voando até ", "Flying to "},
-		{"Voando de novo...", "Flying again..."}, {"Voando...", "Flying..."}, {"Atacando...", "Attacking..."},
-		{"Completando...", "Completing..."}, {"Quest completa!", "Quest complete!"}, {"Completa!", "Complete!"},
-		{"Entregando...", "Turning in..."}, {"Reaceitando...", "Re-accepting..."}, {"Desligado", "Off"},
-		{"Módulos não encontrados", "Modules not found"}, {"(veja o F9)", "(see F9)"},
-		{"pts disponíveis", "pts available"}, {"colocados", "placed"},
-		{"Diálogo", "Dialogue"}, {"Direto", "Direct"}, {"Nada encontrado.", "Nothing found."},
-		{"Nenhuma opção encontrada.", "No options found."}, {"opções", "options"}, {"opção", "option"},
-		{"Selecione", "Select"}, {"alvos", "targets"}, {"alvo", "target"}, {"jogadores", "players"},
-		{"Geral", "General"}, {"Automatização", "Automation"}, {"Personagem indisponível ou morto", "Character unavailable or dead"},
-		{"indisponível", "unavailable"}, {"não encontrado", "not found"}, {" de ", " of "},
-	}
-	table.sort(raw, function(a, b) return #a[1] > #b[1] end)
-	I.pairs = raw
-
-	local function isLetter(b) return b ~= nil and ((b >= 65 and b <= 90) or (b >= 97 and b <= 122) or b >= 128) end
-	local function replaceAll(s, a, b)
-		local out, pos = {}, 1
-		local firstLetter, lastLetter = isLetter(string.byte(a, 1)), isLetter(string.byte(a, #a))
-		while true do
-			local i, j = string.find(s, a, pos, true)
-			if not i then break end
-			local okL = not (firstLetter and i > 1 and isLetter(string.byte(s, i - 1)))
-			local okR = not (lastLetter and j < #s and isLetter(string.byte(s, j + 1)))
-			if okL and okR then out[#out + 1] = string.sub(s, pos, i - 1) .. b else out[#out + 1] = string.sub(s, pos, j) end
-			pos = j + 1
-		end
-		out[#out + 1] = string.sub(s, pos)
-		return table.concat(out)
-	end
-
-	local function tr(s)
-		if s == "" or not string.find(s, "%a") then return s end
-		local cached = I.memo[s]
-		if cached then return cached end
-		local result = s
-		for _, p in ipairs(I.pairs) do
-			if string.find(result, p[1], 1, true) then result = replaceAll(result, p[1], p[2]) end
-		end
-		if I.memoCount > 4000 then I.memo, I.memoCount = {}, 0 end
-		I.memo[s] = result
-		I.memoCount = I.memoCount + 1
-		return result
-	end
-	-- texto para busca/comparação: já no idioma atual
-	function I.translate(s) return I.lang == "en" and tr(s) or s end
-
-	local function refresh(obj)
-		if obj:IsA("TextBox") then
-			local o = I.origPh[obj]
-			if o == nil then return end
-			local want = I.lang == "en" and tr(o) or o
-			if obj.PlaceholderText ~= want then I.shownPh[obj] = want; obj.PlaceholderText = want end
-		else
-			local o = I.orig[obj]
-			if o == nil then return end
-			local want = I.lang == "en" and tr(o) or o
-			if obj.Text ~= want then I.shown[obj] = want; obj.Text = want end
-		end
-	end
-
-	function I.hook(obj)
-		if I.hooked[obj] then return end
-		if obj:IsA("TextBox") then
-			I.hooked[obj] = true
-			I.origPh[obj] = obj.PlaceholderText
-			obj:GetPropertyChangedSignal("PlaceholderText"):Connect(function()
-				if obj.PlaceholderText == I.shownPh[obj] then return end
-				I.origPh[obj] = obj.PlaceholderText
-				refresh(obj)
-			end)
-			refresh(obj)
-		elseif obj:IsA("TextLabel") or obj:IsA("TextButton") then
-			I.hooked[obj] = true
-			I.orig[obj] = obj.Text
-			obj:GetPropertyChangedSignal("Text"):Connect(function()
-				if obj.Text == I.shown[obj] then return end
-				I.orig[obj] = obj.Text
-				refresh(obj)
-			end)
-			refresh(obj)
-		end
-	end
-
-	function I.set(lang)
-		if lang ~= "en" and lang ~= "pt" then return end
-		I.lang = lang
-		for obj in pairs(I.hooked) do
-			if obj.Parent then refresh(obj) end
-		end
-	end
-
-	for _, d in ipairs(screenGui:GetDescendants()) do I.hook(d) end
-	screenGui.DescendantAdded:Connect(function(d) task.defer(I.hook, d) end)
-end
-
------------------------------------------------------------------
 -- SISTEMA DE CORES DINÂMICAS & TEMA GLOBAL
 -----------------------------------------------------------------
 local currentThemeColor = Color3.fromRGB(138, 43, 226)
@@ -507,8 +316,7 @@ function AetherisDropdown(parent, cfg)
 			local query = string.lower(search.Text or "")
 			local shownCount = 0
 			for index, opt in ipairs(state.options) do
-				if query == "" or string.find(string.lower(opt.label), query, 1, true)
-						or string.find(string.lower(AetherisI18n.translate(opt.label)), query, 1, true) then
+				if query == "" or string.find(string.lower(opt.label), query, 1, true) then
 					shownCount = shownCount + 1
 					local selected = state.value ~= nil and opt.value == state.value
 					local b = Instance.new("TextButton")
@@ -672,7 +480,7 @@ local function registerConfigBinding(parent, name, getter, setter)
     if section then
         for _, child in ipairs(section:GetChildren()) do
             if child:IsA("TextLabel") then
-                sectionTitle = (AetherisI18n and AetherisI18n.orig[child]) or child.Text
+                sectionTitle = child.Text
                 break
             end
         end
@@ -9544,27 +9352,6 @@ function showMainPanel()
 	for _, fontInfo in ipairs(safeFonts) do
 		table.insert(fontOptions, {label = fontInfo.Name, value = fontInfo.Enum, font = fontInfo.Enum})
 	end
-	-- Idioma do painel (padrão: English)
-	do
-		local langLabels = {en = "English", pt = "Português"}
-		local langDD = AetherisDropdown(secConfig, {
-			prefix = "Idioma: ",
-			label = langLabels[AetherisI18n.lang],
-			value = AetherisI18n.lang,
-			maxRows = 2,
-			getOptions = function()
-				return {{label = langLabels.en, value = "en"}, {label = langLabels.pt, value = "pt"}}
-			end,
-			onSelect = function(value) AetherisI18n.set(value) end,
-		})
-		registerConfigBinding(secConfig, "Idioma do painel", function() return AetherisI18n.lang end, function(v)
-			if langLabels[v] then
-				AetherisI18n.set(v)
-				langDD.setValue(v, langLabels[v])
-			end
-		end)
-	end
-
 	local fontDD = AetherisDropdown(secConfig, {
 		prefix = "Fonte: ",
 		label = safeFonts[currentFontIndex].Name,
