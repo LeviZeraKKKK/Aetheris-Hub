@@ -189,137 +189,256 @@ function AetherisDropdown(parent, cfg)
 	arrow.Parent = header
 	table.insert(themeTexts, arrow)
 
-	local list = Instance.new("ScrollingFrame")
-	list.Position = UDim2.new(0, 6, 0, HEADER + GAP)
-	list.Size = UDim2.new(1, -12, 0, ROW)
-	list.BackgroundTransparency = 1
-	list.BorderSizePixel = 0
-	list.ScrollBarThickness = 3
-	list.ScrollBarImageColor3 = currentThemeColor
-	list.CanvasSize = UDim2.new(0, 0, 0, 0)
-	list.Parent = box
-	local listLayout = Instance.new("UIListLayout")
-	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	listLayout.Padding = UDim.new(0, 2)
-	listLayout.Parent = list
-
+	-- A lista abre num painel flutuante (não empurra a tela): abre para baixo ou para cima, onde
+	-- houver mais espaço, com altura limitada, barra de pesquisa e contagem de opções.
 	local function setLabelText()
 		label.Text = (split and "" or (cfg.prefix or "")) .. (state.label or cfg.placeholder or "Selecione")
 	end
 	setLabelText()
 
-	local function openHeight()
-		local rows = math.max(1, math.min(#state.options, cfg.maxRows or 5))
-		return HEADER + GAP + rows * ROW + 6, rows * ROW
+	local close
+	local function isShown(obj)
+		local o = obj
+		while o and not o:IsA("ScreenGui") do
+			if o:IsA("GuiObject") and not o.Visible then return false end
+			o = o.Parent
+		end
+		return o ~= nil
 	end
 
-	local close
-	local function build()
-		for _, child in ipairs(list:GetChildren()) do
-			if child:IsA("GuiObject") then child:Destroy() end
-		end
+	local function openPopup()
 		state.options = (cfg.getOptions and cfg.getOptions()) or {}
-		if #state.options == 0 then
-			local empty = Instance.new("TextLabel")
-			empty.Size = UDim2.new(1, -6, 0, ROW - 2)
-			empty.BackgroundTransparency = 1
-			empty.Font = currentGlobalFont
-			empty.Text = "Nenhuma opção encontrada."
-			empty.TextColor3 = Color3.fromRGB(150, 150, 170)
-			empty.TextSize = 10
-			empty.Parent = list
+		local total = #state.options
+		local SEARCH_H, COUNT_H, PAD = 22, 14, 6
+		local topBlock = PAD + SEARCH_H + 2 + COUNT_H + 4
+		local rows = math.max(1, math.min(total, math.min(cfg.maxRows or 5, 6)))
+		local popH = topBlock + rows * ROW + PAD
+		local boxPos, boxSize = box.AbsolutePosition, box.AbsoluteSize
+		local screen = screenGui.AbsoluteSize
+		local popW = math.min(math.max(boxSize.X, 176), screen.X - 16)
+		local spaceBelow = screen.Y - (boxPos.Y + boxSize.Y) - 8
+		local spaceAbove = boxPos.Y - 8
+		local down = spaceBelow >= popH or spaceBelow >= spaceAbove
+		local avail = down and spaceBelow or spaceAbove
+		if popH > avail then
+			rows = math.max(1, math.floor((avail - topBlock - PAD) / ROW))
+			popH = topBlock + rows * ROW + PAD
 		end
-		for index, opt in ipairs(state.options) do
-			local selected = state.value ~= nil and opt.value == state.value
-			local b = Instance.new("TextButton")
-			b.LayoutOrder = index
-			b.Size = UDim2.new(1, -6, 0, ROW - 2)
-			b.BackgroundColor3 = selected and currentThemeColor or Color3.fromRGB(40, 40, 58)
-			b.BackgroundTransparency = selected and 0.35 or 0.2
-			b.BorderSizePixel = 0
-			b.AutoButtonColor = false
-			b.Font = opt.font or currentGlobalFont
-			b.Text = opt.label
-			b.TextColor3 = currentTextColor
-				b.TextSize = 10
-				b.TextXAlignment = Enum.TextXAlignment.Left
-				b.Parent = list
-				if not opt.font then table.insert(allTextLabels, b) end
-				if type(opt.icon) == "table" and opt.icon.Image then
-					b.Text = ""
-					local optionIcon = Instance.new("ImageLabel")
-					optionIcon.Name = "DropdownOptionIcon"
-					optionIcon.Size = UDim2.new(0, 14, 0, 14)
-					optionIcon.Position = UDim2.new(0, 8, 0.5, -7)
-					optionIcon.BackgroundTransparency = 1
-					optionIcon.Image = opt.icon.Image
-					optionIcon.ImageRectOffset = opt.icon.Offset or Vector2.new(0, 0)
-					optionIcon.ImageRectSize = opt.icon.RectSize or Vector2.new(0, 0)
-					optionIcon.ImageColor3 = currentThemeColor
-					optionIcon.ScaleType = Enum.ScaleType.Fit
-					optionIcon.Parent = b
-					table.insert(themeImages, optionIcon)
-					local optionLabel = Instance.new("TextLabel")
-					optionLabel.Size = UDim2.new(1, -32, 1, 0)
-					optionLabel.Position = UDim2.new(0, 28, 0, 0)
-					optionLabel.BackgroundTransparency = 1
-					optionLabel.Font = opt.font or currentGlobalFont
-					optionLabel.Text = opt.label
-					optionLabel.TextColor3 = currentTextColor
-					optionLabel.TextSize = 10
-					optionLabel.TextXAlignment = Enum.TextXAlignment.Left
-					optionLabel.TextTruncate = Enum.TextTruncate.AtEnd
-					optionLabel.Parent = b
-					if not opt.font then table.insert(allTextLabels, optionLabel) end
+		local px = math.clamp(boxPos.X + boxSize.X - popW, 8, math.max(8, screen.X - popW - 8))
+		local py = down and (boxPos.Y + boxSize.Y + 4) or (boxPos.Y - 4)
+
+		local pop = {}
+		pop.backdrop = Instance.new("TextButton")
+		pop.backdrop.Name = "AetherisDropdownBackdrop"
+		pop.backdrop.Size = UDim2.new(1, 0, 1, 0)
+		pop.backdrop.BackgroundTransparency = 1
+		pop.backdrop.Text = ""
+		pop.backdrop.AutoButtonColor = false
+		pop.backdrop.ZIndex = 59
+		pop.backdrop.Parent = screenGui
+		pop.backdrop.MouseButton1Click:Connect(function() close() end)
+
+		local gui = Instance.new("Frame")
+		gui.Name = "AetherisDropdownPopup"
+		gui.AnchorPoint = Vector2.new(0, down and 0 or 1)
+		gui.Position = UDim2.fromOffset(px, py)
+		gui.Size = UDim2.fromOffset(popW, 0)
+		gui.BackgroundColor3 = Color3.fromRGB(22, 24, 36)
+		gui.BackgroundTransparency = 0.04
+		gui.BorderSizePixel = 0
+		gui.ClipsDescendants = true
+		gui.ZIndex = 60
+		gui.Parent = screenGui
+		pop.gui = gui
+		local gCorner = Instance.new("UICorner")
+		gCorner.CornerRadius = UDim.new(0, 7)
+		gCorner.Parent = gui
+		pop.stroke = Instance.new("UIStroke")
+		pop.stroke.Color = currentThemeColor
+		pop.stroke.Transparency = 0.25
+		pop.stroke.Thickness = 1
+		pop.stroke.Parent = gui
+
+		local search = Instance.new("TextBox")
+		search.Size = UDim2.new(1, -12, 0, SEARCH_H)
+		search.Position = UDim2.new(0, 6, 0, PAD)
+		search.BackgroundColor3 = Color3.fromRGB(38, 40, 58)
+		search.BorderSizePixel = 0
+		search.Font = currentGlobalFont
+		search.PlaceholderText = "Pesquisar..."
+		search.PlaceholderColor3 = Color3.fromRGB(130, 132, 150)
+		search.Text = ""
+		search.TextColor3 = currentTextColor
+		search.TextSize = 10
+		search.TextXAlignment = Enum.TextXAlignment.Left
+		search.ClearTextOnFocus = false
+		search.ZIndex = 61
+		search.Parent = gui
+		local sCorner = Instance.new("UICorner")
+		sCorner.CornerRadius = UDim.new(0, 5)
+		sCorner.Parent = search
+		local sPad = Instance.new("UIPadding")
+		sPad.PaddingLeft = UDim.new(0, 8)
+		sPad.PaddingRight = UDim.new(0, 8)
+		sPad.Parent = search
+
+		local countLabel = Instance.new("TextLabel")
+		countLabel.Size = UDim2.new(1, -12, 0, COUNT_H)
+		countLabel.Position = UDim2.new(0, 8, 0, PAD + SEARCH_H + 2)
+		countLabel.BackgroundTransparency = 1
+		countLabel.Font = currentGlobalFont
+		countLabel.TextColor3 = Color3.fromRGB(150, 150, 170)
+		countLabel.TextSize = 9
+		countLabel.TextXAlignment = Enum.TextXAlignment.Left
+		countLabel.ZIndex = 61
+		countLabel.Parent = gui
+
+		local list = Instance.new("ScrollingFrame")
+		list.Position = UDim2.new(0, 6, 0, topBlock)
+		list.Size = UDim2.new(1, -12, 0, rows * ROW)
+		list.BackgroundTransparency = 1
+		list.BorderSizePixel = 0
+		list.ScrollBarThickness = 3
+		list.ScrollBarImageColor3 = currentThemeColor
+		list.CanvasSize = UDim2.new(0, 0, 0, 0)
+		list.ZIndex = 61
+		list.Parent = gui
+		pop.list = list
+		local listLayout = Instance.new("UIListLayout")
+		listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		listLayout.Padding = UDim.new(0, 2)
+		listLayout.Parent = list
+
+		local function populate()
+			for _, child in ipairs(list:GetChildren()) do
+				if child:IsA("GuiObject") then child:Destroy() end
+			end
+			local query = string.lower(search.Text or "")
+			local shownCount = 0
+			for index, opt in ipairs(state.options) do
+				if query == "" or string.find(string.lower(opt.label), query, 1, true) then
+					shownCount = shownCount + 1
+					local selected = state.value ~= nil and opt.value == state.value
+					local b = Instance.new("TextButton")
+					b.LayoutOrder = index
+					b.Size = UDim2.new(1, -6, 0, ROW - 2)
+					b.BackgroundColor3 = selected and currentThemeColor or Color3.fromRGB(40, 40, 58)
+					b.BackgroundTransparency = selected and 0.35 or 0.2
+					b.BorderSizePixel = 0
+					b.AutoButtonColor = false
+					b.Font = opt.font or currentGlobalFont
+					b.Text = opt.label
+					b.TextColor3 = currentTextColor
+					b.TextSize = 10
+					b.TextXAlignment = Enum.TextXAlignment.Left
+					b.TextTruncate = Enum.TextTruncate.AtEnd
+					b.ZIndex = 62
+					b.Parent = list
+					if type(opt.icon) == "table" and opt.icon.Image then
+						b.Text = ""
+						local optionIcon = Instance.new("ImageLabel")
+						optionIcon.Name = "DropdownOptionIcon"
+						optionIcon.Size = UDim2.new(0, 14, 0, 14)
+						optionIcon.Position = UDim2.new(0, 8, 0.5, -7)
+						optionIcon.BackgroundTransparency = 1
+						optionIcon.Image = opt.icon.Image
+						optionIcon.ImageRectOffset = opt.icon.Offset or Vector2.new(0, 0)
+						optionIcon.ImageRectSize = opt.icon.RectSize or Vector2.new(0, 0)
+						optionIcon.ImageColor3 = currentThemeColor
+						optionIcon.ScaleType = Enum.ScaleType.Fit
+						optionIcon.ZIndex = 63
+						optionIcon.Parent = b
+						local optionLabel = Instance.new("TextLabel")
+						optionLabel.Size = UDim2.new(1, -32, 1, 0)
+						optionLabel.Position = UDim2.new(0, 28, 0, 0)
+						optionLabel.BackgroundTransparency = 1
+						optionLabel.Font = opt.font or currentGlobalFont
+						optionLabel.Text = opt.label
+						optionLabel.TextColor3 = currentTextColor
+						optionLabel.TextSize = 10
+						optionLabel.TextXAlignment = Enum.TextXAlignment.Left
+						optionLabel.TextTruncate = Enum.TextTruncate.AtEnd
+						optionLabel.ZIndex = 63
+						optionLabel.Parent = b
+					end
+					local bc = Instance.new("UICorner")
+					bc.CornerRadius = UDim.new(0, 5)
+					bc.Parent = b
+					local bp = Instance.new("UIPadding")
+					bp.PaddingLeft = UDim.new(0, 8)
+					bp.Parent = b
+					b.MouseEnter:Connect(function()
+						if not (state.value ~= nil and opt.value == state.value) then
+							TweenService:Create(b, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(54, 54, 76)}):Play()
+						end
+					end)
+					b.MouseLeave:Connect(function()
+						if not (state.value ~= nil and opt.value == state.value) then
+							TweenService:Create(b, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(40, 40, 58)}):Play()
+						end
+					end)
+					b.MouseButton1Click:Connect(function()
+						state.value = opt.value
+						state.label = opt.label
+						applyHeaderIcon(opt.icon)
+						setLabelText()
+						close()
+						if cfg.onSelect then cfg.onSelect(opt.value, opt) end
+					end)
 				end
-			local bc = Instance.new("UICorner")
-			bc.CornerRadius = UDim.new(0, 5)
-			bc.Parent = b
-			local bp = Instance.new("UIPadding")
-			bp.PaddingLeft = UDim.new(0, 8)
-			bp.Parent = b
-			b.MouseEnter:Connect(function()
-				if not (state.value ~= nil and opt.value == state.value) then
-					TweenService:Create(b, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(54, 54, 76)}):Play()
-				end
-			end)
-			b.MouseLeave:Connect(function()
-				if not (state.value ~= nil and opt.value == state.value) then
-					TweenService:Create(b, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(40, 40, 58)}):Play()
-				end
-			end)
-			b.MouseButton1Click:Connect(function()
-					state.value = opt.value
-					state.label = opt.label
-					applyHeaderIcon(opt.icon)
-					setLabelText()
+			end
+			if shownCount == 0 then
+				local empty = Instance.new("TextLabel")
+				empty.Size = UDim2.new(1, -6, 0, ROW - 2)
+				empty.BackgroundTransparency = 1
+				empty.Font = currentGlobalFont
+				empty.Text = total == 0 and "Nenhuma opção encontrada." or "Nada encontrado."
+				empty.TextColor3 = Color3.fromRGB(150, 150, 170)
+				empty.TextSize = 10
+				empty.ZIndex = 62
+				empty.Parent = list
+			end
+			list.CanvasSize = UDim2.new(0, 0, 0, math.max(shownCount, 1) * ROW)
+			local noun = total == 1 and "opção" or "opções"
+			if query == "" then
+				countLabel.Text = total .. " " .. noun
+			else
+				countLabel.Text = shownCount .. " de " .. total .. " " .. noun
+			end
+		end
+		pop.populate = populate
+		populate()
+		search:GetPropertyChangedSignal("Text"):Connect(populate)
+
+		TweenService:Create(gui, TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.fromOffset(popW, popH)}):Play()
+
+		-- se a caixa sair do lugar (rolagem) ou da tela (aba trocada, painel minimizado), fecha
+		pop.startPos = boxPos
+		pop.watch = RunService.Heartbeat:Connect(function()
+			if not box.Parent or not isShown(box) or (box.AbsolutePosition - pop.startPos).Magnitude > 3 then
 				close()
-				if cfg.onSelect then cfg.onSelect(opt.value, opt) end
-			end)
-		end
-		local total, viewH = openHeight()
-		list.Size = UDim2.new(1, -12, 0, viewH)
-		list.CanvasSize = UDim2.new(0, 0, 0, math.max(#state.options, 1) * ROW)
+			end
+		end)
+		state.popup = pop
+	end
+
+	local function closePopup()
+		local pop = state.popup
+		state.popup = nil
+		if not pop then return end
+		if pop.watch then pop.watch:Disconnect() end
+		if pop.backdrop then pop.backdrop:Destroy() end
+		if pop.gui then pop.gui:Destroy() end
 	end
 
 	local function setOpen(open)
+		if state.open == open then return end
 		state.open = open
 		TweenService:Create(arrow, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {Rotation = open and 180 or 0}):Play()
 		TweenService:Create(frameStroke, TweenInfo.new(0.2), {
 			Color = open and currentThemeColor or GRAYSTROKE, Transparency = open and 0.2 or 0.55
 		}):Play()
-		if open then build() end
-		local boxTarget = open and (openHeight()) or HEADER
-		local frameTarget = split and (boxTarget + 6) or boxTarget
-		local info = TweenInfo.new(open and 0.28 or 0.2, open and Enum.EasingStyle.Quint or Enum.EasingStyle.Quad,
-			open and Enum.EasingDirection.Out or Enum.EasingDirection.In)
-		TweenService:Create(frame, info, {Size = UDim2.new(1, 0, 0, split and math.max(frameTarget, ROW_H) or frameTarget)}):Play()
-		if split then
-			-- aberta, a caixa cresce para a esquerda para caber os nomes das opções
-			TweenService:Create(box, info, {
-				Size = open and UDim2.new(BOX_OPEN, 0, 0, boxTarget) or UDim2.new(0, BOX_W, 0, boxTarget)
-			}):Play()
-		end
+		if open then openPopup() else closePopup() end
 	end
 	close = function() if state.open then setOpen(false) end end
 
@@ -330,12 +449,14 @@ function AetherisDropdown(parent, cfg)
 		TweenService:Create(box, TweenInfo.new(0.15), {BackgroundTransparency = split and 0 or 0.35}):Play()
 	end)
 	header.MouseButton1Click:Connect(function() setOpen(not state.open) end)
+	frame.Destroying:Connect(closePopup)
 	table.insert(AetherisThemeHooks, function(color)
 		if not frame.Parent then return end
-		list.ScrollBarImageColor3 = color
-		if state.open then
-			frameStroke.Color = color
-			build()
+		local pop = state.popup
+		if pop then
+			pop.stroke.Color = color
+			pop.list.ScrollBarImageColor3 = color
+			pop.populate()
 		end
 	end)
 
