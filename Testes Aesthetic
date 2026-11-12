@@ -487,6 +487,12 @@ local function registerConfigBinding(parent, name, getter, setter)
     end
 	local page = section and section.Parent or nil
 	local pageName = page and page.Name or "Page"
+	-- Seções movidas para as abas Automático e Mundo: mantenha as chaves antigas dos presets.
+	if pageName == "Auto" then
+		pageName = "Player"
+	elseif pageName == "Mundo" then
+		pageName = (sectionTitle == "Visual do Mapa") and "Visual" or "Player"
+	end
 	-- O título visível mudou para Baú; mantenha as chaves antigas dos presets.
 	if pageName == "Farming" and sectionTitle == "Baú" then
 		sectionTitle = "Automação"
@@ -2244,8 +2250,10 @@ function showMainPanel()
 	local tabs = {
 		{Name = "Info", Display = "Home", Image = "rbxassetid://16898613509", Offset = Vector2.new(612, 869)},
 		{Name = "Player", Image = "rbxassetid://16898613044", Offset = Vector2.new(0, 869)},
+		{Name = "Auto", Display = "Automático", Image = "rbxassetid://16898613869", Offset = Vector2.new(918, 906)},
 		{Name = "Combate", Image = "rbxassetid://16898613777", Offset = Vector2.new(967, 759)},
 		{Name = "Visual", Image = "rbxassetid://16898613353", Offset = Vector2.new(771, 563)},
+		{Name = "Mundo", Image = "rbxassetid://16898613869", Offset = Vector2.new(820, 612)},
 		{Name = "Farming", Image = "rbxassetid://16898613777", Offset = Vector2.new(918, 306)},
 		{Name = "Fruta", Image = "rbxassetid://16898612629", Offset = Vector2.new(563, 869)},
 		{Name = "Config", Image = "rbxassetid://16898613777", Offset = Vector2.new(771, 257)}
@@ -4602,7 +4610,7 @@ function showMainPanel()
 	-- Auto Aura, Auto Observação (Ken) e Auto Habilidade da Raça (V3), todos na aba Player.
 	-- Tudo dentro de do...end e em tabelas (A e K) para não gastar variáveis locais (limite de 200).
 	do
-		local secAuto = createSection(playerPage, "Auto Habilidades", sectionIcons.Physical)
+		local secAuto = createSection(pages["Auto"], "Auto Habilidades", sectionIcons.Physical)
 		local CollectionSvc = game:GetService("CollectionService")
 		local ContextSvc = game:GetService("ContextActionService")
 		local A = {auraToken = 0, raceToken = 0}
@@ -4861,7 +4869,7 @@ function showMainPanel()
 		-- Auto Stats: distribui 1 ponto por vez, alternando entre os stats marcados.
 		-- Tudo em uma tabela (ST) dentro de do...end para não gastar variáveis locais.
 		do
-			local secStats = createSection(playerPage, "Auto Stats", sectionIcons.Physical)
+			local secStats = createSection(pages["Auto"], "Auto Stats", sectionIcons.Physical)
 			local ST = {
 				enabled = false, token = 0, sessionTotal = 0, added = {}, selected = {},
 				list = {
@@ -5044,7 +5052,7 @@ function showMainPanel()
 		screenGui.Destroying:Connect(stopWalkWater)
 	end
 
-	local secTravel = createSection(playerPage, "Viajar para Ilhas", sectionIcons.Travel)
+	local secTravel = createSection(pages["Mundo"], "Viajar para Ilhas", sectionIcons.Travel)
 
 	local function refreshIslands()
 		local oldName = selectedIsland and selectedIsland.Name
@@ -5441,7 +5449,7 @@ function showMainPanel()
 		addToggle(secEspBerries, "ESP Nome (Berry)", function(state) berryEspName = state end, false)
 		addEspToggleWithColor(secEspBerries, "ESP Distância", berryEspDistanceColor, function(c) berryEspDistanceColor = c end, function(s) berryEspDistance = s end)
 	end
-	local secWorld = createSection(visualPage, "Visual do Mapa", sectionIcons.World)
+	local secWorld = createSection(pages["Mundo"], "Visual do Mapa", sectionIcons.World)
 	addToggle(secWorld, "Fullbright (Remover Escuridão)", function(state)
 		_G_FullbrightEnabled = state
 		Lighting.Brightness = _G_FullbrightEnabled and 2 or 1
