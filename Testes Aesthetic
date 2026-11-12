@@ -74,7 +74,7 @@ function AetherisDropdown(parent, cfg)
 	local titleText = cfg.title or (cfg.prefix and cfg.prefix:gsub("%s*:%s*$", "")) or nil
 	local split = titleText ~= nil
 	-- split: linha "Título [caixa]" como as outras funções (26px), caixa pequena e simples à direita.
-	local HEADER, ROW, GAP = split and 20 or 28, split and 22 or 24, 4
+	local HEADER, ROW, GAP = split and 20 or 28, split and 20 or 22, 4
 	local ROW_H = 26
 	local GRAYSTROKE = Color3.fromRGB(70, 70, 95)
 	local state = {open = false, value = cfg.value, label = cfg.label, icon = cfg.icon, options = {}}
@@ -209,13 +209,13 @@ function AetherisDropdown(parent, cfg)
 	local function openPopup()
 		state.options = (cfg.getOptions and cfg.getOptions()) or {}
 		local total = #state.options
-		local SEARCH_H, COUNT_H, PAD = 22, 14, 6
-		local topBlock = PAD + SEARCH_H + 2 + COUNT_H + 4
-		local rows = math.max(1, math.min(total, math.min(cfg.maxRows or 5, 6)))
+		local SEARCH_H, COUNT_H, PAD = 18, 12, 4
+		local topBlock = PAD + SEARCH_H + 1 + COUNT_H + 2
+		local rows = math.max(1, math.min(total, math.min(cfg.maxRows or 4, 4)))
 		local popH = topBlock + rows * ROW + PAD
 		local boxPos, boxSize = box.AbsolutePosition, box.AbsoluteSize
 		local screen = screenGui.AbsoluteSize
-		local popW = math.min(math.max(boxSize.X, 176), screen.X - 16)
+		local popW = math.min(math.max(boxSize.X, 118), screen.X - 16)
 		local spaceBelow = screen.Y - (boxPos.Y + boxSize.Y) - 8
 		local spaceAbove = boxPos.Y - 8
 		local down = spaceBelow >= popH or spaceBelow >= spaceAbove
@@ -243,8 +243,8 @@ function AetherisDropdown(parent, cfg)
 		gui.AnchorPoint = Vector2.new(0, down and 0 or 1)
 		gui.Position = UDim2.fromOffset(px, py)
 		gui.Size = UDim2.fromOffset(popW, 0)
-		gui.BackgroundColor3 = Color3.fromRGB(22, 24, 36)
-		gui.BackgroundTransparency = 0.04
+		gui.BackgroundColor3 = Color3.fromRGB(7, 8, 12)
+		gui.BackgroundTransparency = 0
 		gui.BorderSizePixel = 0
 		gui.ClipsDescendants = true
 		gui.ZIndex = 60
@@ -255,21 +255,21 @@ function AetherisDropdown(parent, cfg)
 		gCorner.Parent = gui
 		pop.stroke = Instance.new("UIStroke")
 		pop.stroke.Color = currentThemeColor
-		pop.stroke.Transparency = 0.25
+		pop.stroke.Transparency = 0.45
 		pop.stroke.Thickness = 1
 		pop.stroke.Parent = gui
 
 		local search = Instance.new("TextBox")
-		search.Size = UDim2.new(1, -12, 0, SEARCH_H)
-		search.Position = UDim2.new(0, 6, 0, PAD)
-		search.BackgroundColor3 = Color3.fromRGB(38, 40, 58)
+		search.Size = UDim2.new(1, -8, 0, SEARCH_H)
+		search.Position = UDim2.new(0, 4, 0, PAD)
+		search.BackgroundColor3 = Color3.fromRGB(19, 20, 29)
 		search.BorderSizePixel = 0
 		search.Font = currentGlobalFont
 		search.PlaceholderText = "Pesquisar..."
 		search.PlaceholderColor3 = Color3.fromRGB(130, 132, 150)
 		search.Text = ""
 		search.TextColor3 = currentTextColor
-		search.TextSize = 10
+		search.TextSize = 9
 		search.TextXAlignment = Enum.TextXAlignment.Left
 		search.ClearTextOnFocus = false
 		search.ZIndex = 61
@@ -278,27 +278,27 @@ function AetherisDropdown(parent, cfg)
 		sCorner.CornerRadius = UDim.new(0, 5)
 		sCorner.Parent = search
 		local sPad = Instance.new("UIPadding")
-		sPad.PaddingLeft = UDim.new(0, 8)
-		sPad.PaddingRight = UDim.new(0, 8)
+		sPad.PaddingLeft = UDim.new(0, 6)
+		sPad.PaddingRight = UDim.new(0, 6)
 		sPad.Parent = search
 
 		local countLabel = Instance.new("TextLabel")
-		countLabel.Size = UDim2.new(1, -12, 0, COUNT_H)
-		countLabel.Position = UDim2.new(0, 8, 0, PAD + SEARCH_H + 2)
+		countLabel.Size = UDim2.new(1, -10, 0, COUNT_H)
+		countLabel.Position = UDim2.new(0, 6, 0, PAD + SEARCH_H + 1)
 		countLabel.BackgroundTransparency = 1
 		countLabel.Font = currentGlobalFont
 		countLabel.TextColor3 = Color3.fromRGB(150, 150, 170)
-		countLabel.TextSize = 9
+		countLabel.TextSize = 8
 		countLabel.TextXAlignment = Enum.TextXAlignment.Left
 		countLabel.ZIndex = 61
 		countLabel.Parent = gui
 
 		local list = Instance.new("ScrollingFrame")
-		list.Position = UDim2.new(0, 6, 0, topBlock)
-		list.Size = UDim2.new(1, -12, 0, rows * ROW)
+		list.Position = UDim2.new(0, 4, 0, topBlock)
+		list.Size = UDim2.new(1, -8, 0, rows * ROW)
 		list.BackgroundTransparency = 1
 		list.BorderSizePixel = 0
-		list.ScrollBarThickness = 3
+		list.ScrollBarThickness = 2
 		list.ScrollBarImageColor3 = currentThemeColor
 		list.CanvasSize = UDim2.new(0, 0, 0, 0)
 		list.ZIndex = 61
@@ -322,14 +322,14 @@ function AetherisDropdown(parent, cfg)
 					local b = Instance.new("TextButton")
 					b.LayoutOrder = index
 					b.Size = UDim2.new(1, -6, 0, ROW - 2)
-					b.BackgroundColor3 = selected and currentThemeColor or Color3.fromRGB(40, 40, 58)
-					b.BackgroundTransparency = selected and 0.35 or 0.2
+					b.BackgroundColor3 = selected and currentThemeColor or Color3.fromRGB(16, 17, 25)
+					b.BackgroundTransparency = selected and 0.4 or 0
 					b.BorderSizePixel = 0
 					b.AutoButtonColor = false
 					b.Font = opt.font or currentGlobalFont
 					b.Text = opt.label
 					b.TextColor3 = currentTextColor
-					b.TextSize = 10
+					b.TextSize = 9
 					b.TextXAlignment = Enum.TextXAlignment.Left
 					b.TextTruncate = Enum.TextTruncate.AtEnd
 					b.ZIndex = 62
@@ -365,16 +365,16 @@ function AetherisDropdown(parent, cfg)
 					bc.CornerRadius = UDim.new(0, 5)
 					bc.Parent = b
 					local bp = Instance.new("UIPadding")
-					bp.PaddingLeft = UDim.new(0, 8)
+					bp.PaddingLeft = UDim.new(0, 6)
 					bp.Parent = b
 					b.MouseEnter:Connect(function()
 						if not (state.value ~= nil and opt.value == state.value) then
-							TweenService:Create(b, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(54, 54, 76)}):Play()
+							TweenService:Create(b, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(30, 31, 44)}):Play()
 						end
 					end)
 					b.MouseLeave:Connect(function()
 						if not (state.value ~= nil and opt.value == state.value) then
-							TweenService:Create(b, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(40, 40, 58)}):Play()
+							TweenService:Create(b, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(16, 17, 25)}):Play()
 						end
 					end)
 					b.MouseButton1Click:Connect(function()
