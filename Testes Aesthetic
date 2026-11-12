@@ -71,32 +71,74 @@ AetherisThemeHooks = AetherisThemeHooks or {}
 -- cfg = {prefix, placeholder, label, value, maxRows, getOptions = function() -> {{label, value, font?}}, onSelect = function(value, option)}
 -- Retorna {setValue(value, label), close(), frame}
 function AetherisDropdown(parent, cfg)
-	local HEADER, ROW, GAP = 28, 24, 4
+	local titleText = cfg.title or (cfg.prefix and cfg.prefix:gsub("%s*:%s*$", "")) or nil
+	local split = titleText ~= nil
+	-- split: linha "Título [caixa]" como as outras funções (26px), caixa pequena e simples à direita.
+	local HEADER, ROW, GAP = split and 20 or 28, split and 22 or 24, 4
+	local ROW_H = 26
 	local GRAYSTROKE = Color3.fromRGB(70, 70, 95)
 	local state = {open = false, value = cfg.value, label = cfg.label, icon = cfg.icon, options = {}}
 
+	-- Com título (cfg.title, ou cfg.prefix sem os dois pontos) o dropdown vira "Título [caixa]":
+	-- o título fica à esquerda e só a caixa (com a lista) ocupa a direita, em vez da linha inteira.
+	local BOX_W = cfg.boxWidth or 96          -- largura da caixa fechada (px)
+	local BOX_OPEN = cfg.boxOpenScale or 0.72 -- largura da caixa aberta (fração da linha)
+
 	local frame = Instance.new("Frame")
-	frame.Size = UDim2.new(1, 0, 0, HEADER)
+	frame.Size = UDim2.new(1, 0, 0, split and ROW_H or HEADER)
 	frame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-	frame.BackgroundTransparency = 0.35
+	frame.BackgroundTransparency = split and 0.5 or 1
 	frame.BorderSizePixel = 0
 	frame.ClipsDescendants = true
 	frame.Parent = parent
+	if split then
+		local rowCorner = Instance.new("UICorner")
+		rowCorner.CornerRadius = UDim.new(0, 5)
+		rowCorner.Parent = frame
+	end
+
+	local box = frame
+	if split then
+		local titleLabel = Instance.new("TextLabel")
+		titleLabel.Name = "DropdownTitle"
+		titleLabel.Size = UDim2.new(1, -(BOX_W + 14), 0, ROW_H)
+		titleLabel.Position = UDim2.new(0, 8, 0, 0)
+		titleLabel.BackgroundTransparency = 1
+		titleLabel.Font = currentGlobalFont
+		titleLabel.Text = titleText
+		titleLabel.TextColor3 = currentTextColor
+		titleLabel.TextSize = 11
+		titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+		titleLabel.TextTruncate = Enum.TextTruncate.AtEnd
+		titleLabel.Parent = frame
+		table.insert(allTextLabels, titleLabel)
+		box = Instance.new("Frame")
+		box.Name = "DropdownBox"
+		box.AnchorPoint = Vector2.new(1, 0)
+		box.Position = UDim2.new(1, -6, 0, 3)
+		box.Size = UDim2.new(0, BOX_W, 0, HEADER)
+		box.ClipsDescendants = true
+		box.Parent = frame
+	end
+	box.BackgroundColor3 = split and Color3.fromRGB(50, 50, 70) or Color3.fromRGB(34, 34, 46)
+	box.BackgroundTransparency = split and 0 or 0.35
+	box.BorderSizePixel = 0
 	local frameCorner = Instance.new("UICorner")
-	frameCorner.CornerRadius = UDim.new(0, 7)
-	frameCorner.Parent = frame
+	frameCorner.CornerRadius = UDim.new(0, split and 4 or 7)
+	frameCorner.Parent = box
 	local frameStroke = Instance.new("UIStroke")
 	frameStroke.Color = GRAYSTROKE
 	frameStroke.Transparency = 0.55
 	frameStroke.Thickness = 1
-	frameStroke.Parent = frame
+	frameStroke.Parent = box
+	if split then frameStroke.Enabled = false end
 
 	local header = Instance.new("TextButton")
 	header.Size = UDim2.new(1, 0, 0, HEADER)
 	header.BackgroundTransparency = 1
 	header.Text = ""
 	header.AutoButtonColor = false
-	header.Parent = frame
+	header.Parent = box
 
 	local label = Instance.new("TextLabel")
 	label.Size = UDim2.new(1, -34, 1, 0)
@@ -104,7 +146,7 @@ function AetherisDropdown(parent, cfg)
 	label.BackgroundTransparency = 1
 	label.Font = currentGlobalFont
 	label.TextColor3 = currentTextColor
-	label.TextSize = 11
+	label.TextSize = split and 10 or 11
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.TextTruncate = Enum.TextTruncate.AtEnd
 	label.Parent = header
@@ -143,7 +185,7 @@ function AetherisDropdown(parent, cfg)
 	arrow.Font = Enum.Font.GothamBold
 	arrow.Text = "▼"
 	arrow.TextColor3 = currentThemeColor
-	arrow.TextSize = 10
+	arrow.TextSize = split and 8 or 10
 	arrow.Parent = header
 	table.insert(themeTexts, arrow)
 
@@ -155,14 +197,14 @@ function AetherisDropdown(parent, cfg)
 	list.ScrollBarThickness = 3
 	list.ScrollBarImageColor3 = currentThemeColor
 	list.CanvasSize = UDim2.new(0, 0, 0, 0)
-	list.Parent = frame
+	list.Parent = box
 	local listLayout = Instance.new("UIListLayout")
 	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	listLayout.Padding = UDim.new(0, 2)
 	listLayout.Parent = list
 
 	local function setLabelText()
-		label.Text = (cfg.prefix or "") .. (state.label or cfg.placeholder or "Selecione")
+		label.Text = (split and "" or (cfg.prefix or "")) .. (state.label or cfg.placeholder or "Selecione")
 	end
 	setLabelText()
 
@@ -267,17 +309,25 @@ function AetherisDropdown(parent, cfg)
 			Color = open and currentThemeColor or GRAYSTROKE, Transparency = open and 0.2 or 0.55
 		}):Play()
 		if open then build() end
-		local target = open and (openHeight()) or HEADER
-		TweenService:Create(frame, TweenInfo.new(open and 0.28 or 0.2, open and Enum.EasingStyle.Quint or Enum.EasingStyle.Quad,
-			open and Enum.EasingDirection.Out or Enum.EasingDirection.In), {Size = UDim2.new(1, 0, 0, target)}):Play()
+		local boxTarget = open and (openHeight()) or HEADER
+		local frameTarget = split and (boxTarget + 6) or boxTarget
+		local info = TweenInfo.new(open and 0.28 or 0.2, open and Enum.EasingStyle.Quint or Enum.EasingStyle.Quad,
+			open and Enum.EasingDirection.Out or Enum.EasingDirection.In)
+		TweenService:Create(frame, info, {Size = UDim2.new(1, 0, 0, split and math.max(frameTarget, ROW_H) or frameTarget)}):Play()
+		if split then
+			-- aberta, a caixa cresce para a esquerda para caber os nomes das opções
+			TweenService:Create(box, info, {
+				Size = open and UDim2.new(BOX_OPEN, 0, 0, boxTarget) or UDim2.new(0, BOX_W, 0, boxTarget)
+			}):Play()
+		end
 	end
 	close = function() if state.open then setOpen(false) end end
 
 	header.MouseEnter:Connect(function()
-		TweenService:Create(frame, TweenInfo.new(0.12), {BackgroundTransparency = 0.15}):Play()
+		TweenService:Create(box, TweenInfo.new(0.12), {BackgroundTransparency = split and 0.25 or 0.15}):Play()
 	end)
 	header.MouseLeave:Connect(function()
-		TweenService:Create(frame, TweenInfo.new(0.15), {BackgroundTransparency = 0.35}):Play()
+		TweenService:Create(box, TweenInfo.new(0.15), {BackgroundTransparency = split and 0 or 0.35}):Play()
 	end)
 	header.MouseButton1Click:Connect(function() setOpen(not state.open) end)
 	table.insert(AetherisThemeHooks, function(color)
@@ -4766,6 +4816,7 @@ function showMainPanel()
 
 	local travelDD = AetherisDropdown(secTravel, {
 		placeholder = "Selecione a Ilha",
+		title = "Ilha",
 		label = selectedIsland and selectedIsland.Name or nil,
 		value = selectedIsland,
 		maxRows = 5,
