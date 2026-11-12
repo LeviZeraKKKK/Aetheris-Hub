@@ -4858,6 +4858,145 @@ function showMainPanel()
 		end)
 	end
 
+		-- Auto Stats: distribui 1 ponto por vez, alternando entre os stats marcados.
+		-- Tudo em uma tabela (ST) dentro de do...end para não gastar variáveis locais.
+		do
+			local secStats = createSection(playerPage, "Auto Stats", sectionIcons.Physical)
+			local ST = {
+				enabled = false, token = 0, sessionTotal = 0, added = {}, selected = {},
+				list = {
+					{key = "Melee", label = "Melee"}, {key = "Defense", label = "Defense"}, {key = "Gun", label = "Gun"},
+					{key = "Sword", label = "Sword"}, {key = "Fruit", label = "Fruit"},
+				},
+			}
+			local function getRemote()
+				local folder = ReplicatedStorage:FindFirstChild("Remotes")
+				return folder and folder:FindFirstChild("CommF_") or nil
+			end
+			function ST.data() return player:FindFirstChild("Data") end
+			function ST.points()
+				local d = ST.data()
+				local p = d and d:FindFirstChild("Points")
+				return (p and p:IsA("ValueBase")) and p.Value or 0
+			end
+			function ST.level()
+				local d = ST.data()
+				local l = d and d:FindFirstChild("Level")
+				return (l and l:IsA("ValueBase")) and l.Value or 0
+			end
+			-- a chave do Fruit varia: "Demon Fruit", "Blox Fruit" ou "Fruit"
+			function ST.fruitKey()
+				local d = ST.data()
+				local s = d and d:FindFirstChild("Stats")
+				if s then
+					for _, cand in ipairs({"Demon Fruit", "Blox Fruit", "Fruit"}) do
+						if s:FindFirstChild(cand) then return cand end
+					end
+				end
+				return "Demon Fruit"
+			end
+			function ST.realKey(key)
+				if key == "Fruit" then return ST.fruitKey() end
+				return key
+			end
+			function ST.tryAdd(stat)
+				local remote = getRemote()
+				if not remote then return 0 end
+				local before = ST.points()
+				if before <= 0 then return 0 end
+				pcall(function() remote:InvokeServer("AddPoint", stat, 1) end)
+				task.wait(0.06)
+				return math.max(0, before - ST.points())
+			end
+			function ST.round()
+				if ST.points() <= 0 then return 0 end
+				local targets = {}
+				for _, s in ipairs(ST.list) do
+					if ST.selected[s.key] then table.insert(targets, s.key) end
+				end
+				if #targets == 0 then return 0 end
+				local placed, fails, idx = 0, {}, 1
+				for _ = 1, 5000 do
+					if not ST.enabled or ST.points() <= 0 then break end
+					-- remove stats que falharam 3x seguidas (limite atingido ou comando inválido)
+					local valid = {}
+					for _, k in ipairs(targets) do
+						if (fails[k] or 0) < 3 then table.insert(valid, k) end
+					end
+					targets = valid
+					if #targets == 0 then break end
+					idx = (idx - 1) % #targets + 1
+					local key = targets[idx]
+					local n = ST.tryAdd(ST.realKey(key))
+					if n > 0 then
+						placed = placed + n
+						ST.added[key] = (ST.added[key] or 0) + n
+						ST.sessionTotal = ST.sessionTotal + n
+						fails[key] = 0
+						idx = idx + 1
+					else
+						fails[key] = (fails[key] or 0) + 1
+					end
+				end
+				return placed
+			end
+			function ST.setEnabled(state)
+				ST.token = ST.token + 1
+				ST.enabled = state
+				if not state then return end
+				ST.added, ST.sessionTotal = {}, 0
+				local token = ST.token
+				task.spawn(function()
+					while ST.enabled and ST.token == token and screenGui.Parent do
+						local ok, placed = pcall(ST.round)
+						if not ok or placed == 0 then task.wait(0.8) else task.wait(0.05) end
+					end
+				end)
+			end
+
+			addToggle(secStats, "Auto Stats", function(state) ST.setEnabled(state) end, false)
+			for _, s in ipairs(ST.list) do
+				addToggle(secStats, "Stat: " .. s.label, function(state) ST.selected[s.key] = state end, false)
+			end
+
+			-- linha de informação: level, pontos e quantos foram colocados nesta sessão
+			local info = Instance.new("TextLabel")
+			info.Size = UDim2.new(1, 0, 0, 30)
+			info.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+			info.BackgroundTransparency = 0.3
+			info.BorderSizePixel = 0
+			info.Font = currentGlobalFont
+			info.TextSize = 10
+			info.TextColor3 = Color3.fromRGB(180, 220, 255)
+			info.TextWrapped = true
+			info.TextXAlignment = Enum.TextXAlignment.Left
+			info.Text = "Lv -- | -- pts"
+			info.Parent = secStats
+			local infoCorner = Instance.new("UICorner")
+			infoCorner.CornerRadius = UDim.new(0, 5)
+			infoCorner.Parent = info
+			local infoPad = Instance.new("UIPadding")
+			infoPad.PaddingLeft = UDim.new(0, 8)
+			infoPad.PaddingRight = UDim.new(0, 8)
+			infoPad.Parent = info
+			table.insert(allTextLabels, info)
+			task.spawn(function()
+				while screenGui.Parent do
+					task.wait(0.5)
+					if info.Parent and info.Visible then
+						local parts = {}
+						for _, s in ipairs(ST.list) do
+							local n = ST.added[s.key] or 0
+							if n > 0 then table.insert(parts, s.label .. " +" .. n) end
+						end
+						info.Text = string.format("Lv %d | %d pts disponíveis | +%d colocados%s", ST.level(), ST.points(),
+							ST.sessionTotal, #parts > 0 and ("\n" .. table.concat(parts, "  ")) or "")
+					end
+				end
+			end)
+			screenGui.Destroying:Connect(function() ST.enabled = false; ST.token = ST.token + 1 end)
+		end
+
 		-- Andar sobre a Água: barreira invisível que segue o jogador (X e Z) sobre a água.
 	-- Fica dentro de do...end para não gastar variáveis locais (limite de 200).
 	do
@@ -7474,10 +7613,11 @@ function showMainPanel()
 			return 0
 		end
 
-		function Q.pickBest(ceilExclusive)
-			if not Q.quests then return nil end
+		-- Todas as quests elegíveis (nível atual), da mais forte para a mais fraca.
+		function Q.getAllQuests(ceilExclusive)
+			local all = {}
+			if not Q.quests then return all end
 			local level = Q.getLevel()
-			local best = nil
 			for catName, entries in pairs(Q.quests) do
 				if type(entries) == "table" then
 					for idx, q in ipairs(entries) do
@@ -7485,16 +7625,45 @@ function showMainPanel()
 							and (not ceilExclusive or q.LevelReq < ceilExclusive)
 							and not q.MeetsRequirements
 							and not q.OnComplete then
-							if not best or q.LevelReq > best.levelReq then
-								local taskType = nil
-								for t in pairs(q.Task or {}) do taskType = t; break end
-								best = {category = catName, questName = q.Name, index = idx, levelReq = q.LevelReq, taskType = taskType}
-							end
+							local taskType, count = nil, 0
+							for t, c in pairs(q.Task or {}) do taskType = t; count = c; break end
+							table.insert(all, {
+								category = catName, questName = q.Name, index = idx, levelReq = q.LevelReq,
+								taskType = taskType, isSingle = (count == 1),
+							})
 						end
 					end
 				end
 			end
-			return best
+			table.sort(all, function(a, b) return a.levelReq > b.levelReq end)
+			return all
+		end
+
+		-- O boss/inimigo desse tipo de tarefa está vivo agora?
+		function Q.bossSpawned(taskType)
+			if not taskType then return false end
+			local folder = workspace:FindFirstChild("Enemies")
+			if not folder then return false end
+			local key = taskType:lower()
+			for _, obj in ipairs(folder:GetChildren()) do
+				if obj:IsA("Model") then
+					local hum = obj:FindFirstChildOfClass("Humanoid")
+					if hum and hum.Health > 0 and obj.Name:lower():find(key, 1, true) then return true end
+				end
+			end
+			return false
+		end
+
+		-- Escolhe a melhor quest normal. Se a melhor for de boss (1 alvo) e o boss NÃO estiver spawnado,
+		-- pega a anterior. A troca só acontece ao aceitar a próxima quest, então se o boss spawnar
+		-- no meio de uma quest de mob, ela termina primeiro.
+		function Q.pickBest(ceilExclusive)
+			local all = Q.getAllQuests(ceilExclusive)
+			if #all == 0 then return nil end
+			for _, q in ipairs(all) do
+				if not q.isSingle or Q.bossSpawned(q.taskType) then return q end
+			end
+			return all[1]
 		end
 
 		function Q.updateSelection()
