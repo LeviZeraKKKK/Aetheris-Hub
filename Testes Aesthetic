@@ -9032,7 +9032,7 @@ function showMainPanel()
 	local secKeybind = createSection(configPage, "Atalhos (PC)", sectionIcons.Keybind)
 	
 	local kbFrame = Instance.new("Frame")
-	kbFrame.Size = UDim2.new(1, 0, 0, 32)
+	kbFrame.Size = UDim2.new(1, 0, 0, 26)
 	kbFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
 	kbFrame.BackgroundTransparency = 0.5
 	kbFrame.Parent = secKeybind
@@ -9052,11 +9052,11 @@ function showMainPanel()
 	kbLedCorner.Parent = kbLed
 
 	local kbLabel = Instance.new("TextLabel")
-	kbLabel.Size = UDim2.new(1, -110, 1, 0)
+	kbLabel.Size = UDim2.new(1, -50, 1, 0)
 	kbLabel.Position = UDim2.new(0, 20, 0, 0)
 	kbLabel.BackgroundTransparency = 1
 	kbLabel.Font = currentGlobalFont
-	kbLabel.Text = "Keybind Esconder Painel (PC)"
+	kbLabel.Text = "Esconder Painel por Tecla (PC)"
 	kbLabel.TextColor3 = currentTextColor
 	kbLabel.TextSize = 10
 	kbLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -9065,7 +9065,7 @@ function showMainPanel()
 
 	local kbToggleBtn = Instance.new("TextButton")
 	kbToggleBtn.Size = UDim2.new(0, 28, 0, 16)
-	kbToggleBtn.Position = UDim2.new(1, -104, 0.5, -8)
+	kbToggleBtn.Position = UDim2.new(1, -34, 0.5, -8)
 	kbToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
 	kbToggleBtn.Text = ""
 	kbToggleBtn.Parent = kbFrame
@@ -9087,16 +9087,37 @@ function showMainPanel()
 	local keybindStateRef = {isToggled = false, circle = kbCircle, button = kbToggleBtn, led = kbLed}
 	table.insert(themeToggles, keybindStateRef)
 
+	-- Seleção da tecla: linha própria logo abaixo do toggle
+	local kbKeyFrame = Instance.new("Frame")
+	kbKeyFrame.Size = UDim2.new(1, 0, 0, 26)
+	kbKeyFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+	kbKeyFrame.BackgroundTransparency = 0.5
+	kbKeyFrame.Parent = secKeybind
+	local kbKeyCorner = Instance.new("UICorner")
+	kbKeyCorner.CornerRadius = UDim.new(0, 5)
+	kbKeyCorner.Parent = kbKeyFrame
+	local kbKeyLabel = Instance.new("TextLabel")
+	kbKeyLabel.Size = UDim2.new(1, -90, 1, 0)
+	kbKeyLabel.Position = UDim2.new(0, 20, 0, 0)
+	kbKeyLabel.BackgroundTransparency = 1
+	kbKeyLabel.Font = currentGlobalFont
+	kbKeyLabel.Text = "Tecla"
+	kbKeyLabel.TextColor3 = currentTextColor
+	kbKeyLabel.TextSize = 10
+	kbKeyLabel.TextXAlignment = Enum.TextXAlignment.Left
+	kbKeyLabel.Parent = kbKeyFrame
+	table.insert(allTextLabels, kbKeyLabel)
+
 	local keyBox = Instance.new("TextBox")
-	keyBox.Size = UDim2.new(0, 64, 0, 20)
-	keyBox.Position = UDim2.new(1, -68, 0.5, -10)
+	keyBox.Size = UDim2.new(0, 64, 0, 18)
+	keyBox.Position = UDim2.new(1, -70, 0.5, -9)
 	keyBox.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
 	keyBox.Font = currentGlobalFont
 	keyBox.Text = hideKeybindKey.Name
 	keyBox.TextColor3 = currentTextColor
 	keyBox.TextSize = 10
 	keyBox.ClearTextOnFocus = true
-	keyBox.Parent = kbFrame
+	keyBox.Parent = kbKeyFrame
 	table.insert(themeTexts, keyBox)
 	table.insert(allTextLabels, keyBox)
 
