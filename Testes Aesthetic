@@ -5446,26 +5446,26 @@ function showMainPanel()
 		group.Parent = AetherisEspSec
 		local gl = Instance.new("UIListLayout")
 		gl.SortOrder = Enum.SortOrder.LayoutOrder
-		gl.Padding = UDim.new(0, 4)
+		gl.Padding = UDim.new(0, 3)
+		gl.HorizontalAlignment = Enum.HorizontalAlignment.Right
 		gl.Parent = group
-		local head = Instance.new("TextLabel")
-		head.Name = "EspGroupTitle"
-		head.Size = UDim2.new(1, 0, 0, 16)
-		head.BackgroundTransparency = 1
-		head.Font = currentGlobalFont
-		head.Text = string.upper(title)
-		head.TextSize = 10
-		head.TextColor3 = Color3.fromRGB(150, 150, 170)
-		head.TextXAlignment = Enum.TextXAlignment.Left
-		head.LayoutOrder = -1
-		head.Parent = group
+		group.Size = UDim2.new(1, 0, 0, 0)
 		-- Opções ficam escondidas até o toggle principal (o primeiro item do grupo) ser ligado.
 		local st = {on = false, master = nil}
 		AetherisEspGroupState[group] = st
 		group.ChildAdded:Connect(function(c)
-			if not c:IsA("GuiObject") or c == head then return end
+			if not c:IsA("GuiObject") then return end
 			if not st.master then st.master = c return end
 			if not st.on then c.Visible = false end
+			-- Opções menores e levemente recuadas (indicam que pertencem ao toggle de cima).
+			if c.Size.Y.Offset == 26 and c.Size.X.Scale == 1 then
+				c.Size = UDim2.new(1, -10, 0, 20)
+				task.defer(function()
+					for _, d in ipairs(c:GetDescendants()) do
+						if d:IsA("TextLabel") and d.TextSize == 11 then d.TextSize = 9 end
+					end
+				end)
+			end
 		end)
 		return group
 	end
