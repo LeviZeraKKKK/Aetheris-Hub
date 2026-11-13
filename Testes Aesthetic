@@ -318,11 +318,11 @@ function AetherisDropdown(parent, cfg)
 		box.ClipsDescendants = true
 		box.Parent = frame
 	end
-	box.BackgroundColor3 = split and Color3.fromRGB(11, 11, 16) or Color3.fromRGB(34, 34, 46)
+	box.BackgroundColor3 = split and Color3.fromRGB(19, 19, 28) or Color3.fromRGB(34, 34, 46)
 	box.BackgroundTransparency = split and 0 or 0.35
 	box.BorderSizePixel = 0
 	local frameCorner = Instance.new("UICorner")
-	frameCorner.CornerRadius = UDim.new(0, split and 9 or 10)
+	frameCorner.CornerRadius = UDim.new(0, split and 7 or 8)
 	frameCorner.Parent = box
 	local frameStroke = Instance.new("UIStroke")
 	frameStroke.Color = GRAYSTROKE
@@ -441,7 +441,7 @@ function AetherisDropdown(parent, cfg)
 		gui.AnchorPoint = Vector2.new(0, down and 0 or 1)
 		gui.Position = UDim2.fromOffset(px, py)
 		gui.Size = UDim2.fromOffset(popW, 0)
-		gui.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
+		gui.BackgroundColor3 = Color3.fromRGB(12, 12, 18)
 		gui.BackgroundTransparency = 0
 		gui.BorderSizePixel = 0
 		gui.ClipsDescendants = true
@@ -449,7 +449,7 @@ function AetherisDropdown(parent, cfg)
 		gui.Parent = screenGui
 		pop.gui = gui
 		local gCorner = Instance.new("UICorner")
-		gCorner.CornerRadius = UDim.new(0, 12)
+		gCorner.CornerRadius = UDim.new(0, 9)
 		gCorner.Parent = gui
 		pop.stroke = Instance.new("UIStroke")
 		pop.stroke.Color = currentThemeColor
@@ -460,7 +460,7 @@ function AetherisDropdown(parent, cfg)
 		local search = Instance.new("TextBox")
 		search.Size = UDim2.new(1, -8, 0, SEARCH_H)
 		search.Position = UDim2.new(0, 4, 0, PAD)
-		search.BackgroundColor3 = Color3.fromRGB(14, 14, 20)
+		search.BackgroundColor3 = Color3.fromRGB(21, 21, 30)
 		search.BorderSizePixel = 0
 		search.Font = currentGlobalFont
 		search.PlaceholderText = "Pesquisar..."
@@ -473,7 +473,7 @@ function AetherisDropdown(parent, cfg)
 		search.ZIndex = 61
 		search.Parent = gui
 		local sCorner = Instance.new("UICorner")
-		sCorner.CornerRadius = UDim.new(0, 10)
+		sCorner.CornerRadius = UDim.new(0, 7)
 		sCorner.Parent = search
 		local sPad = Instance.new("UIPadding")
 		sPad.PaddingLeft = UDim.new(0, 6)
@@ -521,7 +521,7 @@ function AetherisDropdown(parent, cfg)
 					local b = Instance.new("TextButton")
 					b.LayoutOrder = index
 					b.Size = UDim2.new(1, -6, 0, ROW - 2)
-					b.BackgroundColor3 = selected and currentThemeColor or Color3.fromRGB(10, 10, 15)
+					b.BackgroundColor3 = selected and currentThemeColor or Color3.fromRGB(17, 17, 25)
 					b.BackgroundTransparency = selected and 0.4 or 0
 					b.BorderSizePixel = 0
 					b.AutoButtonColor = false
@@ -561,7 +561,7 @@ function AetherisDropdown(parent, cfg)
 						optionLabel.Parent = b
 					end
 					local bc = Instance.new("UICorner")
-					bc.CornerRadius = UDim.new(0, 10)
+					bc.CornerRadius = UDim.new(0, 7)
 					bc.Parent = b
 					local bp = Instance.new("UIPadding")
 					bp.PaddingLeft = UDim.new(0, 6)
@@ -573,7 +573,7 @@ function AetherisDropdown(parent, cfg)
 					end)
 					b.MouseLeave:Connect(function()
 						if not (state.value ~= nil and opt.value == state.value) then
-							TweenService:Create(b, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(10, 10, 15)}):Play()
+							TweenService:Create(b, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(17, 17, 25)}):Play()
 						end
 					end)
 					b.MouseButton1Click:Connect(function()
@@ -2454,7 +2454,7 @@ function showMainPanel()
 		{Name = "Combate", Image = "rbxassetid://16898613777", Offset = Vector2.new(967, 759)},
 		{Name = "Farming", Image = "rbxassetid://16898613777", Offset = Vector2.new(918, 306)},
 		{Name = "Fruta", Image = "rbxassetid://16898612629", Offset = Vector2.new(563, 869)},
-		{Name = "Misc", Image = "rbxassetid://16898613353", Offset = Vector2.new(771, 563)},
+		{Name = "Misc", Image = "rbxassetid://7734021469", Offset = Vector2.new(0, 0), RectSize = Vector2.new(0, 0)},
 		{Name = "Config", Image = "rbxassetid://16898613777", Offset = Vector2.new(771, 257)}
 	}
 
