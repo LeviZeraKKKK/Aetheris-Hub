@@ -501,9 +501,6 @@ local function registerConfigBinding(parent, name, getter, setter)
 	if pageName == "Config" and sectionTitle == "Design" then
 		sectionTitle = (name == "Fonte do Hub") and "Customização de Textos" or "Tema do Hub"
 	end
-	-- ESPs agrupados numa seção só: cada grupo guarda o título antigo para manter as chaves dos presets.
-	local keyTag = parent and parent:GetAttribute("AetherisKeySection")
-	if keyTag then sectionTitle = keyTag end
 	local baseKey = pageName .. "|" .. sectionTitle .. "|" .. name
     configBindingCounts[baseKey] = (configBindingCounts[baseKey] or 0) + 1
     local key = baseKey
@@ -5208,46 +5205,8 @@ function showMainPanel()
 	-- ABA VISUAL
 	-----------------------------------------------------------------
 	local visualPage = pages["Visual"]
-	-- Todos os ESPs numa seção só: ao ligar o principal de cada tipo, as opções dele aparecem
-	-- logo abaixo, recuadas (menores) para indicar a quem pertencem.
-	local secEsp = createSection(visualPage, "ESP", sectionIcons.EspPlayers)
-	AetherisEsp = {g = {}}
-	do
-		local layout = secEsp:FindFirstChildOfClass("UIListLayout")
-		if layout then layout.HorizontalAlignment = Enum.HorizontalAlignment.Right end
-	end
-	function AetherisEsp.begin(name, keyTitle)
-		secEsp:SetAttribute("AetherisKeySection", keyTitle)
-		local snap = {}
-		for _, c in ipairs(secEsp:GetChildren()) do snap[c] = true end
-		AetherisEsp.g[name] = {snap = snap, sub = {}, on = false}
-	end
-	function AetherisEsp.finish(name)
-		local g = AetherisEsp.g[name]
-		local first = true
-		for _, c in ipairs(secEsp:GetChildren()) do
-			if c:IsA("GuiObject") and not g.snap[c] then
-				if first then
-					first = false -- o primeiro é o toggle principal
-				else
-					table.insert(g.sub, c)
-					c.Size = UDim2.new(1, -16, c.Size.Y.Scale, c.Size.Y.Offset)
-					for _, d in ipairs(c:GetDescendants()) do
-						if (d:IsA("TextLabel") or d:IsA("TextButton")) and d.TextSize >= 10 then d.TextSize = d.TextSize - 1 end
-					end
-					c.Visible = g.on
-				end
-			end
-		end
-	end
-	function AetherisEsp.show(name, state)
-		local g = AetherisEsp.g[name]
-		g.on = state
-		for _, r in ipairs(g.sub) do r.Visible = state end
-	end
-	local secEspPlayers = secEsp
-	AetherisEsp.begin("P", "ESP Players")
-	addToggle(secEspPlayers, "Ativar ESP Players", function(state) _G_EspMaster = state; AetherisEsp.show("P", state) end, false)
+	local secEspPlayers = createSection(visualPage, "ESP Players", sectionIcons.EspPlayers)
+	addToggle(secEspPlayers, "Ativar ESP Players", function(state) _G_EspMaster = state end, false)
 
 	addEspToggleWithColor(secEspPlayers, "Box ESP", _G_ColorBox, function(c) _G_ColorBox = c end, function(s) _G_EspBox = s end)
 	
@@ -5274,20 +5233,16 @@ function showMainPanel()
 	addEspToggleWithColor(secEspPlayers, "Level ESP", levelEsp.color, function(c) levelEsp.color = c end, function(s) levelEsp.enabled = s end)
 	addEspToggleWithColor(secEspPlayers, "Distance ESP", _G_ColorDistance, function(c) _G_ColorDistance = c end, function(s) _G_EspDistance = s end)
 	addEspToggleWithColor(secEspPlayers, "Head Dot ESP", _G_ColorHead, function(c) _G_ColorHead = c end, function(s) _G_EspHead = s end)
-	AetherisEsp.finish("P")
 
-	local secEspEnemies = secEsp
-	AetherisEsp.begin("E", "ESP Inimigos (NPC)")
-	addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state; AetherisEsp.show("E", state) end, false)
+	local secEspEnemies = createSection(visualPage, "ESP Inimigos (NPC)", sectionIcons.EspEnemies)
+	addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state end, false)
 	
 	addEspToggleWithColor(secEspEnemies, "ESP Chams", _G_ColorEnemyChams, function(c) _G_ColorEnemyChams = c end, function(s) _G_EnemyEspChams = s end)
 	addEspToggleWithColor(secEspEnemies, "ESP Nome", _G_ColorEnemyName, function(c) _G_ColorEnemyName = c end, function(s) _G_EnemyEspName = s end)
 	addEspToggleWithColor(secEspEnemies, "ESP Distância", _G_ColorEnemyDist, function(c) _G_ColorEnemyDist = c end, function(s) _G_EnemyEspDistance = s end)
 
-	AetherisEsp.finish("E")
-	local secEspChests = secEsp
-	AetherisEsp.begin("C", "ESP Baú")
-	addToggle(secEspChests, "Ativar ESP Baú", function(state) chestEspEnabled = state; AetherisEsp.show("C", state) end, false)
+	local secEspChests = createSection(visualPage, "ESP Baú", sectionIcons.World)
+	addToggle(secEspChests, "Ativar ESP Baú", function(state) chestEspEnabled = state end, false)
 	local chestColorBtns = {}
 	chestColorBtns.chams = addEspToggleWithColor(secEspChests, "Chams", chestEspChamsColor, function(c) chestEspChamsColor = c end, function(s) chestEspChams = s end)
 	chestColorBtns.name = addEspToggleWithColor(secEspChests, "Nome (Baú)", chestEspNameColor, function(c) chestEspNameColor = c end, function(s) chestEspName = s end)
@@ -5486,17 +5441,13 @@ function showMainPanel()
 			end
 		end)
 
-		AetherisEsp.finish("C")
-		local secEspBerries = secEsp
-		AetherisEsp.begin("B", "ESP Berries")
+		local secEspBerries = createSection(visualPage, "ESP Berries", sectionIcons.FruitAutomation)
 		addToggle(secEspBerries, "Ativar ESP Berries", function(state)
-			AetherisEsp.show("B", state)
 			berryEspEnabled = state
 			if not state then clearBerryESP() end
 		end, false)
 		addToggle(secEspBerries, "ESP Nome (Berry)", function(state) berryEspName = state end, false)
 		addEspToggleWithColor(secEspBerries, "ESP Distância", berryEspDistanceColor, function(c) berryEspDistanceColor = c end, function(s) berryEspDistance = s end)
-		AetherisEsp.finish("B")
 	end
 	local secWorld = createSection(pages["Mundo"], "Visual do Mapa", sectionIcons.World)
 	addToggle(secWorld, "Fullbright (Remover Escuridão)", function(state)
