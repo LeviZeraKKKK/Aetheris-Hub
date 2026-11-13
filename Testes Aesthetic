@@ -2454,7 +2454,7 @@ function showMainPanel()
 		{Name = "Combate", Image = "rbxassetid://16898613777", Offset = Vector2.new(967, 759)},
 		{Name = "Farming", Image = "rbxassetid://16898613777", Offset = Vector2.new(918, 306)},
 		{Name = "Fruta", Image = "rbxassetid://16898612629", Offset = Vector2.new(563, 869)},
-		{Name = "Misc", Image = "rbxassetid://7734021469", Offset = Vector2.new(0, 0), RectSize = Vector2.new(0, 0)},
+		{Name = "Misc", Image = "rbxassetid://7733970390", Offset = Vector2.new(0, 0), RectSize = Vector2.new(0, 0)},
 		{Name = "Config", Image = "rbxassetid://16898613777", Offset = Vector2.new(771, 257)}
 	}
 
