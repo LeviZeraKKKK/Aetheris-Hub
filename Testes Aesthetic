@@ -2370,6 +2370,7 @@ function showMainPanel()
 		page.CanvasSize = UDim2.new(0, 0, 0, 0)
 		page.ScrollBarThickness = 2
 		page.Visible = false
+		page:SetAttribute("AetherisPage", name) -- o Name da página não é definido (os presets dependem disso)
 		page.Parent = contentContainer
 
 		local layout = Instance.new("UIListLayout")
@@ -11649,7 +11650,7 @@ task.spawn(function()
     while hub:FindFirstChild("LoadingCard") do task.wait(0.1) end
     local page
     for _, descendant in ipairs(hub:GetDescendants()) do
-        if descendant:IsA("ScrollingFrame") and descendant.Name == "Fruta" then page = descendant break end
+        if descendant:IsA("ScrollingFrame") and descendant:GetAttribute("AetherisPage") == "Fruta" then page = descendant break end
     end
     if not page then warn("[FV] aba Fruta não encontrada"); return end
     local holder = Instance.new("Frame")
