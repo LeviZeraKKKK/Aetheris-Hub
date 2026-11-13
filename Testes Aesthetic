@@ -129,7 +129,10 @@ do
 		{"Diálogo", "Dialogue"}, {"Direto", "Direct"}, {"Nada encontrado.", "Nothing found."},
 		{"Nenhuma opção encontrada.", "No options found."}, {"opções", "options"}, {"opção", "option"},
 		{"Selecione", "Select"}, {"alvos", "targets"}, {"alvo", "target"}, {"jogadores", "players"},
-		{"Geral", "General"}, {"Automatização", "Automation"}, {"Personagem indisponível ou morto", "Character unavailable or dead"},
+		{"Geral", "General"}, {"ESP Inimigos (NPC)", "ESP Enemies (NPC)"}, {"Inimigos", "Enemies"}, {"inimigos", "enemies"},
+		{"inimigo", "enemy"}, {"Cor", "Color"}, {"Sem quest", "No quest"}, {"Tecla para ocultar", "Key to hide"},
+		{"Atalho de ocultar ativado", "Hide shortcut enabled"}, {"Aliados", "Allies"}, {"Jogadores", "Players"}, {"Jogador", "Player"},
+		{"tipo:", "type:"}, {"Automatização", "Automation"}, {"Personagem indisponível ou morto", "Character unavailable or dead"},
 		{"indisponível", "unavailable"}, {"não encontrado", "not found"}, {" de ", " of "},
 	}
 	table.sort(raw, function(a, b) return #a[1] > #b[1] end)
@@ -212,8 +215,12 @@ do
 		end
 	end
 
-	for _, d in ipairs(screenGui:GetDescendants()) do I.hook(d) end
-	screenGui.DescendantAdded:Connect(function(d) task.defer(I.hook, d) end)
+	-- observa uma ScreenGui inteira (o painel de estoque de frutas tem a sua própria)
+	function I.watch(gui)
+		for _, d in ipairs(gui:GetDescendants()) do I.hook(d) end
+		gui.DescendantAdded:Connect(function(d) task.defer(I.hook, d) end)
+	end
+	I.watch(screenGui)
 end
 
 -----------------------------------------------------------------
@@ -10975,6 +10982,7 @@ sg.ResetOnSpawn = false
 sg.DisplayOrder = 1000000
 sg.IgnoreGuiInset = true
 sg.Parent = PG
+if AetherisI18n and AetherisI18n.watch then AetherisI18n.watch(sg) end
 
 -- ============ PAINEL ============
 local isFruitViewerMobile = UIS.TouchEnabled and not UIS.KeyboardEnabled
@@ -11131,8 +11139,9 @@ local columns = {}
 local function makeColumn(adv, x, label, accent, interval)
     local col = Instance.new("Frame")
     col.Name = adv and "AdvancedStock" or "NormalStock"
-    col.Size = UDim2.new(0, colW, 0, colH)
-    col.Position = UDim2.new(0, x, 0, colTop)
+    -- colunas em escala: o painel ocupa a largura da aba Fruta
+    col.Size = UDim2.new(0.5, -colGap * 1.5, 0, colH)
+    col.Position = x > colGap and UDim2.new(0.5, colGap / 2, 0, colTop) or UDim2.new(0, colGap, 0, colTop)
     col.BackgroundColor3 = Color3.fromRGB(23, 26, 38)
     col.BorderSizePixel = 0
     col.ZIndex = 11
@@ -11631,90 +11640,31 @@ UIS.InputChanged:Connect(function(input)
     end
 end)
 
--- ============ BOTÃO NO HEADER ============
+-- ============ EMBUTIDO NA ABA FRUTA ============
+-- O painel de estoque agora fica fixo no topo da aba Fruta, sem seção em volta, sem botão de fechar
+-- e sem poder arrastar (o botão do header foi removido).
 task.spawn(function()
     local hub = PG:WaitForChild("AetherisHub", 30)
-    if not hub then return end
+    if not hub then warn("[FV] hub não encontrado"); return end
     while hub:FindFirstChild("LoadingCard") do task.wait(0.1) end
-    task.wait(0.2)
-
-    local mainPanel
+    local page
     for _, descendant in ipairs(hub:GetDescendants()) do
-        if descendant:IsA("TextButton") and descendant.Name == "CloseControlButton" then
-            mainPanel = descendant.Parent and descendant.Parent.Parent
-            break
-        end
+        if descendant:IsA("ScrollingFrame") and descendant.Name == "Fruta" then page = descendant break end
     end
-    if not mainPanel then warn("[FV] mainPanel não encontrado"); return end
-
-    local btn = Instance.new("ImageButton")
-    btn.Name = "FruitShopButton"
-    btn.Size = UDim2.new(0, 24, 0, 24)
-    btn.Position = UDim2.new(1, -104, 0, 8)
-    btn.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-    btn.BackgroundTransparency = 0.12
-    btn.AutoButtonColor = true
-    btn.Image = ""
-    btn.ImageTransparency = 1
-    btn.ZIndex = 60
-    btn.Parent = mainPanel
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-    local btnStroke = Instance.new("UIStroke", btn)
-    btnStroke.Thickness = 1.2
-    btnStroke.Color = currentThemeColor
-    btnStroke.Transparency = 0.28
-    table.insert(themeSections, btnStroke)
-
-    -- Ícone minimalista: fruta preenchida na cor do tema e olho levemente deslocado à direita.
-    local iconCanvas = Instance.new("Frame")
-    iconCanvas.Name = "EyeFruitIcon"
-    iconCanvas.Size = UDim2.new(0, 24, 0, 24)
-    iconCanvas.AnchorPoint = Vector2.new(0.5, 0.5)
-    iconCanvas.Position = UDim2.new(0.5, 0, 0.5, 0)
-    iconCanvas.BackgroundTransparency = 1
-    iconCanvas.BorderSizePixel = 0
-    iconCanvas.ZIndex = 61
-    iconCanvas.Parent = btn
-
-    local eyeIcon = Instance.new("ImageLabel")
-    eyeIcon.Name = "EyeMark"
-    eyeIcon.Size = UDim2.new(0, 9, 0, 7)
-    eyeIcon.Position = UDim2.new(0, 2, 0, 0)
-    eyeIcon.BackgroundTransparency = 1
-    eyeIcon.Image = "rbxassetid://16898613353"
-    eyeIcon.ImageRectOffset = Vector2.new(771, 563)
-    eyeIcon.ImageRectSize = Vector2.new(48, 48)
-    eyeIcon.ImageColor3 = currentThemeColor
-    eyeIcon.ScaleType = Enum.ScaleType.Fit
-    eyeIcon.ZIndex = 62
-    eyeIcon.Parent = iconCanvas
-    table.insert(themeImages, eyeIcon)
-
-    -- Ícone Lucide da fruta sem o preenchimento adicional; mantém a cor do tema.
-    local fruitIcon = Instance.new("ImageLabel")
-    fruitIcon.Name = "FruitMark"
-    fruitIcon.Size = UDim2.new(0, 14, 0, 14)
-    fruitIcon.AnchorPoint = Vector2.new(0.5, 0.5)
-    fruitIcon.Position = UDim2.new(0.5, 0, 0.5, 1)
-    fruitIcon.BackgroundTransparency = 1
-    fruitIcon.Image = "rbxassetid://16898612629"
-    fruitIcon.ImageRectOffset = Vector2.new(563, 869)
-    fruitIcon.ImageRectSize = Vector2.new(48, 48)
-    fruitIcon.ImageColor3 = currentThemeColor
-    fruitIcon.ScaleType = Enum.ScaleType.Fit
-    fruitIcon.ZIndex = 65
-    fruitIcon.Parent = iconCanvas
-    table.insert(themeImages, fruitIcon)
-
-    btn.MouseEnter:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = 0, Size = UDim2.new(0, 26, 0, 26)}):Play()
-        TweenService:Create(btnStroke, TweenInfo.new(0.15), {Transparency = 0.05, Thickness = 1.7}):Play()
-    end)
-    btn.MouseLeave:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = 0.12, Size = UDim2.new(0, 24, 0, 24)}):Play()
-        TweenService:Create(btnStroke, TweenInfo.new(0.15), {Transparency = 0.28, Thickness = 1.2}):Play()
-    end)
-    btn.MouseButton1Click:Connect(function()
-        if panel.Visible then FVX.close() else panel.Visible = true end
-    end)
+    if not page then warn("[FV] aba Fruta não encontrada"); return end
+    local holder = Instance.new("Frame")
+    holder.Name = "FruitStockHolder"
+    holder.Size = UDim2.new(1, -4, 0, PH)
+    holder.BackgroundTransparency = 1
+    holder.LayoutOrder = -1000
+    holder.Parent = page
+    closeB.Visible = false
+    dragH.Visible = false
+    dragging = false
+    panel.AnchorPoint = Vector2.new(0, 0)
+    panel.Position = UDim2.new(0, 0, 0, 0)
+    panel.Size = UDim2.new(1, 0, 1, 0)
+    panel.Parent = holder
+    panel.Visible = true
+    hub.Destroying:Connect(function() sg:Destroy() end)
 end)
