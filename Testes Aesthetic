@@ -5433,6 +5433,7 @@ function showMainPanel()
 	local visualPage = pages["Misc"]
 	-- Uma única section "ESP" com um grupo por tipo (Players, Inimigos, Baú, Berries).
 	-- Cada grupo guarda o título antigo (AetherisKeySection) para manter as chaves dos presets.
+	AetherisEspGroupState = setmetatable({}, {__mode = "k"})
 	AetherisEspSec = createSection(visualPage, "ESP", sectionIcons.EspPlayers)
 	AetherisEspGroup = function(title, legacyTitle)
 		local group = Instance.new("Frame")
@@ -5458,10 +5459,28 @@ function showMainPanel()
 		head.TextXAlignment = Enum.TextXAlignment.Left
 		head.LayoutOrder = -1
 		head.Parent = group
+		-- Opções ficam escondidas até o toggle principal (o primeiro item do grupo) ser ligado.
+		local st = {on = false, master = nil}
+		AetherisEspGroupState[group] = st
+		group.ChildAdded:Connect(function(c)
+			if not c:IsA("GuiObject") or c == head then return end
+			if not st.master then st.master = c return end
+			if not st.on then c.Visible = false end
+		end)
 		return group
 	end
+	AetherisEspGroupSet = function(group, on)
+		local st = AetherisEspGroupState[group]
+		if not st then return end
+		st.on = on == true
+		for _, c in ipairs(group:GetChildren()) do
+			if c:IsA("GuiObject") and c ~= st.master and c.Name ~= "EspGroupTitle" then
+				c.Visible = st.on
+			end
+		end
+	end
 	local secEspPlayers = AetherisEspGroup("Players", "ESP Players")
-	addToggle(secEspPlayers, "Ativar ESP Players", function(state) _G_EspMaster = state end, false)
+	addToggle(secEspPlayers, "Ativar ESP Players", function(state) _G_EspMaster = state AetherisEspGroupSet(secEspPlayers, state) end, false)
 
 	addEspToggleWithColor(secEspPlayers, "Box ESP", _G_ColorBox, function(c) _G_ColorBox = c end, function(s) _G_EspBox = s end)
 	
@@ -5490,14 +5509,14 @@ function showMainPanel()
 	addEspToggleWithColor(secEspPlayers, "Head Dot ESP", _G_ColorHead, function(c) _G_ColorHead = c end, function(s) _G_EspHead = s end)
 
 	local secEspEnemies = AetherisEspGroup("Inimigos (NPC)", "ESP Inimigos (NPC)")
-	addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state end, false)
+	addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state AetherisEspGroupSet(secEspEnemies, state) end, false)
 	
 	addEspToggleWithColor(secEspEnemies, "ESP Chams", _G_ColorEnemyChams, function(c) _G_ColorEnemyChams = c end, function(s) _G_EnemyEspChams = s end)
 	addEspToggleWithColor(secEspEnemies, "ESP Nome", _G_ColorEnemyName, function(c) _G_ColorEnemyName = c end, function(s) _G_EnemyEspName = s end)
 	addEspToggleWithColor(secEspEnemies, "ESP Distância", _G_ColorEnemyDist, function(c) _G_ColorEnemyDist = c end, function(s) _G_EnemyEspDistance = s end)
 
 	local secEspChests = AetherisEspGroup("Baú", "ESP Baú")
-	addToggle(secEspChests, "Ativar ESP Baú", function(state) chestEspEnabled = state end, false)
+	addToggle(secEspChests, "Ativar ESP Baú", function(state) chestEspEnabled = state AetherisEspGroupSet(secEspChests, state) end, false)
 	local chestColorBtns = {}
 	chestColorBtns.chams = addEspToggleWithColor(secEspChests, "Chams", chestEspChamsColor, function(c) chestEspChamsColor = c end, function(s) chestEspChams = s end)
 	chestColorBtns.name = addEspToggleWithColor(secEspChests, "Nome (Baú)", chestEspNameColor, function(c) chestEspNameColor = c end, function(s) chestEspName = s end)
@@ -5699,6 +5718,7 @@ function showMainPanel()
 		local secEspBerries = AetherisEspGroup("Berries", "ESP Berries")
 		addToggle(secEspBerries, "Ativar ESP Berries", function(state)
 			berryEspEnabled = state
+			AetherisEspGroupSet(secEspBerries, state)
 			if not state then clearBerryESP() end
 		end, false)
 		addToggle(secEspBerries, "ESP Nome (Berry)", function(state) berryEspName = state end, false)
