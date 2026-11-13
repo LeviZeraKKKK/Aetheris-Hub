@@ -36,14 +36,13 @@ AetherisI18n = {lang = "en", orig = setmetatable({}, {__mode = "k"}), origPh = s
 do
 	local I = AetherisI18n
 	local raw = {
-		{"Automático", "Auto"}, {"Combate", "Combat"}, {"Misc", "Misc"}, {"Fruta", "Fruit"}, {"Movimento", "Movement"},
+		{"Automático", "Auto"}, {"Combate", "Combat"}, {"Mundo", "World"}, {"Fruta", "Fruit"}, {"Movimento", "Movement"},
 		{"Habilidades Físicas", "Physical Abilities"}, {"Auto Habilidades", "Auto Abilities"},
 		{"Auto Habilidade da Raça (V3)", "Auto Race Ability (V3)"}, {"Auto Observação", "Auto Observation"},
 		{"Observação range [INF]", "Observation range [INF]"},
 		{"Viajar para Ilhas", "Travel to Islands"}, {"Viajar", "Travel"}, {"Selecione a Ilha", "Select the Island"},
 		{"Ilha selecionada", "Selected island"}, {"Ilha", "Island"}, {"Indo...", "Going..."},
 		{"Visual do Mapa", "Map Visuals"}, {"Remover Neblina ativo", "Remove Fog active"}, {"Remover Neblina", "Remove Fog"},
-		{"Mostrar configurações ESP", "Show ESP settings"},
 		{"Camadas de iluminação", "Lighting layers"}, {"Camadas de neblina marcadas", "Fog layers selected"},
 		{"camada marcada", "layer selected"}, {"camadas marcadas", "layers selected"},
 		{"Nenhuma camada encontrada.", "No layers found."},
@@ -319,11 +318,11 @@ function AetherisDropdown(parent, cfg)
 		box.ClipsDescendants = true
 		box.Parent = frame
 	end
-	box.BackgroundColor3 = split and Color3.fromRGB(20, 21, 31) or Color3.fromRGB(25, 26, 36)
-	box.BackgroundTransparency = split and 0 or 0.18
+	box.BackgroundColor3 = split and Color3.fromRGB(26, 27, 38) or Color3.fromRGB(34, 34, 46)
+	box.BackgroundTransparency = split and 0 or 0.35
 	box.BorderSizePixel = 0
 	local frameCorner = Instance.new("UICorner")
-	frameCorner.CornerRadius = UDim.new(0, split and 6 or 8)
+	frameCorner.CornerRadius = UDim.new(0, split and 4 or 7)
 	frameCorner.Parent = box
 	local frameStroke = Instance.new("UIStroke")
 	frameStroke.Color = GRAYSTROKE
@@ -687,12 +686,9 @@ local function registerConfigBinding(parent, name, getter, setter)
     end
 	local page = section and section.Parent or nil
 	local pageName = page and page.Name or "Page"
-	-- Seções movidas para Automático, Mundo e Misc: mantenha as chaves antigas dos presets.
+	-- Seções movidas para as abas Automático e Mundo: mantenha as chaves antigas dos presets.
 	if pageName == "Auto" then
 		pageName = "Player"
-	elseif pageName == "Misc" then
-		-- Viagem era Mundo (salva sob Player); as demais seções vieram de Visual/Mundo (Visual).
-		pageName = (sectionTitle == "Viajar para Ilhas") and "Player" or "Visual"
 	elseif pageName == "Mundo" then
 		pageName = (sectionTitle == "Visual do Mapa") and "Visual" or "Player"
 	end
@@ -2450,13 +2446,14 @@ function showMainPanel()
 		return page
 	end
 
-	-- Ícones Lucide: sprites em atlas usam recortes 48x48; assets individuais usam RectSize zero.
+	-- Imagens Lucide publicadas na biblioteca oficial do Roblox; recortes individuais de 48x48.
 	local tabs = {
-		{Name = "Info", Display = "Home", Image = "rbxassetid://7733960981", Offset = Vector2.new(0, 0), RectSize = Vector2.new(0, 0)},
+		{Name = "Info", Display = "Home", Image = "rbxassetid://16898613509", Offset = Vector2.new(612, 869)},
 		{Name = "Player", Image = "rbxassetid://16898613044", Offset = Vector2.new(0, 869)},
 		{Name = "Auto", Display = "Automático", Image = "rbxassetid://16898613869", Offset = Vector2.new(918, 906)},
 		{Name = "Combate", Image = "rbxassetid://16898613777", Offset = Vector2.new(967, 759)},
-		{Name = "Misc", Image = "rbxassetid://7743868936", Offset = Vector2.new(0, 0), RectSize = Vector2.new(0, 0)},
+		{Name = "Visual", Image = "rbxassetid://16898613353", Offset = Vector2.new(771, 563)},
+		{Name = "Mundo", Image = "rbxassetid://16898613869", Offset = Vector2.new(820, 612)},
 		{Name = "Farming", Image = "rbxassetid://16898613777", Offset = Vector2.new(918, 306)},
 		{Name = "Fruta", Image = "rbxassetid://16898612629", Offset = Vector2.new(563, 869)},
 		{Name = "Config", Image = "rbxassetid://16898613777", Offset = Vector2.new(771, 257)}
@@ -2521,8 +2518,8 @@ function showMainPanel()
 		tabIcon.BackgroundTransparency = 1
 		tabIcon.BorderSizePixel = 0
 		tabIcon.Image = tabInfo.Image
-		tabIcon.ImageRectOffset = tabInfo.Offset or Vector2.new(0, 0)
-		tabIcon.ImageRectSize = tabInfo.RectSize or Vector2.new(48, 48)
+		tabIcon.ImageRectOffset = tabInfo.Offset
+		tabIcon.ImageRectSize = Vector2.new(48, 48)
 		tabIcon.ImageColor3 = currentThemeColor
 		tabIcon.ScaleType = Enum.ScaleType.Fit
 		tabIcon.Parent = tabButton
@@ -2541,45 +2538,18 @@ function showMainPanel()
 
 		tabButton.MouseButton1Click:Connect(function()
 			if activePage == page then return end
-			local previousPage = activePage
-			activePage = page
-
-			-- A página anterior sobe e encolhe levemente; a nova entra de baixo
-			-- com zoom suave, mantendo a troca responsiva entre cliques rápidos.
-			local function getPageScale(targetPage)
-				local scale = targetPage:FindFirstChild("TabTransitionScale")
-				if not scale then
-					scale = Instance.new("UIScale")
-					scale.Name = "TabTransitionScale"
-					scale.Scale = 1
-					scale.Parent = targetPage
+			
+			for _, p in pairs(pages) do 
+				if p.Visible then
+					TweenService:Create(p, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {Position = UDim2.new(-1, 0, 0, 4)}):Play()
+					task.wait(0.15)
+					p.Visible = false
 				end
-				return scale
-			end
-			if previousPage then
-				local previousScale = getPageScale(previousPage)
-				TweenService:Create(previousPage, TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-					Position = UDim2.new(0, 4, 0, -8)
-				}):Play()
-				local exitTween = TweenService:Create(previousScale, TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0.97})
-				exitTween:Play()
-				exitTween.Completed:Connect(function()
-					if activePage ~= previousPage then
-						previousPage.Visible = false
-						previousPage.Position = UDim2.new(0, 4, 0, 4)
-						previousScale.Scale = 1
-					end
-				end)
 			end
 
-			local nextScale = getPageScale(page)
 			page.Visible = true
-			page.Position = UDim2.new(0, 4, 0, 14)
-			nextScale.Scale = 0.97
-			TweenService:Create(page, TweenInfo.new(0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-				Position = UDim2.new(0, 4, 0, 4)
-			}):Play()
-			TweenService:Create(nextScale, TweenInfo.new(0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+			page.Position = UDim2.new(1, 0, 0, 4)
+			TweenService:Create(page, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0, 4, 0, 4)}):Play()
 
 			for _, tData in ipairs(tabButtonsList) do
 				TweenService:Create(tData.Indicator, TweenInfo.new(0.15), {BackgroundTransparency = 1}):Play()
@@ -2588,6 +2558,8 @@ function showMainPanel()
 
 			TweenService:Create(indicator, TweenInfo.new(0.15), {BackgroundTransparency = 0.84}):Play()
 			TweenService:Create(tabNameLabel, TweenInfo.new(0.15), {TextColor3 = currentTextColor}):Play()
+
+			activePage = page
 		end)
 
 		if i == 1 then
@@ -5280,7 +5252,7 @@ function showMainPanel()
 		screenGui.Destroying:Connect(stopWalkWater)
 	end
 
-	local secTravel = createSection(pages["Misc"], "Viajar para Ilhas", sectionIcons.Travel)
+	local secTravel = createSection(pages["Mundo"], "Viajar para Ilhas", sectionIcons.Travel)
 
 	local function refreshIslands()
 		local oldName = selectedIsland and selectedIsland.Name
@@ -5430,31 +5402,10 @@ function showMainPanel()
 	end)
 
 	-----------------------------------------------------------------
-	-- ABA MISC (antigas Visual e Mundo)
+	-- ABA VISUAL
 	-----------------------------------------------------------------
-	local miscPage = pages["Misc"]
-	local espRoot = createSection(miscPage, "ESP", sectionIcons.EspPlayers)
-	local espGroupsHolder = Instance.new("Frame")
-	espGroupsHolder.Name = "ESPSettingsGroups"
-	espGroupsHolder.Size = UDim2.new(1, 0, 0, 0)
-	espGroupsHolder.BackgroundTransparency = 1
-	espGroupsHolder.ClipsDescendants = true
-	espGroupsHolder.Parent = espRoot
-	local espGroupsLayout = Instance.new("UIListLayout")
-	espGroupsLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	espGroupsLayout.Padding = UDim.new(0, 5)
-	espGroupsLayout.Parent = espGroupsHolder
-	espGroupsHolder.LayoutOrder = 2
-	local espGroupsExpanded = false
-	local function setEspGroupsExpanded(state)
-		espGroupsExpanded = state == true
-		local targetHeight = espGroupsExpanded and espGroupsLayout.AbsoluteContentSize.Y or 0
-		TweenService:Create(espGroupsHolder, TweenInfo.new(0.24, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-			Size = UDim2.new(1, 0, 0, targetHeight)
-		}):Play()
-	end
-	addToggle(espRoot, "Mostrar configurações ESP", setEspGroupsExpanded, false)
-	local secEspPlayers = createSection(miscPage, "ESP Players", sectionIcons.EspPlayers)
+	local visualPage = pages["Visual"]
+	local secEspPlayers = createSection(visualPage, "ESP Players", sectionIcons.EspPlayers)
 	addToggle(secEspPlayers, "Ativar ESP Players", function(state) _G_EspMaster = state end, false)
 
 	addEspToggleWithColor(secEspPlayers, "Box ESP", _G_ColorBox, function(c) _G_ColorBox = c end, function(s) _G_EspBox = s end)
@@ -5483,14 +5434,14 @@ function showMainPanel()
 	addEspToggleWithColor(secEspPlayers, "Distance ESP", _G_ColorDistance, function(c) _G_ColorDistance = c end, function(s) _G_EspDistance = s end)
 	addEspToggleWithColor(secEspPlayers, "Head Dot ESP", _G_ColorHead, function(c) _G_ColorHead = c end, function(s) _G_EspHead = s end)
 
-	local secEspEnemies = createSection(miscPage, "ESP Inimigos (NPC)", sectionIcons.EspEnemies)
+	local secEspEnemies = createSection(visualPage, "ESP Inimigos (NPC)", sectionIcons.EspEnemies)
 	addToggle(secEspEnemies, "Ativar ESP Inimigos (NPC)", function(state) _G_EnemyEspMaster = state end, false)
 	
 	addEspToggleWithColor(secEspEnemies, "ESP Chams", _G_ColorEnemyChams, function(c) _G_ColorEnemyChams = c end, function(s) _G_EnemyEspChams = s end)
 	addEspToggleWithColor(secEspEnemies, "ESP Nome", _G_ColorEnemyName, function(c) _G_ColorEnemyName = c end, function(s) _G_EnemyEspName = s end)
 	addEspToggleWithColor(secEspEnemies, "ESP Distância", _G_ColorEnemyDist, function(c) _G_ColorEnemyDist = c end, function(s) _G_EnemyEspDistance = s end)
 
-	local secEspChests = createSection(miscPage, "ESP Baú", sectionIcons.World)
+	local secEspChests = createSection(visualPage, "ESP Baú", sectionIcons.World)
 	addToggle(secEspChests, "Ativar ESP Baú", function(state) chestEspEnabled = state end, false)
 	local chestColorBtns = {}
 	chestColorBtns.chams = addEspToggleWithColor(secEspChests, "Chams", chestEspChamsColor, function(c) chestEspChamsColor = c end, function(s) chestEspChams = s end)
@@ -5526,11 +5477,10 @@ function showMainPanel()
 		end)
 		applyColorButtons()
 	end
-		-- ESP Berries: procura em Workspace.Map objetos "{...}" que tenham o filho "Berries"
-		-- e usa o primeiro atributo dele como nome da berry. As variáveis de implementação
-		-- ficam locais ao bloco; a referência à seção é mantida para o agrupamento abaixo.
-		local secEspBerries
-		do
+	-- ESP Berries: procura em Workspace.Map objetos "{...}" que tenham o filho "Berries"
+	-- e usa o primeiro atributo dele como nome da berry. Tudo fica dentro deste bloco
+	-- para não criar variáveis locais novas no nível superior do script.
+	do
 		local berryEspEnabled = false
 		local berryEspName = false
 		local berryEspDistance = false
@@ -5691,34 +5641,15 @@ function showMainPanel()
 			end
 		end)
 
-			secEspBerries = createSection(miscPage, "ESP Berries", sectionIcons.FruitAutomation)
-			addToggle(secEspBerries, "Ativar ESP Berries", function(state)
+		local secEspBerries = createSection(visualPage, "ESP Berries", sectionIcons.FruitAutomation)
+		addToggle(secEspBerries, "Ativar ESP Berries", function(state)
 			berryEspEnabled = state
 			if not state then clearBerryESP() end
 		end, false)
 		addToggle(secEspBerries, "ESP Nome (Berry)", function(state) berryEspName = state end, false)
 		addEspToggleWithColor(secEspBerries, "ESP Distância", berryEspDistanceColor, function(c) berryEspDistanceColor = c end, function(s) berryEspDistance = s end)
 	end
-	-- Os grupos continuam com suas lógicas e bindings originais, mas agora ficam
-	-- dentro do painel ESP e só ocupam espaço depois de expandir as configurações.
-	local espSections = {secEspPlayers.Parent, secEspEnemies.Parent, secEspChests.Parent, secEspBerries.Parent}
-	for index, groupSection in ipairs(espSections) do
-		groupSection.Parent = espGroupsHolder
-		groupSection.LayoutOrder = index
-		groupSection.Size = UDim2.new(1, -4, 0, groupSection.Size.Y.Offset)
-		local groupScale = Instance.new("UIScale")
-		groupScale.Name = "ESPCompactScale"
-		groupScale.Scale = 0.92
-		groupScale.Parent = groupSection
-	end
-	espGroupsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		if espGroupsExpanded then
-			TweenService:Create(espGroupsHolder, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-				Size = UDim2.new(1, 0, 0, espGroupsLayout.AbsoluteContentSize.Y)
-			}):Play()
-		end
-	end)
-	local secWorld = createSection(pages["Misc"], "Visual do Mapa", sectionIcons.World)
+	local secWorld = createSection(pages["Mundo"], "Visual do Mapa", sectionIcons.World)
 	addToggle(secWorld, "Fullbright (Remover Escuridão)", function(state)
 		_G_FullbrightEnabled = state
 		Lighting.Brightness = _G_FullbrightEnabled and 2 or 1
@@ -9432,16 +9363,6 @@ function showMainPanel()
 			data.distLabel.TextColor3 = c
 		end
 	end, function(s) fruitEnabledOptions.Distance = s end)
-	-- Fruit ESP também passa a fazer parte do painel ESP em Misc; os bindings foram
-	-- registrados enquanto a página ainda era Fruta para preservar presets antigos.
-	local fruitEspSection = secFrutaEsp.Parent
-	fruitEspSection.Parent = espGroupsHolder
-	fruitEspSection.LayoutOrder = 5
-	fruitEspSection.Size = UDim2.new(1, -4, 0, fruitEspSection.Size.Y.Offset)
-	local fruitEspScale = Instance.new("UIScale")
-	fruitEspScale.Name = "ESPCompactScale"
-	fruitEspScale.Scale = 0.92
-	fruitEspScale.Parent = fruitEspSection
 
 	local fruitAccumulator = 0
 	RunService.RenderStepped:Connect(function(dt)
