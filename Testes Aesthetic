@@ -10994,7 +10994,7 @@ panel.Name = "FruitStockPanel"
 panel.Size = UDim2.new(0, PW, 0, PH)
 panel.AnchorPoint = Vector2.new(0.5, 0.5)
 panel.Position = UDim2.new(0.5, 0, 0.5, 0)
-panel.BackgroundColor3 = Color3.fromRGB(13, 15, 24)
+panel.BackgroundColor3 = Color3.fromRGB(17, 23, 36)
 panel.BorderSizePixel = 0
 panel.Visible = false
 panel.ZIndex = 10
@@ -11002,10 +11002,9 @@ panel.Parent = sg
 Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 14)
 
 local panelStroke = Instance.new("UIStroke", panel)
-panelStroke.Color = currentThemeColor
-panelStroke.Thickness = 1.5
-panelStroke.Transparency = 0.18
-table.insert(themeSections, panelStroke)
+panelStroke.Color = Color3.fromRGB(60, 66, 88)
+panelStroke.Thickness = 1
+panelStroke.Transparency = 0.4
 
 local panelGradient = Instance.new("UIGradient")
 panelGradient.Color = ColorSequence.new({
@@ -11014,9 +11013,10 @@ panelGradient.Color = ColorSequence.new({
 })
 panelGradient.Rotation = 90
 panelGradient.Parent = panel
+panelGradient.Enabled = false
 
 local viewScale = Instance.new("UIScale")
-viewScale.Scale = 0.94
+viewScale.Scale = 1
 viewScale.Parent = panel
 -- Estado/animações do painel (uma só tabela para não gastar variáveis locais do script).
 local FVX = {closing = false, token = 0}
@@ -11029,6 +11029,7 @@ topAccent.BackgroundColor3 = currentThemeColor
 topAccent.BorderSizePixel = 0
 topAccent.ZIndex = 12
 topAccent.Parent = panel
+topAccent.Visible = false
 Instance.new("UICorner", topAccent).CornerRadius = UDim.new(1, 0)
 table.insert(themeSliders, topAccent)
 do
@@ -11038,6 +11039,7 @@ do
     glow.BackgroundColor3 = currentThemeColor
     glow.BorderSizePixel = 0
     glow.ZIndex = 10
+    glow.Visible = false
     glow.Parent = panel
     Instance.new("UICorner", glow).CornerRadius = UDim.new(0, 14)
     local glowGradient = Instance.new("UIGradient")
@@ -11152,6 +11154,7 @@ local function makeColumn(adv, x, label, accent, interval)
     colStroke.Color = accent
     colStroke.Thickness = 1
     colStroke.Transparency = 0.82
+    colStroke.Enabled = false
 
     local head = Instance.new("Frame")
     head.Size = UDim2.new(1, -12, 0, 42)
@@ -11161,11 +11164,12 @@ local function makeColumn(adv, x, label, accent, interval)
     head.ZIndex = 12
     head.Parent = col
     Instance.new("UICorner", head).CornerRadius = UDim.new(0, 7)
-    head.BackgroundColor3 = Color3.fromRGB(31, 35, 49):Lerp(accent, 0.1)
+    head.BackgroundColor3 = Color3.fromRGB(28, 32, 46)
     local headStroke = Instance.new("UIStroke", head)
     headStroke.Color = accent
     headStroke.Thickness = 1
     headStroke.Transparency = 0.8
+    headStroke.Enabled = false
 
     local progBack = Instance.new("Frame")
     progBack.Name = "CycleProgress"
@@ -11192,11 +11196,11 @@ local function makeColumn(adv, x, label, accent, interval)
     dot.ZIndex = 13
     dot.Parent = head
     Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
-    TweenService:Create(dot, TweenInfo.new(0.9, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {BackgroundTransparency = 0.65}):Play()
+    dot.Visible = false
 
     local lbl = Instance.new("TextLabel")
     lbl.Size = UDim2.new(1, -80, 0, 17)
-    lbl.Position = UDim2.new(0, 21, 0, 0)
+    lbl.Position = UDim2.new(0, 8, 0, 0)
     lbl.BackgroundTransparency = 1
     lbl.TextColor3 = accent
     lbl.Font = Enum.Font.GothamBold
@@ -11565,31 +11569,9 @@ end)
 panel:GetPropertyChangedSignal("Visible"):Connect(function()
     FVX.token = FVX.token + 1
     if panel.Visible then
-        local token = FVX.token
-        viewScale.Scale = 0.86
-        panelStroke.Thickness = 3.5
-        TweenService:Create(viewScale, TweenInfo.new(0.34, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
-        TweenService:Create(panelStroke, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Thickness = 1.5}):Play()
         updateRefreshCountdown(os.time())
         for _, col in pairs(columns) do FVX.playRows(col) end
         refreshAll()
-        -- brilho: faixa de luz no topo + borda pulsando enquanto o painel está aberto
-        task.spawn(function()
-            while token == FVX.token and panel.Visible and sg.Parent do
-                if FVX.shine then
-                    FVX.shine.Position = UDim2.new(-0.25, 0, 0, 0)
-                    TweenService:Create(FVX.shine, TweenInfo.new(1.4, Enum.EasingStyle.Sine), {Position = UDim2.new(1, 0, 0, 0)}):Play()
-                end
-                TweenService:Create(panelStroke, TweenInfo.new(0.9, Enum.EasingStyle.Sine), {Transparency = 0.55}):Play()
-                task.wait(0.9)
-                if token ~= FVX.token then break end
-                TweenService:Create(panelStroke, TweenInfo.new(0.9, Enum.EasingStyle.Sine), {Transparency = 0.15}):Play()
-                task.wait(0.9)
-            end
-            panelStroke.Transparency = 0.18
-        end)
-    else
-        viewScale.Scale = 0.94
     end
 end)
 
@@ -11655,17 +11637,27 @@ task.spawn(function()
     if not page then warn("[FV] aba Fruta não encontrada"); return end
     local holder = Instance.new("Frame")
     holder.Name = "FruitStockHolder"
-    holder.Size = UDim2.new(1, -4, 0, PH)
+    local FV_SCALE = 0.8 -- tamanho do painel na aba (menor = mais compacto)
+    holder.Size = UDim2.new(1, -4, 0, math.floor(PH * FV_SCALE))
     holder.BackgroundTransparency = 1
     holder.LayoutOrder = -1000
     holder.Parent = page
     closeB.Visible = false
     dragH.Visible = false
     dragging = false
+    -- o painel vive num quadro maior (1/escala) com UIScale, então tudo dentro encolhe junto
+    local scaler = Instance.new("Frame")
+    scaler.Name = "FruitStockScaler"
+    scaler.Size = UDim2.new(1 / FV_SCALE, 0, 0, PH)
+    scaler.BackgroundTransparency = 1
+    scaler.Parent = holder
+    local scalerScale = Instance.new("UIScale")
+    scalerScale.Scale = FV_SCALE
+    scalerScale.Parent = scaler
     panel.AnchorPoint = Vector2.new(0, 0)
     panel.Position = UDim2.new(0, 0, 0, 0)
     panel.Size = UDim2.new(1, 0, 1, 0)
-    panel.Parent = holder
+    panel.Parent = scaler
     panel.Visible = true
     hub.Destroying:Connect(function() sg:Destroy() end)
 end)
