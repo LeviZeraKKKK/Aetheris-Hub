@@ -319,11 +319,11 @@ function AetherisDropdown(parent, cfg)
 		box.ClipsDescendants = true
 		box.Parent = frame
 	end
-	box.BackgroundColor3 = split and Color3.fromRGB(26, 27, 38) or Color3.fromRGB(34, 34, 46)
-	box.BackgroundTransparency = split and 0 or 0.35
+	box.BackgroundColor3 = split and Color3.fromRGB(20, 21, 31) or Color3.fromRGB(25, 26, 36)
+	box.BackgroundTransparency = split and 0 or 0.18
 	box.BorderSizePixel = 0
 	local frameCorner = Instance.new("UICorner")
-	frameCorner.CornerRadius = UDim.new(0, split and 4 or 7)
+	frameCorner.CornerRadius = UDim.new(0, split and 6 or 8)
 	frameCorner.Parent = box
 	local frameStroke = Instance.new("UIStroke")
 	frameStroke.Color = GRAYSTROKE
@@ -2544,8 +2544,8 @@ function showMainPanel()
 			local previousPage = activePage
 			activePage = page
 
-			-- Troca com subida suave e leve zoom: cancela tweens anteriores para
-			-- continuar correta mesmo se o usuário clicar rapidamente em várias abas.
+			-- A página anterior sobe e encolhe levemente; a nova entra de baixo
+			-- com zoom suave, mantendo a troca responsiva entre cliques rápidos.
 			local function getPageScale(targetPage)
 				local scale = targetPage:FindFirstChild("TabTransitionScale")
 				if not scale then
@@ -2556,9 +2556,8 @@ function showMainPanel()
 				end
 				return scale
 			end
-			local previousScale, nextScale
 			if previousPage then
-				previousScale = getPageScale(previousPage)
+				local previousScale = getPageScale(previousPage)
 				TweenService:Create(previousPage, TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
 					Position = UDim2.new(0, 4, 0, -8)
 				}):Play()
@@ -2573,7 +2572,7 @@ function showMainPanel()
 				end)
 			end
 
-			nextScale = getPageScale(page)
+			local nextScale = getPageScale(page)
 			page.Visible = true
 			page.Position = UDim2.new(0, 4, 0, 14)
 			nextScale.Scale = 0.97
@@ -2589,7 +2588,6 @@ function showMainPanel()
 
 			TweenService:Create(indicator, TweenInfo.new(0.15), {BackgroundTransparency = 0.84}):Play()
 			TweenService:Create(tabNameLabel, TweenInfo.new(0.15), {TextColor3 = currentTextColor}):Play()
-
 		end)
 
 		if i == 1 then
