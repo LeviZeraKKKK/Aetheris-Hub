@@ -43,6 +43,7 @@ do
 		{"Viajar para Ilhas", "Travel to Islands"}, {"Viajar", "Travel"}, {"Selecione a Ilha", "Select the Island"},
 		{"Ilha selecionada", "Selected island"}, {"Ilha", "Island"}, {"Indo...", "Going..."},
 		{"Visual do Mapa", "Map Visuals"}, {"Remover Neblina ativo", "Remove Fog active"}, {"Remover Neblina", "Remove Fog"},
+		{"Mostrar configurações ESP", "Show ESP settings"},
 		{"Camadas de iluminação", "Lighting layers"}, {"Camadas de neblina marcadas", "Fog layers selected"},
 		{"camada marcada", "layer selected"}, {"camadas marcadas", "layers selected"},
 		{"Nenhuma camada encontrada.", "No layers found."},
@@ -5434,6 +5435,27 @@ function showMainPanel()
 	-- ABA MISC (antigas Visual e Mundo)
 	-----------------------------------------------------------------
 	local miscPage = pages["Misc"]
+	local espRoot = createSection(miscPage, "ESP", sectionIcons.EspPlayers)
+	local espGroupsHolder = Instance.new("Frame")
+	espGroupsHolder.Name = "ESPSettingsGroups"
+	espGroupsHolder.Size = UDim2.new(1, 0, 0, 0)
+	espGroupsHolder.BackgroundTransparency = 1
+	espGroupsHolder.ClipsDescendants = true
+	espGroupsHolder.Parent = espRoot
+	local espGroupsLayout = Instance.new("UIListLayout")
+	espGroupsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	espGroupsLayout.Padding = UDim.new(0, 5)
+	espGroupsLayout.Parent = espGroupsHolder
+	espGroupsHolder.LayoutOrder = 2
+	local espGroupsExpanded = false
+	local function setEspGroupsExpanded(state)
+		espGroupsExpanded = state == true
+		local targetHeight = espGroupsExpanded and espGroupsLayout.AbsoluteContentSize.Y or 0
+		TweenService:Create(espGroupsHolder, TweenInfo.new(0.24, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+			Size = UDim2.new(1, 0, 0, targetHeight)
+		}):Play()
+	end
+	addToggle(espRoot, "Mostrar configurações ESP", setEspGroupsExpanded, false)
 	local secEspPlayers = createSection(miscPage, "ESP Players", sectionIcons.EspPlayers)
 	addToggle(secEspPlayers, "Ativar ESP Players", function(state) _G_EspMaster = state end, false)
 
@@ -5678,6 +5700,25 @@ function showMainPanel()
 		addToggle(secEspBerries, "ESP Nome (Berry)", function(state) berryEspName = state end, false)
 		addEspToggleWithColor(secEspBerries, "ESP Distância", berryEspDistanceColor, function(c) berryEspDistanceColor = c end, function(s) berryEspDistance = s end)
 	end
+	-- Os grupos continuam com suas lógicas e bindings originais, mas agora ficam
+	-- dentro do painel ESP e só ocupam espaço depois de expandir as configurações.
+	local espSections = {secEspPlayers.Parent, secEspEnemies.Parent, secEspChests.Parent, secEspBerries.Parent}
+	for index, groupSection in ipairs(espSections) do
+		groupSection.Parent = espGroupsHolder
+		groupSection.LayoutOrder = index
+		groupSection.Size = UDim2.new(1, -4, 0, groupSection.Size.Y.Offset)
+		local groupScale = Instance.new("UIScale")
+		groupScale.Name = "ESPCompactScale"
+		groupScale.Scale = 0.92
+		groupScale.Parent = groupSection
+	end
+	espGroupsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+		if espGroupsExpanded then
+			TweenService:Create(espGroupsHolder, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				Size = UDim2.new(1, 0, 0, espGroupsLayout.AbsoluteContentSize.Y)
+			}):Play()
+		end
+	end)
 	local secWorld = createSection(pages["Misc"], "Visual do Mapa", sectionIcons.World)
 	addToggle(secWorld, "Fullbright (Remover Escuridão)", function(state)
 		_G_FullbrightEnabled = state
@@ -9392,6 +9433,16 @@ function showMainPanel()
 			data.distLabel.TextColor3 = c
 		end
 	end, function(s) fruitEnabledOptions.Distance = s end)
+	-- Fruit ESP também passa a fazer parte do painel ESP em Misc; os bindings foram
+	-- registrados enquanto a página ainda era Fruta para preservar presets antigos.
+	local fruitEspSection = secFrutaEsp.Parent
+	fruitEspSection.Parent = espGroupsHolder
+	fruitEspSection.LayoutOrder = 5
+	fruitEspSection.Size = UDim2.new(1, -4, 0, fruitEspSection.Size.Y.Offset)
+	local fruitEspScale = Instance.new("UIScale")
+	fruitEspScale.Name = "ESPCompactScale"
+	fruitEspScale.Scale = 0.92
+	fruitEspScale.Parent = fruitEspSection
 
 	local fruitAccumulator = 0
 	RunService.RenderStepped:Connect(function(dt)
