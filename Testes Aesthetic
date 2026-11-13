@@ -5528,10 +5528,11 @@ function showMainPanel()
 		end)
 		applyColorButtons()
 	end
-	-- ESP Berries: procura em Workspace.Map objetos "{...}" que tenham o filho "Berries"
-	-- e usa o primeiro atributo dele como nome da berry. Tudo fica dentro deste bloco
-	-- para não criar variáveis locais novas no nível superior do script.
-	do
+		-- ESP Berries: procura em Workspace.Map objetos "{...}" que tenham o filho "Berries"
+		-- e usa o primeiro atributo dele como nome da berry. As variáveis de implementação
+		-- ficam locais ao bloco; a referência à seção é mantida para o agrupamento abaixo.
+		local secEspBerries
+		do
 		local berryEspEnabled = false
 		local berryEspName = false
 		local berryEspDistance = false
@@ -5692,8 +5693,8 @@ function showMainPanel()
 			end
 		end)
 
-		local secEspBerries = createSection(miscPage, "ESP Berries", sectionIcons.FruitAutomation)
-		addToggle(secEspBerries, "Ativar ESP Berries", function(state)
+			secEspBerries = createSection(miscPage, "ESP Berries", sectionIcons.FruitAutomation)
+			addToggle(secEspBerries, "Ativar ESP Berries", function(state)
 			berryEspEnabled = state
 			if not state then clearBerryESP() end
 		end, false)
