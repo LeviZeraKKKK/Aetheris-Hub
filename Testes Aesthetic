@@ -1972,91 +1972,57 @@ function showMainPanel()
 	end
 
 	local resizeHandle = Instance.new("TextButton")
-	resizeHandle.Size = UDim2.new(0, 28, 0, 28)
+	resizeHandle.Size = UDim2.new(0, 32, 0, 32)
 	resizeHandle.Position = UDim2.new(1, -22, 1, -22)
 	resizeHandle.BackgroundTransparency = 1
 	resizeHandle.Text = ""
 	resizeHandle.ZIndex = 50
 	resizeHandle.Parent = mainPanel
-	-- Alça em relevo: placa com degradê + brilho/sombra e pontinhos "gravados" na diagonal.
+	-- Alça de redimensionar: arco fino por fora do canto arredondado do painel (acompanha a curva).
 	do
-		local plate = Instance.new("Frame")
-		plate.Name = "GripPlate"
-		plate.Size = UDim2.new(0, 20, 0, 20)
-		plate.Position = UDim2.new(0, 6, 0, 6)
-		-- sombra suave embaixo da placa (dá o relevo para o lado de fora da borda)
-		local drop = Instance.new("Frame")
-		drop.Name = "GripShadow"
-		drop.Size = UDim2.new(0, 20, 0, 20)
-		drop.Position = UDim2.new(0, 7, 0, 9)
-		drop.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-		drop.BackgroundTransparency = 0.65
-		drop.BorderSizePixel = 0
-		drop.Active = false
-		drop.ZIndex = 49
-		drop.Parent = resizeHandle
-		local dcr = Instance.new("UICorner")
-		dcr.CornerRadius = UDim.new(0, 8)
-		dcr.Parent = drop
-		plate.BackgroundColor3 = Color3.fromRGB(40, 43, 62)
-		plate.BackgroundTransparency = 0.05
-		plate.BorderSizePixel = 0
-		plate.Active = false
-		plate.ZIndex = 50
-		plate.Parent = resizeHandle
-		local pc = Instance.new("UICorner")
-		pc.CornerRadius = UDim.new(0, 8)
-		pc.Parent = plate
-		local pg = Instance.new("UIGradient")
-		pg.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(150, 150, 170))
-		pg.Rotation = 45
-		pg.Parent = plate
-		local ps = Instance.new("UIStroke")
-		ps.Color = Color3.fromRGB(95, 100, 135)
-		ps.Thickness = 1
-		ps.Transparency = 0.2
-		ps.Parent = plate
-		local hl = Instance.new("Frame")
-		hl.Name = "TopHighlight"
-		hl.Size = UDim2.new(1, -10, 0, 1)
-		hl.Position = UDim2.new(0, 5, 0, 1)
-		hl.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		hl.BackgroundTransparency = 0.7
-		hl.BorderSizePixel = 0
-		hl.ZIndex = 51
-		hl.Parent = plate
-		local spots = {{9, 9}, {9, 5}, {5, 9}, {9, 1}, {5, 5}, {1, 9}}
-		for _, p in ipairs(spots) do
-			local sh = Instance.new("Frame")
-			sh.Size = UDim2.new(0, 3, 0, 3)
-			sh.Position = UDim2.new(0, p[1], 0, p[2])
-			sh.BackgroundColor3 = Color3.fromRGB(8, 9, 15)
-			sh.BackgroundTransparency = 0.2
-			sh.BorderSizePixel = 0
-			sh.ZIndex = 51
-			sh.Parent = plate
-			local shc = Instance.new("UICorner")
-			shc.CornerRadius = UDim.new(1, 0)
-			shc.Parent = sh
-			local dot = Instance.new("Frame")
-			dot.Size = UDim2.new(0, 3, 0, 3)
-			dot.Position = UDim2.new(0, p[1] - 1, 0, p[2] - 1)
-			dot.BackgroundColor3 = currentThemeColor
-			dot.BorderSizePixel = 0
-			dot.ZIndex = 52
-			dot.Parent = plate
-			local dc = Instance.new("UICorner")
-			dc.CornerRadius = UDim.new(1, 0)
-			dc.Parent = dot
-			table.insert(resizeSymbolsLines, dot)
-		end
+		local R = 16 -- raio do arco (o canto do painel tem ~12)
+		local clip = Instance.new("Frame")
+		clip.Name = "GripArcClip"
+		clip.Size = UDim2.new(0, R + 5, 0, R + 5)
+		clip.Position = UDim2.new(0, 10, 0, 10)
+		clip.BackgroundTransparency = 1
+		clip.BorderSizePixel = 0
+		clip.ClipsDescendants = true
+		clip.Active = false
+		clip.ZIndex = 50
+		clip.Parent = resizeHandle
+		local arc = Instance.new("Frame")
+		arc.Name = "GripArc"
+		arc.Size = UDim2.new(0, R * 2, 0, R * 2)
+		arc.Position = UDim2.new(0, -R, 0, -R)
+		arc.BackgroundTransparency = 1
+		arc.BorderSizePixel = 0
+		arc.Active = false
+		arc.ZIndex = 50
+		arc.Parent = clip
+		local ac = Instance.new("UICorner")
+		ac.CornerRadius = UDim.new(1, 0)
+		ac.Parent = arc
+		local as = Instance.new("UIStroke")
+		as.Color = Color3.fromRGB(205, 208, 218)
+		as.Thickness = 3
+		as.Transparency = 0.15
+		as.Parent = arc
+		local ag = Instance.new("UIGradient")
+		ag.Rotation = 135
+		ag.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.22, 0.85),
+			NumberSequenceKeypoint.new(0.5, 0),
+			NumberSequenceKeypoint.new(0.78, 0.85),
+			NumberSequenceKeypoint.new(1, 1)
+		})
+		ag.Parent = as
 		resizeHandle.MouseEnter:Connect(function()
-			TweenService:Create(plate, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(58, 62, 88)}):Play()
-			TweenService:Create(ps, TweenInfo.new(0.12), {Color = currentThemeColor, Transparency = 0}):Play()
+			TweenService:Create(as, TweenInfo.new(0.12), {Color = currentThemeColor, Thickness = 4, Transparency = 0}):Play()
 		end)
 		resizeHandle.MouseLeave:Connect(function()
-			TweenService:Create(plate, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(40, 43, 62)}):Play()
-			TweenService:Create(ps, TweenInfo.new(0.15), {Color = Color3.fromRGB(95, 100, 135), Transparency = 0.2}):Play()
+			TweenService:Create(as, TweenInfo.new(0.15), {Color = Color3.fromRGB(205, 208, 218), Thickness = 3, Transparency = 0.15}):Play()
 		end)
 	end
 
@@ -2673,7 +2639,7 @@ function showMainPanel()
 			-- Painel estreito: tira a divisória e empilha tudo de cima a baixo (1 coluna).
 			local function refreshHolder()
 				local hL, hR = AetherisLayoutHeight(leftLayout), AetherisLayoutHeight(rightLayout)
-				if contentContainer.AbsoluteSize.X > 0 and contentContainer.AbsoluteSize.X < 430 then
+				if contentContainer.AbsoluteSize.X > 0 and contentContainer.AbsoluteSize.X < 310 then
 					divider.Visible = false
 					leftCol.Size = UDim2.new(1, 0, 0, hL)
 					leftCol.Position = UDim2.new(0, 0, 0, 0)
