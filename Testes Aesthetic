@@ -129,7 +129,7 @@ do
 		{"Diálogo", "Dialogue"}, {"Direto", "Direct"}, {"Nada encontrado.", "Nothing found."},
 		{"Nenhuma opção encontrada.", "No options found."}, {"opções", "options"}, {"opção", "option"},
 		{"Selecione", "Select"}, {"alvos", "targets"}, {"alvo", "target"}, {"jogadores", "players"},
-		{"Geral", "General"}, {"Tem certeza de que deseja excluir", "Are you sure you want to delete"}, {"Essa ação não pode ser desfeita.", "This action cannot be undone."}, {"direto", "direct"}, {"incompatível", "incompatible"}, {"Módulo", "Module"}, {"diálogo", "dialog"}, {"INIMIGOS (NPC)", "ENEMIES (NPC)"}, {"BAÚ", "CHEST"}, {"PLAYERS", "PLAYERS"}, {"BERRIES", "BERRIES"}, {"ESP Inimigos (NPC)", "ESP Enemies (NPC)"}, {"Inimigos", "Enemies"}, {"inimigos", "enemies"},
+		{"Geral", "General"}, {"Modificar Barco", "Ship Modifier"}, {"Ativar Modificador", "Enable Modifier"}, {"Velocidade máx", "Max Speed"}, {"Aceleração (por frame)", "Acceleration (per frame)"}, {"Altura sobre a água", "Height above water"}, {"Fechar o Aetheris Hub?", "Close Aetheris Hub?"}, {"O painel será fechado por completo. Para abrir de novo, execute o script outra vez.", "The panel will be closed completely. To open it again, run the script again."}, {"Fechar", "Close"}, {"Tem certeza de que deseja excluir", "Are you sure you want to delete"}, {"Essa ação não pode ser desfeita.", "This action cannot be undone."}, {"direto", "direct"}, {"incompatível", "incompatible"}, {"Módulo", "Module"}, {"diálogo", "dialog"}, {"INIMIGOS (NPC)", "ENEMIES (NPC)"}, {"BAÚ", "CHEST"}, {"PLAYERS", "PLAYERS"}, {"BERRIES", "BERRIES"}, {"ESP Inimigos (NPC)", "ESP Enemies (NPC)"}, {"Inimigos", "Enemies"}, {"inimigos", "enemies"},
 		{"inimigo", "enemy"}, {"Cor", "Color"}, {"Sem quest", "No quest"}, {"Tecla para ocultar", "Key to hide"},
 		{"Atalho de ocultar ativado", "Hide shortcut enabled"}, {"Aliados", "Allies"}, {"Jogadores", "Players"}, {"Jogador", "Player"},
 		{"tipo:", "type:"}, {"Automatização", "Automation"}, {"Personagem indisponível ou morto", "Character unavailable or dead"},
@@ -1526,6 +1526,227 @@ end
 -----------------------------------------------------------------
 -- PAINEL PRINCIPAL
 -----------------------------------------------------------------
+-----------------------------------------------------------------
+-- MODIFICAR BARCO (Ship Modifier) - aceleração acumulada no barco do jogador
+-- Lógica do Boat Mods v10; a interface fica na aba Misc (section "Modificar Barco").
+-----------------------------------------------------------------
+AetherisBoat = {enabled = false, accel = 20, maxSpeed = 260, height = 0}
+do
+	local Players = game:GetService("Players")
+	local RunService = game:GetService("RunService")
+	local UIS = game:GetService("UserInputService")
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+	local Workspace = game:GetService("Workspace")
+	local LP = Players.LocalPlayer
+	local B = AetherisBoat
+
+	local currentBoat, hull, seat, speedBV, hullBP, origHeightY
+	local baseYCaptured, sampleYSum, sampleYCount, sampleYStart = false, 0, 0, 0
+	local mySpeed, accelerating = 0, false
+	local hookedMovement, originalUpdate, heartbeatConn
+	local renderName = "AetherisBoatMods_Override"
+
+	local function getPlayerBoat()
+		local char = LP.Character
+		if not char then return nil end
+		local hum = char:FindFirstChildOfClass("Humanoid")
+		if not hum then return nil end
+		local s = hum.SeatPart
+		if not s or not s:IsA("VehicleSeat") then return nil end
+		local boats = Workspace:FindFirstChild("Boats")
+		if not boats then return nil end
+		for _, b in ipairs(boats:GetChildren()) do
+			if b:IsA("Model") and s:IsDescendantOf(b) then return b end
+		end
+		return nil
+	end
+
+	local function getHull(boat)
+		if boat.PrimaryPart then return boat.PrimaryPart end
+		local best, bestVol = nil, 0
+		for _, p in ipairs(boat:GetDescendants()) do
+			if p:IsA("BasePart") and not p:IsA("VehicleSeat") then
+				local vol = p.Size.X * p.Size.Y * p.Size.Z
+				if vol > bestVol then bestVol = vol; best = p end
+			end
+		end
+		return best
+	end
+
+	local function getMovement()
+		local global = ReplicatedStorage:FindFirstChild("Global")
+		if not global then return nil end
+		local ok, Global = pcall(require, global)
+		if not ok or not Global then return nil end
+		if type(Global.getLocalShipFromPlayer) ~= "function" then return nil end
+		local ok2, shipData = pcall(Global.getLocalShipFromPlayer, LP)
+		if not ok2 or not shipData then return nil end
+		return shipData.Movement
+	end
+
+	local function isAccelerating()
+		if UIS:IsKeyDown(Enum.KeyCode.W) or UIS:IsKeyDown(Enum.KeyCode.Up) then return true end
+		if seat then
+			local ok, tf = pcall(function() return seat.ThrottleFloat end)
+			if ok and tf and tf > 0.1 then return true end
+			local ok2, t = pcall(function() return seat.Throttle end)
+			if ok2 and t and t > 0 then return true end
+		end
+		local mv = getMovement()
+		if mv then
+			local ok, th = pcall(function() return mv.Throttle end)
+			if ok and th and th > 0.1 then return true end
+		end
+		return false
+	end
+
+	local function applySpeed()
+		if not hull or not hull.Parent then return end
+		local look = hull.CFrame.LookVector
+		local dir = Vector3.new(look.X, 0, look.Z)
+		if dir.Magnitude < 0.1 then return end
+		dir = dir.Unit
+		local curVel = hull.AssemblyLinearVelocity
+		hull.AssemblyLinearVelocity = Vector3.new(dir.X * mySpeed, curVel.Y, dir.Z * mySpeed)
+		if speedBV and speedBV.Parent then speedBV.Velocity = dir * mySpeed end
+		local mv = getMovement()
+		if mv then
+			pcall(function()
+				if typeof(mv.Velocity) == "Instance" then mv.Velocity.Value = mySpeed else mv.Velocity = mySpeed end
+			end)
+		end
+	end
+
+	local function installHook()
+		local mv = getMovement()
+		if not mv then return false end
+		if hookedMovement == mv then return true end
+		if hookedMovement and originalUpdate then
+			pcall(function() hookedMovement.update = originalUpdate end)
+		end
+		if type(mv.update) ~= "function" then return false end
+		originalUpdate = mv.update
+		hookedMovement = mv
+		mv.update = function(self, dt)
+			local okOrig, errOrig = pcall(originalUpdate, self, dt)
+			if not okOrig then warn("[Aetheris] Ship Modifier: original update error:", errOrig) end
+			if B.enabled and accelerating and hull and hull.Parent and mySpeed > 0 then applySpeed() end
+		end
+		return true
+	end
+
+	local function removeHook()
+		if hookedMovement and originalUpdate then
+			pcall(function() hookedMovement.update = originalUpdate end)
+		end
+		hookedMovement = nil
+		originalUpdate = nil
+	end
+
+	local function clearMods()
+		if speedBV then speedBV:Destroy(); speedBV = nil end
+		if hullBP then hullBP:Destroy(); hullBP = nil end
+		currentBoat, hull, seat, origHeightY = nil, nil, nil, nil
+		baseYCaptured, sampleYSum, sampleYCount = false, 0, 0
+		mySpeed, accelerating = 0, false
+	end
+
+	local function attachMods(boat)
+		hull = getHull(boat)
+		seat = boat:FindFirstChildWhichIsA("VehicleSeat")
+		if not hull then return false end
+		if speedBV then speedBV:Destroy() end
+		speedBV = Instance.new("BodyVelocity")
+		speedBV.Name = "BoatModSpeed"
+		speedBV.MaxForce = Vector3.new(1e10, 0, 1e10)
+		speedBV.P = 1e6
+		speedBV.Velocity = Vector3.zero
+		speedBV.Parent = hull
+		if hullBP then hullBP:Destroy() end
+		hullBP = Instance.new("BodyPosition")
+		hullBP.Name = "BoatModHeight"
+		hullBP.MaxForce = Vector3.new(0, 1e9, 0)
+		hullBP.P = 1e6
+		hullBP.D = 1e5
+		hullBP.Position = hull.Position
+		hullBP.Parent = hull
+		baseYCaptured, sampleYSum, sampleYCount, sampleYStart = false, 0, 0, tick()
+		mySpeed, accelerating = 0, false
+		currentBoat = boat
+		installHook()
+		return true
+	end
+
+	local function renderLoop()
+		if not B.enabled or not currentBoat or not hull or not hull.Parent then return end
+		accelerating = isAccelerating()
+		if accelerating then
+			mySpeed = math.min(mySpeed + B.accel, B.maxSpeed)
+			applySpeed()
+		else
+			mySpeed = math.max(mySpeed - 40, 0)
+			if mySpeed > 0 then applySpeed() end
+		end
+	end
+
+	local function heartbeatLoop()
+		if not B.enabled then return end
+		local boat = getPlayerBoat()
+		if not boat then
+			if currentBoat then clearMods() end
+			return
+		end
+		if boat ~= currentBoat then
+			clearMods()
+			attachMods(boat)
+			return
+		end
+		if not hull or not hull.Parent then clearMods() return end
+		if not baseYCaptured then
+			sampleYSum = sampleYSum + hull.Position.Y
+			sampleYCount = sampleYCount + 1
+			if tick() - sampleYStart > 1 then
+				origHeightY = sampleYSum / math.max(sampleYCount, 1)
+				baseYCaptured = true
+			end
+		end
+		if baseYCaptured and B.height ~= 0 then
+			local targetY = origHeightY + B.height
+			local cf = hull.CFrame
+			local newY = cf.Position.Y + (targetY - cf.Position.Y) * 0.5
+			hull.CFrame = CFrame.new(Vector3.new(cf.Position.X, newY, cf.Position.Z)) * (cf - cf.Position)
+			if hullBP and hullBP.Parent then hullBP.Position = Vector3.new(hull.Position.X, targetY, hull.Position.Z) end
+		elseif hullBP and B.height == 0 and baseYCaptured then
+			hullBP.Position = Vector3.new(hull.Position.X, origHeightY, hull.Position.Z)
+		end
+	end
+
+	local function stopLoop()
+		pcall(function() RunService:UnbindFromRenderStep(renderName) end)
+		if heartbeatConn then heartbeatConn:Disconnect(); heartbeatConn = nil end
+		removeHook()
+		clearMods()
+	end
+
+	function B.setEnabled(state)
+		B.enabled = state == true
+		if B.enabled then
+			if heartbeatConn then return end
+			pcall(function() RunService:UnbindFromRenderStep(renderName) end)
+			RunService:BindToRenderStep(renderName, Enum.RenderPriority.Camera.Value + 10, function(dt)
+				local ok, err = pcall(renderLoop, dt)
+				if not ok then warn("[Aetheris] Ship Modifier render:", err) end
+			end)
+			heartbeatConn = RunService.Heartbeat:Connect(function()
+				local ok, err = pcall(heartbeatLoop)
+				if not ok then warn("[Aetheris] Ship Modifier heartbeat:", err) end
+			end)
+		else
+			stopLoop()
+		end
+	end
+end
+
 function showMainPanel()
 	local mainPanel = Instance.new("Frame")
 	mainPanel.Size = UDim2.new(0, 0, 0, 0)
@@ -2529,7 +2750,95 @@ function showMainPanel()
 
 		-- Ordem invertida: minimizar à esquerda e fechar à direita.
 		createControlButton("Minimize", toggleMinimizePanel, "—", Color3.fromRGB(58, 61, 80), 1)
-		createControlButton("Close", function() screenGui:Destroy() end, "×", Color3.fromRGB(190, 60, 72), 2)
+		createControlButton("Close", function() AetherisConfirmClose() end, "×", Color3.fromRGB(190, 60, 72), 2)
+
+	-- Confirmação ao fechar no X (texto passa pelo tradutor: English / Português).
+	AetherisConfirmClose = function()
+		if screenGui:FindFirstChild("CloseConfirm") then return end
+		local overlay = Instance.new("TextButton")
+		overlay.Name = "CloseConfirm"
+		overlay.Size = UDim2.new(1, 0, 1, 0)
+		overlay.BackgroundColor3 = Color3.new(0, 0, 0)
+		overlay.BackgroundTransparency = 1
+		overlay.BorderSizePixel = 0
+		overlay.AutoButtonColor = false
+		overlay.Text = ""
+		overlay.Active = true
+		overlay.ZIndex = 500
+		overlay.Parent = screenGui
+		TweenService:Create(overlay, TweenInfo.new(0.18), {BackgroundTransparency = 0.45}):Play()
+
+		local card = Instance.new("Frame")
+		card.AnchorPoint = Vector2.new(0.5, 0.5)
+		card.Position = UDim2.new(0.5, 0, 0.5, 0)
+		card.Size = UDim2.new(0, 300, 0, 138)
+		card.BackgroundColor3 = Color3.fromRGB(21, 23, 32)
+		card.BorderSizePixel = 0
+		card.ZIndex = 501
+		card.Parent = overlay
+		local cc = Instance.new("UICorner")
+		cc.CornerRadius = UDim.new(0, 12)
+		cc.Parent = card
+		local cs = Instance.new("UIStroke")
+		cs.Color = Color3.new(1, 1, 1)
+		cs.Thickness = 1.5
+		cs.Parent = card
+		AetherisBlueGradient(cs, 45)
+		local sc = Instance.new("UIScale")
+		sc.Scale = 0.88
+		sc.Parent = card
+		TweenService:Create(sc, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+
+		local function lbl(text, y, h, size, color, bold)
+			local l = Instance.new("TextLabel")
+			l.Size = UDim2.new(1, -28, 0, h)
+			l.Position = UDim2.new(0, 14, 0, y)
+			l.BackgroundTransparency = 1
+			l.Font = bold and Enum.Font.GothamBold or Enum.Font.Gotham
+			l.Text = text
+			l.TextSize = size
+			l.TextColor3 = color
+			l.TextWrapped = true
+			l.TextXAlignment = Enum.TextXAlignment.Center
+			l.TextYAlignment = Enum.TextYAlignment.Top
+			l.ZIndex = 502
+			l.Parent = card
+			return l
+		end
+		lbl("Fechar o Aetheris Hub?", 14, 20, 14, Color3.fromRGB(240, 240, 250), true)
+		lbl("O painel será fechado por completo. Para abrir de novo, execute o script outra vez.", 40, 44, 11, Color3.fromRGB(170, 172, 190), false)
+
+		local function mkBtn(text, x, color)
+			local b = Instance.new("TextButton")
+			b.Size = UDim2.new(0.5, -20, 0, 30)
+			b.Position = UDim2.new(x, x == 0 and 14 or 6, 1, -44)
+			b.BackgroundColor3 = color
+			b.BorderSizePixel = 0
+			b.AutoButtonColor = false
+			b.Font = Enum.Font.GothamBold
+			b.Text = text
+			b.TextSize = 12
+			b.TextColor3 = Color3.new(1, 1, 1)
+			b.ZIndex = 502
+			b.Parent = card
+			local bc = Instance.new("UICorner")
+			bc.CornerRadius = UDim.new(0, 8)
+			bc.Parent = b
+			b.MouseEnter:Connect(function() TweenService:Create(b, TweenInfo.new(0.1), {BackgroundTransparency = 0.2}):Play() end)
+			b.MouseLeave:Connect(function() TweenService:Create(b, TweenInfo.new(0.1), {BackgroundTransparency = 0}):Play() end)
+			return b
+		end
+		local cancel = mkBtn("Cancelar", 0, Color3.fromRGB(44, 47, 64))
+		local yes = mkBtn("Fechar", 0.5, Color3.fromRGB(190, 60, 72))
+		cancel.MouseButton1Click:Connect(function()
+			TweenService:Create(overlay, TweenInfo.new(0.12), {BackgroundTransparency = 1}):Play()
+			task.delay(0.12, function() overlay:Destroy() end)
+		end)
+		yes.MouseButton1Click:Connect(function()
+			pcall(function() AetherisBoat.setEnabled(false) end)
+			screenGui:Destroy()
+		end)
+	end
 
 	floatingBtn.MouseButton1Click:Connect(toggleMinimizePanel)
 	AetherisMinimize.onClick = toggleMinimizePanel
@@ -2871,7 +3180,11 @@ function showMainPanel()
 			NumberSequenceKeypoint.new(1, 1)
 		})
 		dividerGradient.Parent = divider
-		table.insert(themeSliders, divider)
+		divider.BackgroundColor3 = Color3.new(1, 1, 1)
+		dividerGradient.Color = ColorSequence.new(currentThemeColor, accentBlue)
+		table.insert(AetherisThemeHooks, function(c)
+			if dividerGradient.Parent then dividerGradient.Color = ColorSequence.new(c, accentBlue) end
+		end)
 
 		-- Fundo da barra lateral (cartão com borda sutil).
 		local sideBack = Instance.new("Frame")
@@ -3305,11 +3618,11 @@ function showMainPanel()
 		sCorner.Parent = section
 
 		local sStroke = Instance.new("UIStroke")
-		sStroke.Color = currentThemeColor
-		sStroke.Transparency = 0.6
+		sStroke.Color = Color3.new(1, 1, 1)
+		sStroke.Transparency = 0.55
 		sStroke.Thickness = 1
 		sStroke.Parent = section
-		table.insert(themeSections, sStroke)
+		AetherisBlueGradient(sStroke, 45)
 
 		-- Faixa do cabeçalho: cor diferente do corpo da seção (onde ficam as funções).
 		local function headerTint(color) return color:Lerp(Color3.fromRGB(10, 13, 22), 0.78) end
@@ -4313,10 +4626,10 @@ function showMainPanel()
 
 		local fill = Instance.new("Frame")
 		fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
-		fill.BackgroundColor3 = currentThemeColor
+		fill.BackgroundColor3 = Color3.new(1, 1, 1)
 		fill.BorderSizePixel = 0
 		fill.Parent = bar
-		table.insert(themeSliders, fill)
+		AetherisBlueGradient(fill, 0)
 
 		local fCorner = Instance.new("UICorner")
 		fCorner.CornerRadius = UDim.new(1, 0)
@@ -5657,6 +5970,13 @@ function showMainPanel()
 	addSlider(secTravel, "Velocidade de Viagem", 20, 300, 80, function(val)
 		travelSpeed = val
 	end)
+
+	-- Modificar Barco (Ship Modifier)
+	local secBoat = createSection(pages["Misc"], "Modificar Barco", sectionIcons.Travel)
+	addToggle(secBoat, "Ativar Modificador", function(state) AetherisBoat.setEnabled(state) end, false)
+	addSlider(secBoat, "Velocidade máx", 100, 300, 260, function(val) AetherisBoat.maxSpeed = val end, 0, " studs/s")
+	addSlider(secBoat, "Aceleração (por frame)", 5, 100, 20, function(val) AetherisBoat.accel = val end)
+	addSlider(secBoat, "Altura sobre a água", 0, 150, 0, function(val) AetherisBoat.height = val end, 0, " studs")
 
 	-----------------------------------------------------------------
 	-- ABA VISUAL
