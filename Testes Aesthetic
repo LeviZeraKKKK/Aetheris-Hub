@@ -129,7 +129,7 @@ do
 		{"Diálogo", "Dialogue"}, {"Direto", "Direct"}, {"Nada encontrado.", "Nothing found."},
 		{"Nenhuma opção encontrada.", "No options found."}, {"opções", "options"}, {"opção", "option"},
 		{"Selecione", "Select"}, {"alvos", "targets"}, {"alvo", "target"}, {"jogadores", "players"},
-		{"Geral", "General"}, {"INIMIGOS (NPC)", "ENEMIES (NPC)"}, {"BAÚ", "CHEST"}, {"PLAYERS", "PLAYERS"}, {"BERRIES", "BERRIES"}, {"ESP Inimigos (NPC)", "ESP Enemies (NPC)"}, {"Inimigos", "Enemies"}, {"inimigos", "enemies"},
+		{"Geral", "General"}, {"Tem certeza de que deseja excluir", "Are you sure you want to delete"}, {"Essa ação não pode ser desfeita.", "This action cannot be undone."}, {"direto", "direct"}, {"incompatível", "incompatible"}, {"Módulo", "Module"}, {"diálogo", "dialog"}, {"INIMIGOS (NPC)", "ENEMIES (NPC)"}, {"BAÚ", "CHEST"}, {"PLAYERS", "PLAYERS"}, {"BERRIES", "BERRIES"}, {"ESP Inimigos (NPC)", "ESP Enemies (NPC)"}, {"Inimigos", "Enemies"}, {"inimigos", "enemies"},
 		{"inimigo", "enemy"}, {"Cor", "Color"}, {"Sem quest", "No quest"}, {"Tecla para ocultar", "Key to hide"},
 		{"Atalho de ocultar ativado", "Hide shortcut enabled"}, {"Aliados", "Allies"}, {"Jogadores", "Players"}, {"Jogador", "Player"},
 		{"tipo:", "type:"}, {"Automatização", "Automation"}, {"Personagem indisponível ou morto", "Character unavailable or dead"},
@@ -228,6 +228,18 @@ end
 -----------------------------------------------------------------
 local currentThemeColor = Color3.fromRGB(138, 43, 226)
 local accentBlue = Color3.fromRGB(56, 132, 255)
+-- Degradê roxo -> azul que acompanha o tema (para bordas/detalhes).
+function AetherisBlueGradient(inst, rotation, transparency)
+	local g = Instance.new("UIGradient")
+	g.Color = ColorSequence.new(currentThemeColor, accentBlue)
+	g.Rotation = rotation or 0
+	if transparency then g.Transparency = transparency end
+	g.Parent = inst
+	table.insert(AetherisThemeHooks, function(c)
+		if g.Parent then g.Color = ColorSequence.new(c, accentBlue) end
+	end)
+	return g
+end
 local currentTextColor = Color3.fromRGB(255, 255, 255)
 local currentGlobalFont = Enum.Font.GothamMedium
 local panelTransparencyValue = 0.2
@@ -1569,13 +1581,13 @@ function showMainPanel()
 	local dragBar = Instance.new("TextButton")
 	dragBar.Size = UDim2.new(0, 80, 0, 4)
 	dragBar.Position = UDim2.new(0.5, -40, 1, 5)
-	dragBar.BackgroundColor3 = currentThemeColor
+	dragBar.BackgroundColor3 = Color3.new(1, 1, 1)
 	dragBar.BackgroundTransparency = 0.2
 	dragBar.BorderSizePixel = 0
 	dragBar.Text = ""
 	dragBar.ZIndex = 50
 	dragBar.Parent = mainPanel
-	table.insert(themeSliders, dragBar)
+	AetherisBlueGradient(dragBar, 0)
 
 	local dbCorner = Instance.new("UICorner")
 	dbCorner.CornerRadius = UDim.new(1, 0)
@@ -1871,10 +1883,11 @@ function showMainPanel()
 			gcorner.CornerRadius = UDim.new(0, 12)
 			gcorner.Parent = ghost
 			local gstroke = Instance.new("UIStroke")
-			gstroke.Color = currentThemeColor
+			gstroke.Color = Color3.new(1, 1, 1)
 			gstroke.Thickness = 2
 			gstroke.Transparency = 0.1
 			gstroke.Parent = ghost
+			AetherisBlueGradient(gstroke, 45)
 			-- linhas curtas no meio de cada borda + pontinhos nos cantos
 			local ticks = {
 				{UDim2.new(0.5, 0, 0, 0), UDim2.fromOffset(36, 4)},
@@ -2004,12 +2017,11 @@ function showMainPanel()
 		ac.CornerRadius = UDim.new(1, 0)
 		ac.Parent = arc
 		local as = Instance.new("UIStroke")
-		as.Color = Color3.fromRGB(205, 208, 218)
+		as.Color = Color3.new(1, 1, 1)
 		as.Thickness = 3
-		as.Transparency = 0.15
+		as.Transparency = 0.2
 		as.Parent = arc
-		local ag = Instance.new("UIGradient")
-		ag.Rotation = 135
+		local ag = AetherisBlueGradient(as, 135)
 		ag.Transparency = NumberSequence.new({
 			NumberSequenceKeypoint.new(0, 1),
 			NumberSequenceKeypoint.new(0.22, 0.85),
@@ -2017,12 +2029,11 @@ function showMainPanel()
 			NumberSequenceKeypoint.new(0.78, 0.85),
 			NumberSequenceKeypoint.new(1, 1)
 		})
-		ag.Parent = as
 		resizeHandle.MouseEnter:Connect(function()
-			TweenService:Create(as, TweenInfo.new(0.12), {Color = currentThemeColor, Thickness = 4, Transparency = 0}):Play()
+			TweenService:Create(as, TweenInfo.new(0.12), {Thickness = 4, Transparency = 0}):Play()
 		end)
 		resizeHandle.MouseLeave:Connect(function()
-			TweenService:Create(as, TweenInfo.new(0.15), {Color = Color3.fromRGB(205, 208, 218), Thickness = 3, Transparency = 0.15}):Play()
+			TweenService:Create(as, TweenInfo.new(0.15), {Thickness = 3, Transparency = 0.2}):Play()
 		end)
 	end
 
@@ -2154,11 +2165,11 @@ function showMainPanel()
 		barCorner.CornerRadius = UDim.new(1, 0)
 		barCorner.Parent = bar
 		local barStroke = Instance.new("UIStroke")
-		barStroke.Color = currentThemeColor
+		barStroke.Color = Color3.new(1, 1, 1)
 		barStroke.Thickness = 1.4
 		barStroke.Transparency = 0.35
 		barStroke.Parent = bar
-		table.insert(themeSections, barStroke)
+		AetherisBlueGradient(barStroke, 0)
 
 		local avatar = Instance.new("Frame")
 		avatar.Size = UDim2.fromOffset(26, 26)
@@ -2201,7 +2212,7 @@ function showMainPanel()
 			mb.Size = UDim2.fromOffset(3, 6 + i * 2)
 			mb.AnchorPoint = Vector2.new(0, 0.5)
 			mb.Position = UDim2.new(0, 126 + (i - 1) * 5, 0.5, 0)
-			mb.BackgroundColor3 = currentThemeColor
+			mb.BackgroundColor3 = currentThemeColor:Lerp(accentBlue, (i - 1) / 3)
 			mb.BackgroundTransparency = 0.15
 			mb.BorderSizePixel = 0
 			mb.ZIndex = 21
@@ -2213,7 +2224,7 @@ function showMainPanel()
 		end
 		table.insert(AetherisThemeHooks, function(color)
 			if not bar.Parent then return end
-			for _, mb in ipairs(meterBars) do mb.BackgroundColor3 = color end
+			for mi, mb in ipairs(meterBars) do mb.BackgroundColor3 = color:Lerp(accentBlue, (mi - 1) / 3) end
 		end)
 		local fpsLabel = Instance.new("TextLabel")
 		fpsLabel.Size = UDim2.new(0, 36, 1, 0)
@@ -2284,8 +2295,9 @@ function showMainPanel()
 		expandBtn.Name = "ExpandButton"
 		expandBtn.Size = UDim2.fromOffset(24, 24)
 		expandBtn.Position = UDim2.new(1, -32, 0.5, -12)
-		expandBtn.BackgroundColor3 = currentThemeColor
+		expandBtn.BackgroundColor3 = Color3.new(1, 1, 1)
 		expandBtn.BackgroundTransparency = 0.75
+		AetherisBlueGradient(expandBtn, 45)
 		expandBtn.BorderSizePixel = 0
 		expandBtn.ZIndex = 21
 		expandBtn.Parent = bar
@@ -2293,8 +2305,9 @@ function showMainPanel()
 		expandCorner.CornerRadius = UDim.new(1, 0)
 		expandCorner.Parent = expandBtn
 		local expandStroke = Instance.new("UIStroke")
-		expandStroke.Color = currentThemeColor
+		expandStroke.Color = Color3.new(1, 1, 1)
 		expandStroke.Transparency = 0.5
+		AetherisBlueGradient(expandStroke, 45)
 		expandStroke.Thickness = 1
 		expandStroke.Parent = expandBtn
 		local chevBars = {}
@@ -2327,8 +2340,6 @@ function showMainPanel()
 		shine.Parent = bar
 		table.insert(AetherisThemeHooks, function(color)
 			if not bar.Parent then return end
-			expandBtn.BackgroundColor3 = color
-			expandStroke.Color = color
 		end)
 
 		local hov, hovTarget, pressed, clock = 0, 0, false, 0
