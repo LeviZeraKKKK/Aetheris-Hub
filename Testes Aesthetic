@@ -1852,10 +1852,65 @@ function showMainPanel()
 			dragStart = input.Position
 			startPos = mainPanel.Position
 			interactionBlocker.Visible = true
+			-- Prévia: só um contorno com marcações nas bordas acompanha o mouse; o painel só muda de lugar ao soltar.
+			AetherisGhost = AetherisGhost or {}
+			local G = AetherisGhost
+			if G.frame then G.frame:Destroy() end
+			local ghost = Instance.new("Frame")
+			ghost.Name = "PanelDragPreview"
+			ghost.AnchorPoint = mainPanel.AnchorPoint
+			ghost.Position = startPos
+			ghost.Size = UDim2.fromOffset(mainPanel.AbsoluteSize.X, mainPanel.AbsoluteSize.Y)
+			ghost.BackgroundColor3 = currentThemeColor
+			ghost.BackgroundTransparency = 0.94
+			ghost.BorderSizePixel = 0
+			ghost.Active = false
+			ghost.ZIndex = 100
+			ghost.Parent = screenGui
+			local gcorner = Instance.new("UICorner")
+			gcorner.CornerRadius = UDim.new(0, 12)
+			gcorner.Parent = ghost
+			local gstroke = Instance.new("UIStroke")
+			gstroke.Color = currentThemeColor
+			gstroke.Thickness = 2
+			gstroke.Transparency = 0.1
+			gstroke.Parent = ghost
+			-- linhas curtas no meio de cada borda + pontinhos nos cantos
+			local ticks = {
+				{UDim2.new(0.5, 0, 0, 0), UDim2.fromOffset(36, 4)},
+				{UDim2.new(0.5, 0, 1, 0), UDim2.fromOffset(36, 4)},
+				{UDim2.new(0, 0, 0.5, 0), UDim2.fromOffset(4, 36)},
+				{UDim2.new(1, 0, 0.5, 0), UDim2.fromOffset(4, 36)},
+				{UDim2.new(0, 0, 0, 0), UDim2.fromOffset(8, 8)},
+				{UDim2.new(1, 0, 0, 0), UDim2.fromOffset(8, 8)},
+				{UDim2.new(0, 0, 1, 0), UDim2.fromOffset(8, 8)},
+				{UDim2.new(1, 0, 1, 0), UDim2.fromOffset(8, 8)},
+			}
+			for _, t in ipairs(ticks) do
+				local tk = Instance.new("Frame")
+				tk.AnchorPoint = Vector2.new(0.5, 0.5)
+				tk.Position = t[1]
+				tk.Size = t[2]
+				tk.BackgroundColor3 = Color3.fromRGB(235, 235, 255)
+				tk.BorderSizePixel = 0
+				tk.ZIndex = 101
+				tk.Parent = ghost
+				local tkc = Instance.new("UICorner")
+				tkc.CornerRadius = UDim.new(1, 0)
+				tkc.Parent = tk
+			end
+			G.frame = ghost
 			input.Changed:Connect(function()
 				if input.UserInputState == Enum.UserInputState.End then
 					dragging = false
 					interactionBlocker.Visible = false
+					if G.frame == ghost then
+						mainPanel.Position = ghost.Position
+						G.frame = nil
+						TweenService:Create(gstroke, TweenInfo.new(0.18), {Transparency = 1}):Play()
+						TweenService:Create(ghost, TweenInfo.new(0.18), {BackgroundTransparency = 1}):Play()
+						task.delay(0.2, function() ghost:Destroy() end)
+					end
 				end
 			end)
 		end
@@ -1872,10 +1927,13 @@ function showMainPanel()
 	UserInputService.InputChanged:Connect(function(input)
 		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 			local delta = input.Position - dragStart
-			mainPanel.Position = UDim2.new(
-				startPos.X.Scale, startPos.X.Offset + delta.X,
-				startPos.Y.Scale, startPos.Y.Offset + delta.Y
-			)
+			local gf = AetherisGhost and AetherisGhost.frame
+			if gf then
+				gf.Position = UDim2.new(
+					startPos.X.Scale, startPos.X.Offset + delta.X,
+					startPos.Y.Scale, startPos.Y.Offset + delta.Y
+				)
+			end
 		end
 	end)
 
@@ -1914,7 +1972,7 @@ function showMainPanel()
 	end
 
 	local resizeHandle = Instance.new("TextButton")
-	resizeHandle.Size = UDim2.new(0, 22, 0, 22)
+	resizeHandle.Size = UDim2.new(0, 28, 0, 28)
 	resizeHandle.Position = UDim2.new(1, -22, 1, -22)
 	resizeHandle.BackgroundTransparency = 1
 	resizeHandle.Text = ""
@@ -1924,8 +1982,22 @@ function showMainPanel()
 	do
 		local plate = Instance.new("Frame")
 		plate.Name = "GripPlate"
-		plate.Size = UDim2.new(0, 18, 0, 18)
-		plate.Position = UDim2.new(0, 2, 0, 2)
+		plate.Size = UDim2.new(0, 20, 0, 20)
+		plate.Position = UDim2.new(0, 6, 0, 6)
+		-- sombra suave embaixo da placa (dá o relevo para o lado de fora da borda)
+		local drop = Instance.new("Frame")
+		drop.Name = "GripShadow"
+		drop.Size = UDim2.new(0, 20, 0, 20)
+		drop.Position = UDim2.new(0, 7, 0, 9)
+		drop.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		drop.BackgroundTransparency = 0.65
+		drop.BorderSizePixel = 0
+		drop.Active = false
+		drop.ZIndex = 49
+		drop.Parent = resizeHandle
+		local dcr = Instance.new("UICorner")
+		dcr.CornerRadius = UDim.new(0, 8)
+		dcr.Parent = drop
 		plate.BackgroundColor3 = Color3.fromRGB(40, 43, 62)
 		plate.BackgroundTransparency = 0.05
 		plate.BorderSizePixel = 0
@@ -1933,7 +2005,7 @@ function showMainPanel()
 		plate.ZIndex = 50
 		plate.Parent = resizeHandle
 		local pc = Instance.new("UICorner")
-		pc.CornerRadius = UDim.new(0, 7)
+		pc.CornerRadius = UDim.new(0, 8)
 		pc.Parent = plate
 		local pg = Instance.new("UIGradient")
 		pg.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(150, 150, 170))
@@ -1953,7 +2025,7 @@ function showMainPanel()
 		hl.BorderSizePixel = 0
 		hl.ZIndex = 51
 		hl.Parent = plate
-		local spots = {{13, 13}, {13, 8}, {8, 13}, {13, 3}, {8, 8}, {3, 13}}
+		local spots = {{9, 9}, {9, 5}, {5, 9}, {9, 1}, {5, 5}, {1, 9}}
 		for _, p in ipairs(spots) do
 			local sh = Instance.new("Frame")
 			sh.Size = UDim2.new(0, 3, 0, 3)
@@ -2598,11 +2670,28 @@ function showMainPanel()
 			})
 			dg.Parent = divider
 
+			-- Painel estreito: tira a divisória e empilha tudo de cima a baixo (1 coluna).
 			local function refreshHolder()
-				holder.Size = UDim2.new(1, -4, 0, math.max(AetherisLayoutHeight(leftLayout), AetherisLayoutHeight(rightLayout)))
+				local hL, hR = AetherisLayoutHeight(leftLayout), AetherisLayoutHeight(rightLayout)
+				if contentContainer.AbsoluteSize.X > 0 and contentContainer.AbsoluteSize.X < 430 then
+					divider.Visible = false
+					leftCol.Size = UDim2.new(1, 0, 0, hL)
+					leftCol.Position = UDim2.new(0, 0, 0, 0)
+					rightCol.Size = UDim2.new(1, 0, 0, hR)
+					rightCol.Position = UDim2.new(0, 0, 0, hL + (hR > 0 and hL > 0 and 6 or 0))
+					holder.Size = UDim2.new(1, -4, 0, hL + hR + ((hR > 0 and hL > 0) and 6 or 0))
+				else
+					divider.Visible = true
+					leftCol.Size = UDim2.new(0.5, -7, 1, 0)
+					leftCol.Position = UDim2.new(0, 0, 0, 0)
+					rightCol.Size = UDim2.new(0.5, -7, 1, 0)
+					rightCol.Position = UDim2.new(0.5, 7, 0, 0)
+					holder.Size = UDim2.new(1, -4, 0, math.max(hL, hR))
+				end
 			end
 			leftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(refreshHolder)
 			rightLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(refreshHolder)
+			contentContainer:GetPropertyChangedSignal("AbsoluteSize"):Connect(refreshHolder)
 
 			local entry = {left = leftCol, right = rightCol, count = 0}
 			pageColumns[page] = entry
@@ -2936,7 +3025,8 @@ function showMainPanel()
 			-- usa o Size configurado (e não o AbsoluteSize) para não somar com a animação de escala
 			local w, h = mainPanel.Size.X.Offset, mainPanel.Size.Y.Offset
 			if w <= 0 or h <= 0 then return end
-			local f = math.clamp(math.min(w / baseW, h / baseH), 0.6, 1.7)
+			-- Antes o painel inteiro dava zoom ao redimensionar; agora só a área da página cresce.
+			local f = 1
 			bodyScale.Scale = f
 			body.Size = UDim2.new(0, w / f, 0, h / f)
 		end
