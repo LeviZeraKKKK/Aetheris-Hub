@@ -1914,13 +1914,79 @@ function showMainPanel()
 	end
 
 	local resizeHandle = Instance.new("TextButton")
-	resizeHandle.Size = UDim2.new(0, 20, 0, 20)
-	resizeHandle.Position = UDim2.new(1, -20, 1, -20)
+	resizeHandle.Size = UDim2.new(0, 22, 0, 22)
+	resizeHandle.Position = UDim2.new(1, -22, 1, -22)
 	resizeHandle.BackgroundTransparency = 1
 	resizeHandle.Text = ""
 	resizeHandle.ZIndex = 50
 	resizeHandle.Parent = mainPanel
-	createResizeSymbol(resizeHandle, UDim2.new(0, 3, 0, 3))
+	-- Alça em relevo: placa com degradê + brilho/sombra e pontinhos "gravados" na diagonal.
+	do
+		local plate = Instance.new("Frame")
+		plate.Name = "GripPlate"
+		plate.Size = UDim2.new(0, 18, 0, 18)
+		plate.Position = UDim2.new(0, 2, 0, 2)
+		plate.BackgroundColor3 = Color3.fromRGB(40, 43, 62)
+		plate.BackgroundTransparency = 0.05
+		plate.BorderSizePixel = 0
+		plate.Active = false
+		plate.ZIndex = 50
+		plate.Parent = resizeHandle
+		local pc = Instance.new("UICorner")
+		pc.CornerRadius = UDim.new(0, 7)
+		pc.Parent = plate
+		local pg = Instance.new("UIGradient")
+		pg.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(150, 150, 170))
+		pg.Rotation = 45
+		pg.Parent = plate
+		local ps = Instance.new("UIStroke")
+		ps.Color = Color3.fromRGB(95, 100, 135)
+		ps.Thickness = 1
+		ps.Transparency = 0.2
+		ps.Parent = plate
+		local hl = Instance.new("Frame")
+		hl.Name = "TopHighlight"
+		hl.Size = UDim2.new(1, -10, 0, 1)
+		hl.Position = UDim2.new(0, 5, 0, 1)
+		hl.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		hl.BackgroundTransparency = 0.7
+		hl.BorderSizePixel = 0
+		hl.ZIndex = 51
+		hl.Parent = plate
+		local spots = {{13, 13}, {13, 8}, {8, 13}, {13, 3}, {8, 8}, {3, 13}}
+		for _, p in ipairs(spots) do
+			local sh = Instance.new("Frame")
+			sh.Size = UDim2.new(0, 3, 0, 3)
+			sh.Position = UDim2.new(0, p[1], 0, p[2])
+			sh.BackgroundColor3 = Color3.fromRGB(8, 9, 15)
+			sh.BackgroundTransparency = 0.2
+			sh.BorderSizePixel = 0
+			sh.ZIndex = 51
+			sh.Parent = plate
+			local shc = Instance.new("UICorner")
+			shc.CornerRadius = UDim.new(1, 0)
+			shc.Parent = sh
+			local dot = Instance.new("Frame")
+			dot.Size = UDim2.new(0, 3, 0, 3)
+			dot.Position = UDim2.new(0, p[1] - 1, 0, p[2] - 1)
+			dot.BackgroundColor3 = currentThemeColor
+			dot.BorderSizePixel = 0
+			dot.ZIndex = 52
+			dot.Parent = plate
+			local dc = Instance.new("UICorner")
+			dc.CornerRadius = UDim.new(1, 0)
+			dc.Parent = dot
+			table.insert(resizeSymbolsLines, dot)
+		end
+		resizeHandle.MouseEnter:Connect(function()
+			TweenService:Create(plate, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(58, 62, 88)}):Play()
+			TweenService:Create(ps, TweenInfo.new(0.12), {Color = currentThemeColor, Transparency = 0}):Play()
+		end)
+		resizeHandle.MouseLeave:Connect(function()
+			TweenService:Create(plate, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(40, 43, 62)}):Play()
+			TweenService:Create(ps, TweenInfo.new(0.15), {Color = Color3.fromRGB(95, 100, 135), Transparency = 0.2}):Play()
+		end)
+	end
 
 	local resizing, resizeStart, startSize
 	resizeHandle.InputBegan:Connect(function(input)
@@ -2032,13 +2098,13 @@ function showMainPanel()
 	AetherisMinimize = AetherisMinimize or {mode = "Barra"}
 	do
 		local M = AetherisMinimize
-		local BAR_W, BAR_H = 196, 36
+		local BAR_W, BAR_H = 226, 36
 		local bar = Instance.new("TextButton")
 		bar.Name = "MinimizedTopBar"
 		bar.AnchorPoint = Vector2.new(0.5, 0.5)
 		bar.Position = UDim2.new(0.5, 0, 0, 30)
 		bar.Size = UDim2.new(0, 0, 0, 0)
-		bar.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
+		bar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 		bar.BackgroundTransparency = math.min(panelTransparencyValue, 0.15)
 		bar.AutoButtonColor = false
 		bar.Text = ""
@@ -2078,11 +2144,11 @@ function showMainPanel()
 		table.insert(themeTexts, avatarLetter)
 
 		local nameLabel = Instance.new("TextLabel")
-		nameLabel.Size = UDim2.new(0, 78, 1, 0)
+		nameLabel.Size = UDim2.new(0, 84, 1, 0)
 		nameLabel.Position = UDim2.new(0, 40, 0, 0)
 		nameLabel.BackgroundTransparency = 1
 		nameLabel.Font = Enum.Font.GothamBold
-		nameLabel.Text = player.DisplayName or player.Name
+		nameLabel.Text = "Aetheris Hub"
 		nameLabel.TextSize = 11
 		nameLabel.TextColor3 = Color3.fromRGB(205, 208, 222)
 		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -2113,7 +2179,7 @@ function showMainPanel()
 		end)
 		local fpsLabel = Instance.new("TextLabel")
 		fpsLabel.Size = UDim2.new(0, 36, 1, 0)
-		fpsLabel.Position = UDim2.new(1, -48, 0, 0)
+		fpsLabel.Position = UDim2.new(1, -80, 0, 0)
 		fpsLabel.BackgroundTransparency = 1
 		fpsLabel.Font = Enum.Font.GothamBold
 		fpsLabel.Text = "--"
@@ -2165,6 +2231,90 @@ function showMainPanel()
 		bar.MouseButton1Click:Connect(function()
 			if moved then moved = false return end
 			if M.onClick then M.onClick() end
+		end)
+
+		-- Botão de maximizar (chevron) + animações: gradiente giratório, brilho varrendo,
+		-- borda pulsando, barrinhas do medidor dançando, hover/press com escala suave.
+		local barScale = Instance.new("UIScale")
+		barScale.Parent = bar
+		local barGrad = Instance.new("UIGradient")
+		barGrad.Color = ColorSequence.new(Color3.fromRGB(30, 28, 46), Color3.fromRGB(12, 12, 19))
+		barGrad.Rotation = 0
+		barGrad.Parent = bar
+
+		local expandBtn = Instance.new("Frame")
+		expandBtn.Name = "ExpandButton"
+		expandBtn.Size = UDim2.fromOffset(24, 24)
+		expandBtn.Position = UDim2.new(1, -32, 0.5, -12)
+		expandBtn.BackgroundColor3 = currentThemeColor
+		expandBtn.BackgroundTransparency = 0.75
+		expandBtn.BorderSizePixel = 0
+		expandBtn.ZIndex = 21
+		expandBtn.Parent = bar
+		local expandCorner = Instance.new("UICorner")
+		expandCorner.CornerRadius = UDim.new(1, 0)
+		expandCorner.Parent = expandBtn
+		local expandStroke = Instance.new("UIStroke")
+		expandStroke.Color = currentThemeColor
+		expandStroke.Transparency = 0.5
+		expandStroke.Thickness = 1
+		expandStroke.Parent = expandBtn
+		local chevBars = {}
+		for side = -1, 1, 2 do
+			local cb = Instance.new("Frame")
+			cb.AnchorPoint = Vector2.new(0.5, 0.5)
+			cb.Size = UDim2.fromOffset(8, 2)
+			cb.Position = UDim2.new(0.5, side * 3, 0.5, 0)
+			cb.Rotation = side * 40
+			cb.BackgroundColor3 = Color3.fromRGB(240, 240, 250)
+			cb.BorderSizePixel = 0
+			cb.ZIndex = 22
+			cb.Parent = expandBtn
+			local cbc = Instance.new("UICorner")
+			cbc.CornerRadius = UDim.new(1, 0)
+			cbc.Parent = cb
+			table.insert(chevBars, cb)
+		end
+		local shine = Instance.new("Frame")
+		shine.Name = "Shine"
+		shine.AnchorPoint = Vector2.new(0.5, 0.5)
+		shine.Size = UDim2.new(0, 26, 2, 0)
+		shine.Position = UDim2.new(0, -40, 0.5, 0)
+		shine.Rotation = 20
+		shine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		shine.BackgroundTransparency = 0.9
+		shine.BorderSizePixel = 0
+		shine.Active = false
+		shine.ZIndex = 23
+		shine.Parent = bar
+		table.insert(AetherisThemeHooks, function(color)
+			if not bar.Parent then return end
+			expandBtn.BackgroundColor3 = color
+			expandStroke.Color = color
+		end)
+
+		local hov, hovTarget, pressed, clock = 0, 0, false, 0
+		bar.MouseEnter:Connect(function() hovTarget = 1 end)
+		bar.MouseLeave:Connect(function() hovTarget = 0 pressed = false end)
+		bar.MouseButton1Down:Connect(function() pressed = true end)
+		bar.MouseButton1Up:Connect(function() pressed = false end)
+		RunService.Heartbeat:Connect(function(dt)
+			if not bar.Visible then return end
+			clock = clock + dt
+			hov = hov + (hovTarget - hov) * math.min(1, dt * 14)
+			barScale.Scale = 1 + 0.06 * hov - (pressed and 0.07 or 0)
+			barGrad.Rotation = (clock * 25) % 360
+			barStroke.Transparency = 0.38 - 0.14 * (0.5 + 0.5 * math.sin(clock * 3)) - 0.25 * hov
+			expandBtn.BackgroundTransparency = 0.75 - 0.4 * hov
+			expandBtn.Position = UDim2.new(1, -32, 0.5, -12 + math.sin(clock * 4) * 1.2 * (1 - hov))
+			for i, cb in ipairs(chevBars) do
+				cb.Position = UDim2.new(0.5, (i == 1 and -3 or 3), 0.5, -1 - hov)
+			end
+			for i, mb in ipairs(meterBars) do
+				mb.Size = UDim2.fromOffset(3, 8 + i * 2 + math.floor(math.sin(clock * 5 + i * 1.3) * 3))
+			end
+			local sweep = (clock % 3.6) / 3.6
+			shine.Position = UDim2.new(0, -40 + sweep * (BAR_W + 80), 0.5, 0)
 		end)
 
 		M.bar = bar
@@ -2265,6 +2415,18 @@ function showMainPanel()
 			mainPanel.BackgroundTransparency = 1
 			panelStroke.Transparency = 1
 			panelStroke.Thickness = 4
+			-- Garante que o painel caiba na tela e que a lista de abas apareça inteira (ou role).
+			do
+				local vs = screenGui.AbsoluteSize
+				local cw = math.clamp(currentPanelSize.X.Offset, 340, math.max(340, vs.X - 16))
+				local ch = math.clamp(math.max(currentPanelSize.Y.Offset, 310), 210, math.max(210, vs.Y - 16))
+				currentPanelSize = UDim2.new(0, cw, 0, ch)
+				local tp = target
+				local px = math.clamp(tp.X.Scale * vs.X + tp.X.Offset, cw / 2 + 4, math.max(cw / 2 + 4, vs.X - cw / 2 - 4))
+				local py = math.clamp(tp.Y.Scale * vs.Y + tp.Y.Offset, ch / 2 + 4, math.max(ch / 2 + 4, vs.Y - ch / 2 - 4))
+				target = UDim2.fromOffset(px, py)
+				savedPanelPosition = target
+			end
 			mainPanel.Size = currentPanelSize
 			mainPanel.Visible = true
 
@@ -2337,6 +2499,8 @@ function showMainPanel()
 	sidebar.BackgroundTransparency = 1
 	sidebar.BorderSizePixel = 0
 	sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
+	sidebar.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	sidebar.ScrollingDirection = Enum.ScrollingDirection.Y
 	sidebar.ScrollBarThickness = 2
 	sidebar.Parent = mainPanel
 
@@ -5463,6 +5627,12 @@ function showMainPanel()
 				task.defer(function()
 					for _, d in ipairs(c:GetDescendants()) do
 						if d:IsA("TextLabel") and d.TextSize == 11 then d.TextSize = 9 end
+						-- Remove a bolinha (LED) das opções escondidas e aproveita o espaço.
+						if d:IsA("Frame") and d.Parent == c and d.Size == UDim2.new(0, 6, 0, 6) then d.Visible = false end
+						if d:IsA("TextLabel") and d.Parent == c and d.Position == UDim2.new(0, 20, 0, 0) then
+							d.Position = UDim2.new(0, 8, 0, 0)
+							d.Size = d.Size + UDim2.new(0, 12, 0, 0)
+						end
 					end
 				end)
 			end
