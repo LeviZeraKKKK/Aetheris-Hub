@@ -129,11 +129,14 @@ do
 		{"Diálogo", "Dialogue"}, {"Direto", "Direct"}, {"Nada encontrado.", "Nothing found."},
 		{"Nenhuma opção encontrada.", "No options found."}, {"opções", "options"}, {"opção", "option"},
 		{"Selecione", "Select"}, {"alvos", "targets"}, {"alvo", "target"}, {"jogadores", "players"},
-		{"Geral", "General"}, {"Sons de clique", "Click Sounds"}, {"Som de clique", "Click Sound"}, {"Volume do som", "Sound Volume"}, {"Som: ", "Sound: "}, {"Clássico", "Classic"}, {"Suave", "Soft"}, {"Tecla", "Key"}, {"Página", "Page"}, {"Botão", "Button"}, {"Interruptor", "Switch"}, {"Clique rápido", "Fast Click"}, {"Estalo", "Snap"}, {"Bolha", "Bubble"}, {"Grave", "Bass"}, {"Nenhum", "None"}, {"Tema pronto", "Preset Theme"}, {"funções alteradas", "functions changed"}, {"Fechar o Aetheris Hub?", "Close Aetheris Hub?"}, {"O painel será fechado por completo. Para abrir de novo, execute o script outra vez.", "The panel will be closed completely. To open it again, run the script again."}, {"Fechar", "Close"}, {"Tem certeza de que deseja excluir", "Are you sure you want to delete"}, {"Essa ação não pode ser desfeita.", "This action cannot be undone."}, {"direto", "direct"}, {"incompatível", "incompatible"}, {"Módulo", "Module"}, {"diálogo", "dialog"}, {"INIMIGOS (NPC)", "ENEMIES (NPC)"}, {"BAÚ", "CHEST"}, {"PLAYERS", "PLAYERS"}, {"BERRIES", "BERRIES"}, {"ESP Inimigos (NPC)", "ESP Enemies (NPC)"}, {"Inimigos", "Enemies"}, {"inimigos", "enemies"},
+		{"Geral", "General"}, {"Sons de clique", "Click Sounds"}, {"Som de clique", "Click Sound"}, {"Volume do som", "Sound Volume"}, {"Som: ", "Sound: "}, {"Clássico", "Classic"}, {"Suave", "Soft"}, {"Tecla", "Key"}, {"Página", "Page"}, {"Botão", "Button"}, {"Interruptor", "Switch"}, {"Clique rápido", "Fast Click"}, {"Estalo", "Snap"}, {"Bolha", "Bubble"}, {"Grave", "Bass"}, {"Nenhum", "None"}, {"Tema pronto", "Preset Theme"}, {"Oceano", "Ocean"}, {"Gelo", "Ice"}, {"funções alteradas", "functions changed"}, {"Fechar o Aetheris Hub?", "Close Aetheris Hub?"}, {"O painel será fechado por completo. Para abrir de novo, execute o script outra vez.", "The panel will be closed completely. To open it again, run the script again."}, {"Fechar", "Close"}, {"Tem certeza de que deseja excluir", "Are you sure you want to delete"}, {"Essa ação não pode ser desfeita.", "This action cannot be undone."}, {"direto", "direct"}, {"incompatível", "incompatible"}, {"Módulo", "Module"}, {"diálogo", "dialog"}, {"INIMIGOS (NPC)", "ENEMIES (NPC)"}, {"BAÚ", "CHEST"}, {"PLAYERS", "PLAYERS"}, {"BERRIES", "BERRIES"}, {"ESP Inimigos (NPC)", "ESP Enemies (NPC)"}, {"Inimigos", "Enemies"}, {"inimigos", "enemies"},
 		{"inimigo", "enemy"}, {"Cor", "Color"}, {"Sem quest", "No quest"}, {"Tecla para ocultar", "Key to hide"},
 		{"Atalho de ocultar ativado", "Hide shortcut enabled"}, {"Aliados", "Allies"}, {"Jogadores", "Players"}, {"Jogador", "Player"},
 		{"tipo:", "type:"}, {"Automatização", "Automation"}, {"Personagem indisponível ou morto", "Character unavailable or dead"},
 		{"indisponível", "unavailable"}, {"não encontrado", "not found"}, {" de ", " of "},
+		{"BOM DIA", "GOOD MORNING"}, {"BOA TARDE", "GOOD AFTERNOON"}, {"BOA NOITE", "GOOD EVENING"},
+		{"NÍVEL", "LEVEL"}, {"FRAGMENTOS", "FRAGMENTS"}, {"RAÇA", "RACE"}, {"MEMÓRIA", "MEMORY"},
+		{"Cole o Job ID...", "Paste Job ID..."}, {"Entrar", "Join"}, {"ID?", "ID?"},
 	}
 	table.sort(raw, function(a, b) return #a[1] > #b[1] end)
 	I.pairs = raw
@@ -2650,7 +2653,8 @@ function showMainPanel()
 			local b = Instance.new("TextButton")
 			b.Size = UDim2.new(0.5, -26, 0, 36)
 			b.Position = UDim2.new(side == 0 and 0 or 0.5, side == 0 and 20 or 6, 1, -54)
-			b.BackgroundColor3 = fillGradient and Color3.new(1, 1, 1) or Color3.fromRGB(28, 31, 48)
+			b.BackgroundColor3 = Color3.fromRGB(28, 31, 48)
+			b.BackgroundTransparency = fillGradient and 1 or 0
 			b.BorderSizePixel = 0
 			b.AutoButtonColor = false
 			b.Font = Enum.Font.GothamBold
@@ -2668,10 +2672,35 @@ function showMainPanel()
 			bs.Transparency = fillGradient and 1 or 0.45
 			bs.Parent = b
 			if fillGradient then
+				-- o degradê vai num fundo separado: num TextButton ele também tingiria o texto
+				local fill = Instance.new("Frame")
+				fill.Name = "Fill"
+				fill.Size = UDim2.new(1, 0, 1, 0)
+				fill.BackgroundColor3 = Color3.new(1, 1, 1)
+				fill.BorderSizePixel = 0
+				fill.ZIndex = 502
+				fill.Active = false
+				fill.Parent = b
+				local fc = Instance.new("UICorner")
+				fc.CornerRadius = UDim.new(0, 10)
+				fc.Parent = fill
 				local g = Instance.new("UIGradient")
 				g.Color = ColorSequence.new(Color3.fromRGB(236, 72, 96), Color3.fromRGB(176, 52, 150))
 				g.Rotation = 0
-				g.Parent = b
+				g.Parent = fill
+				-- texto num label próprio, acima do fundo (filho sempre desenha por cima do texto do pai)
+				b.Text = ""
+				local lab = Instance.new("TextLabel")
+				lab.Name = "Label"
+				lab.Size = UDim2.new(1, 0, 1, 0)
+				lab.BackgroundTransparency = 1
+				lab.Font = Enum.Font.GothamBold
+				lab.Text = text
+				lab.TextSize = 12
+				lab.TextColor3 = Color3.new(1, 1, 1)
+				lab.ZIndex = 504
+				lab.Active = false
+				lab.Parent = b
 			else
 				AetherisBlueGradient(bs, 0)
 			end
@@ -2859,10 +2888,10 @@ function showMainPanel()
 	local tabs = {
 		{Name = "Info", Display = "Home", Image = "rbxassetid://7733960981", Offset = Vector2.new(0, 0), RectSize = Vector2.new(0, 0)},
 		{Name = "Player", Image = "rbxassetid://16898613044", Offset = Vector2.new(0, 869)},
-		{Name = "Auto", Display = "Automático", Image = "rbxassetid://16898613869", Offset = Vector2.new(918, 906)},
-		{Name = "Combate", Image = "rbxassetid://16898613777", Offset = Vector2.new(967, 759)},
+		{Name = "Auto", Display = "Automático", En = "Auto", Image = "rbxassetid://16898613869", Offset = Vector2.new(918, 906)},
+		{Name = "Combate", En = "Combat", Image = "rbxassetid://16898613777", Offset = Vector2.new(967, 759)},
 		{Name = "Farming", Image = "rbxassetid://16898613777", Offset = Vector2.new(918, 306)},
-		{Name = "Fruta", Image = "rbxassetid://16898612629", Offset = Vector2.new(563, 869)},
+		{Name = "Fruta", En = "Fruit", Image = "rbxassetid://16898612629", Offset = Vector2.new(563, 869)},
 		{Name = "Misc", Image = "rbxassetid://7733970390", Offset = Vector2.new(0, 0), RectSize = Vector2.new(0, 0)},
 		{Name = "Config", Image = "rbxassetid://16898613777", Offset = Vector2.new(771, 257)}
 	}
@@ -2942,7 +2971,7 @@ function showMainPanel()
 		table.insert(tabIndicators, indicator)
 		
 		local page = createPage(tabInfo.Name)
-		table.insert(tabButtonsList, {Button = tabButton, Label = tabNameLabel, Indicator = indicator, Page = page, Display = tabInfo.Display or tabInfo.Name, Icon = tabInfo})
+		table.insert(tabButtonsList, {Button = tabButton, Label = tabNameLabel, Indicator = indicator, Page = page, Display = tabInfo.Display or tabInfo.Name, En = tabInfo.En, Icon = tabInfo})
 
 		tabButton.MouseButton1Click:Connect(function()
 			if activePage == page then return end
@@ -3297,6 +3326,25 @@ function showMainPanel()
 		pageTitle.BackgroundTransparency = 1
 		pageTitle.Font = Enum.Font.GothamBold
 		pageTitle.Text = first.Display
+		-- Nome da aba no idioma atual (English: Combat/Fruit; Português: Combate/Fruta).
+		local activeTitleData = first
+		local function tabTextFor(d)
+			if AetherisI18n and AetherisI18n.lang == "en" and d.En then return d.En end
+			return d.Display
+		end
+		local function refreshTabTexts()
+			for _, d in ipairs(tabButtonsList) do d.Label.Text = tabTextFor(d) end
+			pageTitle.Text = tabTextFor(activeTitleData)
+		end
+		if AetherisI18n and not AetherisI18n.tabsWrapped then
+			AetherisI18n.tabsWrapped = true
+			local baseSet = AetherisI18n.set
+			AetherisI18n.set = function(lang)
+				baseSet(lang)
+				pcall(refreshTabTexts)
+			end
+		end
+		refreshTabTexts()
 		pageTitle.TextColor3 = Color3.new(1, 1, 1)
 		pageTitle.TextSize = 14
 		pageTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -3399,7 +3447,8 @@ function showMainPanel()
 			accentBars[i] = bar
 			data.Button.MouseButton1Click:Connect(function()
 				searchBox.Text = ""
-				pageTitle.Text = data.Display
+				activeTitleData = data
+				pageTitle.Text = tabTextFor(data)
 				pageIcon.Image = data.Icon.Image
 				pageIcon.ImageRectOffset = data.Icon.Offset
 				pageIcon.ImageRectSize = data.Icon.RectSize or Vector2.new(48, 48)
@@ -4764,7 +4813,11 @@ function showMainPanel()
 		avatar.ScaleType = Enum.ScaleType.Fit
 		avatar.Parent = welcome
 
-		lbl(welcome, "BEM-VINDO DE VOLTA", 8, UDim2.new(0, 14, 0, 9), UDim2.new(1, -100, 0, 10), GRAY, Enum.Font.GothamBold)
+		do
+			local hourNow = tonumber(os.date("%H")) or 12
+			local greeting = hourNow < 12 and "BOM DIA" or (hourNow < 18 and "BOA TARDE" or "BOA NOITE")
+			lbl(welcome, greeting, 8, UDim2.new(0, 14, 0, 9), UDim2.new(1, -100, 0, 10), GRAY, Enum.Font.GothamBold)
+		end
 		lbl(welcome, player.DisplayName or player.Name, 19, UDim2.new(0, 14, 0, 20), UDim2.new(1, -100, 0, 26), Color3.new(1, 1, 1), Enum.Font.GothamBold)
 		lbl(welcome, "@" .. player.Name, 9, UDim2.new(0, 14, 0, 45), UDim2.new(1, -100, 0, 11), GRAY)
 		pill(welcome, "Aetheris Hub", 14, 74).TextColor3 = accentBlue
@@ -4780,24 +4833,79 @@ function showMainPanel()
 		-----------------------------------------------------------------
 		-- 2) FPS / Ping + gráfico
 		-----------------------------------------------------------------
-		local perf = makeCard(2, 116)
+		local acct = {}
+		-- Conta: Level, Beli, Fragmentos e Raça (lidos de player.Data; "--" se o jogo não tiver)
+		do
+			local account = makeCard(2, 62)
+			account.Name = "Account"
+			local tiles = Instance.new("Frame")
+			tiles.Size = UDim2.new(1, -20, 1, -16)
+			tiles.Position = UDim2.new(0, 10, 0, 8)
+			tiles.BackgroundTransparency = 1
+			tiles.Parent = account
+			local tilesLayout = Instance.new("UIListLayout")
+			tilesLayout.FillDirection = Enum.FillDirection.Horizontal
+			tilesLayout.Padding = UDim.new(0, 6)
+			tilesLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			tilesLayout.Parent = tiles
+			local function statTile(order, title, color)
+				local tile = Instance.new("Frame")
+				tile.LayoutOrder = order
+				tile.Size = UDim2.new(0.25, -4.5, 1, 0)
+				tile.BackgroundColor3 = Color3.fromRGB(19, 26, 40)
+				tile.BorderSizePixel = 0
+				tile.Parent = tiles
+				local tc = Instance.new("UICorner")
+				tc.CornerRadius = UDim.new(0, 8)
+				tc.Parent = tile
+				local ts = Instance.new("UIStroke")
+				ts.Color = Color3.fromRGB(32, 42, 62)
+				ts.Thickness = 1
+				ts.Parent = tile
+				lbl(tile, title, 8, UDim2.new(0, 9, 0, 7), UDim2.new(1, -12, 0, 10), GRAY, Enum.Font.GothamBold)
+				return lbl(tile, "--", 13, UDim2.new(0, 9, 0, 19), UDim2.new(1, -12, 0, 18), color, Enum.Font.GothamBold)
+			end
+			acct.level = statTile(1, "NÍVEL", accentBlue)
+			acct.beli = statTile(2, "BELI", Color3.fromRGB(240, 200, 80))
+			acct.frag = statTile(3, "FRAGMENTOS", Color3.fromRGB(190, 130, 255))
+			acct.race = statTile(4, "RAÇA", Color3.new(1, 1, 1))
+		end
+
+		-- Desempenho: tocar em FPS ou PING troca o gráfico
+		local perf = makeCard(3, 128)
 		perf.Name = "Performance"
+		local graphMode = "fps"
 		lbl(perf, "FPS", 8, UDim2.new(0, 14, 0, 9), UDim2.new(0.5, -14, 0, 10), GRAY, Enum.Font.GothamBold)
 		local fpsLabel = lbl(perf, "--", 20, UDim2.new(0, 14, 0, 19), UDim2.new(0.5, -14, 0, 26), GOOD, Enum.Font.GothamBold)
 		lbl(perf, "PING", 8, UDim2.new(0.5, 0, 0, 9), UDim2.new(0.5, -14, 0, 10), GRAY, Enum.Font.GothamBold)
 		local pingLabel = lbl(perf, "-- ms", 20, UDim2.new(0.5, 0, 0, 19), UDim2.new(0.5, -14, 0, 26), GOOD, Enum.Font.GothamBold)
 
+		local markFps = Instance.new("Frame")
+		markFps.Size = UDim2.new(0, 24, 0, 2)
+		markFps.Position = UDim2.new(0, 14, 0, 49)
+		markFps.BackgroundColor3 = accentBlue
+		markFps.BorderSizePixel = 0
+		markFps.Parent = perf
+		local markPing = Instance.new("Frame")
+		markPing.Size = UDim2.new(0, 24, 0, 2)
+		markPing.Position = UDim2.new(0.5, 0, 0, 49)
+		markPing.BackgroundColor3 = accentBlue
+		markPing.BackgroundTransparency = 1
+		markPing.BorderSizePixel = 0
+		markPing.Parent = perf
+
 		local graph = Instance.new("Frame")
-		graph.Name = "FpsGraph"
-		graph.Position = UDim2.new(0, 14, 0, 52)
+		graph.Name = "PerfGraph"
+		graph.Position = UDim2.new(0, 14, 0, 55)
 		graph.Size = UDim2.new(1, -28, 0, 28)
 		graph.BackgroundTransparency = 1
 		graph.Parent = perf
 		local BARS = 30
-		local fpsHistory, bars = {}, {}
+		local fpsHistory, pingHistory, bars = {}, {}, {}
 		local BAR_IDLE = Color3.fromRGB(44, 54, 76)
 		for i = 1, BARS do
 			fpsHistory[i] = 0
+			pingHistory[i] = 0
 			local b = Instance.new("Frame")
 			b.AnchorPoint = Vector2.new(0, 1)
 			b.Position = UDim2.new((i - 1) / BARS, 0, 1, 0)
@@ -4811,15 +4919,53 @@ function showMainPanel()
 			bars[i] = b
 		end
 
-		lbl(perf, "JOGADORES", 8, UDim2.new(0, 14, 0, 87), UDim2.new(0.5, -14, 0, 10), GRAY, Enum.Font.GothamBold)
-		local playerCount = lbl(perf, "-- / " .. tostring(Players.MaxPlayers), 11, UDim2.new(0, 14, 0, 97), UDim2.new(0.5, -14, 0, 14), Color3.new(1, 1, 1), Enum.Font.GothamBold)
-		lbl(perf, "SESSÃO", 8, UDim2.new(0.5, 0, 0, 87), UDim2.new(0.5, -14, 0, 10), GRAY, Enum.Font.GothamBold)
-		local sessionLabel = lbl(perf, "0s", 11, UDim2.new(0.5, 0, 0, 97), UDim2.new(0.5, -14, 0, 14), Color3.new(1, 1, 1), Enum.Font.GothamBold)
+		local function fpsColor(v) return v >= 50 and GOOD or (v >= 30 and WARN or BAD) end
+		local function pingColor(v) return v < 100 and GOOD or (v < 200 and WARN or BAD) end
+		local function renderGraph()
+			local isFps = graphMode == "fps"
+			local hist = isFps and fpsHistory or pingHistory
+			for i = 1, BARS do
+				local v = hist[i]
+				local bar = bars[i]
+				if isFps then
+					bar.Size = UDim2.new(1 / BARS, -2, math.clamp(v / 60, 0.1, 1), 0)
+					if i == BARS then bar.BackgroundColor3 = fpsColor(v)
+					elseif v > 0 and v < 30 then bar.BackgroundColor3 = Color3.fromRGB(150, 70, 80)
+					else bar.BackgroundColor3 = BAR_IDLE end
+				else
+					bar.Size = UDim2.new(1 / BARS, -2, math.clamp(v / 300, 0.1, 1), 0)
+					if i == BARS then bar.BackgroundColor3 = pingColor(v)
+					elseif v > 200 then bar.BackgroundColor3 = Color3.fromRGB(150, 70, 80)
+					else bar.BackgroundColor3 = BAR_IDLE end
+				end
+			end
+			markFps.BackgroundTransparency = isFps and 0 or 1
+			markPing.BackgroundTransparency = isFps and 1 or 0
+		end
+		local function headButton(x)
+			local hb = Instance.new("TextButton")
+			hb.Position = UDim2.new(x, 0, 0, 0)
+			hb.Size = UDim2.new(0.5, 0, 0, 52)
+			hb.BackgroundTransparency = 1
+			hb.Text = ""
+			hb.AutoButtonColor = false
+			hb.Parent = perf
+			return hb
+		end
+		headButton(0).MouseButton1Click:Connect(function() graphMode = "fps" renderGraph() end)
+		headButton(0.5).MouseButton1Click:Connect(function() graphMode = "ping" renderGraph() end)
+
+		lbl(perf, "JOGADORES", 8, UDim2.new(0, 14, 0, 92), UDim2.new(1 / 3, -14, 0, 10), GRAY, Enum.Font.GothamBold)
+		local playerCount = lbl(perf, "-- / " .. tostring(Players.MaxPlayers), 11, UDim2.new(0, 14, 0, 102), UDim2.new(1 / 3, -14, 0, 14), Color3.new(1, 1, 1), Enum.Font.GothamBold)
+		lbl(perf, "SESSÃO", 8, UDim2.new(1 / 3, 0, 0, 92), UDim2.new(1 / 3, 0, 0, 10), GRAY, Enum.Font.GothamBold)
+		local sessionLabel = lbl(perf, "0s", 11, UDim2.new(1 / 3, 0, 0, 102), UDim2.new(1 / 3, 0, 0, 14), Color3.new(1, 1, 1), Enum.Font.GothamBold)
+		lbl(perf, "MEMÓRIA", 8, UDim2.new(2 / 3, 0, 0, 92), UDim2.new(1 / 3, -14, 0, 10), GRAY, Enum.Font.GothamBold)
+		local memLabel = lbl(perf, "-- MB", 11, UDim2.new(2 / 3, 0, 0, 102), UDim2.new(1 / 3, -14, 0, 14), Color3.new(1, 1, 1), Enum.Font.GothamBold)
 
 		-----------------------------------------------------------------
 		-- 3) Servidor atual
 		-----------------------------------------------------------------
-		local server = makeCard(3, 108)
+		local server = makeCard(4, 142)
 		server.Name = "ServerCard"
 		local gameIcon = Instance.new("ImageLabel")
 		gameIcon.Size = UDim2.new(0, 32, 0, 32)
@@ -4967,17 +5113,101 @@ function showMainPanel()
 		local jobShort = game.JobId ~= "" and (string.sub(game.JobId, 1, 8) .. "…") or "Local"
 		local jobInfo = lbl(server, "Job  " .. jobShort .. "   •   Place  " .. tostring(game.PlaceId), 8, UDim2.new(0, 14, 0, 88), UDim2.new(1, -28, 0, 12), GRAY)
 
+		do
+		-- Entrar num servidor específico pelo Job ID
+			local joinBox = Instance.new("TextBox")
+			joinBox.Position = UDim2.new(0, 14, 0, 108)
+			joinBox.Size = UDim2.new(1, -92, 0, 24)
+			joinBox.BackgroundColor3 = Color3.fromRGB(19, 26, 40)
+			joinBox.BorderSizePixel = 0
+			joinBox.ClearTextOnFocus = false
+			joinBox.Font = Enum.Font.GothamMedium
+			joinBox.PlaceholderText = "Cole o Job ID..."
+			joinBox.PlaceholderColor3 = GRAY
+			joinBox.Text = ""
+			joinBox.TextColor3 = Color3.new(1, 1, 1)
+			joinBox.TextSize = 10
+			joinBox.TextXAlignment = Enum.TextXAlignment.Left
+			joinBox.Parent = server
+			local jbc = Instance.new("UICorner")
+			jbc.CornerRadius = UDim.new(0, 7)
+			jbc.Parent = joinBox
+			local jbs = Instance.new("UIStroke")
+			jbs.Color = Color3.fromRGB(34, 44, 66)
+			jbs.Thickness = 1
+			jbs.Parent = joinBox
+			local jbp = Instance.new("UIPadding")
+			jbp.PaddingLeft = UDim.new(0, 8)
+			jbp.PaddingRight = UDim.new(0, 8)
+			jbp.Parent = joinBox
+			joinBox.Focused:Connect(function() TweenService:Create(jbs, TweenInfo.new(0.15), {Color = accentBlue}):Play() end)
+			joinBox.FocusLost:Connect(function() TweenService:Create(jbs, TweenInfo.new(0.15), {Color = Color3.fromRGB(34, 44, 66)}):Play() end)
+
+			local joinBtn = Instance.new("TextButton")
+			joinBtn.Position = UDim2.new(1, -72, 0, 108)
+			joinBtn.Size = UDim2.new(0, 58, 0, 24)
+			joinBtn.BackgroundColor3 = accentBlue
+			joinBtn.BorderSizePixel = 0
+			joinBtn.AutoButtonColor = false
+			joinBtn.Font = Enum.Font.GothamBold
+			joinBtn.Text = "Entrar"
+			joinBtn.TextColor3 = Color3.new(1, 1, 1)
+			joinBtn.TextSize = 10
+			joinBtn.Parent = server
+			local jbtc = Instance.new("UICorner")
+			jbtc.CornerRadius = UDim.new(0, 7)
+			jbtc.Parent = joinBtn
+			local joinBusy = false
+			joinBtn.MouseButton1Click:Connect(function()
+				if joinBusy then return end
+				joinBusy = true
+				local id = joinBox.Text:gsub("%s+", "")
+				local msg
+				if #id < 8 then
+					msg = "ID?"
+				else
+					msg = teleportTo(id) and "Indo..." or "Falhou"
+				end
+				joinBtn.Text = msg
+				task.delay(1.4, function()
+					if joinBtn.Parent then joinBtn.Text = "Entrar" end
+					joinBusy = false
+				end)
+			end)
+		end
+
 		-----------------------------------------------------------------
 		-- Atualização ao vivo
 		-----------------------------------------------------------------
 		local sessionStart = os.clock()
-		local function fmtSession(t)
+		local function fmtDuration(t)
 			t = math.floor(t)
 			if t >= 3600 then return string.format("%dh %02dm", t // 3600, (t % 3600) // 60) end
 			if t >= 60 then return string.format("%dm %02ds", t // 60, t % 60) end
 			return t .. "s"
 		end
-		local function fpsColor(v) return v >= 50 and GOOD or (v >= 30 and WARN or BAD) end
+		local function fmtNum(n)
+			if type(n) ~= "number" then return "--" end
+			local str = tostring(math.floor(n))
+			local r = string.reverse(str):gsub("(%d%d%d)", "%1,")
+			r = string.reverse(r):gsub("^,", "")
+			return r
+		end
+		local function dataValue(name)
+			local ok, v = pcall(function() return player.Data[name].Value end)
+			if ok then return v end
+			return nil
+		end
+		local function refreshAccount()
+			local lv = dataValue("Level")
+			acct.level.Text = lv and tostring(lv) or "--"
+			acct.beli.Text = fmtNum(dataValue("Beli"))
+			acct.frag.Text = fmtNum(dataValue("Fragments"))
+			local race = dataValue("Race")
+			acct.race.Text = (race ~= nil and tostring(race) ~= "") and tostring(race) or "--"
+		end
+		refreshAccount()
+		renderGraph()
 
 		local fpsFrames, fpsElapsed = 0, 0
 		local infoPerfConnection = RunService.RenderStepped:Connect(function(dt)
@@ -4989,26 +5219,6 @@ function showMainPanel()
 				fpsLabel.Text = tostring(fps)
 				fpsLabel.TextColor3 = fpsColor(fps)
 
-				table.remove(fpsHistory, 1)
-				table.insert(fpsHistory, fps)
-				for i = 1, BARS do
-					local v = fpsHistory[i]
-					local bar = bars[i]
-					bar.Size = UDim2.new(1 / BARS, -2, math.clamp(v / 60, 0.1, 1), 0)
-					if i == BARS then
-						bar.BackgroundColor3 = fpsColor(v)
-					elseif v > 0 and v < 30 then
-						bar.BackgroundColor3 = Color3.fromRGB(150, 70, 80)
-					else
-						bar.BackgroundColor3 = BAR_IDLE
-					end
-				end
-
-				local count = #Players:GetPlayers()
-				playerCount.Text = tostring(count) .. " / " .. tostring(Players.MaxPlayers)
-				gameSub.Text = (creatorName ~= "" and ("por " .. creatorName .. "  •  ") or "") .. tostring(count) .. "/" .. tostring(Players.MaxPlayers) .. " jogadores"
-				sessionLabel.Text = fmtSession(os.clock() - sessionStart)
-
 				local pingValue
 				pcall(function()
 					local item = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]
@@ -5017,10 +5227,28 @@ function showMainPanel()
 				if pingValue then
 					pingValue = math.floor(pingValue + 0.5)
 					pingLabel.Text = pingValue .. " ms"
-					pingLabel.TextColor3 = pingValue < 100 and GOOD or (pingValue < 200 and WARN or BAD)
+					pingLabel.TextColor3 = pingColor(pingValue)
 				else
+					pingValue = 0
 					pingLabel.Text = "-- ms"
 				end
+
+				table.remove(fpsHistory, 1)
+				table.insert(fpsHistory, fps)
+				table.remove(pingHistory, 1)
+				table.insert(pingHistory, pingValue)
+				renderGraph()
+
+				local count = #Players:GetPlayers()
+				playerCount.Text = tostring(count) .. " / " .. tostring(Players.MaxPlayers)
+				gameSub.Text = (creatorName ~= "" and ("por " .. creatorName .. "  •  ") or "") .. tostring(count) .. "/" .. tostring(Players.MaxPlayers) .. " jogadores"
+				sessionLabel.Text = fmtDuration(os.clock() - sessionStart)
+
+				local okMem, mem = pcall(function() return game:GetService("Stats"):GetTotalMemoryUsageMb() end)
+				memLabel.Text = okMem and string.format("%d MB", math.floor(mem + 0.5)) or "-- MB"
+
+				jobInfo.Text = "Job  " .. jobShort .. "   •   Place  " .. tostring(game.PlaceId) .. "   •   Uptime  " .. fmtDuration(workspace.DistributedGameTime)
+				refreshAccount()
 			end
 		end)
 		screenGui.Destroying:Connect(function()
@@ -10164,8 +10392,9 @@ function showMainPanel()
 				badge.AnchorPoint = Vector2.new(1, 0.5)
 				badge.Size = UDim2.fromOffset(15, 13)
 				badge.Position = UDim2.new(1, -4, 0.5, 0)
-				badge.BackgroundColor3 = accentBlue
+				badge.BackgroundColor3 = currentThemeColor
 				badge.BackgroundTransparency = 0.1
+				table.insert(themeSliders, badge)
 				badge.Font = Enum.Font.GothamBold
 				badge.TextSize = 8
 				badge.TextColor3 = Color3.new(1, 1, 1)
