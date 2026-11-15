@@ -135,7 +135,7 @@ do
 		{"tipo:", "type:"}, {"Automatização", "Automation"}, {"Personagem indisponível ou morto", "Character unavailable or dead"},
 		{"indisponível", "unavailable"}, {"não encontrado", "not found"}, {" de ", " of "},
 		{"Velocidade máx", "Max speed"}, {"Aceleração (por frame)", "Acceleration (per frame)"}, {"Altura sobre a água", "Height above water"},
-		{"Acelerar Barco", "Boost Boat"}, {"Barco", "Boat"}, {"Entre em um barco", "Get in a boat"}, {"Desligado", "Off"},
+		{"Acelerar Barco", "Boost Boat"}, {"Modificar Barco", "Ship Modifier"}, {"Barco", "Boat"}, {"Entre em um barco", "Get in a boat"}, {"Desligado", "Off"},
 		{"BOM DIA", "GOOD MORNING"}, {"BOA TARDE", "GOOD AFTERNOON"}, {"BOA NOITE", "GOOD EVENING"},
 		{"NÍVEL", "LEVEL"}, {"FRAGMENTOS", "FRAGMENTS"}, {"RAÇA", "RACE"}, {"MEMÓRIA", "MEMORY"},
 		{"Cole o Job ID...", "Paste Job ID..."}, {"Entrar", "Join"}, {"ID?", "ID?"},
@@ -6444,7 +6444,7 @@ function showMainPanel()
 
 		local enabled = false
 		local ACCEL_PER_FRAME = 20
-		local MAX_SPEED = 600
+		local MAX_SPEED = 260
 		local heightOffset = 0
 
 		local currentBoat, hull, seat, speedBV, hullBP = nil, nil, nil, nil, nil
@@ -6730,10 +6730,10 @@ function showMainPanel()
 
 	-- Seção "Barco" na aba Misc
 	do
-		local secBoat = createSection(pages["Misc"], "Barco", sectionIcons.Travel)
+		local secBoat = createSection(pages["Misc"], "Modificar Barco", {Image = "rbxassetid://75826463279777", Offset = Vector2.new(0, 0), RectSize = Vector2.new(0, 0)})
 
 		addToggle(secBoat, "Acelerar Barco", function(state) AetherisBoat.setEnabled(state) end, false)
-		addSlider(secBoat, "Velocidade máx", 100, 1500, 600, function(v) AetherisBoat.setMaxSpeed(v) end, 0, " studs/s")
+		addSlider(secBoat, "Velocidade máx", 100, 300, 260, function(v) AetherisBoat.setMaxSpeed(v) end, 0, " studs/s")
 		addSlider(secBoat, "Aceleração (por frame)", 5, 100, 20, function(v) AetherisBoat.setAccel(v) end, 0, "")
 		addSlider(secBoat, "Altura sobre a água", 0, 150, 0, function(v) AetherisBoat.setHeight(v) end, 0, " studs")
 
