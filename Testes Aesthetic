@@ -226,17 +226,18 @@ end
 -----------------------------------------------------------------
 -- SISTEMA DE CORES DINÂMICAS & TEMA GLOBAL
 -----------------------------------------------------------------
-local currentThemeColor = Color3.fromRGB(138, 43, 226)
+local currentThemeColor = Color3.fromRGB(52, 124, 255)
 local accentBlue = Color3.fromRGB(56, 132, 255)
+local accentPurple = Color3.fromRGB(126, 62, 236)
 -- Degradê roxo -> azul que acompanha o tema (para bordas/detalhes).
 function AetherisBlueGradient(inst, rotation, transparency)
 	local g = Instance.new("UIGradient")
-	g.Color = ColorSequence.new(currentThemeColor, accentBlue)
+	g.Color = ColorSequence.new(currentThemeColor, accentPurple)
 	g.Rotation = rotation or 0
 	if transparency then g.Transparency = transparency end
 	g.Parent = inst
 	table.insert(AetherisThemeHooks, function(c)
-		if g.Parent then g.Color = ColorSequence.new(c, accentBlue) end
+		if g.Parent then g.Color = ColorSequence.new(c, accentPurple) end
 	end)
 	return g
 end
@@ -1247,7 +1248,7 @@ end
 -- são liberadas no final e não pesam no limite de 200 locals do script.
 do
 	local WHITE = Color3.new(1, 1, 1)
-	local PURPLE, BLUE = currentThemeColor, accentBlue
+	local PURPLE, BLUE = currentThemeColor, accentPurple
 
 	-- Cápsula compacta no centro da tela (sem escurecer o fundo e sem blur).
 	-- CanvasGroup: o fade de entrada e saída é um único valor (GroupTransparency).
@@ -2217,7 +2218,7 @@ function showMainPanel()
 			mb.Size = UDim2.fromOffset(3, 6 + i * 2)
 			mb.AnchorPoint = Vector2.new(0, 0.5)
 			mb.Position = UDim2.new(0, 126 + (i - 1) * 5, 0.5, 0)
-			mb.BackgroundColor3 = currentThemeColor:Lerp(accentBlue, (i - 1) / 3)
+			mb.BackgroundColor3 = currentThemeColor:Lerp(accentPurple, (i - 1) / 3)
 			mb.BackgroundTransparency = 0.15
 			mb.BorderSizePixel = 0
 			mb.ZIndex = 21
@@ -2229,7 +2230,7 @@ function showMainPanel()
 		end
 		table.insert(AetherisThemeHooks, function(color)
 			if not bar.Parent then return end
-			for mi, mb in ipairs(meterBars) do mb.BackgroundColor3 = color:Lerp(accentBlue, (mi - 1) / 3) end
+			for mi, mb in ipairs(meterBars) do mb.BackgroundColor3 = color:Lerp(accentPurple, (mi - 1) / 3) end
 		end)
 		local fpsLabel = Instance.new("TextLabel")
 		fpsLabel.Size = UDim2.new(0, 36, 1, 0)
@@ -2962,9 +2963,9 @@ function showMainPanel()
 		})
 		dividerGradient.Parent = divider
 		divider.BackgroundColor3 = Color3.new(1, 1, 1)
-		dividerGradient.Color = ColorSequence.new(currentThemeColor, accentBlue)
+		dividerGradient.Color = ColorSequence.new(currentThemeColor, accentPurple)
 		table.insert(AetherisThemeHooks, function(c)
-			if dividerGradient.Parent then dividerGradient.Color = ColorSequence.new(c, accentBlue) end
+			if dividerGradient.Parent then dividerGradient.Color = ColorSequence.new(c, accentPurple) end
 		end)
 
 		-- Fundo da barra lateral (cartão com borda sutil).
@@ -3124,7 +3125,7 @@ function showMainPanel()
 	-----------------------------------------------------------------
 	do
 		local body = mainPanel:FindFirstChild("PanelBody")
-		local PURPLE_BLUE = function(c) return ColorSequence.new(c, accentBlue) end
+		local PURPLE_BLUE = function(c) return ColorSequence.new(c, accentPurple) end
 		local function themedGradient(inst, rotation)
 			local g = Instance.new("UIGradient")
 			g.Color = PURPLE_BLUE(currentThemeColor)
@@ -3156,20 +3157,20 @@ function showMainPanel()
 		local brand = Instance.new("Frame")
 		brand.Name = "Brand"
 		brand.Size = UDim2.new(0, 72, 0, 20)
-		brand.Position = UDim2.new(0, 48, 0, 8)
+		brand.Position = UDim2.new(0, 46, 0, 8)
 		brand.BackgroundTransparency = 1
 		brand.Active = false
 		brand.Parent = body
 		local brandLayout = Instance.new("UIListLayout")
 		brandLayout.FillDirection = Enum.FillDirection.Horizontal
 		brandLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
-		brandLayout.Padding = UDim.new(0, 4)
+		brandLayout.Padding = UDim.new(0, 3)
 		brandLayout.Parent = brand
 		titleLabel.Parent = brand
 		titleLabel.AutomaticSize = Enum.AutomaticSize.X
 		titleLabel.Size = UDim2.new(0, 0, 1, 0)
 		titleLabel.Position = UDim2.new(0, 0, 0, 0)
-		titleLabel.TextSize = 14
+		titleLabel.TextSize = 13
 		titleLabel.TextColor3 = Color3.new(1, 1, 1)
 		themedGradient(titleLabel, 0)
 		local hubTag = Instance.new("TextLabel")
@@ -3179,11 +3180,10 @@ function showMainPanel()
 		hubTag.Font = Enum.Font.GothamMedium
 		hubTag.Text = "Hub"
 		hubTag.TextColor3 = Color3.fromRGB(110, 120, 145)
-		hubTag.TextSize = 10
+		hubTag.TextSize = 8
 		hubTag.TextYAlignment = Enum.TextYAlignment.Bottom
-		hubTag.Visible = false
 		hubTag.Parent = brand
-		subTitleLabel.Position = UDim2.new(0, 49, 0, 28)
+		subTitleLabel.Position = UDim2.new(0, 47, 0, 28)
 		subTitleLabel.Size = UDim2.new(0, 70, 0, 12)
 
 		-- Conteúdo sem moldura: os cartões ficam direto sobre o painel.
@@ -3590,6 +3590,7 @@ function showMainPanel()
 		width = 196,
 		height = 178,
 		presets = {
+			Color3.fromRGB(52, 124, 255),
 			Color3.fromRGB(138, 43, 226),
 			Color3.fromRGB(255, 0, 128),
 			Color3.fromRGB(255, 65, 75),
