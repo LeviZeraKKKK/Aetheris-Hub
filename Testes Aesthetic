@@ -129,7 +129,7 @@ do
 		{"Diálogo", "Dialogue"}, {"Direto", "Direct"}, {"Nada encontrado.", "Nothing found."},
 		{"Nenhuma opção encontrada.", "No options found."}, {"opções", "options"}, {"opção", "option"},
 		{"Selecione", "Select"}, {"alvos", "targets"}, {"alvo", "target"}, {"jogadores", "players"},
-		{"Geral", "General"}, {"Tema pronto", "Preset Theme"}, {"funções alteradas", "functions changed"}, {"Fechar o Aetheris Hub?", "Close Aetheris Hub?"}, {"O painel será fechado por completo. Para abrir de novo, execute o script outra vez.", "The panel will be closed completely. To open it again, run the script again."}, {"Fechar", "Close"}, {"Tem certeza de que deseja excluir", "Are you sure you want to delete"}, {"Essa ação não pode ser desfeita.", "This action cannot be undone."}, {"direto", "direct"}, {"incompatível", "incompatible"}, {"Módulo", "Module"}, {"diálogo", "dialog"}, {"INIMIGOS (NPC)", "ENEMIES (NPC)"}, {"BAÚ", "CHEST"}, {"PLAYERS", "PLAYERS"}, {"BERRIES", "BERRIES"}, {"ESP Inimigos (NPC)", "ESP Enemies (NPC)"}, {"Inimigos", "Enemies"}, {"inimigos", "enemies"},
+		{"Geral", "General"}, {"Sons de clique", "Click Sounds"}, {"Som de clique", "Click Sound"}, {"Volume do som", "Sound Volume"}, {"Som: ", "Sound: "}, {"Clássico", "Classic"}, {"Suave", "Soft"}, {"Tecla", "Key"}, {"Página", "Page"}, {"Botão", "Button"}, {"Interruptor", "Switch"}, {"Clique rápido", "Fast Click"}, {"Estalo", "Snap"}, {"Bolha", "Bubble"}, {"Grave", "Bass"}, {"Nenhum", "None"}, {"Tema pronto", "Preset Theme"}, {"funções alteradas", "functions changed"}, {"Fechar o Aetheris Hub?", "Close Aetheris Hub?"}, {"O painel será fechado por completo. Para abrir de novo, execute o script outra vez.", "The panel will be closed completely. To open it again, run the script again."}, {"Fechar", "Close"}, {"Tem certeza de que deseja excluir", "Are you sure you want to delete"}, {"Essa ação não pode ser desfeita.", "This action cannot be undone."}, {"direto", "direct"}, {"incompatível", "incompatible"}, {"Módulo", "Module"}, {"diálogo", "dialog"}, {"INIMIGOS (NPC)", "ENEMIES (NPC)"}, {"BAÚ", "CHEST"}, {"PLAYERS", "PLAYERS"}, {"BERRIES", "BERRIES"}, {"ESP Inimigos (NPC)", "ESP Enemies (NPC)"}, {"Inimigos", "Enemies"}, {"inimigos", "enemies"},
 		{"inimigo", "enemy"}, {"Cor", "Color"}, {"Sem quest", "No quest"}, {"Tecla para ocultar", "Key to hide"},
 		{"Atalho de ocultar ativado", "Hide shortcut enabled"}, {"Aliados", "Allies"}, {"Jogadores", "Players"}, {"Jogador", "Player"},
 		{"tipo:", "type:"}, {"Automatização", "Automation"}, {"Personagem indisponível ou morto", "Character unavailable or dead"},
@@ -297,7 +297,7 @@ function AetherisDropdown(parent, cfg)
 
 	local frame = Instance.new("Frame")
 	frame.Size = UDim2.new(1, 0, 0, split and ROW_H or HEADER)
-	frame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+	frame.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
 	frame.BackgroundTransparency = split and 0.5 or 1
 	frame.BorderSizePixel = 0
 	frame.ClipsDescendants = true
@@ -331,7 +331,7 @@ function AetherisDropdown(parent, cfg)
 		box.ClipsDescendants = true
 		box.Parent = frame
 	end
-	box.BackgroundColor3 = split and Color3.fromRGB(19, 19, 28) or Color3.fromRGB(34, 34, 46)
+	box.BackgroundColor3 = split and Color3.fromRGB(19, 19, 28) or Color3.fromRGB(19, 20, 30)
 	box.BackgroundTransparency = split and 0 or 0.35
 	box.BorderSizePixel = 0
 	local frameCorner = Instance.new("UICorner")
@@ -2543,7 +2543,7 @@ function showMainPanel()
 		local overlay = Instance.new("TextButton")
 		overlay.Name = "CloseConfirm"
 		overlay.Size = UDim2.new(1, 0, 1, 0)
-		overlay.BackgroundColor3 = Color3.new(0, 0, 0)
+		overlay.BackgroundColor3 = Color3.fromRGB(4, 5, 12)
 		overlay.BackgroundTransparency = 1
 		overlay.BorderSizePixel = 0
 		overlay.AutoButtonColor = false
@@ -2551,33 +2551,85 @@ function showMainPanel()
 		overlay.Active = true
 		overlay.ZIndex = 500
 		overlay.Parent = screenGui
-		TweenService:Create(overlay, TweenInfo.new(0.18), {BackgroundTransparency = 0.45}):Play()
+		TweenService:Create(overlay, TweenInfo.new(0.22), {BackgroundTransparency = 0.38}):Play()
+
+		-- sombra + cartão
+		local shadow = Instance.new("Frame")
+		shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+		shadow.Position = UDim2.new(0.5, 0, 0.5, 8)
+		shadow.Size = UDim2.new(0, 330, 0, 214)
+		shadow.BackgroundColor3 = Color3.new(0, 0, 0)
+		shadow.BackgroundTransparency = 0.6
+		shadow.BorderSizePixel = 0
+		shadow.ZIndex = 500
+		shadow.Parent = overlay
+		local shc = Instance.new("UICorner")
+		shc.CornerRadius = UDim.new(0, 18)
+		shc.Parent = shadow
 
 		local card = Instance.new("Frame")
 		card.AnchorPoint = Vector2.new(0.5, 0.5)
 		card.Position = UDim2.new(0.5, 0, 0.5, 0)
-		card.Size = UDim2.new(0, 300, 0, 138)
-		card.BackgroundColor3 = Color3.fromRGB(21, 23, 32)
+		card.Size = UDim2.new(0, 330, 0, 214)
+		card.BackgroundColor3 = Color3.fromRGB(16, 18, 30)
 		card.BorderSizePixel = 0
+		card.ClipsDescendants = true
 		card.ZIndex = 501
 		card.Parent = overlay
 		local cc = Instance.new("UICorner")
-		cc.CornerRadius = UDim.new(0, 12)
+		cc.CornerRadius = UDim.new(0, 16)
 		cc.Parent = card
 		local cs = Instance.new("UIStroke")
 		cs.Color = Color3.new(1, 1, 1)
-		cs.Thickness = 1.5
+		cs.Thickness = 1.6
+		cs.Transparency = 0.1
 		cs.Parent = card
 		AetherisBlueGradient(cs, 45)
-		local sc = Instance.new("UIScale")
-		sc.Scale = 0.88
-		sc.Parent = card
-		TweenService:Create(sc, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+		local cardScale = Instance.new("UIScale")
+		cardScale.Scale = 0.86
+		cardScale.Parent = card
+		TweenService:Create(cardScale, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+
+		-- faixa de brilho no topo (degradê azul -> roxo)
+		local topGlow = Instance.new("Frame")
+		topGlow.Size = UDim2.new(1, 0, 0, 90)
+		topGlow.BackgroundColor3 = Color3.new(1, 1, 1)
+		topGlow.BackgroundTransparency = 0.82
+		topGlow.BorderSizePixel = 0
+		topGlow.ZIndex = 501
+		topGlow.Parent = card
+		local tgg = AetherisBlueGradient(topGlow, 90)
+		tgg.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.2), NumberSequenceKeypoint.new(1, 1)})
+		local topLine = Instance.new("Frame")
+		topLine.Size = UDim2.new(1, 0, 0, 3)
+		topLine.BackgroundColor3 = Color3.new(1, 1, 1)
+		topLine.BorderSizePixel = 0
+		topLine.ZIndex = 503
+		topLine.Parent = card
+		AetherisBlueGradient(topLine, 0)
+
+		-- logo
+		local logo = Instance.new("ImageLabel")
+		logo.AnchorPoint = Vector2.new(0.5, 0)
+		logo.Size = UDim2.fromOffset(56, 56)
+		logo.Position = UDim2.new(0.5, 0, 0, 16)
+		logo.BackgroundTransparency = 1
+		logo.Image = "rbxassetid://92797653374824"
+		logo.ScaleType = Enum.ScaleType.Fit
+		logo.ZIndex = 503
+		logo.Parent = card
+		task.spawn(function()
+			local t0 = tick()
+			while logo.Parent do
+				logo.Position = UDim2.new(0.5, 0, 0, 16 + math.sin((tick() - t0) * 2.4) * 2)
+				task.wait()
+			end
+		end)
 
 		local function lbl(text, y, h, size, color, bold)
 			local l = Instance.new("TextLabel")
-			l.Size = UDim2.new(1, -28, 0, h)
-			l.Position = UDim2.new(0, 14, 0, y)
+			l.Size = UDim2.new(1, -40, 0, h)
+			l.Position = UDim2.new(0, 20, 0, y)
 			l.BackgroundTransparency = 1
 			l.Font = bold and Enum.Font.GothamBold or Enum.Font.Gotham
 			l.Text = text
@@ -2586,40 +2638,71 @@ function showMainPanel()
 			l.TextWrapped = true
 			l.TextXAlignment = Enum.TextXAlignment.Center
 			l.TextYAlignment = Enum.TextYAlignment.Top
-			l.ZIndex = 502
+			l.ZIndex = 503
 			l.Parent = card
 			return l
 		end
-		lbl("Fechar o Aetheris Hub?", 14, 20, 14, Color3.fromRGB(240, 240, 250), true)
-		lbl("O painel será fechado por completo. Para abrir de novo, execute o script outra vez.", 40, 44, 11, Color3.fromRGB(170, 172, 190), false)
+		local titleL = lbl("Fechar o Aetheris Hub?", 82, 22, 16, Color3.new(1, 1, 1), true)
+		AetherisBlueGradient(titleL, 0)
+		lbl("O painel será fechado por completo. Para abrir de novo, execute o script outra vez.", 108, 34, 11, Color3.fromRGB(150, 156, 178), false)
 
-		local function mkBtn(text, x, color)
+		local function mkBtn(text, side, fillGradient, danger)
 			local b = Instance.new("TextButton")
-			b.Size = UDim2.new(0.5, -20, 0, 30)
-			b.Position = UDim2.new(x, x == 0 and 14 or 6, 1, -44)
-			b.BackgroundColor3 = color
+			b.Size = UDim2.new(0.5, -26, 0, 36)
+			b.Position = UDim2.new(side == 0 and 0 or 0.5, side == 0 and 20 or 6, 1, -54)
+			b.BackgroundColor3 = fillGradient and Color3.new(1, 1, 1) or Color3.fromRGB(28, 31, 48)
 			b.BorderSizePixel = 0
 			b.AutoButtonColor = false
 			b.Font = Enum.Font.GothamBold
 			b.Text = text
 			b.TextSize = 12
 			b.TextColor3 = Color3.new(1, 1, 1)
-			b.ZIndex = 502
+			b.ZIndex = 503
 			b.Parent = card
 			local bc = Instance.new("UICorner")
-			bc.CornerRadius = UDim.new(0, 8)
+			bc.CornerRadius = UDim.new(0, 10)
 			bc.Parent = b
-			b.MouseEnter:Connect(function() TweenService:Create(b, TweenInfo.new(0.1), {BackgroundTransparency = 0.2}):Play() end)
-			b.MouseLeave:Connect(function() TweenService:Create(b, TweenInfo.new(0.1), {BackgroundTransparency = 0}):Play() end)
+			local bs = Instance.new("UIStroke")
+			bs.Color = Color3.new(1, 1, 1)
+			bs.Thickness = 1.2
+			bs.Transparency = fillGradient and 1 or 0.45
+			bs.Parent = b
+			if fillGradient then
+				local g = Instance.new("UIGradient")
+				g.Color = ColorSequence.new(Color3.fromRGB(236, 72, 96), Color3.fromRGB(176, 52, 150))
+				g.Rotation = 0
+				g.Parent = b
+			else
+				AetherisBlueGradient(bs, 0)
+			end
+			local sc = Instance.new("UIScale")
+			sc.Parent = b
+			b.MouseEnter:Connect(function() TweenService:Create(sc, TweenInfo.new(0.12, Enum.EasingStyle.Quad), {Scale = 1.04}):Play() end)
+			b.MouseLeave:Connect(function() TweenService:Create(sc, TweenInfo.new(0.12, Enum.EasingStyle.Quad), {Scale = 1}):Play() end)
+			b.MouseButton1Down:Connect(function() TweenService:Create(sc, TweenInfo.new(0.06), {Scale = 0.96}):Play() end)
 			return b
 		end
-		local cancel = mkBtn("Cancelar", 0, Color3.fromRGB(44, 47, 64))
-		local yes = mkBtn("Fechar", 0.5, Color3.fromRGB(190, 60, 72))
-		cancel.MouseButton1Click:Connect(function()
-			TweenService:Create(overlay, TweenInfo.new(0.12), {BackgroundTransparency = 1}):Play()
-			task.delay(0.12, function() overlay:Destroy() end)
+		local cancel = mkBtn("Cancelar", 0, false, false)
+		local yes = mkBtn("Fechar", 1, true, true)
+
+		local keyConn
+		local function dismiss()
+			if keyConn then keyConn:Disconnect(); keyConn = nil end
+			TweenService:Create(overlay, TweenInfo.new(0.14), {BackgroundTransparency = 1}):Play()
+			TweenService:Create(cardScale, TweenInfo.new(0.14), {Scale = 0.92}):Play()
+			TweenService:Create(shadow, TweenInfo.new(0.14), {BackgroundTransparency = 1}):Play()
+			task.delay(0.15, function() overlay:Destroy() end)
+		end
+		local function confirm()
+			if keyConn then keyConn:Disconnect(); keyConn = nil end
+			pcall(function() if AetherisBoat then AetherisBoat.setEnabled(false) end end)
+			screenGui:Destroy()
+		end
+		cancel.MouseButton1Click:Connect(dismiss)
+		yes.MouseButton1Click:Connect(confirm)
+		keyConn = UserInputService.InputBegan:Connect(function(input, processed)
+			if input.KeyCode == Enum.KeyCode.Escape then dismiss() end
 		end)
-		yes.MouseButton1Click:Connect(function() screenGui:Destroy() end)
 	end
 
 	floatingBtn.MouseButton1Click:Connect(toggleMinimizePanel)
@@ -2904,7 +2987,7 @@ function showMainPanel()
 				TweenService:Create(tData.Label, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(165, 167, 184)}):Play()
 			end
 
-			TweenService:Create(indicator, TweenInfo.new(0.15), {BackgroundTransparency = 0.84}):Play()
+			TweenService:Create(indicator, TweenInfo.new(0.15), {BackgroundTransparency = 1}):Play()
 			TweenService:Create(tabNameLabel, TweenInfo.new(0.15), {TextColor3 = currentTextColor}):Play()
 		end)
 
@@ -2912,7 +2995,7 @@ function showMainPanel()
 			page.Visible = true
 			page.Position = UDim2.new(0, 4, 0, 4)
 			activePage = page
-			indicator.BackgroundTransparency = 0.84
+			indicator.BackgroundTransparency = 1
 			tabNameLabel.TextColor3 = currentTextColor
 		end
 	end
@@ -3019,12 +3102,12 @@ function showMainPanel()
 			local stroke = Instance.new("UIStroke")
 			stroke.Color = currentThemeColor
 			stroke.Thickness = 1
-			stroke.Transparency = (data.Page == activePage) and 0.65 or 1
+			stroke.Transparency = 1
 			stroke.Parent = btn
 			table.insert(themeSections, stroke)
 			tabStrokes[index] = stroke
 			if data.Page == activePage then
-				btn.BackgroundTransparency = 0.84
+				btn.BackgroundTransparency = 1
 			end
 
 			btn.MouseEnter:Connect(function()
@@ -3041,8 +3124,8 @@ function showMainPanel()
 				task.defer(function()
 					for i2, d2 in ipairs(tabButtonsList) do
 						local isActive = d2.Page == activePage
-						TweenService:Create(tabStrokes[i2], TweenInfo.new(0.18), {Transparency = isActive and 0.65 or 1}):Play()
-						TweenService:Create(d2.Button, TweenInfo.new(0.18), {BackgroundTransparency = isActive and 0.84 or 1}):Play()
+						TweenService:Create(tabStrokes[i2], TweenInfo.new(0.18), {Transparency = 1}):Play()
+						TweenService:Create(d2.Button, TweenInfo.new(0.18), {BackgroundTransparency = 1}):Play()
 					end
 				end)
 			end)
@@ -3225,7 +3308,7 @@ function showMainPanel()
 		searchWrap.Name = "SearchBox"
 		searchWrap.Size = UDim2.new(0, 100, 0, 22)
 		searchWrap.Position = UDim2.new(1, -216, 0, 11)
-		searchWrap.BackgroundColor3 = Color3.fromRGB(17, 23, 36)
+		searchWrap.BackgroundColor3 = Color3.fromRGB(11, 14, 24)
 		searchWrap.BorderSizePixel = 0
 		searchWrap.Parent = body
 		local searchCorner = Instance.new("UICorner")
@@ -3406,7 +3489,7 @@ function showMainPanel()
 
 		local section = Instance.new("Frame")
 		section.Size = UDim2.new(1, sectionW, 0, 0)
-		section.BackgroundColor3 = Color3.fromRGB(17, 23, 36)
+		section.BackgroundColor3 = Color3.fromRGB(11, 14, 24)
 		section.BackgroundTransparency = 0.1
 		section.Parent = parentFrame
 
@@ -4152,8 +4235,8 @@ function showMainPanel()
 	local function addColorPicker(parent, title, defaultColor, callback)
 		local pickerFrame = Instance.new("Frame")
 		pickerFrame.Size = UDim2.new(1, 0, 0, 26)
-		pickerFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-		pickerFrame.BackgroundTransparency = 0.5
+		pickerFrame.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
+		pickerFrame.BackgroundTransparency = 0.3
 		pickerFrame.Parent = parent
 
 		local corner = Instance.new("UICorner")
@@ -4193,8 +4276,8 @@ function showMainPanel()
 	local function addEspToggleWithColor(parent, name, defaultColor, colorCallback, toggleCallback, modeCallback, modeText)
 		local toggleFrame = Instance.new("Frame")
 		toggleFrame.Size = UDim2.new(1, 0, 0, 26)
-		toggleFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-		toggleFrame.BackgroundTransparency = 0.5
+		toggleFrame.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
+		toggleFrame.BackgroundTransparency = 0.3
 		toggleFrame.Parent = parent
 
 		local corner = Instance.new("UICorner")
@@ -4312,8 +4395,8 @@ function showMainPanel()
 	local function addToggle(parent, name, callback, defaultState, configName)
 		local toggleFrame = Instance.new("Frame")
 		toggleFrame.Size = UDim2.new(1, 0, 0, 26)
-		toggleFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-		toggleFrame.BackgroundTransparency = 0.5
+		toggleFrame.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
+		toggleFrame.BackgroundTransparency = 0.3
 		toggleFrame.Parent = parent
 
 		local corner = Instance.new("UICorner")
@@ -4394,8 +4477,8 @@ function showMainPanel()
 
 		local sliderFrame = Instance.new("Frame")
 		sliderFrame.Size = UDim2.new(1, 0, 0, 38)
-		sliderFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-		sliderFrame.BackgroundTransparency = 0.5
+		sliderFrame.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
+		sliderFrame.BackgroundTransparency = 0.3
 		sliderFrame.Parent = parent
 
 		local corner = Instance.new("UICorner")
@@ -6134,8 +6217,8 @@ function showMainPanel()
 		local fogRow = Instance.new("Frame")
 		fogRow.Name = "FogToggleRow"
 		fogRow.Size = UDim2.new(1, 0, 0, 26)
-		fogRow.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-		fogRow.BackgroundTransparency = 0.5
+		fogRow.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
+		fogRow.BackgroundTransparency = 0.3
 		fogRow.Parent = fogSection
 		local rowCorner = Instance.new("UICorner")
 		rowCorner.CornerRadius = UDim.new(0, 5)
@@ -6540,7 +6623,7 @@ function showMainPanel()
 				row.Name = "LayerRow_" .. tostring(index)
 				row.LayoutOrder = index
 				row.Size = UDim2.new(1, -8, 0, 27)
-				row.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+				row.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
 				row.BackgroundTransparency = 0.25
 				row.BorderSizePixel = 0
 				row.ZIndex = 82
@@ -6592,7 +6675,7 @@ function showMainPanel()
 						Size = UDim2.new(0, 3, 0, sel and 17 or 0)
 					}):Play()
 					TweenService:Create(row, TweenInfo.new(0.2), {
-						BackgroundColor3 = sel and currentThemeColor or Color3.fromRGB(34, 34, 46),
+						BackgroundColor3 = sel and currentThemeColor or Color3.fromRGB(19, 20, 30),
 						BackgroundTransparency = sel and 0.72 or 0.25
 					}):Play()
 				end
@@ -6741,8 +6824,8 @@ function showMainPanel()
 
 	local modeFrame = Instance.new("Frame")
 	modeFrame.Size = UDim2.new(1, 0, 0, 26)
-	modeFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-	modeFrame.BackgroundTransparency = 0.5
+	modeFrame.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
+	modeFrame.BackgroundTransparency = 0.3
 	modeFrame.Parent = secCombat
 
 	local mfCorner = Instance.new("UICorner")
@@ -6789,7 +6872,7 @@ function showMainPanel()
 		end
 		local function round(parent, r) return new("UICorner", {CornerRadius = UDim.new(0, r)}, parent) end
 		local GRAY = Color3.fromRGB(150, 150, 170)
-		local OFFCOLOR = Color3.fromRGB(34, 34, 46)
+		local OFFCOLOR = Color3.fromRGB(19, 20, 30)
 		local LIST_HEIGHT = 158
 		local dropOpen = false
 
@@ -6797,7 +6880,7 @@ function showMainPanel()
 		local header = new("TextButton", {
 			Name = "PlayerDropdownHeader",
 			Size = UDim2.new(1, 0, 0, 32),
-			BackgroundColor3 = Color3.fromRGB(34, 34, 46),
+			BackgroundColor3 = Color3.fromRGB(19, 20, 30),
 			BackgroundTransparency = 0.35,
 			BorderSizePixel = 0,
 			AutoButtonColor = false,
@@ -7177,7 +7260,7 @@ function showMainPanel()
 	local filtersHeader = Instance.new("TextButton")
 	filtersHeader.Name = "FiltersDropdownHeader"
 	filtersHeader.Size = UDim2.new(1, 0, 0, 32)
-	filtersHeader.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+	filtersHeader.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
 	filtersHeader.BackgroundTransparency = 0.35
 	filtersHeader.BorderSizePixel = 0
 	filtersHeader.AutoButtonColor = false
@@ -7483,7 +7566,7 @@ function showMainPanel()
 			end
 			local function round(parent, r) return new("UICorner", {CornerRadius = UDim.new(0, r)}, parent) end
 			local GRAY = Color3.fromRGB(150, 150, 170)
-			local OFFCOLOR = Color3.fromRGB(34, 34, 46)
+			local OFFCOLOR = Color3.fromRGB(19, 20, 30)
 			local ALLY = Color3.fromRGB(46, 160, 90)
 			local LIST_HEIGHT = 158
 			local dropOpen = false
@@ -7491,7 +7574,7 @@ function showMainPanel()
 			local header = new("TextButton", {
 				Name = "AimPlayerDropdownHeader",
 				Size = UDim2.new(1, 0, 0, 32),
-				BackgroundColor3 = Color3.fromRGB(34, 34, 46),
+				BackgroundColor3 = Color3.fromRGB(19, 20, 30),
 				BackgroundTransparency = 0.35,
 				BorderSizePixel = 0,
 				AutoButtonColor = false,
@@ -9761,7 +9844,7 @@ function showMainPanel()
 	rollStatusLabel = Instance.new("TextLabel")
 	rollStatusLabel.Name = "FruitRollStatus"
 	rollStatusLabel.Size = UDim2.new(1, 0, 0, 34)
-	rollStatusLabel.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
+	rollStatusLabel.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
 	rollStatusLabel.BackgroundTransparency = 0.48
 	rollStatusLabel.BorderSizePixel = 0
 	rollStatusLabel.Font = currentGlobalFont
@@ -10034,7 +10117,7 @@ function showMainPanel()
 			back.Name = "FxBackdrop"
 			back.Size = UDim2.new(1, 0, 1, 0)
 			back.BackgroundColor3 = Color3.new(1, 1, 1)
-			back.BackgroundTransparency = 0.93
+			back.BackgroundTransparency = 0.96
 			back.BorderSizePixel = 0
 			back.Active = false
 			back.ZIndex = 0
@@ -10050,17 +10133,24 @@ function showMainPanel()
 		safe("barra de abas", function()
 			local ind = Instance.new("Frame")
 			ind.Name = "FxTabIndicator"
-			ind.Size = UDim2.fromOffset(3, 16)
+			ind.Size = UDim2.fromOffset(104, 25)
 			ind.BackgroundColor3 = Color3.new(1, 1, 1)
+			ind.BackgroundTransparency = 0.78
 			ind.BorderSizePixel = 0
 			ind.Active = false
-			ind.ZIndex = 30
+			ind.ZIndex = 0
 			ind.Visible = false
 			ind.Parent = mainPanel
 			local ic = Instance.new("UICorner")
-			ic.CornerRadius = UDim.new(1, 0)
+			ic.CornerRadius = UDim.new(0, 8)
 			ic.Parent = ind
-			AetherisBlueGradient(ind, 90)
+			local istroke = Instance.new("UIStroke")
+			istroke.Color = Color3.new(1, 1, 1)
+			istroke.Thickness = 1
+			istroke.Transparency = 0.5
+			istroke.Parent = ind
+			AetherisBlueGradient(ind, 0)
+			AetherisBlueGradient(istroke, 0)
 			FX.ind = ind
 		end)
 
@@ -10218,10 +10308,11 @@ function showMainPanel()
 					if t.data.Page == activePage then target = t.data.Button break end
 				end
 				if target and sidebar then
-					local y = target.AbsolutePosition.Y - mainPanel.AbsolutePosition.Y + target.AbsoluteSize.Y / 2 - 8
-					local x = sidebar.AbsolutePosition.X - mainPanel.AbsolutePosition.X - 1
+					local y = target.AbsolutePosition.Y - mainPanel.AbsolutePosition.Y
+					local x = target.AbsolutePosition.X - mainPanel.AbsolutePosition.X
 					local topY = sidebar.AbsolutePosition.Y - mainPanel.AbsolutePosition.Y
-					local inside = y >= topY - 4 and y <= topY + sidebar.AbsoluteSize.Y - 12
+					local inside = y >= topY - 4 and y <= topY + sidebar.AbsoluteSize.Y - target.AbsoluteSize.Y + 4
+					FX.ind.Size = UDim2.fromOffset(target.AbsoluteSize.X, target.AbsoluteSize.Y)
 					FX.ind.Visible = inside
 					if lerpY == nil then lerpY = y end
 					lerpY = lerpY + (y - lerpY) * math.min(1, dt * 14)
@@ -10290,6 +10381,72 @@ function showMainPanel()
 			end
 		end)
 
+		-- Sons de clique (Config): escolha do som, volume e liga/desliga
+		safe("sons", function()
+			local sounds = {
+				{"Clássico", "rbxassetid://421058925"},
+				{"Suave", "rbxassetid://6895079853"},
+				{"Tecla", "rbxassetid://6042053626"},
+				{"Página", "rbxassetid://4590662766"},
+				{"Botão", "rbxasset://sounds/button.wav"},
+				{"Interruptor", "rbxasset://sounds/switch.wav"},
+				{"Clique rápido", "rbxasset://sounds/clickfast.wav"},
+				{"Ping", "rbxasset://sounds/electronicpingshort.wav"},
+				{"Estalo", "rbxasset://sounds/snap.mp3"},
+				{"Bolha", "rbxasset://sounds/impact_water.mp3"},
+				{"Grave", "rbxasset://sounds/bass.wav"},
+				{"Nenhum", ""},
+			}
+			local S = {enabled = true, volume = 0.5, current = "Clássico"}
+			local player = Instance.new("Sound")
+			player.Name = "AetherisClickSound"
+			player.Parent = screenGui
+			local function soundId(name)
+				for _, e in ipairs(sounds) do if e[1] == name then return e[2] end end
+				return ""
+			end
+			local function play(force)
+				if not force and not S.enabled then return end
+				local id = soundId(S.current)
+				if id == "" then return end
+				pcall(function()
+					player.SoundId = id
+					player.Volume = S.volume
+					player.TimePosition = 0
+					player:Play()
+				end)
+			end
+			local function hook(obj)
+				if (obj:IsA("TextButton") or obj:IsA("ImageButton")) and not obj:GetAttribute("AetherisSnd")
+					and obj.Name ~= "CloseConfirm" and obj.Name ~= "SectionHeaderButton" then
+					obj:SetAttribute("AetherisSnd", true)
+					obj.MouseButton1Click:Connect(function() play(false) end)
+				end
+			end
+			for _, d in ipairs(screenGui:GetDescendants()) do hook(d) end
+			screenGui.DescendantAdded:Connect(function(d) task.defer(hook, d) end)
+
+			local secSnd = createSection(configPage, "Sons de clique", sectionIcons.Theme)
+			addToggle(secSnd, "Som de clique", function(state) S.enabled = state end, true)
+			local sndDD = AetherisDropdown(secSnd, {
+				prefix = "Som: ",
+				label = S.current,
+				value = S.current,
+				maxRows = 6,
+				getOptions = function()
+					local o = {}
+					for _, e in ipairs(sounds) do table.insert(o, {label = e[1], value = e[1]}) end
+					return o
+				end,
+				onSelect = function(v) S.current = v play(true) end,
+			})
+			registerConfigBinding(secSnd, "Som escolhido", function() return S.current end, function(v)
+				if type(v) == "string" and soundId(v) ~= nil then S.current = v; sndDD.setValue(v, v) end
+			end)
+			addSlider(secSnd, "Volume do som", 0, 100, 50, function(val) S.volume = val / 100 end, 0, "%")
+			AetherisClickSound = {play = play, state = S}
+		end)
+
 		-- Temas prontos (Design): azul base + cor final do degradê
 		safe("temas", function()
 			local themes = {
@@ -10332,8 +10489,8 @@ function showMainPanel()
 	
 	local kbFrame = Instance.new("Frame")
 	kbFrame.Size = UDim2.new(1, 0, 0, 26)
-	kbFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-	kbFrame.BackgroundTransparency = 0.5
+	kbFrame.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
+	kbFrame.BackgroundTransparency = 0.3
 	kbFrame.Parent = secKeybind
 
 	local kbCorner = Instance.new("UICorner")
@@ -10389,8 +10546,8 @@ function showMainPanel()
 	-- Seleção da tecla: linha própria logo abaixo do toggle
 	local kbKeyFrame = Instance.new("Frame")
 	kbKeyFrame.Size = UDim2.new(1, 0, 0, 26)
-	kbKeyFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 46)
-	kbKeyFrame.BackgroundTransparency = 0.5
+	kbKeyFrame.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
+	kbKeyFrame.BackgroundTransparency = 0.3
 	kbKeyFrame.Parent = secKeybind
 	local kbKeyCorner = Instance.new("UICorner")
 	kbKeyCorner.CornerRadius = UDim.new(0, 5)
@@ -10526,7 +10683,7 @@ function showMainPanel()
 		local function round(parent, r) return new("UICorner", {CornerRadius = UDim.new(0, r)}, parent) end
 		local GRAY = Color3.fromRGB(150, 150, 170)
 		local LINE = Color3.fromRGB(70, 70, 95)
-		local CARD = Color3.fromRGB(34, 34, 46)
+		local CARD = Color3.fromRGB(19, 20, 30)
 		local function hover(btn, base)
 			btn.MouseEnter:Connect(function()
 				TweenService:Create(btn, TweenInfo.new(0.12), {BackgroundColor3 = base:Lerp(currentThemeColor, 0.4)}):Play()
@@ -11774,7 +11931,7 @@ panel.Name = "FruitStockPanel"
 panel.Size = UDim2.new(0, PW, 0, PH)
 panel.AnchorPoint = Vector2.new(0.5, 0.5)
 panel.Position = UDim2.new(0.5, 0, 0.5, 0)
-panel.BackgroundColor3 = Color3.fromRGB(17, 23, 36)
+panel.BackgroundColor3 = Color3.fromRGB(11, 14, 24)
 panel.BorderSizePixel = 0
 panel.Visible = false
 panel.ZIndex = 10
