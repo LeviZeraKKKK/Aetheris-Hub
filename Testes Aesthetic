@@ -2972,28 +2972,14 @@ function showMainPanel()
 		do
 			local logo = Instance.new("ImageLabel")
 			logo.Name = "AetherisLogo"
-			logo.Size = UDim2.fromOffset(34, 34)
-			logo.Position = UDim2.new(0, 10, 0, 8)
+			logo.Size = UDim2.fromOffset(36, 36)
+			logo.Position = UDim2.new(0, 8, 0, 4)
 			logo.BackgroundTransparency = 1
 			logo.Image = "rbxassetid://92797653374824"
 			logo.ScaleType = Enum.ScaleType.Fit
 			logo.Active = false
 			logo.ZIndex = 12
 			logo.Parent = mainPanel
-			local logoText = Instance.new("TextLabel")
-			logoText.Name = "AetherisLogoText"
-			logoText.Size = UDim2.fromOffset(70, 34)
-			logoText.Position = UDim2.new(0, 48, 0, 8)
-			logoText.BackgroundTransparency = 1
-			logoText.Font = Enum.Font.GothamBold
-			logoText.Text = "Aetheris Hub"
-			logoText.TextSize = 12
-			logoText.TextColor3 = Color3.new(1, 1, 1)
-			logoText.TextXAlignment = Enum.TextXAlignment.Left
-			logoText.Active = false
-			logoText.ZIndex = 12
-			logoText.Parent = mainPanel
-			AetherisBlueGradient(logoText, 0)
 		end
 
 		local sideBack = Instance.new("Frame")
@@ -3169,8 +3155,8 @@ function showMainPanel()
 		-- Marca: "Aetheris" em degradê + "Hub" pequeno.
 		local brand = Instance.new("Frame")
 		brand.Name = "Brand"
-		brand.Size = UDim2.new(0, 108, 0, 22)
-		brand.Position = UDim2.new(0, 14, 0, 8)
+		brand.Size = UDim2.new(0, 72, 0, 20)
+		brand.Position = UDim2.new(0, 48, 0, 8)
 		brand.BackgroundTransparency = 1
 		brand.Active = false
 		brand.Parent = body
@@ -3183,6 +3169,7 @@ function showMainPanel()
 		titleLabel.AutomaticSize = Enum.AutomaticSize.X
 		titleLabel.Size = UDim2.new(0, 0, 1, 0)
 		titleLabel.Position = UDim2.new(0, 0, 0, 0)
+		titleLabel.TextSize = 14
 		titleLabel.TextColor3 = Color3.new(1, 1, 1)
 		themedGradient(titleLabel, 0)
 		local hubTag = Instance.new("TextLabel")
@@ -3194,9 +3181,10 @@ function showMainPanel()
 		hubTag.TextColor3 = Color3.fromRGB(110, 120, 145)
 		hubTag.TextSize = 10
 		hubTag.TextYAlignment = Enum.TextYAlignment.Bottom
+		hubTag.Visible = false
 		hubTag.Parent = brand
-		subTitleLabel.Position = UDim2.new(0, 15, 0, 31)
-		subTitleLabel.Size = UDim2.new(0, 100, 0, 12)
+		subTitleLabel.Position = UDim2.new(0, 49, 0, 28)
+		subTitleLabel.Size = UDim2.new(0, 70, 0, 12)
 
 		-- Conteúdo sem moldura: os cartões ficam direto sobre o painel.
 		contentContainer.BackgroundTransparency = 1
