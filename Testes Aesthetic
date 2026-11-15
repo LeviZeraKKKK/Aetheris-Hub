@@ -129,7 +129,7 @@ do
 		{"Diálogo", "Dialogue"}, {"Direto", "Direct"}, {"Nada encontrado.", "Nothing found."},
 		{"Nenhuma opção encontrada.", "No options found."}, {"opções", "options"}, {"opção", "option"},
 		{"Selecione", "Select"}, {"alvos", "targets"}, {"alvo", "target"}, {"jogadores", "players"},
-		{"Geral", "General"}, {"Fechar o Aetheris Hub?", "Close Aetheris Hub?"}, {"O painel será fechado por completo. Para abrir de novo, execute o script outra vez.", "The panel will be closed completely. To open it again, run the script again."}, {"Fechar", "Close"}, {"Tem certeza de que deseja excluir", "Are you sure you want to delete"}, {"Essa ação não pode ser desfeita.", "This action cannot be undone."}, {"direto", "direct"}, {"incompatível", "incompatible"}, {"Módulo", "Module"}, {"diálogo", "dialog"}, {"INIMIGOS (NPC)", "ENEMIES (NPC)"}, {"BAÚ", "CHEST"}, {"PLAYERS", "PLAYERS"}, {"BERRIES", "BERRIES"}, {"ESP Inimigos (NPC)", "ESP Enemies (NPC)"}, {"Inimigos", "Enemies"}, {"inimigos", "enemies"},
+		{"Geral", "General"}, {"Tema pronto", "Preset Theme"}, {"funções alteradas", "functions changed"}, {"Fechar o Aetheris Hub?", "Close Aetheris Hub?"}, {"O painel será fechado por completo. Para abrir de novo, execute o script outra vez.", "The panel will be closed completely. To open it again, run the script again."}, {"Fechar", "Close"}, {"Tem certeza de que deseja excluir", "Are you sure you want to delete"}, {"Essa ação não pode ser desfeita.", "This action cannot be undone."}, {"direto", "direct"}, {"incompatível", "incompatible"}, {"Módulo", "Module"}, {"diálogo", "dialog"}, {"INIMIGOS (NPC)", "ENEMIES (NPC)"}, {"BAÚ", "CHEST"}, {"PLAYERS", "PLAYERS"}, {"BERRIES", "BERRIES"}, {"ESP Inimigos (NPC)", "ESP Enemies (NPC)"}, {"Inimigos", "Enemies"}, {"inimigos", "enemies"},
 		{"inimigo", "enemy"}, {"Cor", "Color"}, {"Sem quest", "No quest"}, {"Tecla para ocultar", "Key to hide"},
 		{"Atalho de ocultar ativado", "Hide shortcut enabled"}, {"Aliados", "Allies"}, {"Jogadores", "Players"}, {"Jogador", "Player"},
 		{"tipo:", "type:"}, {"Automatização", "Automation"}, {"Personagem indisponível ou morto", "Character unavailable or dead"},
@@ -1327,10 +1327,18 @@ do
 	loadIcon.Size = UDim2.new(1, 0, 1, 0)
 	loadIcon.BackgroundTransparency = 1
 	loadIcon.Font = Enum.Font.GothamBold
-	loadIcon.Text = "A"
+	loadIcon.Text = ""
 	loadIcon.TextColor3 = WHITE
 	loadIcon.TextSize = 17
 	loadIcon.Parent = logoHolder
+	local loadLogo = Instance.new("ImageLabel")
+	loadLogo.Size = UDim2.new(1, -8, 1, -8)
+	loadLogo.Position = UDim2.new(0, 4, 0, 4)
+	loadLogo.BackgroundTransparency = 1
+	loadLogo.Image = "rbxassetid://92797653374824"
+	loadLogo.ScaleType = Enum.ScaleType.Fit
+	loadLogo.ZIndex = loadIcon.ZIndex + 1
+	loadLogo.Parent = logoHolder
 	local iconGradient = Instance.new("UIGradient")
 	iconGradient.Color = ColorSequence.new(PURPLE, BLUE)
 	iconGradient.Rotation = 45
@@ -4373,6 +4381,8 @@ function showMainPanel()
 			TweenService:Create(circle, TweenInfo.new(0.18), {Position = targetPos}):Play()
 			TweenService:Create(toggleBtn, TweenInfo.new(0.18), {BackgroundColor3 = targetColor}):Play()
 			TweenService:Create(ledIndicator, TweenInfo.new(0.18), {BackgroundColor3 = targetLedColor}):Play()
+			TweenService:Create(circle, TweenInfo.new(0.08), {Size = UDim2.new(0, 17, 0, 12)}):Play()
+			task.delay(0.08, function() TweenService:Create(circle, TweenInfo.new(0.14), {Size = UDim2.new(0, 12, 0, 12)}):Play() end)
 			callback(toggleStateRef.isToggled)
 		end
 		toggleBtn.MouseButton1Click:Connect(function() setToggleState(not toggleStateRef.isToggled) end)
@@ -4433,6 +4443,44 @@ function showMainPanel()
 		fCorner.CornerRadius = UDim.new(1, 0)
 		fCorner.Parent = fill
 
+		local knob = Instance.new("Frame")
+		knob.Name = "SliderKnob"
+		knob.AnchorPoint = Vector2.new(0.5, 0.5)
+		knob.Size = UDim2.new(0, 10, 0, 10)
+		knob.Position = UDim2.new((default - min) / (max - min), 0, 0.5, 0)
+		knob.BackgroundColor3 = Color3.new(1, 1, 1)
+		knob.BorderSizePixel = 0
+		knob.ZIndex = 5
+		knob.Parent = bar
+		local kCorner = Instance.new("UICorner")
+		kCorner.CornerRadius = UDim.new(1, 0)
+		kCorner.Parent = knob
+		local kStroke = Instance.new("UIStroke")
+		kStroke.Color = currentThemeColor
+		kStroke.Thickness = 1.5
+		kStroke.Parent = knob
+		table.insert(themeSections, kStroke)
+		local bubble = Instance.new("TextLabel")
+		bubble.Name = "SliderBubble"
+		bubble.AnchorPoint = Vector2.new(0.5, 1)
+		bubble.Size = UDim2.new(0, 40, 0, 14)
+		bubble.Position = UDim2.new(0.5, 0, 0, -6)
+		bubble.BackgroundColor3 = Color3.fromRGB(12, 14, 22)
+		bubble.BackgroundTransparency = 1
+		bubble.TextTransparency = 1
+		bubble.Font = Enum.Font.GothamBold
+		bubble.TextSize = 9
+		bubble.TextColor3 = Color3.new(1, 1, 1)
+		bubble.Text = ""
+		bubble.ZIndex = 6
+		bubble.Parent = knob
+		local bbCorner = Instance.new("UICorner")
+		bbCorner.CornerRadius = UDim.new(0, 5)
+		bbCorner.Parent = bubble
+		local function showBubble(on)
+			TweenService:Create(knob, TweenInfo.new(0.12), {Size = on and UDim2.new(0, 14, 0, 14) or UDim2.new(0, 10, 0, 10)}):Play()
+			TweenService:Create(bubble, TweenInfo.new(0.12), {BackgroundTransparency = on and 0.05 or 1, TextTransparency = on and 0 or 1}):Play()
+		end
 		local draggingSlider = false
 		local currentValue = default
 		local function setSliderValue(value)
@@ -4445,14 +4493,19 @@ function showMainPanel()
 			end
 			currentValue = value
 			fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
+			knob.Position = UDim2.new((value - min) / (max - min), 0, 0.5, 0)
+			bubble.Text = formatSliderValue(value)
 			label.Text = name .. ": " .. formatSliderValue(value)
 			callback(value)
 		end
 		bar.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSlider = true end
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSlider = true showBubble(true) end
 		end)
 		UserInputService.InputEnded:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSlider = false end
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				if draggingSlider then showBubble(false) end
+				draggingSlider = false
+			end
 		end)
 		UserInputService.InputChanged:Connect(function(input)
 			if draggingSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
@@ -9970,6 +10023,362 @@ function showMainPanel()
 			end
 		end
 	end)
+
+	-----------------------------------------------------------------
+	-- EFEITOS DE DESIGN (tudo protegido por pcall: se algo falhar, o painel continua normal)
+	-----------------------------------------------------------------
+	do
+		local function safe(name, fn)
+			local ok, err = pcall(fn)
+			if not ok then warn("[Aetheris] efeito '" .. name .. "' falhou:", err) end
+		end
+		local FX = {}
+		local lerpY = nil
+
+		-- Fundo em vidro com degradê animado
+		safe("fundo", function()
+			local back = Instance.new("Frame")
+			back.Name = "FxBackdrop"
+			back.Size = UDim2.new(1, 0, 1, 0)
+			back.BackgroundColor3 = Color3.new(1, 1, 1)
+			back.BackgroundTransparency = 0.93
+			back.BorderSizePixel = 0
+			back.Active = false
+			back.ZIndex = 0
+			back.Parent = mainPanel
+			local bc = Instance.new("UICorner")
+			bc.CornerRadius = panelCorner.CornerRadius
+			bc.Parent = back
+			panelCorner:GetPropertyChangedSignal("CornerRadius"):Connect(function() bc.CornerRadius = panelCorner.CornerRadius end)
+			FX.backGrad = AetherisBlueGradient(back, 20)
+		end)
+
+		-- Cantos luminosos
+		safe("cantos", function()
+			for _, c in ipairs({{0, 0}, {1, 0}, {0, 1}, {1, 1}}) do
+				local sx, sy = c[1] == 0 and 1 or -1, c[2] == 0 and 1 or -1
+				for _, dim in ipairs({{16, 2}, {2, 16}}) do
+					local l = Instance.new("Frame")
+					l.Name = "FxCorner"
+					l.AnchorPoint = Vector2.new(c[1], c[2])
+					l.Size = UDim2.fromOffset(dim[1], dim[2])
+					l.Position = UDim2.new(c[1], sx * 6, c[2], sy * 6)
+					l.BackgroundColor3 = Color3.new(1, 1, 1)
+					l.BackgroundTransparency = 0.25
+					l.BorderSizePixel = 0
+					l.Active = false
+					l.ZIndex = 40
+					l.Parent = mainPanel
+					AetherisBlueGradient(l, dim[1] > dim[2] and 0 or 90)
+				end
+			end
+		end)
+
+		-- Halo da logo
+		safe("halo", function()
+			local halo = Instance.new("Frame")
+			halo.Name = "FxLogoHalo"
+			halo.AnchorPoint = Vector2.new(0.5, 0.5)
+			halo.Size = UDim2.fromOffset(44, 44)
+			halo.Position = UDim2.new(0, 26, 0, 22)
+			halo.BackgroundColor3 = currentThemeColor
+			halo.BackgroundTransparency = 0.86
+			halo.BorderSizePixel = 0
+			halo.Active = false
+			halo.ZIndex = 11
+			halo.Parent = mainPanel
+			local hc = Instance.new("UICorner")
+			hc.CornerRadius = UDim.new(1, 0)
+			hc.Parent = halo
+			table.insert(themeSliders, halo)
+			FX.halo = halo
+		end)
+
+		-- Barra deslizante que acompanha a aba ativa
+		safe("barra de abas", function()
+			local ind = Instance.new("Frame")
+			ind.Name = "FxTabIndicator"
+			ind.Size = UDim2.fromOffset(3, 16)
+			ind.BackgroundColor3 = Color3.new(1, 1, 1)
+			ind.BorderSizePixel = 0
+			ind.Active = false
+			ind.ZIndex = 30
+			ind.Visible = false
+			ind.Parent = mainPanel
+			local ic = Instance.new("UICorner")
+			ic.CornerRadius = UDim.new(1, 0)
+			ic.Parent = ind
+			AetherisBlueGradient(ind, 90)
+			FX.ind = ind
+		end)
+
+		-- Ícone aceso na aba ativa + contador de funções ligadas + ondas ao clicar
+		FX.tabs = {}
+		safe("abas", function()
+			for _, d in ipairs(tabButtonsList) do
+				local t = {data = d, icon = d.Button:FindFirstChild("TabImageIcon"), lastActive = nil}
+				local badge = Instance.new("TextLabel")
+				badge.Name = "FxBadge"
+				badge.AnchorPoint = Vector2.new(1, 0.5)
+				badge.Size = UDim2.fromOffset(15, 13)
+				badge.Position = UDim2.new(1, -4, 0.5, 0)
+				badge.BackgroundColor3 = accentBlue
+				badge.BackgroundTransparency = 0.1
+				badge.Font = Enum.Font.GothamBold
+				badge.TextSize = 8
+				badge.TextColor3 = Color3.new(1, 1, 1)
+				badge.Text = "0"
+				badge.Visible = false
+				badge.ZIndex = 5
+				badge.Parent = d.Button
+				local bgc = Instance.new("UICorner")
+				bgc.CornerRadius = UDim.new(1, 0)
+				bgc.Parent = badge
+				t.badge = badge
+				table.insert(FX.tabs, t)
+				d.Button.ClipsDescendants = true
+				d.Button.MouseButton1Down:Connect(function(x, y)
+					safe("onda", function()
+						local r = Instance.new("Frame")
+						r.AnchorPoint = Vector2.new(0.5, 0.5)
+						r.Size = UDim2.fromOffset(0, 0)
+						r.Position = UDim2.fromOffset(x - d.Button.AbsolutePosition.X, y - d.Button.AbsolutePosition.Y)
+						r.BackgroundColor3 = Color3.new(1, 1, 1)
+						r.BackgroundTransparency = 0.75
+						r.BorderSizePixel = 0
+						r.Active = false
+						r.ZIndex = 4
+						r.Parent = d.Button
+						local rc = Instance.new("UICorner")
+						rc.CornerRadius = UDim.new(1, 0)
+						rc.Parent = r
+						local sz = d.Button.AbsoluteSize.X * 2.2
+						TweenService:Create(r, TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.fromOffset(sz, sz), BackgroundTransparency = 1}):Play()
+						task.delay(0.5, function() r:Destroy() end)
+					end)
+				end)
+			end
+		end)
+
+		-- Notificações (toasts)
+		local toastHolder
+		safe("toasts", function()
+			toastHolder = Instance.new("Frame")
+			toastHolder.Name = "FxToasts"
+			toastHolder.AnchorPoint = Vector2.new(1, 0)
+			toastHolder.Position = UDim2.new(1, -14, 0, 14)
+			toastHolder.Size = UDim2.fromOffset(230, 10)
+			toastHolder.BackgroundTransparency = 1
+			toastHolder.Active = false
+			toastHolder.ZIndex = 300
+			toastHolder.Parent = screenGui
+			local tl = Instance.new("UIListLayout")
+			tl.Padding = UDim.new(0, 6)
+			tl.SortOrder = Enum.SortOrder.LayoutOrder
+			tl.HorizontalAlignment = Enum.HorizontalAlignment.Right
+			tl.Parent = toastHolder
+		end)
+		AetherisNotify = function(text, color)
+			pcall(function()
+				if not toastHolder or not toastHolder.Parent then return end
+				local list = {}
+				for _, c in ipairs(toastHolder:GetChildren()) do if c:IsA("Frame") then table.insert(list, c) end end
+				if #list >= 4 then list[1]:Destroy() end
+				local t = Instance.new("Frame")
+				t.Size = UDim2.fromOffset(0, 28)
+				t.AutomaticSize = Enum.AutomaticSize.X
+				t.BackgroundColor3 = Color3.fromRGB(14, 16, 26)
+				t.BackgroundTransparency = 1
+				t.BorderSizePixel = 0
+				t.ZIndex = 301
+				t.Parent = toastHolder
+				local tc = Instance.new("UICorner")
+				tc.CornerRadius = UDim.new(0, 8)
+				tc.Parent = t
+				local ts = Instance.new("UIStroke")
+				ts.Color = Color3.new(1, 1, 1)
+				ts.Thickness = 1.2
+				ts.Transparency = 1
+				ts.Parent = t
+				AetherisBlueGradient(ts, 0)
+				local tp = Instance.new("UIPadding")
+				tp.PaddingLeft = UDim.new(0, 12)
+				tp.PaddingRight = UDim.new(0, 12)
+				tp.Parent = t
+				local tx = Instance.new("TextLabel")
+				tx.Size = UDim2.new(0, 0, 1, 0)
+				tx.AutomaticSize = Enum.AutomaticSize.X
+				tx.BackgroundTransparency = 1
+				tx.Font = Enum.Font.GothamBold
+				tx.TextSize = 11
+				tx.TextColor3 = color or Color3.new(1, 1, 1)
+				tx.TextTransparency = 1
+				tx.Text = text
+				tx.ZIndex = 302
+				tx.Parent = t
+				TweenService:Create(t, TweenInfo.new(0.2), {BackgroundTransparency = 0.08}):Play()
+				TweenService:Create(ts, TweenInfo.new(0.2), {Transparency = 0.2}):Play()
+				TweenService:Create(tx, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
+				task.delay(2.2, function()
+					if not t.Parent then return end
+					TweenService:Create(t, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
+					TweenService:Create(ts, TweenInfo.new(0.3), {Transparency = 1}):Play()
+					TweenService:Create(tx, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
+					task.delay(0.32, function() t:Destroy() end)
+				end)
+			end)
+		end
+
+		-- Etiquetas NOVO / BETA
+		safe("etiquetas", function()
+			local tags = {["Auto Stats"] = "NOVO", ["Auto Aura"] = "NOVO", ["Auto Observação"] = "BETA", ["Auto Habilidade da Raça (V3)"] = "NOVO"}
+			for _, d in ipairs(screenGui:GetDescendants()) do
+				if d:IsA("TextLabel") and tags[d.Text] and d.Parent and d.Parent:IsA("Frame") then
+					local tg = Instance.new("TextLabel")
+					tg.Name = "FxTag"
+					tg.AnchorPoint = Vector2.new(1, 0.5)
+					tg.Size = UDim2.fromOffset(tags[d.Text] == "NOVO" and 28 or 26, 12)
+					tg.Position = UDim2.new(1, -40, 0.5, 0)
+					tg.BackgroundColor3 = tags[d.Text] == "NOVO" and accentBlue or accentPurple
+					tg.BackgroundTransparency = 0.15
+					tg.Font = Enum.Font.GothamBold
+					tg.TextSize = 7
+					tg.TextColor3 = Color3.new(1, 1, 1)
+					tg.Text = tags[d.Text]
+					tg.ZIndex = d.ZIndex + 1
+					tg.Parent = d.Parent
+					local tgc = Instance.new("UICorner")
+					tgc.CornerRadius = UDim.new(0, 4)
+					tgc.Parent = tg
+				end
+			end
+		end)
+
+		-- Loop de animação (só roda com o painel visível)
+		local clock = 0
+		RunService.Heartbeat:Connect(function(dt)
+			if not mainPanel.Visible or not mainPanel.Parent then return end
+			clock = clock + dt
+			if FX.backGrad then FX.backGrad.Rotation = (20 + clock * 12) % 360 end
+			if FX.halo then
+				local p = 0.5 + 0.5 * math.sin(clock * 2.2)
+				FX.halo.Size = UDim2.fromOffset(42 + p * 6, 42 + p * 6)
+				FX.halo.BackgroundTransparency = 0.9 - 0.1 * p
+			end
+			if FX.ind then
+				local target
+				for _, t in ipairs(FX.tabs) do
+					if t.data.Page == activePage then target = t.data.Button break end
+				end
+				if target and sidebar then
+					local y = target.AbsolutePosition.Y - mainPanel.AbsolutePosition.Y + target.AbsoluteSize.Y / 2 - 8
+					local x = sidebar.AbsolutePosition.X - mainPanel.AbsolutePosition.X - 1
+					local topY = sidebar.AbsolutePosition.Y - mainPanel.AbsolutePosition.Y
+					local inside = y >= topY - 4 and y <= topY + sidebar.AbsoluteSize.Y - 12
+					FX.ind.Visible = inside
+					if lerpY == nil then lerpY = y end
+					lerpY = lerpY + (y - lerpY) * math.min(1, dt * 14)
+					FX.ind.Position = UDim2.fromOffset(x, lerpY)
+				end
+			end
+		end)
+
+		-- Estado das abas e dos toggles (a cada 0.25s): ícone aceso, contador, brilho, notificações
+		task.spawn(function()
+			local last, first = {}, true
+			local born = tick()
+			while screenGui.Parent do
+				task.wait(0.25)
+				safe("estado", function()
+					for _, t in ipairs(FX.tabs) do
+						local active = t.data.Page == activePage
+						if t.icon and t.lastActive ~= active then
+							t.lastActive = active
+							TweenService:Create(t.icon, TweenInfo.new(0.2), {ImageTransparency = active and 0 or 0.45}):Play()
+						end
+					end
+					local counts, changes = {}, {}
+					for _, data in pairs(themeToggles) do
+						if data.button and data.button.Parent then
+							local glow = data.button:FindFirstChild("FxGlow")
+							if not glow then
+								glow = Instance.new("UIStroke")
+								glow.Name = "FxGlow"
+								glow.Color = accentBlue
+								glow.Thickness = 2
+								glow.Transparency = 1
+								glow.Parent = data.button
+							end
+							if last[data] ~= data.isToggled then
+								TweenService:Create(glow, TweenInfo.new(0.2), {Transparency = data.isToggled and 0.45 or 1}):Play()
+								if last[data] ~= nil and not first then
+									local lbl = data.button.Parent and data.button.Parent:FindFirstChildOfClass("TextLabel")
+									if lbl then table.insert(changes, {lbl.Text, data.isToggled}) end
+								end
+								last[data] = data.isToggled
+							end
+							if data.isToggled then
+								local pg = data.led and data.led:FindFirstAncestorOfClass("ScrollingFrame")
+								if pg then counts[pg] = (counts[pg] or 0) + 1 end
+							end
+						end
+					end
+					for _, t in ipairs(FX.tabs) do
+						local n = counts[t.data.Page] or 0
+						t.badge.Visible = n > 0
+						t.badge.Text = tostring(n)
+					end
+					first = false
+					if tick() - born > 4 then
+						local pt = AetherisI18n.lang == "pt"
+						if #changes > 2 then
+							AetherisNotify(tostring(#changes) .. (pt and " funções alteradas" or " functions changed"))
+						else
+							for _, c in ipairs(changes) do
+								AetherisNotify("● " .. c[1] .. "  " .. (c[2] and (pt and "ligado" or "on") or (pt and "desligado" or "off")), c[2] and Color3.fromRGB(150, 220, 255) or Color3.fromRGB(190, 190, 210))
+							end
+						end
+					end
+				end)
+			end
+		end)
+
+		-- Temas prontos (Design): azul base + cor final do degradê
+		safe("temas", function()
+			local themes = {
+				{"Aurora", Color3.fromRGB(52, 124, 255), Color3.fromRGB(126, 62, 236)},
+				{"Oceano", Color3.fromRGB(0, 170, 255), Color3.fromRGB(0, 225, 200)},
+				{"Neon", Color3.fromRGB(60, 130, 255), Color3.fromRGB(255, 60, 180)},
+				{"Gelo", Color3.fromRGB(110, 190, 255), Color3.fromRGB(175, 150, 255)},
+			}
+			local function applyTheme(name)
+				for _, th in ipairs(themes) do
+					if th[1] == name then
+						accentPurple = th[3]
+						updateGlobalTheme(th[2])
+						return true
+					end
+				end
+				return false
+			end
+			local current = "Aurora"
+			local dd = AetherisDropdown(secConfig, {
+				prefix = "Tema pronto: ",
+				label = current,
+				value = current,
+				maxRows = 4,
+				getOptions = function()
+					local o = {}
+					for _, th in ipairs(themes) do table.insert(o, {label = th[1], value = th[1]}) end
+					return o
+				end,
+				onSelect = function(v) current = v applyTheme(v) end,
+			})
+			registerConfigBinding(secConfig, "Tema pronto", function() return current end, function(v)
+				if type(v) == "string" and applyTheme(v) then current = v; dd.setValue(v, v) end
+			end)
+		end)
+	end
 
 	local secKeybind = createSection(configPage, "Atalhos (PC)", sectionIcons.Keybind)
 	
