@@ -226,18 +226,18 @@ end
 -----------------------------------------------------------------
 -- SISTEMA DE CORES DINÂMICAS & TEMA GLOBAL
 -----------------------------------------------------------------
-local currentThemeColor = Color3.fromRGB(52, 124, 255)
+local currentThemeColor = Color3.fromRGB(89, 93, 246) -- meio a meio entre o azul e o roxo
 local accentBlue = Color3.fromRGB(56, 132, 255)
 local accentPurple = Color3.fromRGB(126, 62, 236)
 -- Degradê roxo -> azul que acompanha o tema (para bordas/detalhes).
 function AetherisBlueGradient(inst, rotation, transparency)
 	local g = Instance.new("UIGradient")
-	g.Color = ColorSequence.new(currentThemeColor, accentPurple)
+	g.Color = ColorSequence.new(accentBlue, accentPurple)
 	g.Rotation = rotation or 0
 	if transparency then g.Transparency = transparency end
 	g.Parent = inst
 	table.insert(AetherisThemeHooks, function(c)
-		if g.Parent then g.Color = ColorSequence.new(c, accentPurple) end
+		if g.Parent then g.Color = ColorSequence.new(accentBlue, accentPurple) end
 	end)
 	return g
 end
@@ -1248,7 +1248,7 @@ end
 -- são liberadas no final e não pesam no limite de 200 locals do script.
 do
 	local WHITE = Color3.new(1, 1, 1)
-	local PURPLE, BLUE = currentThemeColor, accentPurple
+	local PURPLE, BLUE = accentBlue, accentPurple
 
 	-- Cápsula compacta no centro da tela (sem escurecer o fundo e sem blur).
 	-- CanvasGroup: o fade de entrada e saída é um único valor (GroupTransparency).
@@ -1702,24 +1702,16 @@ function showMainPanel()
 	visibleBorderStroke.Parent = visibleBorder
 	table.insert(themeSections, visibleBorderStroke)
 
-	local floatLetter = Instance.new("TextLabel")
+	local floatLetter = Instance.new("ImageLabel")
 	floatLetter.Name = "LogoLetter"
-	floatLetter.Size = UDim2.new(1, 0, 1, 0)
+	floatLetter.AnchorPoint = Vector2.new(0.5, 0.5)
+	floatLetter.Size = UDim2.new(1, -10, 1, -10)
+	floatLetter.Position = UDim2.new(0.5, 0, 0.5, 0)
 	floatLetter.BackgroundTransparency = 1
-	floatLetter.Font = Enum.Font.GothamBold
-	floatLetter.Text = "A"
-	floatLetter.TextColor3 = currentThemeColor
-	floatLetter.TextSize = 21
+	floatLetter.Image = "rbxassetid://92797653374824"
+	floatLetter.ScaleType = Enum.ScaleType.Fit
 	floatLetter.ZIndex = 21
 	floatLetter.Parent = floatingBtn
-	table.insert(themeTexts, floatLetter)
-
-	local floatLetterStroke = Instance.new("UIStroke")
-	floatLetterStroke.Color = currentThemeColor
-	floatLetterStroke.Transparency = 0.72
-	floatLetterStroke.Thickness = 0.7
-	floatLetterStroke.Parent = floatLetter
-	table.insert(themeSections, floatLetterStroke)
 
 	local floatGlow = Instance.new("UIStroke")
 	floatGlow.Name = "SoftGlow"
@@ -1829,7 +1821,7 @@ function showMainPanel()
 					sweep.Rotation = (t * 120) % 360
 					bgGrad.Rotation = 135 + math.sin(t * 0.8) * 25
 					floatLetter.Rotation = math.sin(t * 1.6) * 6
-					floatLetter.Position = UDim2.new(0, 0, 0, math.sin(t * 2.2) * 1.5)
+					floatLetter.Position = UDim2.new(0.5, 0, 0.5, math.sin(t * 2.2) * 1.5)
 					for index, particle in ipairs(floatParticles) do
 						if particle.Parent then
 							local a = t * 2.1 + (index - 1) * math.pi / 2
@@ -2226,7 +2218,7 @@ function showMainPanel()
 			mb.Size = UDim2.fromOffset(3, 6 + i * 2)
 			mb.AnchorPoint = Vector2.new(0, 0.5)
 			mb.Position = UDim2.new(0, 126 + (i - 1) * 5, 0.5, 0)
-			mb.BackgroundColor3 = currentThemeColor:Lerp(accentPurple, (i - 1) / 3)
+			mb.BackgroundColor3 = accentBlue:Lerp(accentPurple, (i - 1) / 3)
 			mb.BackgroundTransparency = 0.15
 			mb.BorderSizePixel = 0
 			mb.ZIndex = 21
@@ -2238,7 +2230,7 @@ function showMainPanel()
 		end
 		table.insert(AetherisThemeHooks, function(color)
 			if not bar.Parent then return end
-			for mi, mb in ipairs(meterBars) do mb.BackgroundColor3 = color:Lerp(accentPurple, (mi - 1) / 3) end
+			for mi, mb in ipairs(meterBars) do mb.BackgroundColor3 = accentBlue:Lerp(accentPurple, (mi - 1) / 3) end
 		end)
 		local fpsLabel = Instance.new("TextLabel")
 		fpsLabel.Size = UDim2.new(0, 36, 1, 0)
@@ -2971,9 +2963,9 @@ function showMainPanel()
 		})
 		dividerGradient.Parent = divider
 		divider.BackgroundColor3 = Color3.new(1, 1, 1)
-		dividerGradient.Color = ColorSequence.new(currentThemeColor, accentPurple)
+		dividerGradient.Color = ColorSequence.new(accentBlue, accentPurple)
 		table.insert(AetherisThemeHooks, function(c)
-			if dividerGradient.Parent then dividerGradient.Color = ColorSequence.new(c, accentPurple) end
+			if dividerGradient.Parent then dividerGradient.Color = ColorSequence.new(accentBlue, accentPurple) end
 		end)
 
 		-- Fundo da barra lateral (cartão com borda sutil).
@@ -3133,7 +3125,7 @@ function showMainPanel()
 	-----------------------------------------------------------------
 	do
 		local body = mainPanel:FindFirstChild("PanelBody")
-		local PURPLE_BLUE = function(c) return ColorSequence.new(c, accentPurple) end
+		local PURPLE_BLUE = function(c) return ColorSequence.new(accentBlue, accentPurple) end
 		local function themedGradient(inst, rotation)
 			local g = Instance.new("UIGradient")
 			g.Color = PURPLE_BLUE(currentThemeColor)
@@ -3598,6 +3590,7 @@ function showMainPanel()
 		width = 196,
 		height = 178,
 		presets = {
+			Color3.fromRGB(89, 93, 246),
 			Color3.fromRGB(52, 124, 255),
 			Color3.fromRGB(138, 43, 226),
 			Color3.fromRGB(255, 0, 128),
@@ -10053,47 +10046,6 @@ function showMainPanel()
 			FX.backGrad = AetherisBlueGradient(back, 20)
 		end)
 
-		-- Cantos luminosos
-		safe("cantos", function()
-			for _, c in ipairs({{0, 0}, {1, 0}, {0, 1}, {1, 1}}) do
-				local sx, sy = c[1] == 0 and 1 or -1, c[2] == 0 and 1 or -1
-				for _, dim in ipairs({{16, 2}, {2, 16}}) do
-					local l = Instance.new("Frame")
-					l.Name = "FxCorner"
-					l.AnchorPoint = Vector2.new(c[1], c[2])
-					l.Size = UDim2.fromOffset(dim[1], dim[2])
-					l.Position = UDim2.new(c[1], sx * 6, c[2], sy * 6)
-					l.BackgroundColor3 = Color3.new(1, 1, 1)
-					l.BackgroundTransparency = 0.25
-					l.BorderSizePixel = 0
-					l.Active = false
-					l.ZIndex = 40
-					l.Parent = mainPanel
-					AetherisBlueGradient(l, dim[1] > dim[2] and 0 or 90)
-				end
-			end
-		end)
-
-		-- Halo da logo
-		safe("halo", function()
-			local halo = Instance.new("Frame")
-			halo.Name = "FxLogoHalo"
-			halo.AnchorPoint = Vector2.new(0.5, 0.5)
-			halo.Size = UDim2.fromOffset(44, 44)
-			halo.Position = UDim2.new(0, 26, 0, 22)
-			halo.BackgroundColor3 = currentThemeColor
-			halo.BackgroundTransparency = 0.86
-			halo.BorderSizePixel = 0
-			halo.Active = false
-			halo.ZIndex = 11
-			halo.Parent = mainPanel
-			local hc = Instance.new("UICorner")
-			hc.CornerRadius = UDim.new(1, 0)
-			hc.Parent = halo
-			table.insert(themeSliders, halo)
-			FX.halo = halo
-		end)
-
 		-- Barra deslizante que acompanha a aba ativa
 		safe("barra de abas", function()
 			local ind = Instance.new("Frame")
@@ -10260,11 +10212,6 @@ function showMainPanel()
 			if not mainPanel.Visible or not mainPanel.Parent then return end
 			clock = clock + dt
 			if FX.backGrad then FX.backGrad.Rotation = (20 + clock * 12) % 360 end
-			if FX.halo then
-				local p = 0.5 + 0.5 * math.sin(clock * 2.2)
-				FX.halo.Size = UDim2.fromOffset(42 + p * 6, 42 + p * 6)
-				FX.halo.BackgroundTransparency = 0.9 - 0.1 * p
-			end
 			if FX.ind then
 				local target
 				for _, t in ipairs(FX.tabs) do
@@ -10354,8 +10301,9 @@ function showMainPanel()
 			local function applyTheme(name)
 				for _, th in ipairs(themes) do
 					if th[1] == name then
+						accentBlue = th[2]
 						accentPurple = th[3]
-						updateGlobalTheme(th[2])
+						updateGlobalTheme(th[2]:Lerp(th[3], 0.5))
 						return true
 					end
 				end
