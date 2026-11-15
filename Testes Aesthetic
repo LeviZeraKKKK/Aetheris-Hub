@@ -1530,7 +1530,7 @@ end
 -- MODIFICAR BARCO (Ship Modifier) - aceleração acumulada no barco do jogador
 -- Lógica do Boat Mods v10; a interface fica na aba Misc (section "Modificar Barco").
 -----------------------------------------------------------------
-AetherisBoat = {enabled = false, accel = 20, maxSpeed = 260, height = 0}
+AetherisBoat = {enabled = false, accel = 20, maxSpeed = 600, height = 0}
 do
 	local Players = game:GetService("Players")
 	local RunService = game:GetService("RunService")
@@ -3180,11 +3180,7 @@ function showMainPanel()
 			NumberSequenceKeypoint.new(1, 1)
 		})
 		dividerGradient.Parent = divider
-		divider.BackgroundColor3 = Color3.new(1, 1, 1)
-		dividerGradient.Color = ColorSequence.new(currentThemeColor, accentBlue)
-		table.insert(AetherisThemeHooks, function(c)
-			if dividerGradient.Parent then dividerGradient.Color = ColorSequence.new(c, accentBlue) end
-		end)
+		table.insert(themeSliders, divider)
 
 		-- Fundo da barra lateral (cartão com borda sutil).
 		local sideBack = Instance.new("Frame")
@@ -3618,11 +3614,11 @@ function showMainPanel()
 		sCorner.Parent = section
 
 		local sStroke = Instance.new("UIStroke")
-		sStroke.Color = Color3.new(1, 1, 1)
-		sStroke.Transparency = 0.55
+		sStroke.Color = currentThemeColor
+		sStroke.Transparency = 0.6
 		sStroke.Thickness = 1
 		sStroke.Parent = section
-		AetherisBlueGradient(sStroke, 45)
+		table.insert(themeSections, sStroke)
 
 		-- Faixa do cabeçalho: cor diferente do corpo da seção (onde ficam as funções).
 		local function headerTint(color) return color:Lerp(Color3.fromRGB(10, 13, 22), 0.78) end
@@ -4626,10 +4622,10 @@ function showMainPanel()
 
 		local fill = Instance.new("Frame")
 		fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
-		fill.BackgroundColor3 = Color3.new(1, 1, 1)
+		fill.BackgroundColor3 = currentThemeColor
 		fill.BorderSizePixel = 0
 		fill.Parent = bar
-		AetherisBlueGradient(fill, 0)
+		table.insert(themeSliders, fill)
 
 		local fCorner = Instance.new("UICorner")
 		fCorner.CornerRadius = UDim.new(1, 0)
@@ -5974,7 +5970,7 @@ function showMainPanel()
 	-- Modificar Barco (Ship Modifier)
 	local secBoat = createSection(pages["Misc"], "Modificar Barco", sectionIcons.Travel)
 	addToggle(secBoat, "Ativar Modificador", function(state) AetherisBoat.setEnabled(state) end, false)
-	addSlider(secBoat, "Velocidade máx", 100, 300, 260, function(val) AetherisBoat.maxSpeed = val end, 0, " studs/s")
+	addSlider(secBoat, "Velocidade máx", 100, 1500, 600, function(val) AetherisBoat.maxSpeed = val end, 0, " studs/s")
 	addSlider(secBoat, "Aceleração (por frame)", 5, 100, 20, function(val) AetherisBoat.accel = val end)
 	addSlider(secBoat, "Altura sobre a água", 0, 150, 0, function(val) AetherisBoat.height = val end, 0, " studs")
 
