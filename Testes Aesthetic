@@ -134,6 +134,8 @@ do
 		{"Atalho de ocultar ativado", "Hide shortcut enabled"}, {"Aliados", "Allies"}, {"Jogadores", "Players"}, {"Jogador", "Player"},
 		{"tipo:", "type:"}, {"Automatização", "Automation"}, {"Personagem indisponível ou morto", "Character unavailable or dead"},
 		{"indisponível", "unavailable"}, {"não encontrado", "not found"}, {" de ", " of "},
+		{"Velocidade máx", "Max speed"}, {"Aceleração (por frame)", "Acceleration (per frame)"}, {"Altura sobre a água", "Height above water"},
+		{"Acelerar Barco", "Boost Boat"}, {"Barco", "Boat"}, {"Entre em um barco", "Get in a boat"}, {"Desligado", "Off"},
 		{"BOM DIA", "GOOD MORNING"}, {"BOA TARDE", "GOOD AFTERNOON"}, {"BOA NOITE", "GOOD EVENING"},
 		{"NÍVEL", "LEVEL"}, {"FRAGMENTOS", "FRAGMENTS"}, {"RAÇA", "RACE"}, {"MEMÓRIA", "MEMORY"},
 		{"Cole o Job ID...", "Paste Job ID..."}, {"Entrar", "Join"}, {"ID?", "ID?"},
@@ -6429,6 +6431,351 @@ function showMainPanel()
 		addToggle(secEspBerries, "ESP Nome (Berry)", function(state) berryEspName = state end, false)
 		addEspToggleWithColor(secEspBerries, "ESP Distância", berryEspDistanceColor, function(c) berryEspDistanceColor = c end, function(s) berryEspDistance = s end)
 	end
+	-----------------------------------------------------------------
+	-- BARCO: aceleração acumulada (lógica do Boat Mods v10 como função do hub)
+	-- Global AetherisBoat: setEnabled / isEnabled / setMaxSpeed / setAccel / setHeight / getStatus
+	-- (o botão de fechar do painel já chama AetherisBoat.setEnabled(false))
+	-----------------------------------------------------------------
+	do
+		local Workspace = game:GetService("Workspace")
+		local RS = game:GetService("ReplicatedStorage")
+		local UIS = UserInputService
+		local LP = player
+
+		local enabled = false
+		local ACCEL_PER_FRAME = 20
+		local MAX_SPEED = 600
+		local heightOffset = 0
+
+		local currentBoat, hull, seat, speedBV, hullBP = nil, nil, nil, nil, nil
+		local origHeightY, baseYCaptured = nil, false
+		local sampleYSum, sampleYCount, sampleYStart = 0, 0, 0
+		local mySpeed, accelerating, lastAccelSource = 0, false, "-"
+		local hookedMovement, originalUpdate = nil, nil
+		local renderName = "AetherisBoat_Override"
+		local heartbeatConn = nil
+
+		-- ===== HELPERS =====
+		local function getPlayerBoat()
+			local char = LP.Character
+			if not char then return nil end
+			local hum = char:FindFirstChildOfClass("Humanoid")
+			if not hum then return nil end
+			local s = hum.SeatPart
+			if not s or not s:IsA("VehicleSeat") then return nil end
+			local boats = Workspace:FindFirstChild("Boats")
+			if not boats then return nil end
+			for _, b in ipairs(boats:GetChildren()) do
+				if b:IsA("Model") and s:IsDescendantOf(b) then
+					return b
+				end
+			end
+			return nil
+		end
+
+		local function getHull(boat)
+			if boat.PrimaryPart then return boat.PrimaryPart end
+			local best, bestVol = nil, 0
+			for _, p in ipairs(boat:GetDescendants()) do
+				if p:IsA("BasePart") and not p:IsA("VehicleSeat") then
+					local vol = p.Size.X * p.Size.Y * p.Size.Z
+					if vol > bestVol then bestVol = vol; best = p end
+				end
+			end
+			return best
+		end
+
+		local function getMovement()
+			local global = RS:FindFirstChild("Global")
+			if not global then return nil end
+			local ok, Global = pcall(require, global)
+			if not ok or not Global then return nil end
+			if type(Global.getLocalShipFromPlayer) ~= "function" then return nil end
+			local ok2, shipData = pcall(Global.getLocalShipFromPlayer, LP)
+			if not ok2 or not shipData then return nil end
+			return shipData.Movement
+		end
+
+		local function isAccelerating()
+			if UIS:IsKeyDown(Enum.KeyCode.W) then return true, "W" end
+			if UIS:IsKeyDown(Enum.KeyCode.Up) then return true, "Up" end
+			if seat then
+				local ok, tf = pcall(function() return seat.ThrottleFloat end)
+				if ok and tf and tf > 0.1 then return true, "ThrottleFloat" end
+				local ok2, t = pcall(function() return seat.Throttle end)
+				if ok2 and t and t > 0 then return true, "Throttle" end
+			end
+			local mv = getMovement()
+			if mv then
+				local ok, th = pcall(function() return mv.Throttle end)
+				if ok and th and th > 0.1 then return true, "mvThrottle" end
+			end
+			return false, "-"
+		end
+
+		local function applySpeed()
+			if not hull or not hull.Parent then return end
+			local look = hull.CFrame.LookVector
+			local dir = Vector3.new(look.X, 0, look.Z)
+			if dir.Magnitude < 0.1 then return end
+			dir = dir.Unit
+
+			local curVel = hull.AssemblyLinearVelocity
+			hull.AssemblyLinearVelocity = Vector3.new(dir.X * mySpeed, curVel.Y, dir.Z * mySpeed)
+
+			if speedBV and speedBV.Parent then
+				speedBV.Velocity = dir * mySpeed
+			end
+
+			local mv = getMovement()
+			if mv then
+				pcall(function()
+					if typeof(mv.Velocity) == "Instance" then
+						mv.Velocity.Value = mySpeed
+					else
+						mv.Velocity = mySpeed
+					end
+				end)
+			end
+		end
+
+		-- ===== HOOK no Movement.update =====
+		local function installHook()
+			local mv = getMovement()
+			if not mv then return false end
+			if hookedMovement == mv then return true end
+			if hookedMovement and originalUpdate then
+				pcall(function() hookedMovement.update = originalUpdate end)
+			end
+			if type(mv.update) ~= "function" then return false end
+
+			originalUpdate = mv.update
+			hookedMovement = mv
+
+			mv.update = function(self, dt)
+				local okOrig, errOrig = pcall(originalUpdate, self, dt)
+				if not okOrig then warn("[AetherisBoat] original update error:", errOrig) end
+
+				if enabled and accelerating and hull and hull.Parent then
+					if mySpeed > 0 then
+						applySpeed()
+					end
+				end
+			end
+			return true
+		end
+
+		local function removeHook()
+			if hookedMovement and originalUpdate then
+				pcall(function() hookedMovement.update = originalUpdate end)
+				hookedMovement = nil
+				originalUpdate = nil
+			end
+		end
+
+		-- ===== ATTACH / CLEAR =====
+		local function clearMods()
+			if speedBV then speedBV:Destroy(); speedBV = nil end
+			if hullBP then hullBP:Destroy(); hullBP = nil end
+			currentBoat, hull, seat = nil, nil, nil
+			origHeightY = nil
+			baseYCaptured = false
+			sampleYSum, sampleYCount = 0, 0
+			mySpeed = 0
+			accelerating = false
+		end
+
+		local function attachMods(boat)
+			hull = getHull(boat)
+			seat = boat:FindFirstChildWhichIsA("VehicleSeat")
+			if not hull then return false end
+
+			if speedBV then speedBV:Destroy() end
+			speedBV = Instance.new("BodyVelocity")
+			speedBV.Name = "BoatModSpeed"
+			speedBV.MaxForce = Vector3.new(1e10, 0, 1e10)
+			speedBV.P = 1e6
+			speedBV.Velocity = Vector3.zero
+			speedBV.Parent = hull
+
+			if hullBP then hullBP:Destroy() end
+			hullBP = Instance.new("BodyPosition")
+			hullBP.Name = "BoatModHeight"
+			hullBP.MaxForce = Vector3.new(0, 1e9, 0)
+			hullBP.P = 1e6
+			hullBP.D = 1e5
+			hullBP.Position = hull.Position
+			hullBP.Parent = hull
+
+			baseYCaptured = false
+			sampleYSum, sampleYCount = 0, 0
+			sampleYStart = tick()
+			mySpeed = 0
+			accelerating = false
+
+			currentBoat = boat
+			installHook()
+			return true
+		end
+
+		-- ===== LOOPS =====
+		local function renderLoop()
+			if not enabled then return end
+			if not currentBoat then return end
+			if not hull or not hull.Parent then return end
+
+			accelerating, lastAccelSource = isAccelerating()
+
+			if accelerating then
+				mySpeed = math.min(mySpeed + ACCEL_PER_FRAME, MAX_SPEED)
+				applySpeed()
+			else
+				mySpeed = math.max(mySpeed - 40, 0)
+				if mySpeed > 0 then
+					applySpeed()
+				end
+			end
+		end
+
+		local function heartbeatLoop()
+			if not enabled then return end
+
+			local boat = getPlayerBoat()
+			if not boat then
+				if currentBoat then clearMods() end
+				return
+			end
+
+			if boat ~= currentBoat then
+				clearMods()
+				attachMods(boat)
+				return
+			end
+
+			if not hull or not hull.Parent then
+				clearMods()
+				return
+			end
+
+			if not baseYCaptured then
+				sampleYSum = sampleYSum + hull.Position.Y
+				sampleYCount = sampleYCount + 1
+				if tick() - sampleYStart > 1 then
+					origHeightY = sampleYSum / math.max(sampleYCount, 1)
+					baseYCaptured = true
+				end
+			end
+
+			if baseYCaptured and heightOffset ~= 0 then
+				local targetY = origHeightY + heightOffset
+				local cf = hull.CFrame
+				local newY = cf.Position.Y + (targetY - cf.Position.Y) * 0.5
+				hull.CFrame = CFrame.new(Vector3.new(cf.Position.X, newY, cf.Position.Z)) * (cf - cf.Position)
+				if hullBP and hullBP.Parent then
+					hullBP.Position = Vector3.new(hull.Position.X, targetY, hull.Position.Z)
+				end
+			elseif hullBP and heightOffset == 0 and baseYCaptured then
+				hullBP.Position = Vector3.new(hull.Position.X, origHeightY, hull.Position.Z)
+			end
+		end
+
+		local function startLoop()
+			if heartbeatConn then return end
+			pcall(function() RunService:UnbindFromRenderStep(renderName) end)
+			RunService:BindToRenderStep(renderName, Enum.RenderPriority.Camera.Value + 10, function(dt)
+				local ok, err = pcall(renderLoop, dt)
+				if not ok then warn("[AetherisBoat render]", err) end
+			end)
+			heartbeatConn = RunService.Heartbeat:Connect(function()
+				local ok, err = pcall(heartbeatLoop)
+				if not ok then warn("[AetherisBoat heartbeat]", err) end
+			end)
+		end
+
+		local function stopLoop()
+			pcall(function() RunService:UnbindFromRenderStep(renderName) end)
+			if heartbeatConn then heartbeatConn:Disconnect(); heartbeatConn = nil end
+			removeHook()
+			clearMods()
+		end
+
+		-- ===== API PÚBLICA =====
+		AetherisBoat = {
+			setEnabled = function(state)
+				state = state == true
+				if state == enabled then return end
+				enabled = state
+				if enabled then startLoop() else stopLoop() end
+			end,
+			isEnabled = function() return enabled end,
+			setMaxSpeed = function(v) MAX_SPEED = math.max(tonumber(v) or MAX_SPEED, 1) end,
+			setAccel = function(v) ACCEL_PER_FRAME = math.max(tonumber(v) or ACCEL_PER_FRAME, 1) end,
+			setHeight = function(v) heightOffset = tonumber(v) or 0 end,
+			getStatus = function()
+				local boat = getPlayerBoat()
+				return {
+					enabled = enabled,
+					boatName = boat and boat.Name or nil,
+					attached = currentBoat ~= nil and hull ~= nil,
+					speed = mySpeed,
+					maxSpeed = MAX_SPEED,
+					accelerating = accelerating,
+					source = lastAccelSource,
+					height = heightOffset,
+				}
+			end,
+		}
+		screenGui.Destroying:Connect(function() AetherisBoat.setEnabled(false) end)
+	end
+
+	-- Seção "Barco" na aba Misc
+	do
+		local secBoat = createSection(pages["Misc"], "Barco", sectionIcons.Travel)
+
+		addToggle(secBoat, "Acelerar Barco", function(state) AetherisBoat.setEnabled(state) end, false)
+		addSlider(secBoat, "Velocidade máx", 100, 1500, 600, function(v) AetherisBoat.setMaxSpeed(v) end, 0, " studs/s")
+		addSlider(secBoat, "Aceleração (por frame)", 5, 100, 20, function(v) AetherisBoat.setAccel(v) end, 0, "")
+		addSlider(secBoat, "Altura sobre a água", 0, 150, 0, function(v) AetherisBoat.setHeight(v) end, 0, " studs")
+
+		local infoRow = Instance.new("Frame")
+		infoRow.Size = UDim2.new(1, 0, 0, 40)
+		infoRow.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
+		infoRow.BackgroundTransparency = 0.3
+		infoRow.BorderSizePixel = 0
+		infoRow.Parent = secBoat
+		local infoCorner = Instance.new("UICorner")
+		infoCorner.CornerRadius = UDim.new(0, 6)
+		infoCorner.Parent = infoRow
+		local infoLabel = Instance.new("TextLabel")
+		infoLabel.Size = UDim2.new(1, -16, 1, 0)
+		infoLabel.Position = UDim2.new(0, 8, 0, 0)
+		infoLabel.BackgroundTransparency = 1
+		infoLabel.Font = currentGlobalFont
+		infoLabel.Text = "💤 Desligado"
+		infoLabel.TextColor3 = Color3.fromRGB(150, 150, 180)
+		infoLabel.TextSize = 9
+		infoLabel.TextWrapped = true
+		infoLabel.TextXAlignment = Enum.TextXAlignment.Left
+		infoLabel.Parent = infoRow
+
+		task.spawn(function()
+			while screenGui.Parent do
+				task.wait(0.3)
+				local st = AetherisBoat.getStatus()
+				if not st.enabled then
+					infoLabel.Text = "💤 Desligado"
+					infoLabel.TextColor3 = Color3.fromRGB(150, 150, 180)
+				elseif st.boatName and st.attached then
+					infoLabel.Text = string.format("🚤 %s\n⚡ Boost: %.0f | Max: %.0f | Alt: %+d", st.boatName, st.speed, st.maxSpeed, st.height)
+					infoLabel.TextColor3 = st.accelerating and Color3.fromRGB(100, 255, 150) or Color3.fromRGB(200, 200, 200)
+				else
+					infoLabel.Text = "🚤 Entre em um barco"
+					infoLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+				end
+			end
+		end)
+	end
+
 	local secWorld = createSection(pages["Misc"], "Visual do Mapa", sectionIcons.World)
 	addToggle(secWorld, "Fullbright (Remover Escuridão)", function(state)
 		_G_FullbrightEnabled = state
