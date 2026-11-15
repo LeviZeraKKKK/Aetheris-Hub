@@ -1,4 +1,4 @@
- -- Serviços necessários
+-- Serviços necessários
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
@@ -129,7 +129,7 @@ do
 		{"Diálogo", "Dialogue"}, {"Direto", "Direct"}, {"Nada encontrado.", "Nothing found."},
 		{"Nenhuma opção encontrada.", "No options found."}, {"opções", "options"}, {"opção", "option"},
 		{"Selecione", "Select"}, {"alvos", "targets"}, {"alvo", "target"}, {"jogadores", "players"},
-		{"Geral", "General"}, {"Subir quando a vida estiver baixa", "Rise when health is low"}, {"Vida mínima para subir", "Health % to rise"}, {"Altura de segurança", "Safe height"}, {"Carregar save automaticamente", "Auto load save"}, {"Ao abrir o hub, aplica sozinho a última configuração salva ou usada.", "On launch, automatically applies the last saved or used config."}, {"Boss: ", "Boss: "}, {"Todos", "All"}, {"Recuperando no alto...", "Recovering up high..."}, {"Vida baixa", "Low health"}, {"Aguardando boss...", "Waiting for boss..."}, {"Sons de clique", "Click Sounds"}, {"Som de clique", "Click Sound"}, {"Volume do som", "Sound Volume"}, {"Som: ", "Sound: "}, {"Clássico", "Classic"}, {"Suave", "Soft"}, {"Tecla", "Key"}, {"Página", "Page"}, {"Botão", "Button"}, {"Interruptor", "Switch"}, {"Clique rápido", "Fast Click"}, {"Estalo", "Snap"}, {"Bolha", "Bubble"}, {"Grave", "Bass"}, {"Nenhum", "None"}, {"Tema pronto", "Preset Theme"}, {"Oceano", "Ocean"}, {"Gelo", "Ice"}, {"funções alteradas", "functions changed"}, {"Fechar o Aetheris Hub?", "Close Aetheris Hub?"}, {"O painel será fechado por completo. Para abrir de novo, execute o script outra vez.", "The panel will be closed completely. To open it again, run the script again."}, {"Fechar", "Close"}, {"Tem certeza de que deseja excluir", "Are you sure you want to delete"}, {"Essa ação não pode ser desfeita.", "This action cannot be undone."}, {"direto", "direct"}, {"incompatível", "incompatible"}, {"Módulo", "Module"}, {"diálogo", "dialog"}, {"INIMIGOS (NPC)", "ENEMIES (NPC)"}, {"BAÚ", "CHEST"}, {"PLAYERS", "PLAYERS"}, {"BERRIES", "BERRIES"}, {"ESP Inimigos (NPC)", "ESP Enemies (NPC)"}, {"Inimigos", "Enemies"}, {"inimigos", "enemies"},
+		{"Geral", "General"}, {"Subir quando a vida estiver baixa", "Rise when health is low"}, {"Vida mínima para subir", "Health % to rise"}, {"Altura de segurança", "Safe height"}, {"Carregar save automaticamente", "Auto load save"}, {"Ao abrir o hub, aplica sozinho a última configuração salva ou usada.", "On launch, automatically applies the last saved or used config."}, {"Boss: ", "Boss: "}, {"Todos", "All"}, {"Recuperando no alto...", "Recovering up high..."}, {"Vida baixa", "Low health"}, {"Pegar quest do boss", "Take boss quest"}, {"Altura sobre o boss", "Height above boss"}, {"Aguardando boss...", "Waiting for boss..."}, {"Sons de clique", "Click Sounds"}, {"Som de clique", "Click Sound"}, {"Volume do som", "Sound Volume"}, {"Som: ", "Sound: "}, {"Clássico", "Classic"}, {"Suave", "Soft"}, {"Tecla", "Key"}, {"Página", "Page"}, {"Botão", "Button"}, {"Interruptor", "Switch"}, {"Clique rápido", "Fast Click"}, {"Estalo", "Snap"}, {"Bolha", "Bubble"}, {"Grave", "Bass"}, {"Nenhum", "None"}, {"Tema pronto", "Preset Theme"}, {"Oceano", "Ocean"}, {"Gelo", "Ice"}, {"funções alteradas", "functions changed"}, {"Fechar o Aetheris Hub?", "Close Aetheris Hub?"}, {"O painel será fechado por completo. Para abrir de novo, execute o script outra vez.", "The panel will be closed completely. To open it again, run the script again."}, {"Fechar", "Close"}, {"Tem certeza de que deseja excluir", "Are you sure you want to delete"}, {"Essa ação não pode ser desfeita.", "This action cannot be undone."}, {"direto", "direct"}, {"incompatível", "incompatible"}, {"Módulo", "Module"}, {"diálogo", "dialog"}, {"INIMIGOS (NPC)", "ENEMIES (NPC)"}, {"BAÚ", "CHEST"}, {"PLAYERS", "PLAYERS"}, {"BERRIES", "BERRIES"}, {"ESP Inimigos (NPC)", "ESP Enemies (NPC)"}, {"Inimigos", "Enemies"}, {"inimigos", "enemies"},
 		{"inimigo", "enemy"}, {"Cor", "Color"}, {"Sem quest", "No quest"}, {"Tecla para ocultar", "Key to hide"},
 		{"Atalho de ocultar ativado", "Hide shortcut enabled"}, {"Aliados", "Allies"}, {"Jogadores", "Players"}, {"Jogador", "Player"},
 		{"tipo:", "type:"}, {"Automatização", "Automation"}, {"Personagem indisponível ou morto", "Character unavailable or dead"},
@@ -9796,18 +9796,60 @@ function showMainPanel()
 		-- ===== Auto Kill Boss =====
 		Q.boss = {
 			enabled = false, token = 0, target = "Todos", lastBuso = 0,
-			list = {
-				"The Gorilla King", "Bobby", "Yeti", "Mob Leader", "Vice Admiral", "Warden", "Chief Warden", "Swan",
-				"Magma Admiral", "Fishman Lord", "Wysper", "Thunder God", "Cyborg", "Saber Expert", "The Saw", "Greybeard",
-				"Diamond", "Jeremy", "Fajita", "Don Swan", "Smoke Admiral", "Awakened Ice Admiral", "Tide Keeper", "Order",
-				"Darkbeard", "Cursed Captain", "Stone", "Island Empress", "Kilo Admiral", "Captain Elephant",
-				"Beautiful Pirate", "Cake Queen", "rip_indra", "Dough King", "Longma", "Soul Reaper",
+			wantQuest = false, height = 20, quested = setmetatable({}, {__mode = "k"}),
+			seas = {
+				[1] = {"The Gorilla King", "Bobby", "Yeti", "Mob Leader", "Vice Admiral", "Warden", "Chief Warden", "Swan",
+					"Magma Admiral", "Fishman Lord", "Wysper", "Thunder God", "Cyborg", "Saber Expert", "The Saw", "Greybeard"},
+				[2] = {"Diamond", "Jeremy", "Fajita", "Don Swan", "Smoke Admiral", "Awakened Ice Admiral", "Tide Keeper", "Order",
+					"Darkbeard", "Cursed Captain"},
+				[3] = {"Stone", "Island Empress", "Kilo Admiral", "Captain Elephant", "Beautiful Pirate", "Cake Queen",
+					"rip_indra", "Dough King", "Longma", "Soul Reaper"},
 			},
 		}
+		-- Sea atual pelo PlaceId (se não reconhecer, mostra os três)
+		function Q.boss.currentList()
+			local id = game.PlaceId
+			local sea = (id == 2753915549 and 1) or (id == 4442272183 and 2) or (id == 7449423635 and 3) or nil
+			if sea then return Q.boss.seas[sea] end
+			local all = {}
+			for i = 1, 3 do for _, n in ipairs(Q.boss.seas[i]) do table.insert(all, n) end end
+			return all
+		end
+		function Q.boss.valid(name)
+			for _, n in ipairs(Q.boss.currentList()) do if n == name then return true end end
+			return false
+		end
+		-- Pega a quest do boss de longe (StartQuest direto), sem mexer na seleção do Auto Farm Level
+		function Q.boss.takeQuest(name)
+			if not Q.quests or not Q.commF then return false end
+			local lname, level = name:lower(), Q.getLevel()
+			local bestCat, bestQ, bestIdx, bestScore = nil, nil, nil, 0
+			for catName, entries in pairs(Q.quests) do
+				if type(entries) == "table" then
+					for idx, q in ipairs(entries) do
+						if type(q) == "table" and type(q.LevelReq) == "number" and q.LevelReq <= level and type(q.Task) == "table" then
+							for t in pairs(q.Task) do
+								if type(t) == "string" then
+									local lt = t:lower()
+									local score = (lt == lname and 1000) or (lname:find(lt, 1, true) and #lt) or 0
+									if score > bestScore then bestCat, bestQ, bestIdx, bestScore = catName, q, idx, score end
+								end
+							end
+						end
+					end
+				end
+			end
+			if not bestQ then return false end
+			local sc, sn, si, st = Q.questCat, Q.questName, Q.questIndex, Q.taskType
+			Q.questCat, Q.questName, Q.questIndex = bestCat, bestQ.Name, bestIdx
+			local ok = Q.acceptDirect()
+			Q.questCat, Q.questName, Q.questIndex, Q.taskType = sc, sn, si, st
+			return ok
+		end
 		function Q.boss.find(hrp)
 			local folder = workspace:FindFirstChild("Enemies")
 			if not folder then return nil end
-			local names = Q.boss.target == "Todos" and Q.boss.list or {Q.boss.target}
+			local names = (Q.boss.target ~= "Todos" and Q.boss.valid(Q.boss.target)) and {Q.boss.target} or Q.boss.currentList()
 			local best, bestDist = nil, math.huge
 			for _, obj in ipairs(folder:GetChildren()) do
 				if obj:IsA("Model") then
@@ -9854,13 +9896,19 @@ function showMainPanel()
 			end
 			if not Q.noclipConn then Q.enableNoclip() end
 			if Q.weapon ~= "Any" then Q.ensureWeapon() end
+			if Q.boss.wantQuest and not Q.boss.quested[boss.model] then
+				Q.boss.quested[boss.model] = true
+				Q.boss.takeQuest(boss.name)
+			end
 			if Q.commF and tick() - Q.boss.lastBuso > 2 then
 				Q.boss.lastBuso = tick()
 				if not char:FindFirstChild("HasBuso") then pcall(function() Q.commF:InvokeServer("Buso") end) end
 			end
-			local offset = (boss.part.Position + Vector3.new(0, Q.hoverHeight, 0)) - hrp.Position
+			local offset = (boss.part.Position + Vector3.new(0, Q.boss.height, 0)) - hrp.Position
 			if offset.Magnitude > 2 then
-				Q.fly(hrp, offset.Unit * math.min(Q.flySpeed, offset.Magnitude * 5))
+				-- de longe: quanto mais distante, mais rápido (até 350)
+				local speed = math.clamp(offset.Magnitude * 2, Q.flySpeed, math.max(Q.flySpeed, 350))
+				Q.fly(hrp, offset.Unit * math.min(speed, offset.Magnitude * 5))
 			elseif Q.bv then
 				Q.bv.Velocity = Vector3.zero
 			end
@@ -9955,6 +10003,8 @@ function showMainPanel()
 			addToggle(secBoss, "Auto  Kill  Boss", function(state)
 				if state then Q.boss.start() else Q.boss.stop() end
 			end, false)
+			addToggle(secBoss, "Pegar quest do boss", function(state) Q.boss.wantQuest = state end, false)
+			addSlider(secBoss, "Altura sobre o boss", 6, 60, 20, function(val) Q.boss.height = val end, 0, " studs")
 			local bossDD
 			bossDD = AetherisDropdown(secBoss, {
 				prefix = "Boss: ",
@@ -9964,13 +10014,14 @@ function showMainPanel()
 				boxWidth = 130,
 				getOptions = function()
 					local opts = {{label = "Todos", value = "Todos"}}
-					for _, n in ipairs(Q.boss.list) do table.insert(opts, {label = n, value = n}) end
+					for _, n in ipairs(Q.boss.currentList()) do table.insert(opts, {label = n, value = n}) end
 					return opts
 				end,
 				onSelect = function(v) Q.boss.target = v end,
 			})
 			registerConfigBinding(secBoss, "Boss: alvo", function() return Q.boss.target end, function(v)
 				if type(v) == "string" then
+					if v ~= "Todos" and not Q.boss.valid(v) then v = "Todos" end
 					Q.boss.target = v
 					bossDD.setValue(v, v)
 				end
