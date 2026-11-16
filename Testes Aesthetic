@@ -8964,7 +8964,7 @@ function showMainPanel()
 	do
 		local secAFL = createSection(secFarm.Parent.Parent, "Auto  Farm  Level", sectionIcons.FarmAutomation)
 		local Q = {
-			enabled = false, hitDelay = 0.05, aoeRange = 80, flySpeed = 120, hoverHeight = 6,
+			enabled = false, hitDelay = 0.05, aoeRange = 80, flySpeed = 270, hoverHeight = 6,
 				lastHit = 0, combo = 1, questName = "?", questCat = nil, taskType = nil, questIndex = 1,
 				phase = "idle", acceptedAt = 0, noEnemySince = 0, method = 1, weapon = "Melee",
 				lastEquip = 0, completed = false, searchSince = 0, fallback = nil, curLevelReq = 0, wanderAngle = 0, wanderAt = 0, origCollision = {}, busy = false, ready = false,
@@ -9312,7 +9312,16 @@ function showMainPanel()
 		end
 
 		function Q.stopFly()
-			if Q.bv then Q.bv:Destroy(); Q.bv = nil end
+			if Q.bv then
+				local hrp = Q.bv.Parent
+				Q.bv:Destroy()
+				Q.bv = nil
+				-- zera a inércia para não deslizar depois de desligar
+				if hrp and hrp:IsA("BasePart") then
+					hrp.AssemblyLinearVelocity = Vector3.zero
+					hrp.AssemblyAngularVelocity = Vector3.zero
+				end
+			end
 		end
 
 		-- Aceitar quest: método 1 (direto)
@@ -10012,6 +10021,7 @@ function showMainPanel()
 			Q.boss.token = Q.boss.token + 1
 			local token = Q.boss.token
 			Q.boss.enabled = true
+			Q.enableNoclip()
 			task.spawn(function()
 				while Q.boss.enabled and Q.boss.token == token and screenGui.Parent do
 					RunService.Heartbeat:Wait()
@@ -10075,7 +10085,7 @@ function showMainPanel()
 			end)
 
 		addSlider(secAFL, "Ataque Range", 10, 300, 80, function(val) Q.aoeRange = val end, 0, " studs")
-		addSlider(secAFL, "Velocidade de voo", 10, 300, 120, function(val) Q.flySpeed = val end, 0)
+		addSlider(secAFL, "Velocidade de voo", 10, 300, 270, function(val) Q.flySpeed = val end, 0)
 		addSlider(secAFL, "Altura sobre o inimigo", 2, 30, 6, function(val) Q.hoverHeight = val end, 0, " studs")
 
 		do
@@ -10091,7 +10101,7 @@ function showMainPanel()
 				if state then Q.boss.start() else Q.boss.stop() end
 			end, false)
 			addToggle(secBoss, "Pegar quest do boss", function(state) Q.boss.wantQuest = state end, false)
-			addSlider(secBoss, "Altura sobre o boss", 6, 60, 20, function(val) Q.boss.height = val end, 0, " studs")
+			addSlider(secBoss, "Altura sobre o boss", 6, 30, 20, function(val) Q.boss.height = val end, 0, " studs")
 			local bossDD
 			bossDD = AetherisDropdown(secBoss, {
 				prefix = "Boss: ",
