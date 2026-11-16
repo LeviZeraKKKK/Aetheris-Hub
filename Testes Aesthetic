@@ -78,7 +78,7 @@ do
 		{"Mais Perto da Mira (Crosshair)", "Closest to Crosshair"},
 		{"Ativar Círculo FOV", "Enable FOV Circle"}, {"Cor do Círculo FOV", "FOV Circle Color"},
 		{"Raio do FOV", "FOV Radius"}, {"Grossura do FOV", "FOV Thickness"},
-		{"Transparência do FOV (%)", "FOV Transparency (%)"}, {"Transparência do Painel", "Panel Transparency"},
+		{"Transparência do FOV (%)", "FOV Transparency (%)"}, {"Transparência do Painel", "Panel Transparency"}, {"Opacidade", "Opacity"},
 		{"Cantos do Painel", "Panel Corners"}, {"Alcance", "Range"}, {"Raio", "Radius"},
 		{"Baús próximos", "Nearby Chests"}, {"Baú de mapa todo (não consegue pegar o tipo)", "Whole-map chests (can't detect the type)"},
 		{"ESP Nome (Berry)", "ESP Name (Berry)"}, {"ESP Nome", "ESP Name"}, {"ESP Distância", "ESP Distance"},
@@ -3266,8 +3266,8 @@ function showMainPanel()
 		-- Barra de busca: filtra as seções da aba atual.
 		local searchWrap = Instance.new("Frame")
 		searchWrap.Name = "SearchBox"
-		searchWrap.Size = UDim2.new(0, 100, 0, 22)
-		searchWrap.Position = UDim2.new(1, -216, 0, 11)
+		searchWrap.Size = UDim2.new(0, 116, 0, 22)
+		searchWrap.Position = UDim2.new(1, -232, 0, 11)
 		searchWrap.BackgroundColor3 = Color3.fromRGB(11, 14, 24)
 		searchWrap.BorderSizePixel = 0
 		searchWrap.Parent = body
@@ -3279,8 +3279,8 @@ function showMainPanel()
 		searchStroke.Thickness = 1
 		searchStroke.Parent = searchWrap
 		local searchBox = Instance.new("TextBox")
-		searchBox.Size = UDim2.new(1, -14, 1, 0)
-		searchBox.Position = UDim2.new(0, 8, 0, 0)
+		searchBox.Size = UDim2.new(1, -32, 1, 0)
+		searchBox.Position = UDim2.new(0, 26, 0, 0)
 		searchBox.BackgroundTransparency = 1
 		searchBox.Font = Enum.Font.GothamMedium
 		searchBox.PlaceholderText = "Buscar..."
@@ -3291,11 +3291,43 @@ function showMainPanel()
 		searchBox.TextXAlignment = Enum.TextXAlignment.Left
 		searchBox.ClearTextOnFocus = false
 		searchBox.Parent = searchWrap
+
+		-- Ícone de lupa (desenhado): aro + cabinho
+		local LUPA_IDLE = Color3.fromRGB(130, 140, 165)
+		local lupaRing = Instance.new("Frame")
+		lupaRing.Name = "LupaRing"
+		lupaRing.Size = UDim2.new(0, 10, 0, 10)
+		lupaRing.Position = UDim2.new(0, 8, 0.5, -6)
+		lupaRing.BackgroundTransparency = 1
+		lupaRing.Active = false
+		lupaRing.Parent = searchWrap
+		local lupaRingCorner = Instance.new("UICorner")
+		lupaRingCorner.CornerRadius = UDim.new(1, 0)
+		lupaRingCorner.Parent = lupaRing
+		local lupaRingStroke = Instance.new("UIStroke")
+		lupaRingStroke.Color = LUPA_IDLE
+		lupaRingStroke.Thickness = 1.4
+		lupaRingStroke.Parent = lupaRing
+		local lupaHandle = Instance.new("Frame")
+		lupaHandle.Name = "LupaHandle"
+		lupaHandle.AnchorPoint = Vector2.new(0, 0.5)
+		lupaHandle.Size = UDim2.new(0, 5, 0, 1.6)
+		lupaHandle.Position = UDim2.new(0, 16, 0.5, 3)
+		lupaHandle.Rotation = 45
+		lupaHandle.BackgroundColor3 = LUPA_IDLE
+		lupaHandle.BorderSizePixel = 0
+		lupaHandle.Active = false
+		lupaHandle.Parent = searchWrap
+
 		searchBox.Focused:Connect(function()
 			TweenService:Create(searchStroke, TweenInfo.new(0.15), {Color = accentBlue}):Play()
+			TweenService:Create(lupaRingStroke, TweenInfo.new(0.15), {Color = accentBlue}):Play()
+			TweenService:Create(lupaHandle, TweenInfo.new(0.15), {BackgroundColor3 = accentBlue}):Play()
 		end)
 		searchBox.FocusLost:Connect(function()
 			TweenService:Create(searchStroke, TweenInfo.new(0.15), {Color = Color3.fromRGB(38, 48, 68)}):Play()
+			TweenService:Create(lupaRingStroke, TweenInfo.new(0.15), {Color = LUPA_IDLE}):Play()
+			TweenService:Create(lupaHandle, TweenInfo.new(0.15), {BackgroundColor3 = LUPA_IDLE}):Play()
 		end)
 
 		local hiddenBySearch = {}
@@ -10982,12 +11014,13 @@ function showMainPanel()
 	local configPage = pages["Config"]
 	local secConfig = createSection(configPage, "Design", sectionIcons.Theme)
 	
-	addSlider(secConfig, "Transparência do Painel", 0, 80, 20, function(val)
-		panelTransparencyValue = val / 100
+	-- Opacidade: ligada = painel totalmente opaco; desligada = translúcido (padrão)
+	addToggle(secConfig, "Opacidade", function(state)
+		panelTransparencyValue = state and 0 or 0.2
 		mainPanel.BackgroundTransparency = panelTransparencyValue
 		floatingBtn.BackgroundTransparency = panelTransparencyValue
 		if AetherisMinimize.bar then AetherisMinimize.bar.BackgroundTransparency = math.min(panelTransparencyValue, 0.15) end
-	end)
+	end, false)
 
 	-- Arredondamento dos cantos (corner) do painel e da área de conteúdo
 	addSlider(secConfig, "Cantos do Painel", 0, 24, 12, function(val)
@@ -11182,7 +11215,7 @@ function showMainPanel()
 		end)
 
 		-- Notificações (toasts): posição (embaixo/em cima) e duração configuráveis na aba Config.
-		-- Cada toast mostra o tempo restante e uma barrinha que vai esvaziando até sumir.
+		-- Toast simples: caixa preta com texto branco que some sozinho.
 		AetherisNotifyCfg = AetherisNotifyCfg or {pos = "bottom", duration = 3}
 		local NC = AetherisNotifyCfg
 		local toastHolder, toastLayout
@@ -11223,12 +11256,13 @@ function showMainPanel()
 				table.sort(list, function(a, b) return a.LayoutOrder < b.LayoutOrder end)
 				if #list >= 4 then list[1]:Destroy() end
 
+				-- toast simples: caixa preta, texto branco
 				toastSeq = toastSeq + 1
 				local t = Instance.new("Frame")
 				t.LayoutOrder = toastSeq
-				t.Size = UDim2.fromOffset(0, 30)
+				t.Size = UDim2.fromOffset(0, 28)
 				t.AutomaticSize = Enum.AutomaticSize.X
-				t.BackgroundColor3 = Color3.fromRGB(14, 16, 26)
+				t.BackgroundColor3 = Color3.new(0, 0, 0)
 				t.BackgroundTransparency = 1
 				t.BorderSizePixel = 0
 				t.ZIndex = 301
@@ -11236,99 +11270,30 @@ function showMainPanel()
 				local tc = Instance.new("UICorner")
 				tc.CornerRadius = UDim.new(0, 8)
 				tc.Parent = t
-				local ts = Instance.new("UIStroke")
-				ts.Color = Color3.new(1, 1, 1)
-				ts.Thickness = 1.2
-				ts.Transparency = 1
-				ts.Parent = t
-				AetherisBlueGradient(ts, 0)
-
-				-- conteúdo: texto + tempo restante lado a lado
-				local content = Instance.new("Frame")
-				content.Name = "Content"
-				content.Size = UDim2.new(0, 0, 1, -3)
-				content.AutomaticSize = Enum.AutomaticSize.X
-				content.BackgroundTransparency = 1
-				content.BorderSizePixel = 0
-				content.ZIndex = 302
-				content.Parent = t
-				local cp = Instance.new("UIPadding")
-				cp.PaddingLeft = UDim.new(0, 12)
-				cp.PaddingRight = UDim.new(0, 10)
-				cp.Parent = content
-				local cl = Instance.new("UIListLayout")
-				cl.FillDirection = Enum.FillDirection.Horizontal
-				cl.VerticalAlignment = Enum.VerticalAlignment.Center
-				cl.SortOrder = Enum.SortOrder.LayoutOrder
-				cl.Padding = UDim.new(0, 8)
-				cl.Parent = content
+				local tp = Instance.new("UIPadding")
+				tp.PaddingLeft = UDim.new(0, 12)
+				tp.PaddingRight = UDim.new(0, 12)
+				tp.Parent = t
 
 				local tx = Instance.new("TextLabel")
-				tx.LayoutOrder = 1
 				tx.Size = UDim2.new(0, 0, 1, 0)
 				tx.AutomaticSize = Enum.AutomaticSize.X
 				tx.BackgroundTransparency = 1
-				tx.Font = Enum.Font.GothamBold
+				tx.Font = Enum.Font.GothamMedium
 				tx.TextSize = 11
-				tx.TextColor3 = color or Color3.new(1, 1, 1)
+				tx.TextColor3 = Color3.new(1, 1, 1)
 				tx.TextTransparency = 1
 				tx.Text = text
-				tx.ZIndex = 303
-				tx.Parent = content
+				tx.ZIndex = 302
+				tx.Parent = t
 
-				local timerLbl = Instance.new("TextLabel")
-				timerLbl.Name = "ToastTimer"
-				timerLbl.LayoutOrder = 2
-				timerLbl.Size = UDim2.new(0, 0, 1, 0)
-				timerLbl.AutomaticSize = Enum.AutomaticSize.X
-				timerLbl.BackgroundTransparency = 1
-				timerLbl.Font = Enum.Font.GothamMedium
-				timerLbl.TextSize = 9
-				timerLbl.TextColor3 = Color3.fromRGB(150, 156, 178)
-				timerLbl.TextTransparency = 1
-				timerLbl.Text = string.format("%.1fs", duration)
-				timerLbl.ZIndex = 303
-				timerLbl.Parent = content
-				-- o contador não passa pelo tradutor (muda 10x por segundo)
-				if AetherisI18n and AetherisI18n.hooked then AetherisI18n.hooked[timerLbl] = true end
-
-				-- barrinha de tempo no rodapé do toast
-				local bar = Instance.new("Frame")
-				bar.Name = "ToastBar"
-				bar.Position = UDim2.new(0, 8, 1, -4)
-				bar.Size = UDim2.new(1, -16, 0, 2)
-				bar.BackgroundColor3 = Color3.new(1, 1, 1)
-				bar.BackgroundTransparency = 1
-				bar.BorderSizePixel = 0
-				bar.ZIndex = 303
-				bar.Parent = t
-				local barCorner = Instance.new("UICorner")
-				barCorner.CornerRadius = UDim.new(1, 0)
-				barCorner.Parent = bar
-				AetherisBlueGradient(bar, 0)
-
-				TweenService:Create(t, TweenInfo.new(0.2), {BackgroundTransparency = 0.08}):Play()
-				TweenService:Create(ts, TweenInfo.new(0.2), {Transparency = 0.2}):Play()
+				TweenService:Create(t, TweenInfo.new(0.2), {BackgroundTransparency = 0.1}):Play()
 				TweenService:Create(tx, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
-				TweenService:Create(timerLbl, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
-				TweenService:Create(bar, TweenInfo.new(0.2), {BackgroundTransparency = 0.15}):Play()
-				TweenService:Create(bar, TweenInfo.new(duration, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 0, 2)}):Play()
 
-				local startedAt = os.clock()
-				task.spawn(function()
-					while t.Parent do
-						local left = duration - (os.clock() - startedAt)
-						if left <= 0 then break end
-						timerLbl.Text = string.format("%.1fs", left)
-						task.wait(0.1)
-					end
+				task.delay(duration, function()
 					if not t.Parent then return end
-					timerLbl.Text = "0.0s"
 					TweenService:Create(t, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
-					TweenService:Create(ts, TweenInfo.new(0.3), {Transparency = 1}):Play()
 					TweenService:Create(tx, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
-					TweenService:Create(timerLbl, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
-					TweenService:Create(bar, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
 					task.delay(0.32, function() t:Destroy() end)
 				end)
 			end)
