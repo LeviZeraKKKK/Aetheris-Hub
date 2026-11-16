@@ -9807,10 +9807,43 @@ function showMainPanel()
 			},
 		}
 		-- Sea atual pelo PlaceId (se não reconhecer, mostra os três)
-		function Q.boss.currentList()
+		-- Detecta o Sea: PlaceId primeiro; se não bater, pelas ilhas que existem no mapa
+		function Q.boss.detectSea()
+			if Q.boss.seaCache then return Q.boss.seaCache end
 			local id = game.PlaceId
 			local sea = (id == 2753915549 and 1) or (id == 4442272183 and 2) or (id == 7449423635 and 3) or nil
+			if not sea then
+				local map = workspace:FindFirstChild("Map")
+				if map then
+					local marks = {
+						[1] = {"jungle", "pirate village", "desert", "frozen village", "marine fortress", "skypiea", "prison", "colosseum", "magma village", "fountain city", "middle town", "marine starter"},
+						[2] = {"kingdom of rose", "green zone", "graveyard", "snow mountain", "hot and cold", "cursed ship", "ice castle", "forgotten island", "dark arena", "usoapp"},
+						[3] = {"port town", "hydra", "great tree", "castle on the sea", "haunted castle", "floating turtle", "tiki outpost", "sea of treats"},
+					}
+					local best, bestScore = nil, 0
+					for i = 1, 3 do
+						local score = 0
+						for _, m in ipairs(map:GetChildren()) do
+							local ln = m.Name:lower()
+							for _, key in ipairs(marks[i]) do
+								if ln:find(key, 1, true) then score = score + 1; break end
+							end
+						end
+						if score > bestScore then best, bestScore = i, score end
+					end
+					sea = best
+				end
+			end
+			if sea then
+				Q.boss.seaCache = sea
+				print("[Aetheris] Auto Kill Boss: Sea detectado =", sea)
+			end
+			return sea
+		end
+		function Q.boss.currentList()
+			local sea = Q.boss.detectSea()
 			if sea then return Q.boss.seas[sea] end
+			warn("[Aetheris] Auto Kill Boss: não consegui detectar o Sea, mostrando todos")
 			local all = {}
 			for i = 1, 3 do for _, n in ipairs(Q.boss.seas[i]) do table.insert(all, n) end end
 			return all
@@ -9858,7 +9891,9 @@ function showMainPanel()
 					if hum and hum.Health > 0 and part then
 						local lname = obj.Name:lower()
 						for _, n in ipairs(names) do
-							if lname:find(n:lower(), 1, true) then
+							local ln = n:lower()
+							-- nome exato (aceita sufixo " [Lv...]"): não pega inimigos normais parecidos
+							if lname == ln or lname:sub(1, #ln + 2) == ln .. " [" then
 								local d = (part.Position - hrp.Position).Magnitude
 								if d < bestDist then best, bestDist = {model = obj, part = part, hum = hum, name = obj.Name}, d end
 								break
@@ -11102,13 +11137,13 @@ function showMainPanel()
 				local badge = Instance.new("TextLabel")
 				badge.Name = "FxBadge"
 				badge.AnchorPoint = Vector2.new(1, 0.5)
-				badge.Size = UDim2.fromOffset(15, 13)
-				badge.Position = UDim2.new(1, -4, 0.5, 0)
+				badge.Size = UDim2.fromOffset(10, 10)
+				badge.Position = UDim2.new(1, -3, 0.5, 0)
 				badge.BackgroundColor3 = currentThemeColor
 				badge.BackgroundTransparency = 0.1
 				table.insert(themeSliders, badge)
 				badge.Font = Enum.Font.GothamBold
-				badge.TextSize = 8
+				badge.TextSize = 6
 				badge.TextColor3 = Color3.new(1, 1, 1)
 				badge.Text = "0"
 				badge.Visible = false
