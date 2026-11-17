@@ -136,7 +136,12 @@ do
 		{"indisponível", "unavailable"}, {"não encontrado", "not found"}, {" de ", " of "},
 		{"Velocidade máx", "Max speed"}, {"Aceleração (por frame)", "Acceleration (per frame)"}, {"Altura sobre a água", "Height above water"},
 		{"Acelerar Barco", "Boost Boat"}, {"Modificar Barco", "Ship Modifier"}, {"Notificações", "Notifications"}, {"Notificação de teste", "Test notification"}, {"Tempo da notificação", "Notification time"}, {"Painel carregado com sucesso", "Panel loaded successfully"}, {"Posição", "Position"}, {"Embaixo", "Bottom"}, {"Em cima", "Top"}, {"Barco", "Boat"}, {"Entre em um barco", "Get in a boat"}, {"Desligado", "Off"},
-		{"Utilidades", "Utilities"}, {"Auto Rejoin (se for desconectado)", "Auto Rejoin (if disconnected)"}, {"Remover Neblina", "Remove Fog"},
+		{"Utilidades", "Utilities"},
+		{"Remover Partículas", "Remove Particles"}, {"Remover Rastros e Feixes", "Remove Trails and Beams"}, {"Remover Luzes", "Remove Lights"},
+		{"Sem Sombras nas Peças", "No Part Shadows"}, {"Materiais Simples", "Simple Materials"}, {"Remover Reflexos das Peças", "Remove Part Reflections"},
+		{"Remover Texturas e Decals", "Remove Textures and Decals"}, {"Desligar Sombras", "Disable Shadows"}, {"Remover Reflexos do Ambiente", "Remove Ambient Reflections"},
+		{"Qualidade Gráfica Mínima", "Minimum Graphics Quality"}, {"Água Simples", "Simple Water"}, {"Remover Nuvens", "Remove Clouds"},
+		{"Limitar FPS", "Limit FPS"}, {"Limite de FPS", "FPS Limit"}, {"Seu executor não tem setfpscap", "Your executor has no setfpscap"}, {"Auto Rejoin (se for desconectado)", "Auto Rejoin (if disconnected)"}, {"Remover Neblina", "Remove Fog"},
 		{"Remover Efeitos de Tela", "Remove Screen Effects"}, {"Alterar FOV", "Change FOV"}, {"Campo de Visão (FOV)", "Field of View (FOV)"},
 		{"Zoom Infinito da Câmera", "Infinite Camera Zoom"}, {"Reconectando...", "Reconnecting..."},
 		{"BOM DIA", "GOOD MORNING"}, {"BOA TARDE", "GOOD AFTERNOON"}, {"BOA NOITE", "GOOD EVENING"},
@@ -9658,7 +9663,7 @@ function showMainPanel()
 			Q.updateLevelInfo()
 			Q.conn = RunService.Heartbeat:Connect(function()
 				if not screenGui.Parent then Q.stop() return end
-				if not Q.enabled or Q.busy or Q.bossBusy then return end
+				if not Q.enabled or Q.busy or Q.bossBusy or AetherisBossBusy then return end
 				Q.busy = true -- evita rodar duas etapas ao mesmo tempo (várias têm task.wait)
 				local ok, err = pcall(Q.step)
 				if not ok then warn("[Aetheris] Auto Farm Level:", err) end
@@ -9760,240 +9765,771 @@ function showMainPanel()
 			return true
 		end
 
-		-- ===== Auto Kill Boss =====
-		Q.boss = {
-			enabled = false, token = 0, target = "Todos", lastBuso = 0,
-			wantQuest = false, height = 20, quested = setmetatable({}, {__mode = "k"}),
-			seas = {
-				[1] = {"The Gorilla King", "Bobby", "Yeti", "Mob Leader", "Vice Admiral", "Warden", "Chief Warden", "Swan",
-					"Magma Admiral", "Fishman Lord", "Wysper", "Thunder God", "Cyborg", "Saber Expert", "The Saw", "Greybeard"},
-				[2] = {"Diamond", "Jeremy", "Fajita", "Don Swan", "Smoke Admiral", "Awakened Ice Admiral", "Tide Keeper", "Order",
-					"Darkbeard", "Cursed Captain"},
-				[3] = {"Stone", "Island Empress", "Kilo Admiral", "Captain Elephant", "Beautiful Pirate", "Cake Queen",
-					"rip_indra", "Dough King", "Longma", "Soul Reaper"},
-			},
-		}
-		-- Sea atual pelo PlaceId (se não reconhecer, mostra os três)
-		-- Detecta o Sea: PlaceId primeiro; se não bater, pelas ilhas que existem no mapa
-		function Q.boss.detectSea()
-			if Q.boss.seaCache then return Q.boss.seaCache end
-			local id = game.PlaceId
-			local sea = (id == 2753915549 and 1) or (id == 4442272183 and 2) or (id == 7449423635 and 3) or nil
-			if not sea then
-				local map = workspace:FindFirstChild("Map")
-				if map then
-					local marks = {
-						[1] = {"jungle", "pirate village", "desert", "frozen village", "marine fortress", "skypiea", "prison", "colosseum", "magma village", "fountain city", "middle town", "marine starter"},
-						[2] = {"kingdom of rose", "green zone", "graveyard", "snow mountain", "hot and cold", "cursed ship", "ice castle", "forgotten island", "dark arena", "usoapp"},
-						[3] = {"port town", "hydra", "great tree", "castle on the sea", "haunted castle", "floating turtle", "tiki outpost", "sea of treats"},
-					}
-					local best, bestScore = nil, 0
-					for i = 1, 3 do
-						local score = 0
-						for _, m in ipairs(map:GetChildren()) do
-							local ln = m.Name:lower()
-							for _, key in ipairs(marks[i]) do
-								if ln:find(key, 1, true) then score = score + 1; break end
-							end
+		-- ===== Auto Kill Boss (lógica própria e independente do Auto Farm Level) =====
+		local BossLogic = (function()
+			local Q = {
+				weapon = "Melee", hitDelay = 0.05, aoeRange = 80, flySpeed = 270, height = 20,
+				healthEnabled = false, healthPct = 30, safeHeight = 90, retreating = false,
+				wantQuest = false, target = "Todos", enabled = false, token = 0, lastBuso = 0, lastHit = 0, lastEquip = 0, combo = 1,
+				origCollision = {}, ready = false, bossBusy = false,
+				quested = setmetatable({}, {__mode = "k"}),
+				questRetryAt = setmetatable({}, {__mode = "k"}),
+				currentTarget = nil,
+				currentTargetZeroAt = nil,
+				currentTargetGoneAt = nil,
+				currentTargetPos = nil,
+				currentTargetLastSeen = 0,
+				lastBoss = nil, lastBossSeenAt = 0,
+				seas = {
+					[1] = {"The Gorilla King", "Bobby", "Yeti", "Mob Leader", "Vice Admiral", "Warden", "Chief Warden", "Swan",
+						"Magma Admiral", "Fishman Lord", "Wysper", "Thunder God", "Cyborg", "Saber Expert", "The Saw", "Greybeard"},
+					[2] = {"Diamond", "Jeremy", "Fajita", "Don Swan", "Smoke Admiral", "Awakened Ice Admiral", "Tide Keeper", "Order",
+						"Darkbeard", "Cursed Captain"},
+					[3] = {"Stone", "Island Empress", "Kilo Admiral", "Captain Elephant", "Beautiful Pirate", "Cake Queen",
+						"rip_indra", "Dough King", "Longma", "Soul Reaper", "Orbitus"},
+				},
+			}
+			local setStatus = function() end
+			function Q.setStatusHandler(fn) setStatus = fn end
+
+			local function cleanBossName(name)
+				if not name then return "" end
+				local s = tostring(name):lower()
+				s = s:gsub("%s*%[.*%]%s*$", "")
+				s = s:gsub("%s*%(.*%)%s*$", "")
+				s = s:gsub("%s*%-.*$", "")
+				s = s:gsub("%s*%d+%s*$", "")
+				s = s:gsub("^%s+", ""):gsub("%s+$", "")
+				return s
+			end
+
+			function Q.init()
+				if Q.ready then return true end
+				local RS = ReplicatedStorage
+				pcall(function()
+					local net = require(RS.Modules.Net)
+					Q.hitEvent = net:RemoteEvent("RegisterHit")
+					Q.attackEvent = net:RemoteEvent("RegisterAttack")
+				end)
+				if not Q.hitEvent then
+					for _, obj in ipairs(RS:GetDescendants()) do
+						if obj:IsA("RemoteEvent") then
+							if obj.Name == "RegisterHit" then Q.hitEvent = obj end
+							if obj.Name == "RegisterAttack" then Q.attackEvent = obj end
 						end
-						if score > bestScore then best, bestScore = i, score end
-					end
-					sea = best
-				end
-			end
-			if sea then
-				Q.boss.seaCache = sea
-				print("[Aetheris] Auto Kill Boss: Sea detectado =", sea)
-			end
-			return sea
-		end
-		function Q.boss.seaList()
-			local sea = Q.boss.detectSea()
-			if sea then return Q.boss.seas[sea] end
-			warn("[Aetheris] Auto Kill Boss: não consegui detectar o Sea, mostrando todos")
-			local all = {}
-			for i = 1, 3 do for _, n in ipairs(Q.boss.seas[i]) do table.insert(all, n) end end
-			return all
-		end
-		-- Boss = spawn com nome único em _WorldOrigin.EnemySpawns (nome repetido = inimigo normal)
-		function Q.boss.scanSpawns()
-			local now = tick()
-			if Q.boss.spawnCache and now - Q.boss.spawnCacheAt < 3 then return Q.boss.spawnCache end
-			local result = {}
-			local origin = workspace:FindFirstChild("_WorldOrigin")
-			local folder = origin and origin:FindFirstChild("EnemySpawns")
-			if folder then
-				local counts, first = {}, {}
-				for _, sp in ipairs(folder:GetChildren()) do
-					counts[sp.Name] = (counts[sp.Name] or 0) + 1
-					first[sp.Name] = sp
-				end
-				for name, c in pairs(counts) do
-					if c == 1 then
-						local ok, pos = pcall(function() return first[name]:GetPivot().Position end)
-						if ok then table.insert(result, {name = name, pos = pos}) end
 					end
 				end
-				table.sort(result, function(a, b) return a.name < b.name end)
+				local remotes = RS:FindFirstChild("Remotes")
+				Q.commF = remotes and remotes:FindFirstChild("CommF_") or nil
+				pcall(function() Q.quests = require(RS.Quests) end)
+				pcall(function() Q.questController = require(RS.Controllers.QuestController) end)
+				if not Q.hitEvent then warn("[Aetheris Boss] RegisterHit não achado"); return false end
+				if not Q.commF then warn("[Aetheris Boss] CommF_ não achado"); return false end
+				Q.ready = true
+				return true
 			end
-			Q.boss.spawnCache, Q.boss.spawnCacheAt = result, now
-			return result
-		end
-		function Q.boss.spawnPos(name)
-			for _, e in ipairs(Q.boss.scanSpawns()) do if e.name == name then return e.pos end end
-			return nil
-		end
-		function Q.boss.currentList()
-			local spawns = Q.boss.scanSpawns()
-			if #spawns > 0 then
-				local names = {}
-				for _, e in ipairs(spawns) do table.insert(names, e.name) end
-				return names
+
+			function Q.getLevel()
+				local data = player:FindFirstChild("Data")
+				if data then
+					local lvl = data:FindFirstChild("Level")
+					if lvl and lvl:IsA("ValueBase") then return lvl.Value end
+				end
+				return player:GetAttribute("Level") or 0
 			end
-			return Q.boss.seaList() -- sem EnemySpawns: usa a lista fixa do Sea
-		end
-		function Q.boss.valid(name)
-			for _, n in ipairs(Q.boss.currentList()) do if n == name then return true end end
-			return false
-		end
-		-- Pega a quest do boss de longe (StartQuest direto), sem mexer na seleção do Auto Farm Level
-		function Q.boss.takeQuest(name)
-			if not Q.quests or not Q.commF then return false end
-			local lname, level = name:lower(), Q.getLevel()
-			local bestCat, bestQ, bestIdx, bestScore = nil, nil, nil, 0
-			for catName, entries in pairs(Q.quests) do
-				if type(entries) == "table" then
-					for idx, q in ipairs(entries) do
-						if type(q) == "table" and type(q.LevelReq) == "number" and q.LevelReq <= level and type(q.Task) == "table" then
-							for t in pairs(q.Task) do
-								if type(t) == "string" then
-									local lt = t:lower()
-									local score = (lt == lname and 1000) or (lname:find(lt, 1, true) and #lt) or 0
-									if score > bestScore then bestCat, bestQ, bestIdx, bestScore = catName, q, idx, score end
+
+			function Q.toolType(tool)
+				if not tool or not tool:IsA("Tool") then return nil end
+				local wt = tool:GetAttribute("WeaponType")
+				if wt == "Demon Fruit" then return "Fruit" end
+				if wt == "Sword" then return "Sword" end
+				if wt == "Melee" then return "Melee" end
+				if wt == "Gun" then return "Gun" end
+				if tool:HasTag("MeleeTool") then return "Melee" end
+				if tool:HasTag("GunTool") then return "Gun" end
+				local n = tool.Name:lower()
+				if n:find("fruit") then return "Fruit" end
+				if n:find("sword") or n:find("blade") or n:find("katana") or n:find("saber") then return "Sword" end
+				if n:find("fighting") or n:find("karate") or n:find("art") then return "Melee" end
+				if tool:GetAttribute("FruitType") then return "Fruit" end
+				return nil
+			end
+
+			function Q.getTool()
+				local char = player.Character
+				local tool = char and char:FindFirstChildOfClass("Tool")
+				if not tool or not tool:FindFirstChild("LocalEquippedWeaponPointer") then return nil end
+				if Q.toolType(tool) ~= Q.weapon then return nil end
+				return tool
+			end
+
+			function Q.ensureWeapon()
+				if tick() - Q.lastEquip < 1 then return end
+				local char = player.Character
+				local hum = char and char:FindFirstChildOfClass("Humanoid")
+				if not hum then return end
+				local equipped = char:FindFirstChildOfClass("Tool")
+				if equipped and Q.toolType(equipped) == Q.weapon then return end
+				Q.lastEquip = tick()
+				local bp = player:FindFirstChild("Backpack")
+				if bp then
+					for _, tool in ipairs(bp:GetChildren()) do
+						if tool:IsA("Tool") and Q.toolType(tool) == Q.weapon then
+							pcall(function() hum:EquipTool(tool) end)
+							return
+						end
+					end
+				end
+			end
+
+			function Q.scanEnemies(range)
+				local char = player.Character
+				local hrp = char and char:FindFirstChild("HumanoidRootPart")
+				local folder = workspace:FindFirstChild("Enemies")
+				local results = {}
+				if not hrp or not folder then return results end
+				for _, obj in ipairs(folder:GetChildren()) do
+					if obj:IsA("Model") then
+						local hum = obj:FindFirstChildOfClass("Humanoid")
+						local part = obj:FindFirstChild("Head") or obj:FindFirstChild("UpperTorso") or obj:FindFirstChild("HumanoidRootPart")
+						if hum and hum.Health > 0 and part then
+							local d = (part.Position - hrp.Position).Magnitude
+							if d <= range then table.insert(results, {char = obj, part = part, dist = d, hum = hum}) end
+						end
+					end
+				end
+				table.sort(results, function(a, b) return a.dist < b.dist end)
+				return results
+			end
+
+			function Q.aoeHit()
+				if not Q.enabled then return end
+				if tick() - Q.lastHit < Q.hitDelay then return end
+				if not Q.getTool() then return end
+				local targets = Q.scanEnemies(Q.aoeRange)
+				if #targets == 0 then return end
+				Q.lastHit = tick()
+				Q.combo = (Q.combo % 4) + 1
+				if Q.attackEvent then pcall(function() Q.attackEvent:FireServer(0.3, Q.combo) end) end
+				local extras = {}
+				for i = 2, #targets do table.insert(extras, {targets[i].char, targets[i].part}) end
+				pcall(function() Q.hitEvent:FireServer(targets[1].part, extras) end)
+			end
+
+			-- GUARD: se enabled=false, não faz nada
+			function Q.enableNoclip()
+				if not Q.enabled then return end
+				if Q.noclipConn then return end
+				table.clear(Q.origCollision)
+				Q.noclipConn = RunService.Stepped:Connect(function()
+					if not Q.enabled then return end
+					local c = player.Character
+					if not c then return end
+					for _, part in ipairs(c:GetDescendants()) do
+						if part:IsA("BasePart") then
+							if Q.origCollision[part] == nil then Q.origCollision[part] = part.CanCollide end
+							part.CanCollide = false
+						end
+					end
+				end)
+			end
+
+			function Q.disableNoclip()
+				if Q.noclipConn then Q.noclipConn:Disconnect(); Q.noclipConn = nil end
+				for part, orig in pairs(Q.origCollision) do
+					if part and part.Parent then part.CanCollide = orig end
+				end
+				table.clear(Q.origCollision)
+			end
+
+			-- GUARD: se enabled=false, não faz nada
+			function Q.fly(hrp, velocity)
+				if not Q.enabled then return end
+				if not Q.bv or Q.bv.Parent ~= hrp then
+					if Q.bv then Q.bv:Destroy() end
+					Q.bv = Instance.new("BodyVelocity")
+					Q.bv.Name = "AetherisBossFly"
+					Q.bv.MaxForce = Vector3.new(1e8, 1e8, 1e8)
+					Q.bv.P = 15000
+					Q.bv.Velocity = Vector3.zero
+					Q.bv.Parent = hrp
+				end
+				Q.bv.Velocity = velocity
+			end
+
+			function Q.stopFly()
+				if Q.bv then
+					Q.bv:Destroy()
+					Q.bv = nil
+				end
+			end
+
+			function Q.hold()
+				local char = player.Character
+				local hrp = char and char:FindFirstChild("HumanoidRootPart")
+				if not hrp then return end
+				Q.fly(hrp, Vector3.zero)
+			end
+
+			local function flyTo(hrp, target)
+				if not Q.enabled then return end
+				local offset = target - hrp.Position
+				local dist = offset.Magnitude
+				if dist < 0.1 then
+					Q.fly(hrp, Vector3.zero)
+					return
+				end
+				local dir = offset / dist
+				local speed
+				if dist > 4 then
+					speed = math.min(dist * 3, Q.flySpeed * 1.5)
+				else
+					speed = math.max(dist * 8, 20)
+				end
+				speed = math.min(speed, dist * 6)
+				Q.fly(hrp, dir * speed)
+			end
+
+			function Q.retreat()
+				if not Q.healthEnabled then Q.retreating = false return false end
+				local char = player.Character
+				local hum = char and char:FindFirstChildOfClass("Humanoid")
+				local hrp = char and char:FindFirstChild("HumanoidRootPart")
+				if not hum or not hrp or hum.MaxHealth <= 0 or hum.Health <= 0 then Q.retreating = false return false end
+				local pct = hum.Health / hum.MaxHealth * 100
+				if not Q.retreating then
+					if pct > Q.healthPct then return false end
+					Q.retreating = true
+					Q.retreatPos = hrp.Position + Vector3.new(0, Q.safeHeight, 0)
+				elseif pct > Q.healthPct then
+					Q.retreating = false
+					Q.retreatPos = nil
+					return false
+				end
+				Q.enableNoclip()
+				flyTo(hrp, Q.retreatPos)
+				setStatus("🩹 Vida baixa (" .. math.floor(pct) .. "%) — recuperando no alto", Color3.fromRGB(255, 140, 140))
+				return true
+			end
+
+			local charConn = player.CharacterAdded:Connect(function()
+				Q.retreating = false
+				Q.retreatPos = nil
+				Q.bv = nil
+			end)
+
+			function Q.detectSea()
+				if Q.seaCache then return Q.seaCache end
+				local id = game.PlaceId
+				local sea = (id == 2753915549 and 1) or (id == 4442272183 and 2) or (id == 7449423635 and 3) or nil
+				if not sea then
+					local map = workspace:FindFirstChild("Map")
+					if map then
+						local marks = {
+							[1] = {"jungle", "pirate village", "desert", "frozen village", "marine fortress", "skypiea", "prison", "colosseum", "magma village", "fountain city", "middle town", "marine starter"},
+							[2] = {"kingdom of rose", "green zone", "graveyard", "snow mountain", "hot and cold", "cursed ship", "ice castle", "forgotten island", "dark arena", "usoapp"},
+							[3] = {"port town", "hydra", "great tree", "castle on the sea", "haunted castle", "floating turtle", "tiki outpost", "sea of treats"},
+						}
+						local best, bestScore = nil, 0
+						for i = 1, 3 do
+							local score = 0
+							for _, m in ipairs(map:GetChildren()) do
+								local ln = m.Name:lower()
+								for _, key in ipairs(marks[i]) do
+									if ln:find(key, 1, true) then score = score + 1; break end
+								end
+							end
+							if score > bestScore then best, bestScore = i, score end
+						end
+						sea = best
+					end
+				end
+				if sea then Q.seaCache = sea end
+				return sea
+			end
+
+			function Q.seaList()
+				local sea = Q.detectSea()
+				if sea then return Q.seas[sea] end
+				local all = {}
+				for i = 1, 3 do for _, n in ipairs(Q.seas[i]) do table.insert(all, n) end end
+				return all
+			end
+
+			function Q.scanSpawns()
+				local now = tick()
+				if Q.spawnCache and now - Q.spawnCacheAt < 2 then return Q.spawnCache end
+				local result = {}
+				local origin = workspace:FindFirstChild("_WorldOrigin")
+				local folder = origin and origin:FindFirstChild("EnemySpawns")
+				if folder then
+					local counts, first = {}, {}
+					for _, sp in ipairs(folder:GetChildren()) do
+						counts[sp.Name] = (counts[sp.Name] or 0) + 1
+						first[sp.Name] = sp
+					end
+					for name, c in pairs(counts) do
+						if c == 1 then
+							local ok, pos = pcall(function() return first[name]:GetPivot().Position end)
+							if ok then table.insert(result, {name = name, pos = pos}) end
+						end
+					end
+					table.sort(result, function(a, b) return a.name < b.name end)
+				end
+				Q.spawnCache, Q.spawnCacheAt = result, now
+				return result
+			end
+
+			function Q.spawnPos(name)
+				local target = cleanBossName(name)
+				if target == "" then return nil end
+				for _, e in ipairs(Q.scanSpawns()) do
+					if cleanBossName(e.name) == target then return e.pos end
+				end
+				for _, e in ipairs(Q.scanSpawns()) do
+					local en = cleanBossName(e.name)
+					if en ~= "" and (en:find(target, 1, true) or target:find(en, 1, true)) then
+						return e.pos
+					end
+				end
+				return nil
+			end
+
+			function Q.currentList()
+				local spawns = Q.scanSpawns()
+				if #spawns > 0 then
+					local names = {}
+					for _, e in ipairs(spawns) do table.insert(names, e.name) end
+					return names
+				end
+				return Q.seaList()
+			end
+
+			function Q.valid(name)
+				local target = cleanBossName(name)
+				if target == "" then return false end
+				for _, n in ipairs(Q.currentList()) do
+					local nn = cleanBossName(n)
+					if nn == target or nn:find(target, 1, true) or target:find(nn, 1, true) then
+						return true
+					end
+				end
+				return false
+			end
+
+			function Q.acceptDirect(cat, name, idx)
+				local commF = Q.commF
+				local attempts = {
+					function() return commF:InvokeServer("StartQuest", cat, idx) end,
+					function() return commF:InvokeServer("StartQuest", cat, name) end,
+					function() return commF:InvokeServer("StartQuest", cat) end,
+					function() return commF:InvokeServer("AcceptQuest", cat, idx) end,
+					function() return commF:InvokeServer("AcceptQuest", cat) end,
+				}
+				for _, fn in ipairs(attempts) do
+					local ok = pcall(fn)
+					if ok then return true end
+					task.wait(0.1)
+				end
+				return false
+			end
+
+			function Q.takeQuest(rawName)
+				if not Q.quests or not Q.commF then return false end
+				local name = cleanBossName(rawName)
+				local lname, level = name, Q.getLevel()
+
+				local bestCat, bestQ, bestIdx, bestScore = nil, nil, nil, 0
+				for catName, entries in pairs(Q.quests) do
+					if type(entries) == "table" then
+						for idx, q in ipairs(entries) do
+							if type(q) == "table" and type(q.LevelReq) == "number" and q.LevelReq <= level and type(q.Task) == "table" then
+								for t in pairs(q.Task) do
+									if type(t) == "string" then
+										local lt = cleanBossName(t)
+										local score = 0
+										if lt == lname then
+											score = 10000
+										elseif lname:find(lt, 1, true) then
+											score = 5000 + #lt
+										elseif lt:find(lname, 1, true) then
+											score = 3000 + #lname
+										end
+										if score > 0 then score = score + q.LevelReq end
+										if score > bestScore then
+											bestCat, bestQ, bestIdx, bestScore = catName, q, idx, score
+										end
+									end
 								end
 							end
 						end
 					end
 				end
+
+				if not bestQ then return false end
+
+				local accepted = Q.acceptDirect(bestCat, bestQ.Name, bestIdx)
+				if not accepted then return false end
+
+				task.wait(0.15)
+				if Q.questController then
+					local qc = Q.questController.QuestsCompleted
+					if qc and qc[bestCat] and qc[bestCat][bestQ.Name] == false then
+						return true
+					end
+				end
+				return true
 			end
-			if not bestQ then return false end
-			local sc, sn, si, st = Q.questCat, Q.questName, Q.questIndex, Q.taskType
-			Q.questCat, Q.questName, Q.questIndex = bestCat, bestQ.Name, bestIdx
-			local ok = Q.acceptDirect()
-			Q.questCat, Q.questName, Q.questIndex, Q.taskType = sc, sn, si, st
-			return ok
-		end
-		function Q.boss.find(hrp)
-			local folder = workspace:FindFirstChild("Enemies")
-			if not folder then return nil end
-			local names = (Q.boss.target ~= "Todos" and Q.boss.valid(Q.boss.target)) and {Q.boss.target} or Q.boss.currentList()
-			local best, bestDist = nil, math.huge
-			for _, obj in ipairs(folder:GetChildren()) do
-				if obj:IsA("Model") then
-					local hum = obj:FindFirstChildOfClass("Humanoid")
-					local part = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Head") or obj.PrimaryPart
-					if hum and hum.Health > 0 and part then
-						local lname = obj.Name:lower()
-						for _, n in ipairs(names) do
-							local ln = n:lower()
-							-- nome exato (aceita sufixo " [Lv...]"): não pega inimigos normais parecidos
-							if lname == ln or lname:sub(1, #ln + 2) == ln .. " [" then
-								local d = (part.Position - hrp.Position).Magnitude
-								if d < bestDist then best, bestDist = {model = obj, part = part, hum = hum, name = obj.Name}, d end
+
+			function Q.find(hrp)
+				local folder = workspace:FindFirstChild("Enemies")
+				if not folder then return nil end
+
+				local allModels = {}
+				for _, obj in ipairs(folder:GetChildren()) do
+					if obj:IsA("Model") then
+						local hum = obj:FindFirstChildOfClass("Humanoid")
+						local part = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Head") or obj.PrimaryPart
+						if hum and part then
+							table.insert(allModels, {
+								model = obj,
+								hum = hum,
+								part = part,
+								cleanName = cleanBossName(obj.Name),
+								alive = hum.Health > 0,
+							})
+						end
+					end
+				end
+				if #allModels == 0 then return nil end
+
+				local best, bestDist = nil, math.huge
+				local function consider(entry, dist)
+					if not entry.alive then return end
+					if dist < bestDist then
+						best, bestDist = {
+							model = entry.model,
+							part = entry.part,
+							hum = entry.hum,
+							name = entry.model.Name,
+						}, dist
+					end
+				end
+
+				local names = {}
+				if Q.target ~= "Todos" then
+					table.insert(names, cleanBossName(Q.target))
+				else
+					for _, n in ipairs(Q.currentList()) do
+						table.insert(names, cleanBossName(n))
+					end
+				end
+
+				for _, entry in ipairs(allModels) do
+					for _, ln in ipairs(names) do
+						if ln ~= "" and entry.cleanName ~= "" then
+							if entry.cleanName == ln
+								or entry.cleanName:find(ln, 1, true)
+								or ln:find(entry.cleanName, 1, true) then
+								consider(entry, (entry.part.Position - hrp.Position).Magnitude)
 								break
 							end
 						end
 					end
 				end
-			end
-			return best
-		end
-		function Q.boss.release()
-			Q.bossBusy = false
-			if not Q.enabled then
-				Q.stopFly()
-				Q.disableNoclip()
-			end
-		end
-		function Q.boss.step()
-			if Q.retreat() then return end
-			local char = player.Character
-			local hrp = char and char:FindFirstChild("HumanoidRootPart")
-			if not hrp then return end
-			local boss = Q.boss.find(hrp)
-			if not boss then
-				-- boss escolhido ainda não spawnou/carregou: vai até o spawn dele (de longe)
-				local sp = Q.boss.target ~= "Todos" and Q.boss.spawnPos(Q.boss.target) or nil
-				if sp then
-					Q.bossBusy = true
-					if not Q.noclipConn then Q.enableNoclip() end
-					local off = (sp + Vector3.new(0, Q.boss.height, 0)) - hrp.Position
-					if off.Magnitude > 4 then
-						local speed = math.clamp(off.Magnitude * 2, Q.flySpeed, math.max(Q.flySpeed, 350))
-						Q.fly(hrp, off.Unit * math.min(speed, off.Magnitude * 5))
-					else
-						Q.hold()
+
+				if Q.target ~= "Todos" and best then return best end
+
+				if not best and Q.target == "Todos" then
+					for _, entry in ipairs(allModels) do
+						if entry.model.Name:match("%[%d+%]") then
+							consider(entry, (entry.part.Position - hrp.Position).Magnitude)
+						end
 					end
-					if not Q.enabled then Q.updateStatus("👹 Indo ao spawn de " .. Q.boss.target, Color3.fromRGB(200, 180, 120)) end
+				end
+
+				if not best and Q.target == "Todos" then
+					local counts = {}
+					for _, entry in ipairs(allModels) do
+						counts[entry.cleanName] = (counts[entry.cleanName] or 0) + 1
+					end
+					for _, entry in ipairs(allModels) do
+						if counts[entry.cleanName] == 1 then
+							consider(entry, (entry.part.Position - hrp.Position).Magnitude)
+						end
+					end
+				end
+
+				if not best and Q.target == "Todos" then
+					for _, entry in ipairs(allModels) do
+						consider(entry, (entry.part.Position - hrp.Position).Magnitude)
+					end
+				end
+
+				if not best and Q.target ~= "Todos" then
+					local spawnPos = Q.spawnPos(Q.target)
+					local targetAlpha = cleanBossName(Q.target):gsub("[^%a]", "")
+					local targetFirst = targetAlpha:sub(1, 1)
+					local targetFirst2 = targetAlpha:sub(1, 2)
+
+					for _, entry in ipairs(allModels) do
+						if entry.alive then
+							local entryAlpha = entry.cleanName:gsub("[^%a]", "")
+							local initialMatch = (targetFirst ~= "" and entryAlpha:sub(1, 1) == targetFirst)
+								or (targetFirst2 ~= "" and entryAlpha:sub(1, 2) == targetFirst2)
+
+							if spawnPos and initialMatch then
+								local spawnDist = (entry.part.Position - spawnPos).Magnitude
+								if spawnDist < 200 then consider(entry, spawnDist) end
+							end
+							if not best and initialMatch then
+								local playerDist = (entry.part.Position - hrp.Position).Magnitude
+								if playerDist < 300 then consider(entry, playerDist) end
+							end
+						end
+					end
+
+					if not best then
+						for _, entry in ipairs(allModels) do
+							if entry.alive then
+								local playerDist = (entry.part.Position - hrp.Position).Magnitude
+								if playerDist < 100 then consider(entry, playerDist) end
+							end
+						end
+					end
+				end
+
+				return best
+			end
+
+			function Q.release()
+				Q.bossBusy = false; AetherisBossBusy = false
+				Q.stopFly()
+			end
+
+			function Q.debug()
+				print("═══════ AETHERIS BOSS DEBUG ═══════")
+				print("Enabled:", Q.enabled, "| Token:", Q.token, "| Target:", Q.target)
+				if Q.currentTarget then
+					local ct = Q.currentTarget
+					print("currentTarget:", ct.name)
+					print("  model.Parent:", ct.model and ct.model.Parent and ct.model.Parent.Name or "DESTROYED")
+					print("  ZeroAt há:", Q.currentTargetZeroAt and (string.format("%.1f", tick() - Q.currentTargetZeroAt) .. "s") or "nunca")
+					print("  GoneAt há:", Q.currentTargetGoneAt and (string.format("%.1f", tick() - Q.currentTargetGoneAt) .. "s") or "nunca")
+				else
+					print("currentTarget: NIL")
+				end
+				print("BV:", Q.bv and "ativa" or "nil")
+				print("NoclipConn:", Q.noclipConn and "conectada" or "nil")
+				print("═══════════════════════════════════")
+			end
+
+			-- STEP com guard inicial
+			function Q.step()
+				if not Q.enabled then return end
+				if Q.retreat() then return end
+				local char = player.Character
+				local hrp = char and char:FindFirstChild("HumanoidRootPart")
+				if not hrp then return end
+
+				local targetValid = false
+				local ct = Q.currentTarget
+
+				if ct and ct.model and ct.model.Parent then
+					local freshHum = ct.model:FindFirstChildOfClass("Humanoid")
+					local freshPart = ct.model:FindFirstChild("HumanoidRootPart")
+						or ct.model:FindFirstChild("Head")
+						or ct.model:FindFirstChildWhichIsA("BasePart", true)
+						or ct.model.PrimaryPart
+
+					if freshHum and freshPart then
+						ct.hum = freshHum
+						ct.part = freshPart
+						Q.currentTargetPos = freshPart.Position
+						Q.currentTargetGoneAt = nil
+						Q.currentTargetLastSeen = tick()
+
+						if freshHum.Health > 0 then
+							targetValid = true
+							Q.currentTargetZeroAt = nil
+						else
+							if not Q.currentTargetZeroAt then
+								Q.currentTargetZeroAt = tick()
+							end
+							if tick() - Q.currentTargetZeroAt < 15 then
+								targetValid = true
+							else
+								Q.currentTarget = nil
+								Q.currentTargetZeroAt = nil
+								Q.currentTargetGoneAt = nil
+							end
+						end
+					else
+						if not Q.currentTargetGoneAt then
+							Q.currentTargetGoneAt = tick()
+						end
+						if tick() - Q.currentTargetGoneAt < 10 then
+							targetValid = true
+						else
+							Q.currentTarget = nil
+							Q.currentTargetZeroAt = nil
+							Q.currentTargetGoneAt = nil
+						end
+					end
+				elseif ct then
+					if not Q.currentTargetGoneAt then
+						Q.currentTargetGoneAt = tick()
+					end
+					if tick() - Q.currentTargetGoneAt < 10 then
+						targetValid = true
+					else
+						Q.currentTarget = nil
+						Q.currentTargetZeroAt = nil
+						Q.currentTargetGoneAt = nil
+					end
+				end
+
+				if not targetValid then
+					Q.currentTarget = nil
+					Q.currentTargetZeroAt = nil
+					Q.currentTargetGoneAt = nil
+					local boss = Q.find(hrp)
+					if boss then
+						Q.currentTarget = boss
+						Q.currentTargetPos = boss.part.Position
+						Q.currentTargetLastSeen = tick()
+					end
+				end
+
+				local boss = Q.currentTarget
+
+				if not boss then
+					local sp = Q.target ~= "Todos" and Q.spawnPos(Q.target) or nil
+					if sp then
+						Q.enableNoclip()
+						flyTo(hrp, sp + Vector3.new(0, Q.height, 0))
+						setStatus("👹 Indo ao spawn de " .. Q.target, Color3.fromRGB(200, 180, 120))
+						return
+					end
+
+					if Q.lastBoss and Q.lastBoss.model and Q.lastBoss.model.Parent and (tick() - Q.lastBossSeenAt) < 15 then
+						Q.enableNoclip()
+						if Q.lastBoss.part and Q.lastBoss.part.Parent then
+							flyTo(hrp, Q.lastBoss.part.Position + Vector3.new(0, Q.height, 0))
+						else
+							Q.hold()
+						end
+						setStatus("⏳ Aguardando boss...", Color3.fromRGB(255, 200, 100))
+						return
+					end
+
+					Q.hold()
+					setStatus("🔍 Procurando boss...", Color3.fromRGB(200, 180, 120))
+					task.wait(0.2)
 					return
 				end
-				if Q.bossBusy then
-					Q.boss.release()
-					if not Q.enabled then Q.updateStatus("👹 Aguardando boss...", Color3.fromRGB(200, 180, 120)) end
+
+				Q.bossBusy = true; AetherisBossBusy = true
+				Q.lastBoss = boss
+				Q.lastBossSeenAt = tick()
+				Q.enableNoclip()
+				Q.ensureWeapon()
+
+				if Q.wantQuest and not Q.quested[boss.model] then
+					local retryAt = Q.questRetryAt[boss.model] or 0
+					if tick() > retryAt then
+						if Q.takeQuest(boss.name) then
+							Q.quested[boss.model] = true
+						else
+							Q.questRetryAt[boss.model] = tick() + 5
+						end
+					end
 				end
-				task.wait(0.4)
-				return
-			end
-			if not Q.bossBusy then
-				Q.bossBusy = true
-				Q.stopFly() -- solta o voo do farm antes de assumir
-			end
-			if not Q.noclipConn then Q.enableNoclip() end
-			if Q.weapon ~= "Any" then Q.ensureWeapon() end
-			if Q.boss.wantQuest and not Q.boss.quested[boss.model] then
-				Q.boss.quested[boss.model] = true
-				Q.boss.takeQuest(boss.name)
-			end
-			if Q.commF and tick() - Q.boss.lastBuso > 2 then
-				Q.boss.lastBuso = tick()
-				if not char:FindFirstChild("HasBuso") then pcall(function() Q.commF:InvokeServer("Buso") end) end
-			end
-			local offset = (boss.part.Position + Vector3.new(0, Q.boss.height, 0)) - hrp.Position
-			if offset.Magnitude > 2 then
-				-- de longe: quanto mais distante, mais rápido (até 350)
-				local speed = math.clamp(offset.Magnitude * 2, Q.flySpeed, math.max(Q.flySpeed, 350))
-				Q.fly(hrp, offset.Unit * math.min(speed, offset.Magnitude * 5))
-			elseif Q.bv then
-				Q.bv.Velocity = Vector3.zero
-			end
-			Q.aoeHit()
-			if not Q.enabled then
-				Q.updateStatus("👹 " .. boss.name .. "\n" .. math.floor(boss.hum.Health) .. " HP", Color3.fromRGB(255, 120, 120))
-			end
-		end
-		function Q.boss.start()
-			if not Q.init() then
-				warn("[Aetheris] Auto Kill Boss: módulos não encontrados")
-				return
-			end
-			Q.boss.token = Q.boss.token + 1
-			local token = Q.boss.token
-			Q.boss.enabled = true
-			Q.enableNoclip()
-			task.spawn(function()
-				while Q.boss.enabled and Q.boss.token == token and screenGui.Parent do
-					RunService.Heartbeat:Wait()
-					local ok, err = pcall(Q.boss.step)
-					if not ok then warn("[Aetheris] Auto Kill Boss:", err); task.wait(1) end
+
+				if Q.commF and tick() - Q.lastBuso > 2 then
+					Q.lastBuso = tick()
+					if not char:FindFirstChild("HasBuso") then pcall(function() Q.commF:InvokeServer("Buso") end) end
 				end
-				if Q.boss.token == token then Q.boss.release() end
+
+				local aimPos
+				if boss.part and boss.part.Parent then
+					aimPos = boss.part.Position
+				elseif Q.currentTargetPos then
+					aimPos = Q.currentTargetPos
+				else
+					Q.hold()
+					return
+				end
+
+				flyTo(hrp, aimPos + Vector3.new(0, Q.height, 0))
+				Q.aoeHit()
+
+				local hpText
+				if boss.hum and boss.hum.Parent and boss.hum.Health > 0 then
+					hpText = math.floor(boss.hum.Health) .. " HP"
+				else
+					hpText = "aguardando..."
+				end
+				setStatus("⚔️ " .. boss.name .. " — " .. hpText, Color3.fromRGB(255, 140, 120))
+			end
+
+			-- START com Q.stop() antes de tudo pra limpar estado anterior
+			function Q.start()
+				if not Q.init() then
+					setStatus("❌ Módulos não encontrados (veja o F9)", Color3.fromRGB(255, 120, 120))
+					return false
+				end
+				Q.stop()
+				Q.token = Q.token + 1
+				local token = Q.token
+				Q.enabled = true
+				Q.currentTarget = nil
+				Q.currentTargetZeroAt = nil
+				Q.currentTargetGoneAt = nil
+				Q.currentTargetPos = nil
+				Q.currentTargetLastSeen = 0
+				Q.lastBoss = nil
+				Q.lastBossSeenAt = 0
+				Q.enableNoclip()
+				task.spawn(function()
+					while Q.enabled and Q.token == token and screenGui.Parent do
+						RunService.Heartbeat:Wait()
+						if not Q.enabled or Q.token ~= token then break end
+						local ok, err = pcall(Q.step)
+						if not ok then warn("[Aetheris Boss]", err); task.wait(1) end
+					end
+					-- cleanup final: só roda se essa thread foi a última e não tem novo start
+					if Q.token == token and not Q.enabled then
+						Q.stopFly()
+						Q.disableNoclip()
+					end
+				end)
+				return true
+			end
+
+			-- STOP: enabled=false PRIMEIRO, depois cleanup
+			function Q.stop()
+				Q.enabled = false
+				Q.token = Q.token + 1
+				Q.stopFly()
+				Q.disableNoclip()
+				Q.bossBusy = false; AetherisBossBusy = false
+				Q.currentTarget = nil
+				Q.currentTargetZeroAt = nil
+				Q.currentTargetGoneAt = nil
+				Q.currentTargetPos = nil
+				Q.lastBoss = nil
+				Q.lastBossSeenAt = 0
+				setStatus("💤 Desligado", Color3.fromRGB(150, 150, 180))
+			end
+
+			screenGui.Destroying:Connect(function()
+				Q.stop()
+				if charConn then charConn:Disconnect() end
 			end)
-		end
-		function Q.boss.stop()
-			Q.boss.enabled = false
-			Q.boss.token = Q.boss.token + 1
-			Q.boss.release()
-		end
+
+			return Q
+		end)()
 
 		-- ===== CONFIGURAÇÕES NA INTERFACE =====
 		addToggle(secAFL, "Auto  Farm  Level", function(state)
@@ -10055,11 +10591,37 @@ function showMainPanel()
 			addSlider(secAFL, "Altura de segurança", 30, 200, 90, function(val) Q.safeHeight = val end, 0, " studs")
 
 			local secBoss = createSection(secFarm.Parent.Parent, "Auto  Kill  Boss", sectionIcons.FarmAutomation)
+
+			-- status do boss
+			local bossStatusRow = Instance.new("Frame")
+			bossStatusRow.Size = UDim2.new(1, 0, 0, 34)
+			bossStatusRow.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
+			bossStatusRow.BackgroundTransparency = 0.3
+			bossStatusRow.BorderSizePixel = 0
+			bossStatusRow.Parent = secBoss
+			local bossStatusCorner = Instance.new("UICorner")
+			bossStatusCorner.CornerRadius = UDim.new(0, 6)
+			bossStatusCorner.Parent = bossStatusRow
+			local bossStatus = Instance.new("TextLabel")
+			bossStatus.Size = UDim2.new(1, -16, 1, 0)
+			bossStatus.Position = UDim2.new(0, 8, 0, 0)
+			bossStatus.BackgroundTransparency = 1
+			bossStatus.Font = currentGlobalFont
+			bossStatus.Text = "💤 Desligado"
+			bossStatus.TextColor3 = Color3.fromRGB(150, 150, 180)
+			bossStatus.TextSize = 10
+			bossStatus.TextWrapped = true
+			bossStatus.TextXAlignment = Enum.TextXAlignment.Left
+			bossStatus.Parent = bossStatusRow
+			BossLogic.setStatusHandler(function(text, color)
+				bossStatus.Text = text
+				bossStatus.TextColor3 = color or Color3.fromRGB(150, 150, 180)
+			end)
+
 			addToggle(secBoss, "Auto  Kill  Boss", function(state)
-				if state then Q.boss.start() else Q.boss.stop() end
+				if state then BossLogic.start() else BossLogic.stop() end
 			end, false)
-			addToggle(secBoss, "Pegar quest do boss", function(state) Q.boss.wantQuest = state end, false)
-			addSlider(secBoss, "Altura sobre o boss", 6, 30, 20, function(val) Q.boss.height = val end, 0, " studs")
+
 			local bossDD
 			bossDD = AetherisDropdown(secBoss, {
 				prefix = "Boss: ",
@@ -10069,18 +10631,70 @@ function showMainPanel()
 				boxWidth = 130,
 				getOptions = function()
 					local opts = {{label = "Todos", value = "Todos"}}
-					for _, n in ipairs(Q.boss.currentList()) do table.insert(opts, {label = n, value = n}) end
+					for _, n in ipairs(BossLogic.currentList()) do table.insert(opts, {label = n, value = n}) end
 					return opts
 				end,
-				onSelect = function(v) Q.boss.target = v end,
+				onSelect = function(v) BossLogic.target = v end,
 			})
-			registerConfigBinding(secBoss, "Boss: alvo", function() return Q.boss.target end, function(v)
+			registerConfigBinding(secBoss, "Boss: alvo", function() return BossLogic.target end, function(v)
 				if type(v) == "string" then
-					if v ~= "Todos" and not Q.boss.valid(v) then v = "Todos" end
-					Q.boss.target = v
+					if v ~= "Todos" and not BossLogic.valid(v) then v = "Todos" end
+					BossLogic.target = v
 					bossDD.setValue(v, v)
 				end
 			end)
+
+			addToggle(secBoss, "Pegar quest do boss", function(state) BossLogic.wantQuest = state end, false)
+
+			local bossWeaponDD
+			bossWeaponDD = AetherisDropdown(secBoss, {
+				prefix = "Arma: ",
+				label = weaponLabels.Melee,
+				value = "Melee",
+				icon = weaponIcons.Melee,
+				maxRows = 3,
+				boxWidth = 130,
+				getOptions = function()
+					local opts = {}
+					for _, v in ipairs({"Melee", "Fruit", "Sword"}) do
+						table.insert(opts, {label = weaponLabels[v], value = v, icon = weaponIcons[v]})
+					end
+					return opts
+				end,
+				onSelect = function(v) BossLogic.weapon = v end,
+			})
+			registerConfigBinding(secBoss, "Boss: arma", function() return BossLogic.weapon end, function(v)
+				if weaponLabels[v] then
+					BossLogic.weapon = v
+					bossWeaponDD.setValue(v, weaponLabels[v], weaponIcons[v])
+				end
+			end)
+
+			addSlider(secBoss, "Velocidade de voo", 10, 300, 270, function(val) BossLogic.flySpeed = val end, 0)
+			addSlider(secBoss, "Altura sobre o boss", 6, 30, 20, function(val) BossLogic.height = val end, 0, " studs")
+			addSlider(secBoss, "Ataque Range", 10, 300, 80, function(val) BossLogic.aoeRange = val end, 0, " studs")
+
+			addToggle(secBoss, "Subir quando a vida estiver baixa", function(state)
+				BossLogic.healthEnabled = state
+				if not state then BossLogic.retreating = false; BossLogic.retreatPos = nil end
+			end, false)
+			addSlider(secBoss, "Vida mínima para subir", 5, 95, 30, function(val) BossLogic.healthPct = val end, 0, "%")
+			addSlider(secBoss, "Altura de segurança", 30, 200, 90, function(val) BossLogic.safeHeight = val end, 0, " studs")
+
+			local bossDebug = Instance.new("TextButton")
+			bossDebug.Size = UDim2.new(1, 0, 0, 24)
+			bossDebug.BackgroundColor3 = Color3.fromRGB(80, 60, 140)
+			bossDebug.BorderSizePixel = 0
+			bossDebug.AutoButtonColor = false
+			bossDebug.Font = Enum.Font.GothamBold
+			bossDebug.Text = "🔬 Debug (veja o F9)"
+			bossDebug.TextColor3 = Color3.new(1, 1, 1)
+			bossDebug.TextSize = 10
+			bossDebug.Parent = secBoss
+			local bossDebugCorner = Instance.new("UICorner")
+			bossDebugCorner.CornerRadius = UDim.new(0, 5)
+			bossDebugCorner.Parent = bossDebug
+			bossDebug.MouseButton1Click:Connect(function() BossLogic.debug() end)
 		end
 
 		task.spawn(function()
@@ -11721,6 +12335,7 @@ function showMainPanel()
 		local Lighting = game:GetService("Lighting")
 		local TeleportService = game:GetService("TeleportService")
 		local GuiService = game:GetService("GuiService")
+		local secFps = createSection(pages["Misc"], "FPS Boost", sectionIcons.World)
 
 		-- Auto Rejoin: se o jogo mostrar erro de desconexão/kick, volta pro mesmo servidor
 		do
@@ -11758,7 +12373,7 @@ function showMainPanel()
 					inst.Enabled = false
 				end
 			end
-			addToggle(secWorld, "FPS Boost", function(state) -- fica na aba Misc (seção Visual do Mapa)
+			addToggle(secFps, "FPS Boost", function(state) -- fica na aba Misc (seção FPS Boost)
 				boosting = state
 				if descConn then descConn:Disconnect(); descConn = nil end
 				if state then
@@ -11784,11 +12399,183 @@ function showMainPanel()
 			end, false)
 		end
 
+		-----------------------------------------------------------------
+		-- Mais opções de FPS Boost (cada uma liga/desliga sozinha e restaura ao desligar)
+		-----------------------------------------------------------------
+		-- Opções que varrem o mapa: aplicam nos objetos existentes e nos novos
+		local function descendantToggle(label, test, apply, restore)
+			local saved = setmetatable({}, {__mode = "k"})
+			local on, conn = false, nil
+			local function handle(inst)
+				local okTest, match = pcall(test, inst)
+				if okTest and match and saved[inst] == nil then
+					local okApply, orig = pcall(apply, inst)
+					if okApply then saved[inst] = {orig} end
+				end
+			end
+			addToggle(secFps, label, function(state)
+				on = state
+				if conn then conn:Disconnect(); conn = nil end
+				if state then
+					conn = workspace.DescendantAdded:Connect(function(d) if on then handle(d) end end)
+					task.spawn(function()
+						local n = 0
+						for _, d in ipairs(workspace:GetDescendants()) do
+							if not on then break end
+							handle(d)
+							n = n + 1
+							if n % 300 == 0 then task.wait() end
+						end
+					end)
+				else
+					for inst, box in pairs(saved) do
+						if inst.Parent then pcall(restore, inst, box[1]) end
+					end
+					table.clear(saved)
+				end
+			end, false)
+		end
+
+		descendantToggle("Remover Partículas",
+			function(i) return i:IsA("ParticleEmitter") or i:IsA("Smoke") or i:IsA("Fire") or i:IsA("Sparkles") end,
+			function(i) local o = i.Enabled; i.Enabled = false; return o end,
+			function(i, o) i.Enabled = o end)
+
+		descendantToggle("Remover Rastros e Feixes",
+			function(i) return i:IsA("Trail") or i:IsA("Beam") end,
+			function(i) local o = i.Enabled; i.Enabled = false; return o end,
+			function(i, o) i.Enabled = o end)
+
+		descendantToggle("Remover Luzes",
+			function(i) return i:IsA("PointLight") or i:IsA("SpotLight") or i:IsA("SurfaceLight") end,
+			function(i) local o = i.Enabled; i.Enabled = false; return o end,
+			function(i, o) i.Enabled = o end)
+
+		descendantToggle("Sem Sombras nas Peças",
+			function(i) return i:IsA("BasePart") and i.CastShadow end,
+			function(i) local o = i.CastShadow; i.CastShadow = false; return o end,
+			function(i, o) i.CastShadow = o end)
+
+		descendantToggle("Materiais Simples",
+			function(i) return i:IsA("BasePart") and not i:IsA("Terrain") and i.Material ~= Enum.Material.SmoothPlastic end,
+			function(i) local o = i.Material; i.Material = Enum.Material.SmoothPlastic; return o end,
+			function(i, o) i.Material = o end)
+
+		descendantToggle("Remover Reflexos das Peças",
+			function(i) return i:IsA("BasePart") and i.Reflectance > 0 end,
+			function(i) local o = i.Reflectance; i.Reflectance = 0; return o end,
+			function(i, o) i.Reflectance = o end)
+
+		descendantToggle("Remover Texturas e Decals",
+			function(i) return i:IsA("Decal") or i:IsA("Texture") end,
+			function(i) local o = i.Transparency; i.Transparency = 1; return o end,
+			function(i, o) i.Transparency = o end)
+
+		-- Sombras da iluminação
+		do
+			local old
+			addToggle(secFps, "Desligar Sombras", function(state)
+				if state then
+					old = Lighting.GlobalShadows
+					pcall(function() Lighting.GlobalShadows = false end)
+				elseif old ~= nil then
+					pcall(function() Lighting.GlobalShadows = old end)
+				end
+			end, false)
+		end
+
+		-- Reflexos do ambiente (brilho metálico do céu nas peças)
+		do
+			local old
+			addToggle(secFps, "Remover Reflexos do Ambiente", function(state)
+				if state then
+					old = Lighting.EnvironmentSpecularScale
+					pcall(function() Lighting.EnvironmentSpecularScale = 0 end)
+				elseif old ~= nil then
+					pcall(function() Lighting.EnvironmentSpecularScale = old end)
+				end
+			end, false)
+		end
+
+		-- Qualidade gráfica mínima (nível 1 + malhas com menos detalhe)
+		do
+			local oldQuality, oldMesh
+			addToggle(secFps, "Qualidade Gráfica Mínima", function(state)
+				pcall(function()
+					local r = settings().Rendering
+					if state then
+						oldQuality = r.QualityLevel
+						r.QualityLevel = Enum.QualityLevel.Level01
+						pcall(function()
+							oldMesh = r.MeshPartDetailLevel
+							r.MeshPartDetailLevel = Enum.MeshPartDetailLevel.Level04
+						end)
+					else
+						if oldQuality then r.QualityLevel = oldQuality end
+						if oldMesh then pcall(function() r.MeshPartDetailLevel = oldMesh end) end
+					end
+				end)
+			end, false)
+		end
+
+		-- Água simples (sem ondas e sem reflexo)
+		do
+			local old
+			addToggle(secFps, "Água Simples", function(state)
+				pcall(function()
+					local t = workspace:FindFirstChildOfClass("Terrain")
+					if not t then return end
+					if state then
+						old = {t.WaterWaveSize, t.WaterWaveSpeed, t.WaterReflectance}
+						t.WaterWaveSize, t.WaterWaveSpeed, t.WaterReflectance = 0, 0, 0
+					elseif old then
+						t.WaterWaveSize, t.WaterWaveSpeed, t.WaterReflectance = old[1], old[2], old[3]
+					end
+				end)
+			end, false)
+		end
+
+		-- Sem nuvens
+		do
+			local old
+			addToggle(secFps, "Remover Nuvens", function(state)
+				pcall(function()
+					local t = workspace:FindFirstChildOfClass("Terrain")
+					local clouds = t and t:FindFirstChildOfClass("Clouds")
+					if not clouds then return end
+					if state then
+						old = clouds.Enabled
+						clouds.Enabled = false
+					elseif old ~= nil then
+						clouds.Enabled = old
+					end
+				end)
+			end, false)
+		end
+
+		-- Limite de FPS (precisa do setfpscap do executor)
+		do
+			local capValue = 60
+			local capOn = false
+			addToggle(secFps, "Limitar FPS", function(state)
+				capOn = state
+				if not setfpscap then
+					if AetherisNotify then pcall(AetherisNotify, "Seu executor não tem setfpscap") end
+					return
+				end
+				pcall(setfpscap, state and capValue or 0)
+			end, false)
+			addSlider(secFps, "Limite de FPS", 15, 240, 60, function(v)
+				capValue = v
+				if capOn and setfpscap then pcall(setfpscap, v) end
+			end, 0, "")
+		end
+
 		-- Remover Neblina
 		do
 			local token = 0
 			local oldFog = {}
-			addToggle(secTools, "Remover Neblina", function(state)
+			addToggle(secFps, "Remover Neblina", function(state)
 				token = token + 1
 				local my = token
 				if state then
@@ -11818,7 +12605,7 @@ function showMainPanel()
 			local token = 0
 			local saved = setmetatable({}, {__mode = "k"})
 			local classes = {BlurEffect = true, BloomEffect = true, SunRaysEffect = true, DepthOfFieldEffect = true}
-			addToggle(secTools, "Remover Efeitos de Tela", function(state)
+			addToggle(secFps, "Remover Efeitos de Tela", function(state)
 				token = token + 1
 				local my = token
 				if state then
