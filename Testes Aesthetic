@@ -136,6 +136,9 @@ do
 		{"indisponível", "unavailable"}, {"não encontrado", "not found"}, {" de ", " of "},
 		{"Velocidade máx", "Max speed"}, {"Aceleração (por frame)", "Acceleration (per frame)"}, {"Altura sobre a água", "Height above water"},
 		{"Acelerar Barco", "Boost Boat"}, {"Modificar Barco", "Ship Modifier"}, {"Notificações", "Notifications"}, {"Notificação de teste", "Test notification"}, {"Tempo da notificação", "Notification time"}, {"Painel carregado com sucesso", "Panel loaded successfully"}, {"Posição", "Position"}, {"Embaixo", "Bottom"}, {"Em cima", "Top"}, {"Barco", "Boat"}, {"Entre em um barco", "Get in a boat"}, {"Desligado", "Off"},
+		{"Utilidades", "Utilities"}, {"Auto Rejoin (se for desconectado)", "Auto Rejoin (if disconnected)"}, {"Remover Neblina", "Remove Fog"},
+		{"Remover Efeitos de Tela", "Remove Screen Effects"}, {"Alterar FOV", "Change FOV"}, {"Campo de Visão (FOV)", "Field of View (FOV)"},
+		{"Zoom Infinito da Câmera", "Infinite Camera Zoom"}, {"Reconectando...", "Reconnecting..."},
 		{"BOM DIA", "GOOD MORNING"}, {"BOA TARDE", "GOOD AFTERNOON"}, {"BOA NOITE", "GOOD EVENING"},
 		{"NÍVEL", "LEVEL"}, {"FRAGMENTOS", "FRAGMENTS"}, {"RAÇA", "RACE"}, {"MEMÓRIA", "MEMORY"},
 		{"Cole o Job ID...", "Paste Job ID..."}, {"Entrar", "Join"}, {"ID?", "ID?"},
@@ -3292,42 +3295,24 @@ function showMainPanel()
 		searchBox.ClearTextOnFocus = false
 		searchBox.Parent = searchWrap
 
-		-- Ícone de lupa (desenhado): aro + cabinho
-		local LUPA_IDLE = Color3.fromRGB(130, 140, 165)
-		local lupaRing = Instance.new("Frame")
-		lupaRing.Name = "LupaRing"
-		lupaRing.Size = UDim2.new(0, 10, 0, 10)
-		lupaRing.Position = UDim2.new(0, 8, 0.5, -6)
-		lupaRing.BackgroundTransparency = 1
-		lupaRing.Active = false
-		lupaRing.Parent = searchWrap
-		local lupaRingCorner = Instance.new("UICorner")
-		lupaRingCorner.CornerRadius = UDim.new(1, 0)
-		lupaRingCorner.Parent = lupaRing
-		local lupaRingStroke = Instance.new("UIStroke")
-		lupaRingStroke.Color = LUPA_IDLE
-		lupaRingStroke.Thickness = 1.4
-		lupaRingStroke.Parent = lupaRing
-		local lupaHandle = Instance.new("Frame")
-		lupaHandle.Name = "LupaHandle"
-		lupaHandle.AnchorPoint = Vector2.new(0, 0.5)
-		lupaHandle.Size = UDim2.new(0, 5, 0, 1.6)
-		lupaHandle.Position = UDim2.new(0, 16, 0.5, 3)
-		lupaHandle.Rotation = 45
-		lupaHandle.BackgroundColor3 = LUPA_IDLE
-		lupaHandle.BorderSizePixel = 0
-		lupaHandle.Active = false
-		lupaHandle.Parent = searchWrap
+		-- Lupa: a mesma imagem da busca da lista de jogadores do Lock-On
+		local searchIcon = Instance.new("ImageLabel")
+		searchIcon.Name = "SearchIcon"
+		searchIcon.Size = UDim2.new(0, 14, 0, 14)
+		searchIcon.Position = UDim2.new(0, 6, 0.5, -7)
+		searchIcon.BackgroundTransparency = 1
+		searchIcon.Image = "rbxassetid://7734052925"
+		searchIcon.ImageColor3 = currentThemeColor
+		searchIcon.ScaleType = Enum.ScaleType.Fit
+		searchIcon.Active = false
+		searchIcon.Parent = searchWrap
+		table.insert(themeImages, searchIcon)
 
 		searchBox.Focused:Connect(function()
 			TweenService:Create(searchStroke, TweenInfo.new(0.15), {Color = accentBlue}):Play()
-			TweenService:Create(lupaRingStroke, TweenInfo.new(0.15), {Color = accentBlue}):Play()
-			TweenService:Create(lupaHandle, TweenInfo.new(0.15), {BackgroundColor3 = accentBlue}):Play()
 		end)
 		searchBox.FocusLost:Connect(function()
 			TweenService:Create(searchStroke, TweenInfo.new(0.15), {Color = Color3.fromRGB(38, 48, 68)}):Play()
-			TweenService:Create(lupaRingStroke, TweenInfo.new(0.15), {Color = LUPA_IDLE}):Play()
-			TweenService:Create(lupaHandle, TweenInfo.new(0.15), {BackgroundColor3 = LUPA_IDLE}):Play()
 		end)
 
 		local hiddenBySearch = {}
@@ -11215,7 +11200,7 @@ function showMainPanel()
 		end)
 
 		-- Notificações (toasts): posição (embaixo/em cima) e duração configuráveis na aba Config.
-		-- Toast simples: caixa preta com texto branco que some sozinho.
+		-- Toast simples: caixa preta, texto branco e um contadorzinho de segundos; some sozinho.
 		AetherisNotifyCfg = AetherisNotifyCfg or {pos = "bottom", duration = 3}
 		local NC = AetherisNotifyCfg
 		local toastHolder, toastLayout
@@ -11274,8 +11259,15 @@ function showMainPanel()
 				tp.PaddingLeft = UDim.new(0, 12)
 				tp.PaddingRight = UDim.new(0, 12)
 				tp.Parent = t
+				local tl = Instance.new("UIListLayout")
+				tl.FillDirection = Enum.FillDirection.Horizontal
+				tl.VerticalAlignment = Enum.VerticalAlignment.Center
+				tl.SortOrder = Enum.SortOrder.LayoutOrder
+				tl.Padding = UDim.new(0, 6)
+				tl.Parent = t
 
 				local tx = Instance.new("TextLabel")
+				tx.LayoutOrder = 1
 				tx.Size = UDim2.new(0, 0, 1, 0)
 				tx.AutomaticSize = Enum.AutomaticSize.X
 				tx.BackgroundTransparency = 1
@@ -11287,13 +11279,39 @@ function showMainPanel()
 				tx.ZIndex = 302
 				tx.Parent = t
 
+				-- contador bem pequeno (segundos restantes), fora do tradutor
+				local timerLbl = Instance.new("TextLabel")
+				timerLbl.Name = "ToastTimer"
+				timerLbl.LayoutOrder = 2
+				timerLbl.Size = UDim2.new(0, 0, 1, 0)
+				timerLbl.AutomaticSize = Enum.AutomaticSize.X
+				timerLbl.BackgroundTransparency = 1
+				timerLbl.Font = Enum.Font.GothamMedium
+				timerLbl.TextSize = 8
+				timerLbl.TextColor3 = Color3.fromRGB(120, 120, 120)
+				timerLbl.TextTransparency = 1
+				timerLbl.Text = math.ceil(duration) .. "s"
+				timerLbl.ZIndex = 302
+				timerLbl.Parent = t
+				if AetherisI18n and AetherisI18n.hooked then AetherisI18n.hooked[timerLbl] = true end
+
 				TweenService:Create(t, TweenInfo.new(0.2), {BackgroundTransparency = 0.1}):Play()
 				TweenService:Create(tx, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
+				TweenService:Create(timerLbl, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
 
-				task.delay(duration, function()
+				local startedAt = os.clock()
+				task.spawn(function()
+					while t.Parent do
+						local left = duration - (os.clock() - startedAt)
+						if left <= 0 then break end
+						timerLbl.Text = math.ceil(left) .. "s"
+						task.wait(0.25)
+					end
 					if not t.Parent then return end
+					timerLbl.Text = "0s"
 					TweenService:Create(t, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
 					TweenService:Create(tx, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
+					TweenService:Create(timerLbl, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
 					task.delay(0.32, function() t:Destroy() end)
 				end)
 			end)
@@ -11695,6 +11713,171 @@ function showMainPanel()
 				end
 			end)
 		end, false)
+	end
+
+	-- Utilidades simples (Config): Auto Rejoin, FPS Boost, sem neblina, sem efeitos de tela, FOV e zoom
+	do
+		local secTools = createSection(configPage, "Utilidades", sectionIcons.Theme)
+		local Lighting = game:GetService("Lighting")
+		local TeleportService = game:GetService("TeleportService")
+		local GuiService = game:GetService("GuiService")
+
+		-- Auto Rejoin: se o jogo mostrar erro de desconexão/kick, volta pro mesmo servidor
+		do
+			local rejoining = false
+			local conn
+			local function rejoin()
+				if rejoining then return end
+				rejoining = true
+				if AetherisNotify then pcall(AetherisNotify, "Reconectando...") end
+				task.wait(1)
+				local ok = false
+				if game.JobId ~= "" then
+					ok = pcall(function() TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player) end)
+				end
+				if not ok then pcall(function() TeleportService:Teleport(game.PlaceId, player) end) end
+				task.delay(10, function() rejoining = false end)
+			end
+			addToggle(secTools, "Auto Rejoin (se for desconectado)", function(state)
+				if conn then conn:Disconnect(); conn = nil end
+				if not state then return end
+				conn = GuiService.ErrorMessageChanged:Connect(function(msg)
+					if msg and msg ~= "" then rejoin() end
+				end)
+			end, false)
+		end
+
+		-- FPS Boost: desliga partículas/rastros/fogo e as sombras (restaura ao desligar). O toggle aparece na aba Misc.
+		do
+			local saved = setmetatable({}, {__mode = "k"})
+			local classes = {ParticleEmitter = true, Trail = true, Beam = true, Smoke = true, Fire = true, Sparkles = true}
+			local boosting, descConn, oldShadows = false, nil, nil
+			local function applyTo(inst)
+				if classes[inst.ClassName] then
+					if saved[inst] == nil then saved[inst] = inst.Enabled end
+					inst.Enabled = false
+				end
+			end
+			addToggle(secWorld, "FPS Boost", function(state) -- fica na aba Misc (seção Visual do Mapa)
+				boosting = state
+				if descConn then descConn:Disconnect(); descConn = nil end
+				if state then
+					oldShadows = Lighting.GlobalShadows
+					pcall(function() Lighting.GlobalShadows = false end)
+					descConn = workspace.DescendantAdded:Connect(function(d) if boosting then pcall(applyTo, d) end end)
+					task.spawn(function()
+						local n = 0
+						for _, d in ipairs(workspace:GetDescendants()) do
+							if not boosting then break end
+							pcall(applyTo, d)
+							n = n + 1
+							if n % 400 == 0 then task.wait() end
+						end
+					end)
+				else
+					for inst, was in pairs(saved) do
+						if inst.Parent then pcall(function() inst.Enabled = was end) end
+					end
+					table.clear(saved)
+					if oldShadows ~= nil then pcall(function() Lighting.GlobalShadows = oldShadows end) end
+				end
+			end, false)
+		end
+
+		-- Remover Neblina
+		do
+			local token = 0
+			local oldFog = {}
+			addToggle(secTools, "Remover Neblina", function(state)
+				token = token + 1
+				local my = token
+				if state then
+					oldFog.FogEnd, oldFog.FogStart = Lighting.FogEnd, Lighting.FogStart
+					task.spawn(function()
+						while token == my and screenGui.Parent do
+							pcall(function()
+								Lighting.FogEnd = 9e8
+								for _, a in ipairs(Lighting:GetChildren()) do
+									if a:IsA("Atmosphere") then a.Density = 0; a.Haze = 0 end
+								end
+							end)
+							task.wait(1)
+						end
+					end)
+				else
+					pcall(function()
+						if oldFog.FogEnd then Lighting.FogEnd = oldFog.FogEnd end
+						if oldFog.FogStart then Lighting.FogStart = oldFog.FogStart end
+					end)
+				end
+			end, false)
+		end
+
+		-- Remover Efeitos de Tela (blur, bloom, raios de sol, profundidade de campo)
+		do
+			local token = 0
+			local saved = setmetatable({}, {__mode = "k"})
+			local classes = {BlurEffect = true, BloomEffect = true, SunRaysEffect = true, DepthOfFieldEffect = true}
+			addToggle(secTools, "Remover Efeitos de Tela", function(state)
+				token = token + 1
+				local my = token
+				if state then
+					task.spawn(function()
+						while token == my and screenGui.Parent do
+							local cam = workspace.CurrentCamera
+							for _, holder in ipairs({Lighting, cam}) do
+								if holder then
+									for _, e in ipairs(holder:GetChildren()) do
+										if classes[e.ClassName] then
+											if saved[e] == nil then saved[e] = e.Enabled end
+											pcall(function() e.Enabled = false end)
+										end
+									end
+								end
+							end
+							task.wait(1)
+						end
+					end)
+				else
+					for e, was in pairs(saved) do
+						if e.Parent then pcall(function() e.Enabled = was end) end
+					end
+					table.clear(saved)
+				end
+			end, false)
+		end
+
+		-- Campo de Visão (FOV)
+		do
+			local fovValue, conn, original = 70, nil, nil
+			addToggle(secTools, "Alterar FOV", function(state)
+				if conn then conn:Disconnect(); conn = nil end
+				local cam = workspace.CurrentCamera
+				if state then
+					if cam then original = cam.FieldOfView end
+					conn = RunService.RenderStepped:Connect(function()
+						local c = workspace.CurrentCamera
+						if c then c.FieldOfView = fovValue end
+					end)
+				elseif cam and original then
+					cam.FieldOfView = original
+				end
+			end, false)
+			addSlider(secTools, "Campo de Visão (FOV)", 40, 120, 70, function(v) fovValue = v end, 0, "")
+		end
+
+		-- Zoom infinito da câmera
+		do
+			local original
+			addToggle(secTools, "Zoom Infinito da Câmera", function(state)
+				if state then
+					original = player.CameraMaxZoomDistance
+					player.CameraMaxZoomDistance = 10000
+				elseif original then
+					player.CameraMaxZoomDistance = original
+				end
+			end, false)
+		end
 	end
 
 	-- Presets: salva valores de todos os controles registrados em um JSON local.
