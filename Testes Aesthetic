@@ -81,7 +81,7 @@ do
 		{"Transparência do FOV (%)", "FOV Transparency (%)"}, {"Transparência do Painel", "Panel Transparency"}, {"Opacidade", "Opacity"},
 		{"Cantos do Painel", "Panel Corners"}, {"Alcance", "Range"}, {"Raio", "Radius"},
 		{"Baús próximos", "Nearby Chests"}, {"Baú de mapa todo (não consegue pegar o tipo)", "Whole-map chests (can't detect the type)"},
-		{"ESP Nome (Berry)", "ESP Name (Berry)"}, {"ESP Nome", "ESP Name"}, {"ESP Distância", "ESP Distance"},
+		{"ESP Nome (Berry)", "ESP Name (Berry)"}, {"ESP Chams (Flower)", "ESP Chams (Flower)"}, {"ESP Nome", "ESP Name"}, {"ESP Distância", "ESP Distance"},
 		{"Nome (Baú)", "Name (Chest)"}, {"Baú", "Chest"}, {"baú", "chest"}, {"Distância", "Distance"},
 		{"Ativar ", "Enable "}, {"Modo: ", "Mode: "}, {"Modo", "Mode"}, {"Ativado", "Enabled"},
 		{"Tema do Hub", "Hub Theme"}, {"Customização de Textos", "Text Customization"}, {"Fonte do Hub", "Hub Font"},
@@ -6537,6 +6537,121 @@ function showMainPanel()
 		addToggle(secEspBerries, "ESP Nome (Berry)", function(state) berryEspName = state end, false)
 		addEspToggleWithColor(secEspBerries, "ESP Distância", berryEspDistanceColor, function(c) berryEspDistanceColor = c end, function(s) berryEspDistance = s end)
 	end
+
+	-- ESP Flower (Flower1 azul / Flower2 vermelha), no mesmo estilo dos outros ESPs
+	do
+		local flowerEspEnabled = false
+		local flowerEspName = false
+		local flowerEspDistance = false
+		local flowerEspChams = false
+		local flowerEspDistanceColor = Color3.fromRGB(200, 200, 200)
+		local flowerDefs = {
+			{Name = "Flower1", Color = Color3.fromRGB(0, 150, 255)},
+			{Name = "Flower2", Color = Color3.fromRGB(255, 50, 50)},
+		}
+		local flowerObjects = {} -- [Name] = {flower, billboard, nameLabel, distanceLabel, highlight, part}
+
+		local function makeFlowerLabel(parent, name, size, position, fontSize)
+			local label = Instance.new("TextLabel")
+			label.Name = name
+			label.Size = size
+			label.Position = position
+			label.BackgroundTransparency = 1
+			label.TextColor3 = Color3.new(1, 1, 1)
+			label.TextStrokeColor3 = Color3.new(0, 0, 0)
+			label.TextStrokeTransparency = 0.25
+			label.Font = currentGlobalFont
+			label.TextSize = fontSize
+			label.TextXAlignment = Enum.TextXAlignment.Center
+			label.Parent = parent
+			return label
+		end
+
+		local function removeFlowerESP(name)
+			local data = flowerObjects[name]
+			if not data then return end
+			if data.billboard then data.billboard:Destroy() end
+			if data.highlight then data.highlight:Destroy() end
+			flowerObjects[name] = nil
+		end
+		local function clearFlowerESP()
+			for name in pairs(flowerObjects) do removeFlowerESP(name) end
+		end
+
+		local flowerConnection
+		flowerConnection = RunService.Heartbeat:Connect(function()
+			if not screenGui.Parent then
+				flowerConnection:Disconnect()
+				clearFlowerESP()
+				return
+			end
+			if not flowerEspEnabled then return end
+			local character = player.Character
+			local root = character and character:FindFirstChild("HumanoidRootPart")
+			for _, def in ipairs(flowerDefs) do
+				local flower = workspace:FindFirstChild(def.Name)
+				local data = flowerObjects[def.Name]
+				if data and data.flower ~= flower then removeFlowerESP(def.Name); data = nil end
+				if flower then
+					local part = flower:IsA("BasePart") and flower
+						or (flower:IsA("Model") and (flower.PrimaryPart or flower:FindFirstChildWhichIsA("BasePart", true))) or nil
+					if part then
+						if not data then
+							local billboard = Instance.new("BillboardGui")
+							billboard.Name = "AetherisFlowerInfo"
+							billboard.Adornee = part
+							billboard.Size = UDim2.fromOffset(150, 34)
+							billboard.StudsOffsetWorldSpace = Vector3.new(0, 2.5, 0)
+							billboard.AlwaysOnTop = true
+							billboard.LightInfluence = 0
+							billboard.Enabled = false
+							billboard.Parent = screenGui
+							local nameLabel = makeFlowerLabel(billboard, "FlowerName", UDim2.new(1, 0, 0, 16), UDim2.fromOffset(0, 0), 12)
+							nameLabel.Text = def.Name
+							nameLabel.TextColor3 = def.Color
+							local distanceLabel = makeFlowerLabel(billboard, "FlowerDistance", UDim2.new(1, 0, 0, 15), UDim2.fromOffset(0, 18), 10)
+							data = {flower = flower, part = part, billboard = billboard, nameLabel = nameLabel, distanceLabel = distanceLabel}
+							flowerObjects[def.Name] = data
+						end
+						data.nameLabel.Visible = flowerEspName
+						data.distanceLabel.Visible = flowerEspDistance
+						data.distanceLabel.TextColor3 = flowerEspDistanceColor
+						if root and flowerEspDistance then
+							data.distanceLabel.Text = string.format("%d studs", math.floor((part.Position - root.Position).Magnitude))
+						end
+						data.billboard.Enabled = flowerEspName or flowerEspDistance
+						if flowerEspChams then
+							if not data.highlight then
+								local h = Instance.new("Highlight")
+								h.Adornee = flower
+								h.FillColor = def.Color
+								h.OutlineColor = Color3.new(1, 1, 1)
+								h.FillTransparency = 0.5
+								h.OutlineTransparency = 0.1
+								h.Parent = screenGui
+								data.highlight = h
+							end
+						elseif data.highlight then
+							data.highlight:Destroy()
+							data.highlight = nil
+						end
+					end
+				elseif data then
+					removeFlowerESP(def.Name)
+				end
+			end
+		end)
+
+		local secEspFlower = AetherisEspGroup("Flower", "ESP Flower")
+		addToggle(secEspFlower, "Ativar ESP Flower", function(state)
+			flowerEspEnabled = state
+			AetherisEspGroupSet(secEspFlower, state)
+			if not state then clearFlowerESP() end
+		end, false)
+		addToggle(secEspFlower, "ESP Nome (Flower)", function(state) flowerEspName = state end, false)
+		addToggle(secEspFlower, "ESP Chams (Flower)", function(state) flowerEspChams = state end, false)
+		addEspToggleWithColor(secEspFlower, "ESP Distância", flowerEspDistanceColor, function(c) flowerEspDistanceColor = c end, function(s) flowerEspDistance = s end)
+	end
 	-----------------------------------------------------------------
 	-- BARCO: aceleração acumulada (lógica do Boat Mods v10 como função do hub)
 	-- Global AetherisBoat: setEnabled / isEnabled / setMaxSpeed / setAccel / setHeight / getStatus
@@ -9780,6 +9895,7 @@ function showMainPanel()
 				currentTargetPos = nil,
 				currentTargetLastSeen = 0,
 				lastBoss = nil, lastBossSeenAt = 0,
+				arriveDist = 70, spawnRadius = 150, arrivedAt = nil, skip = {},
 				seas = {
 					[1] = {"The Gorilla King", "Bobby", "Yeti", "Mob Leader", "Vice Admiral", "Warden", "Chief Warden", "Swan",
 						"Magma Admiral", "Fishman Lord", "Wysper", "Thunder God", "Cyborg", "Saber Expert", "The Saw", "Greybeard"},
@@ -10181,7 +10297,30 @@ function showMainPanel()
 				return true
 			end
 
-			function Q.find(hrp)
+			-- Escolhe para onde ir: o spawn do boss escolhido, ou (modo "Todos") o spawn mais perto que não foi pulado
+			function Q.pickSpawn(hrp)
+				if Q.target ~= "Todos" then
+					local pos = Q.spawnPos(Q.target)
+					if pos then return Q.target, pos end
+					return nil, nil
+				end
+				local now = tick()
+				local best, bestPos, bestD
+				local function search(useSkip)
+					for _, e in ipairs(Q.scanSpawns()) do
+						if not (useSkip and (Q.skip[e.name] or 0) > now) then
+							local d = (e.pos - hrp.Position).Magnitude
+							if not bestD or d < bestD then best, bestPos, bestD = e.name, e.pos, d end
+						end
+					end
+				end
+				search(true)
+				if not best then table.clear(Q.skip); search(false) end
+				return best, bestPos
+			end
+
+			-- Só chamada depois de CHEGAR no spawn (sp). Só aceita inimigos perto do spawn.
+			function Q.find(hrp, sp)
 				local folder = workspace:FindFirstChild("Enemies")
 				if not folder then return nil end
 
@@ -10206,6 +10345,7 @@ function showMainPanel()
 				local best, bestDist = nil, math.huge
 				local function consider(entry, dist)
 					if not entry.alive then return end
+					if sp and (entry.part.Position - sp).Magnitude > Q.spawnRadius then return end -- longe do spawn: ignora
 					if dist < bestDist then
 						best, bestDist = {
 							model = entry.model,
@@ -10228,72 +10368,30 @@ function showMainPanel()
 				for _, entry in ipairs(allModels) do
 					for _, ln in ipairs(names) do
 						if ln ~= "" and entry.cleanName ~= "" then
-							if entry.cleanName == ln
-								or entry.cleanName:find(ln, 1, true)
-								or ln:find(entry.cleanName, 1, true) then
+							local match = entry.cleanName == ln or entry.cleanName:find(ln, 1, true)
+							-- o nome do boss contido no nome do inimigo só vale perto do spawn (evita mob aleatório no caminho)
+							if not match and sp then match = ln:find(entry.cleanName, 1, true) end
+							if match then
 								consider(entry, (entry.part.Position - hrp.Position).Magnitude)
 								break
 							end
 						end
 					end
 				end
+				if best then return best end
 
-				if Q.target ~= "Todos" and best then return best end
-
-				if not best and Q.target == "Todos" then
-					for _, entry in ipairs(allModels) do
-						if entry.model.Name:match("%[%d+%]") then
-							consider(entry, (entry.part.Position - hrp.Position).Magnitude)
-						end
-					end
-				end
-
-				if not best and Q.target == "Todos" then
-					local counts = {}
-					for _, entry in ipairs(allModels) do
-						counts[entry.cleanName] = (counts[entry.cleanName] or 0) + 1
-					end
-					for _, entry in ipairs(allModels) do
-						if counts[entry.cleanName] == 1 then
-							consider(entry, (entry.part.Position - hrp.Position).Magnitude)
-						end
-					end
-				end
-
-				if not best and Q.target == "Todos" then
-					for _, entry in ipairs(allModels) do
-						consider(entry, (entry.part.Position - hrp.Position).Magnitude)
-					end
-				end
-
-				if not best and Q.target ~= "Todos" then
-					local spawnPos = Q.spawnPos(Q.target)
+				-- parecido pela inicial do nome: só dentro do raio do spawn
+				if sp and Q.target ~= "Todos" then
 					local targetAlpha = cleanBossName(Q.target):gsub("[^%a]", "")
 					local targetFirst = targetAlpha:sub(1, 1)
 					local targetFirst2 = targetAlpha:sub(1, 2)
-
 					for _, entry in ipairs(allModels) do
 						if entry.alive then
 							local entryAlpha = entry.cleanName:gsub("[^%a]", "")
 							local initialMatch = (targetFirst ~= "" and entryAlpha:sub(1, 1) == targetFirst)
 								or (targetFirst2 ~= "" and entryAlpha:sub(1, 2) == targetFirst2)
-
-							if spawnPos and initialMatch then
-								local spawnDist = (entry.part.Position - spawnPos).Magnitude
-								if spawnDist < 200 then consider(entry, spawnDist) end
-							end
-							if not best and initialMatch then
-								local playerDist = (entry.part.Position - hrp.Position).Magnitude
-								if playerDist < 300 then consider(entry, playerDist) end
-							end
-						end
-					end
-
-					if not best then
-						for _, entry in ipairs(allModels) do
-							if entry.alive then
-								local playerDist = (entry.part.Position - hrp.Position).Magnitude
-								if playerDist < 100 then consider(entry, playerDist) end
+							if initialMatch and (entry.part.Position - sp).Magnitude <= 80 then
+								consider(entry, (entry.part.Position - sp).Magnitude)
 							end
 						end
 					end
@@ -10307,26 +10405,10 @@ function showMainPanel()
 				Q.stopFly()
 			end
 
-			function Q.debug()
-				print("═══════ AETHERIS BOSS DEBUG ═══════")
-				print("Enabled:", Q.enabled, "| Token:", Q.token, "| Target:", Q.target)
-				if Q.currentTarget then
-					local ct = Q.currentTarget
-					print("currentTarget:", ct.name)
-					print("  model.Parent:", ct.model and ct.model.Parent and ct.model.Parent.Name or "DESTROYED")
-					print("  ZeroAt há:", Q.currentTargetZeroAt and (string.format("%.1f", tick() - Q.currentTargetZeroAt) .. "s") or "nunca")
-					print("  GoneAt há:", Q.currentTargetGoneAt and (string.format("%.1f", tick() - Q.currentTargetGoneAt) .. "s") or "nunca")
-				else
-					print("currentTarget: NIL")
-				end
-				print("BV:", Q.bv and "ativa" or "nil")
-				print("NoclipConn:", Q.noclipConn and "conectada" or "nil")
-				print("═══════════════════════════════════")
-			end
-
 			-- STEP com guard inicial
 			function Q.step()
 				if not Q.enabled then return end
+				AetherisBossBusy = true -- boss ligado: o Auto Farm Level fica parado (não ataca inimigos no caminho)
 				if Q.retreat() then return end
 				local char = player.Character
 				local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -10393,25 +10475,54 @@ function showMainPanel()
 					Q.currentTarget = nil
 					Q.currentTargetZeroAt = nil
 					Q.currentTargetGoneAt = nil
-					local boss = Q.find(hrp)
+
+					-- 1) vai até o spawn SEM procurar inimigos no caminho
+					local spName, sp = Q.pickSpawn(hrp)
+					if not sp and #Q.scanSpawns() > 0 then
+						-- há spawns, mas o do boss escolhido não foi achado: não procura nada em Enemies
+						Q.hold()
+						setStatus("🔍 Spawn do boss não encontrado", Color3.fromRGB(255, 160, 120))
+						task.wait(0.3)
+						return
+					end
+					local arrived = true
+					if sp then
+						local flat = Vector3.new(sp.X - hrp.Position.X, 0, sp.Z - hrp.Position.Z).Magnitude
+						arrived = flat <= Q.arriveDist
+					end
+
+					if not arrived then
+						Q.arrivedAt = nil
+						Q.enableNoclip()
+						flyTo(hrp, sp + Vector3.new(0, Q.height, 0))
+						setStatus("👹 Indo ao spawn de " .. tostring(spName), Color3.fromRGB(200, 180, 120))
+						return
+					end
+
+					-- 2) chegou no spawn: agora sim procura o boss em Enemies (só perto do spawn)
+					local boss = Q.find(hrp, sp)
 					if boss then
+						Q.arrivedAt = nil
 						Q.currentTarget = boss
 						Q.currentTargetPos = boss.part.Position
 						Q.currentTargetLastSeen = tick()
+					elseif sp then
+						-- no spawn mas o boss ainda não nasceu: espera ali (no modo "Todos" tenta o próximo spawn depois de 4s)
+						Q.arrivedAt = Q.arrivedAt or tick()
+						if Q.target == "Todos" and tick() - Q.arrivedAt > 4 then
+							Q.skip[spName] = tick() + 40
+							Q.arrivedAt = nil
+						end
+						Q.enableNoclip()
+						flyTo(hrp, sp + Vector3.new(0, Q.height, 0))
+						setStatus("⏳ Esperando o boss nascer no spawn...", Color3.fromRGB(255, 200, 100))
+						return
 					end
 				end
 
 				local boss = Q.currentTarget
 
 				if not boss then
-					local sp = Q.target ~= "Todos" and Q.spawnPos(Q.target) or nil
-					if sp then
-						Q.enableNoclip()
-						flyTo(hrp, sp + Vector3.new(0, Q.height, 0))
-						setStatus("👹 Indo ao spawn de " .. Q.target, Color3.fromRGB(200, 180, 120))
-						return
-					end
-
 					if Q.lastBoss and Q.lastBoss.model and Q.lastBoss.model.Parent and (tick() - Q.lastBossSeenAt) < 15 then
 						Q.enableNoclip()
 						if Q.lastBoss.part and Q.lastBoss.part.Parent then
@@ -10490,6 +10601,8 @@ function showMainPanel()
 				Q.currentTargetLastSeen = 0
 				Q.lastBoss = nil
 				Q.lastBossSeenAt = 0
+				Q.arrivedAt = nil
+				table.clear(Q.skip)
 				Q.enableNoclip()
 				task.spawn(function()
 					while Q.enabled and Q.token == token and screenGui.Parent do
@@ -10681,20 +10794,6 @@ function showMainPanel()
 			addSlider(secBoss, "Vida mínima para subir", 5, 95, 30, function(val) BossLogic.healthPct = val end, 0, "%")
 			addSlider(secBoss, "Altura de segurança", 30, 200, 90, function(val) BossLogic.safeHeight = val end, 0, " studs")
 
-			local bossDebug = Instance.new("TextButton")
-			bossDebug.Size = UDim2.new(1, 0, 0, 24)
-			bossDebug.BackgroundColor3 = Color3.fromRGB(80, 60, 140)
-			bossDebug.BorderSizePixel = 0
-			bossDebug.AutoButtonColor = false
-			bossDebug.Font = Enum.Font.GothamBold
-			bossDebug.Text = "🔬 Debug (veja o F9)"
-			bossDebug.TextColor3 = Color3.new(1, 1, 1)
-			bossDebug.TextSize = 10
-			bossDebug.Parent = secBoss
-			local bossDebugCorner = Instance.new("UICorner")
-			bossDebugCorner.CornerRadius = UDim.new(0, 5)
-			bossDebugCorner.Parent = bossDebug
-			bossDebug.MouseButton1Click:Connect(function() BossLogic.debug() end)
 		end
 
 		task.spawn(function()
