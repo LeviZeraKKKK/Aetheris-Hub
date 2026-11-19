@@ -10187,7 +10187,12 @@ function showMainPanel()
 					for name, c in pairs(counts) do
 						if c == 1 then
 							local ok, pos = pcall(function() return first[name]:GetPivot().Position end)
-							if ok then table.insert(result, {name = name, pos = pos}) end
+							if ok then
+								table.insert(result, {name = name, pos = pos})
+								-- lembra a posição: com streaming o spawn some da lista ao chegar perto/longe
+								Q.known = Q.known or {}
+								Q.known[cleanBossName(name)] = pos
+							end
 						end
 					end
 					table.sort(result, function(a, b) return a.name < b.name end)
@@ -10206,6 +10211,13 @@ function showMainPanel()
 					local en = cleanBossName(e.name)
 					if en ~= "" and (en:find(target, 1, true) or target:find(en, 1, true)) then
 						return e.pos
+					end
+				end
+				-- não está na lista agora (streaming/renomeado): usa a última posição conhecida
+				if Q.known then
+					if Q.known[target] then return Q.known[target] end
+					for kn, kp in pairs(Q.known) do
+						if kn ~= "" and (kn:find(target, 1, true) or target:find(kn, 1, true)) then return kp end
 					end
 				end
 				return nil
