@@ -25,6 +25,15 @@ screenGui.IgnoreGuiInset = true
 screenGui.DisplayOrder = 999999
 screenGui.Parent = playerGui
 
+-- Impede a tradução automática do Roblox: o idioma do painel é controlado só pelo tradutor do hub.
+do
+	pcall(function() screenGui.AutoLocalize = false end)
+	local function noAutoLocalize(d)
+		if d:IsA("GuiObject") then pcall(function() d.AutoLocalize = false end) end
+	end
+	screenGui.DescendantAdded:Connect(noAutoLocalize)
+end
+
 -----------------------------------------------------------------
 -- IDIOMA DO PAINEL (English padrão / Português)
 -- Os textos do hub são escritos em português; o tradutor troca os textos visíveis (TextLabel,
@@ -10327,7 +10336,12 @@ function showMainPanel()
 					end
 				end
 				search(true)
-				if not best then table.clear(Q.skip); search(false) end
+				if not best then
+					-- todos os spawns já foram visitados: espera os bosses respawnarem em vez de ficar trocando
+					Q.allSkipped = true
+					return nil, nil
+				end
+				Q.allSkipped = false
 				return best, bestPos
 			end
 
@@ -10489,7 +10503,18 @@ function showMainPanel()
 					Q.currentTargetGoneAt = nil
 
 					-- 1) vai até o spawn SEM procurar inimigos no caminho
+					-- boss que acabou de ser morto/sumiu: marca o spawn dele como visitado
+					if Q.engagedSpawn then
+						Q.skip[Q.engagedSpawn] = tick() + 150
+						Q.engagedSpawn = nil
+					end
 					local spName, sp = Q.pickSpawn(hrp)
+					if not sp and Q.target == "Todos" and Q.allSkipped then
+						Q.hold()
+						setStatus("⏳ Bosses mortos — aguardando respawn...", Color3.fromRGB(255, 200, 100))
+						task.wait(0.5)
+						return
+					end
 					if not sp and #Q.scanSpawns() > 0 then
 						-- há spawns, mas o do boss escolhido não foi achado: não procura nada em Enemies
 						Q.hold()
@@ -10515,14 +10540,15 @@ function showMainPanel()
 					local boss = Q.find(hrp, sp)
 					if boss then
 						Q.arrivedAt = nil
+						Q.engagedSpawn = spName
 						Q.currentTarget = boss
 						Q.currentTargetPos = boss.part.Position
 						Q.currentTargetLastSeen = tick()
 					elseif sp then
 						-- no spawn mas o boss ainda não nasceu: espera ali (no modo "Todos" tenta o próximo spawn depois de 4s)
 						Q.arrivedAt = Q.arrivedAt or tick()
-						if Q.target == "Todos" and tick() - Q.arrivedAt > 4 then
-							Q.skip[spName] = tick() + 40
+						if Q.target == "Todos" and tick() - Q.arrivedAt > 8 then
+							Q.skip[spName] = tick() + 150
 							Q.arrivedAt = nil
 						end
 						Q.enableNoclip()
@@ -10614,7 +10640,7 @@ function showMainPanel()
 				Q.lastBoss = nil
 				Q.lastBossSeenAt = 0
 				Q.arrivedAt = nil
-				table.clear(Q.skip)
+				table.clear(Q.skip); Q.engagedSpawn = nil; Q.allSkipped = false
 				Q.enableNoclip()
 				task.spawn(function()
 					while Q.enabled and Q.token == token and screenGui.Parent do
@@ -10665,7 +10691,7 @@ function showMainPanel()
 		end, false)
 
 		local weaponWarn = nil
-		local weaponLabels = {Melee = "Punho", Fruit = "Fruta", Sword = "Espada"}
+		local weaponLabels = {Melee = "Melee", Fruit = "Fruta", Sword = "Espada"}
 		local weaponIcons = {
 			Melee = {Image = "rbxassetid://7733955664"}, -- mão de combate
 			Fruit = {Image = "rbxassetid://16898612629", Offset = Vector2.new(563, 869), RectSize = Vector2.new(48, 48)}, -- fruta
@@ -12414,32 +12440,6 @@ function showMainPanel()
 	end)
 
 
-	-- Anti-AFK
-	do
-		local secUtil = createSection(configPage, "Anti-AFK", sectionIcons.Theme)
-		local VirtualUser = game:GetService("VirtualUser")
-		local afk = {token = 0}
-		local function poke()
-			pcall(function()
-				VirtualUser:CaptureController()
-				VirtualUser:ClickButton2(Vector2.new(0, 0))
-			end)
-		end
-		addToggle(secUtil, "Anti-AFK", function(state)
-			afk.token = afk.token + 1
-			if afk.conn then afk.conn:Disconnect(); afk.conn = nil end
-			if not state then return end
-			local token = afk.token
-			afk.conn = player.Idled:Connect(poke)
-			task.spawn(function()
-				while afk.token == token and screenGui.Parent do
-					task.wait(50)
-					if afk.token == token then poke() end
-				end
-			end)
-		end, false)
-	end
-
 	-- Utilidades simples (Config): Auto Rejoin, FPS Boost, sem neblina, sem efeitos de tela, FOV e zoom
 	do
 		local secTools = createSection(configPage, "Utilidades", sectionIcons.Theme)
@@ -12447,6 +12447,31 @@ function showMainPanel()
 		local TeleportService = game:GetService("TeleportService")
 		local GuiService = game:GetService("GuiService")
 		local secFps = createSection(pages["Misc"], "FPS Boost", sectionIcons.World)
+
+		-- Anti-AFK
+		do
+			local VirtualUser = game:GetService("VirtualUser")
+			local afk = {token = 0}
+			local function poke()
+				pcall(function()
+					VirtualUser:CaptureController()
+					VirtualUser:ClickButton2(Vector2.new(0, 0))
+				end)
+			end
+			addToggle(secTools, "Anti-AFK", function(state)
+				afk.token = afk.token + 1
+				if afk.conn then afk.conn:Disconnect(); afk.conn = nil end
+				if not state then return end
+				local token = afk.token
+				afk.conn = player.Idled:Connect(poke)
+				task.spawn(function()
+					while afk.token == token and screenGui.Parent do
+						task.wait(50)
+						if afk.token == token then poke() end
+					end
+				end)
+			end, false)
+		end
 
 		-- Auto Rejoin: se o jogo mostrar erro de desconexão/kick, volta pro mesmo servidor
 		do
