@@ -145,7 +145,7 @@ do
 		{"indisponível", "unavailable"}, {"não encontrado", "not found"}, {" de ", " of "},
 		{"Velocidade máx", "Max speed"}, {"Aceleração (por frame)", "Acceleration (per frame)"}, {"Altura sobre a água", "Height above water"},
 		{"Acelerar Barco", "Boost Boat"}, {"Modificar Barco", "Ship Modifier"}, {"Notificações", "Notifications"}, {"Notificação de teste", "Test notification"}, {"Tempo da notificação", "Notification time"}, {"Painel carregado com sucesso", "Panel loaded successfully"}, {"Posição", "Position"}, {"Embaixo", "Bottom"}, {"Em cima", "Top"}, {"Barco", "Boat"}, {"Entre em um barco", "Get in a boat"}, {"Desligado", "Off"},
-		{"★ Favoritos", "★ Favorites"}, {"Voar até o botão", "Fly to button"}, {"Deslizar", "Slide"}, {"Mola (elástico)", "Spring (elastic)"}, {"Animação: ", "Animation: "}, {"Limpar tudo", "Clear all"}, {"Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar.", "No favorite sections yet. Tap the ★ next to a section name to favorite it."},
+		{"★ Favoritos", "★ Favorites"}, {"Voar até o botão", "Fly to button"}, {"Deslizar", "Slide"}, {"Mola (elástico)", "Spring (elastic)"}, {"Animação: ", "Animation: "}, {"Limpar tudo", "Clear all"}, {"Nada fixado ainda", "Nothing pinned yet"}, {" seção fixada", " section pinned"}, {" seções fixadas", " sections pinned"}, {"Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar.", "No favorite sections yet. Tap the ★ next to a section name to favorite it."},
 		{"Utilidades", "Utilities"},
 		{"Remover Partículas", "Remove Particles"}, {"Remover Rastros e Feixes", "Remove Trails and Beams"}, {"Remover Luzes", "Remove Lights"},
 		{"Sem Sombras nas Peças", "No Part Shadows"}, {"Materiais Simples", "Simple Materials"}, {"Remover Reflexos das Peças", "Remove Part Reflections"},
@@ -3426,9 +3426,10 @@ function showMainPanel()
 		-----------------------------------------------------------------
 		do
 			local FAV_FILE = "AetherisHub_Favorites.json"
-			local YELLOW = Color3.fromRGB(255, 205, 60)
-			local DIM = Color3.fromRGB(130, 140, 165)
-			local EDGE = Color3.fromRGB(38, 48, 68)
+			local YELLOW = Color3.fromRGB(165, 120, 255) -- roxo (nome mantido)
+			local DIM = Color3.fromRGB(125, 115, 175)
+			local EDGE = Color3.fromRGB(70, 58, 120)
+			local GLASS = Color3.fromRGB(150, 120, 255)
 
 			AetherisFav = {entries = {}, byKey = {}, saved = {}, order = 0, viewOpen = false}
 			local F = AetherisFav
@@ -3461,7 +3462,8 @@ function showMainPanel()
 			favBtn.Name = "FavoritesButton"
 			favBtn.Size = UDim2.new(0, 22, 0, 22)
 			favBtn.Position = UDim2.new(1, -262, 0, 11)
-			favBtn.BackgroundColor3 = Color3.fromRGB(17, 23, 36)
+			favBtn.BackgroundColor3 = GLASS
+			favBtn.BackgroundTransparency = 0.8
 			favBtn.BorderSizePixel = 0
 			favBtn.AutoButtonColor = false
 			favBtn.Text = ""
@@ -3470,16 +3472,21 @@ function showMainPanel()
 			favCorner.CornerRadius = UDim.new(0, 6)
 			favCorner.Parent = favBtn
 			local favStroke = Instance.new("UIStroke")
-			favStroke.Color = EDGE
+			favStroke.Color = YELLOW
+			favStroke.Transparency = 0.55
 			favStroke.Thickness = 1
 			favStroke.Parent = favBtn
+			local favShine = Instance.new("UIGradient")
+			favShine.Rotation = 90
+			favShine.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 0.6)})
+			favShine.Parent = favBtn
 			local favStar = Instance.new("TextLabel")
 			favStar.Size = UDim2.new(1, 0, 1, 0)
 			favStar.BackgroundTransparency = 1
 			favStar.Font = Enum.Font.GothamBold
 			favStar.Text = "★"
 			favStar.TextSize = 12
-			favStar.TextColor3 = DIM
+			favStar.TextColor3 = YELLOW
 			favStar.Active = false
 			favStar.Parent = favBtn
 			local favScale = Instance.new("UIScale")
@@ -3495,7 +3502,7 @@ function showMainPanel()
 			countBadge.BorderSizePixel = 0
 			countBadge.Font = Enum.Font.GothamBold
 			countBadge.TextSize = 6
-			countBadge.TextColor3 = Color3.fromRGB(20, 20, 28)
+			countBadge.TextColor3 = Color3.fromRGB(255, 255, 255)
 			countBadge.Text = "0"
 			countBadge.Visible = false
 			countBadge.Active = false
@@ -3524,8 +3531,9 @@ function showMainPanel()
 				hoverToken = hoverToken + 1
 				local my = hoverToken
 				local lit = on or F.viewOpen
-				TweenService:Create(favStar, TweenInfo.new(0.15), {TextColor3 = lit and YELLOW or DIM}):Play()
-				TweenService:Create(favStroke, TweenInfo.new(0.15), {Color = lit and YELLOW or EDGE}):Play()
+				TweenService:Create(favStar, TweenInfo.new(0.15), {TextColor3 = lit and Color3.fromRGB(205, 175, 255) or YELLOW}):Play()
+				TweenService:Create(favStroke, TweenInfo.new(0.15), {Transparency = lit and 0.1 or 0.55}):Play()
+				TweenService:Create(favBtn, TweenInfo.new(0.15), {BackgroundTransparency = lit and 0.6 or 0.8}):Play()
 				TweenService:Create(favScale, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = on and 1.3 or 1}):Play()
 				if on then
 					-- balançadinha da estrela
@@ -3577,39 +3585,64 @@ function showMainPanel()
 
 			local favHeader = Instance.new("Frame")
 			favHeader.Name = "FavoritesHeader"
-			favHeader.Size = UDim2.new(1, -4, 0, 22)
-			favHeader.BackgroundTransparency = 1
+			favHeader.Size = UDim2.new(1, -4, 0, 40)
+			favHeader.BackgroundColor3 = GLASS
+			favHeader.BackgroundTransparency = 0.86
 			favHeader.BorderSizePixel = 0
 			favHeader.LayoutOrder = -3
 			favHeader.Parent = favPage
+			local fhc = Instance.new("UICorner")
+			fhc.CornerRadius = UDim.new(0, 8)
+			fhc.Parent = favHeader
+			local fhs = Instance.new("UIStroke")
+			fhs.Color = YELLOW
+			fhs.Transparency = 0.6
+			fhs.Thickness = 1
+			fhs.Parent = favHeader
+			local fhg = Instance.new("UIGradient")
+			fhg.Rotation = 90
+			fhg.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 0.55)})
+			fhg.Parent = favHeader
 
 			local favTitle = Instance.new("TextLabel")
-			favTitle.Size = UDim2.new(1, -70, 1, 0)
-			favTitle.Position = UDim2.new(0, 4, 0, 0)
+			favTitle.Size = UDim2.new(1, -80, 0, 18)
+			favTitle.Position = UDim2.new(0, 10, 0, 5)
 			favTitle.BackgroundTransparency = 1
 			favTitle.Font = Enum.Font.GothamBold
 			favTitle.Text = "★ Favoritos"
-			favTitle.TextColor3 = YELLOW
-			favTitle.TextSize = 12
+			favTitle.TextColor3 = Color3.fromRGB(205, 175, 255)
+			favTitle.TextSize = 13
 			favTitle.TextXAlignment = Enum.TextXAlignment.Left
 			favTitle.Parent = favHeader
+
+			local favSub = Instance.new("TextLabel")
+			favSub.Size = UDim2.new(1, -80, 0, 12)
+			favSub.Position = UDim2.new(0, 10, 0, 22)
+			favSub.BackgroundTransparency = 1
+			favSub.Font = Enum.Font.GothamMedium
+			favSub.Text = "Nada fixado ainda"
+			favSub.TextColor3 = DIM
+			favSub.TextSize = 9
+			favSub.TextXAlignment = Enum.TextXAlignment.Left
+			favSub.Parent = favHeader
 
 			local clearBtn = Instance.new("TextButton")
 			clearBtn.Name = "ClearFavorites"
 			clearBtn.AnchorPoint = Vector2.new(1, 0.5)
-			clearBtn.Position = UDim2.new(1, -4, 0.5, 0)
-			clearBtn.Size = UDim2.new(0, 58, 0, 16)
-			clearBtn.BackgroundColor3 = Color3.fromRGB(17, 23, 36)
+			clearBtn.Position = UDim2.new(1, -8, 0.5, 0)
+			clearBtn.Size = UDim2.new(0, 62, 0, 20)
+			clearBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 20)
+			clearBtn.BackgroundTransparency = 0.5
 			clearBtn.BorderSizePixel = 0
 			clearBtn.AutoButtonColor = false
 			clearBtn.Font = Enum.Font.GothamMedium
 			clearBtn.Text = "Limpar tudo"
-			clearBtn.TextSize = 8
+			clearBtn.TextSize = 9
 			clearBtn.TextColor3 = DIM
 			clearBtn.Visible = false
 			clearBtn.Parent = favHeader
 			local clc = Instance.new("UICorner")
-			clc.CornerRadius = UDim.new(0, 5)
+			clc.CornerRadius = UDim.new(0, 6)
 			clc.Parent = clearBtn
 			local cls = Instance.new("UIStroke")
 			cls.Color = EDGE
@@ -3624,18 +3657,90 @@ function showMainPanel()
 				TweenService:Create(cls, TweenInfo.new(0.12), {Color = EDGE}):Play()
 			end)
 
-			local hint = Instance.new("TextLabel")
-			hint.Size = UDim2.new(1, -4, 0, 40)
-			hint.BackgroundTransparency = 1
-			hint.Font = Enum.Font.GothamMedium
-			hint.Text = "Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar."
-			hint.TextColor3 = DIM
-			hint.TextSize = 10
-			hint.TextWrapped = true
-			hint.TextXAlignment = Enum.TextXAlignment.Left
-			hint.TextYAlignment = Enum.TextYAlignment.Top
+			-- estado vazio: cartão central com estrela grande esmaecida
+			local hint = Instance.new("Frame")
+			hint.Name = "FavoritesEmpty"
+			hint.Size = UDim2.new(1, -4, 0, 120)
+			hint.BackgroundColor3 = GLASS
+			hint.BackgroundTransparency = 0.92
+			hint.BorderSizePixel = 0
 			hint.LayoutOrder = -2
 			hint.Parent = favPage
+			local hc = Instance.new("UICorner")
+			hc.CornerRadius = UDim.new(0, 10)
+			hc.Parent = hint
+			local hs = Instance.new("UIStroke")
+			hs.Color = YELLOW
+			hs.Transparency = 0.75
+			hs.Thickness = 1
+			hs.Parent = hint
+			local hStar = Instance.new("TextLabel")
+			hStar.Size = UDim2.new(1, 0, 0, 44)
+			hStar.Position = UDim2.new(0, 0, 0, 14)
+			hStar.BackgroundTransparency = 1
+			hStar.Font = Enum.Font.GothamBold
+			hStar.Text = "★"
+			hStar.TextSize = 38
+			hStar.TextColor3 = YELLOW
+			hStar.TextTransparency = 0.6
+			hStar.Parent = hint
+			local hText = Instance.new("TextLabel")
+			hText.Size = UDim2.new(1, -40, 0, 40)
+			hText.Position = UDim2.new(0, 20, 0, 66)
+			hText.BackgroundTransparency = 1
+			hText.Font = Enum.Font.GothamMedium
+			hText.Text = "Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar."
+			hText.TextColor3 = DIM
+			hText.TextSize = 10
+			hText.TextWrapped = true
+			hText.TextYAlignment = Enum.TextYAlignment.Top
+			hText.Parent = hint
+
+			-- etiqueta pequena com a aba de origem no cabeçalho da seção favoritada
+			local function pageOf(inst)
+				while inst do
+					for _, pg in pairs(pages) do
+						if pg == inst then return pg end
+					end
+					inst = inst.Parent
+				end
+			end
+			local function setChip(e, on)
+				local chip = e.section:FindFirstChild("FavOriginChip")
+				if not on then
+					if chip then chip:Destroy() end
+					return
+				end
+				local label
+				local pg = pageOf(e.origin)
+				for _, d in ipairs(tabButtonsList) do
+					if d.Page == pg then label = tabTextFor(d) break end
+				end
+				if not label then return end
+				if not chip then
+					chip = Instance.new("TextLabel")
+					chip.Name = "FavOriginChip"
+					chip.AnchorPoint = Vector2.new(1, 0)
+					chip.Position = UDim2.new(1, -48, 0, 6)
+					chip.Size = UDim2.new(0, 0, 0, 14)
+					chip.AutomaticSize = Enum.AutomaticSize.X
+					chip.BackgroundColor3 = GLASS
+					chip.BackgroundTransparency = 0.78
+					chip.BorderSizePixel = 0
+					chip.Font = Enum.Font.GothamMedium
+					chip.TextSize = 8
+					chip.TextColor3 = Color3.fromRGB(205, 175, 255)
+					chip.Parent = e.section
+					local cc = Instance.new("UICorner")
+					cc.CornerRadius = UDim.new(1, 0)
+					cc.Parent = chip
+					local cp = Instance.new("UIPadding")
+					cp.PaddingLeft = UDim.new(0, 6)
+					cp.PaddingRight = UDim.new(0, 6)
+					cp.Parent = chip
+				end
+				chip.Text = label
+			end
 
 			-- move as seções favoritas para a aba (e devolve as desmarcadas ao lugar de origem)
 			local function layoutView()
@@ -3664,6 +3769,15 @@ function showMainPanel()
 				end
 				hint.Visible = (#favs == 0)
 				clearBtn.Visible = (#favs > 0)
+				local en = AetherisI18n and AetherisI18n.lang == "en"
+				if #favs == 0 then
+					favSub.Text = en and "Nothing pinned yet" or "Nada fixado ainda"
+				elseif #favs == 1 then
+					favSub.Text = "1" .. (en and " section pinned" or " seção fixada")
+				else
+					favSub.Text = #favs .. (en and " sections pinned" or " seções fixadas")
+				end
+				for _, e in ipairs(F.entries) do setChip(e, e.fav) end
 			end
 			local function setTitle(open)
 				if open then
@@ -3689,6 +3803,7 @@ function showMainPanel()
 				F.viewOpen = false
 				for _, e in ipairs(F.entries) do
 					if e.section.Parent ~= e.origin then e.section.Parent = e.origin end
+					setChip(e, false)
 				end
 				favPage.Visible = false
 				-- se a aba clicada já era a ativa, ela não se reabre sozinha: reabre aqui
@@ -4139,7 +4254,7 @@ function showMainPanel()
 
 		-- ★ favoritar: ao lado da setinha de minimizar. Marcada = aparece na aba de favoritos do cabeçalho.
 		do
-			local STAR_ON, STAR_OFF = Color3.fromRGB(255, 205, 60), Color3.fromRGB(95, 105, 130)
+			local STAR_ON, STAR_OFF = Color3.fromRGB(165, 120, 255), Color3.fromRGB(95, 105, 130)
 			local starBtn = Instance.new("TextButton")
 			starBtn.Name = "SectionFavoriteStar"
 			starBtn.Size = UDim2.new(0, 18, 0, 20)
