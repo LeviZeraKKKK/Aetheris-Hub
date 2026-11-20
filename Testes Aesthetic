@@ -145,7 +145,7 @@ do
 		{"indisponível", "unavailable"}, {"não encontrado", "not found"}, {" de ", " of "},
 		{"Velocidade máx", "Max speed"}, {"Aceleração (por frame)", "Acceleration (per frame)"}, {"Altura sobre a água", "Height above water"},
 		{"Acelerar Barco", "Boost Boat"}, {"Modificar Barco", "Ship Modifier"}, {"Notificações", "Notifications"}, {"Notificação de teste", "Test notification"}, {"Tempo da notificação", "Notification time"}, {"Painel carregado com sucesso", "Panel loaded successfully"}, {"Posição", "Position"}, {"Embaixo", "Bottom"}, {"Em cima", "Top"}, {"Barco", "Boat"}, {"Entre em um barco", "Get in a boat"}, {"Desligado", "Off"},
-		{"★ Favoritos", "★ Favorites"}, {"Voar até o botão", "Fly to button"}, {"Deslizar", "Slide"}, {"Mola (elástico)", "Spring (elastic)"}, {"Animação: ", "Animation: "}, {"Limpar tudo", "Clear all"}, {"Nada fixado ainda", "Nothing pinned yet"}, {" seção fixada", " section pinned"}, {" seções fixadas", " sections pinned"}, {"Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar.", "No favorite sections yet. Tap the ★ next to a section name to favorite it."},
+		{"★ Favoritos", "★ Favorites"}, {"Voar até o botão", "Fly to button"}, {"Deslizar", "Slide"}, {"Mola (elástico)", "Spring (elastic)"}, {"Animação: ", "Animation: "}, {"Limpar tudo", "Clear all"}, {"NOVO", "NEW"}, {"Nada fixado ainda", "Nothing pinned yet"}, {" seção fixada", " section pinned"}, {" seções fixadas", " sections pinned"}, {"Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar.", "No favorite sections yet. Tap the ★ next to a section name to favorite it."},
 		{"Utilidades", "Utilities"},
 		{"Remover Partículas", "Remove Particles"}, {"Remover Rastros e Feixes", "Remove Trails and Beams"}, {"Remover Luzes", "Remove Lights"},
 		{"Sem Sombras nas Peças", "No Part Shadows"}, {"Materiais Simples", "Simple Materials"}, {"Remover Reflexos das Peças", "Remove Part Reflections"},
@@ -266,7 +266,7 @@ function AetherisBlueGradient(inst, rotation, transparency)
 end
 local currentTextColor = Color3.fromRGB(255, 255, 255)
 local currentGlobalFont = Enum.Font.GothamMedium
-local panelTransparencyValue = 0.2
+local panelTransparencyValue = 0.04
 
 local themeToggles = {}
 local themeSections = {}
@@ -4372,6 +4372,44 @@ function showMainPanel()
 			starBtn.MouseButton1Click:Connect(function()
 				if entry and AetherisFav then AetherisFav.toggle(entry) end
 			end)
+		end
+
+		-- Selo "NOVO" ao lado do nome das seções adicionadas recentemente.
+		do
+			local NEW_SECTIONS = {["Auto Stats"] = true, ["Auto Habilidades"] = true, ["Auto Kill Boss"] = true, ["FPS Boost"] = true}
+			if NEW_SECTIONS[title] then
+				local chip = Instance.new("TextLabel")
+				chip.Name = "NewBadge"
+				chip.Size = UDim2.new(0, 0, 0, 12)
+				chip.AutomaticSize = Enum.AutomaticSize.X
+				chip.Position = UDim2.new(0, 70, 0, 7)
+				chip.BackgroundTransparency = 1
+				chip.Font = Enum.Font.GothamBold
+				chip.Text = "  NOVO  "
+				chip.TextColor3 = Color3.fromRGB(255, 255, 255)
+				chip.TextSize = 7
+				chip.Active = false
+				chip.ZIndex = 3
+				chip.Parent = section
+				local fill = Instance.new("Frame")
+				fill.Size = UDim2.new(1, 0, 1, 0)
+				fill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				fill.BorderSizePixel = 0
+				fill.ZIndex = 2
+				fill.Active = false
+				fill.Parent = chip
+				local cc = Instance.new("UICorner")
+				cc.CornerRadius = UDim.new(1, 0)
+				cc.Parent = fill
+				local cg = Instance.new("UIGradient")
+				cg.Color = ColorSequence.new(Color3.fromRGB(56, 132, 255), Color3.fromRGB(150, 80, 255))
+				cg.Parent = fill
+				local function place()
+					chip.Position = UDim2.new(0, 28 + sTitle.TextBounds.X + 6, 0, 7)
+				end
+				place()
+				sTitle:GetPropertyChangedSignal("TextBounds"):Connect(place)
+			end
 		end
 
 		-- Rótulos nunca passam por baixo dos controles: nomes longos quebram em 2 linhas pequenas
@@ -9662,7 +9700,7 @@ function showMainPanel()
 	-- AUTO FARM LEVEL (aceita a melhor quest do seu level, voa até os inimigos e ataca)
 	-----------------------------------------------------------------
 	do
-		local secAFL = createSection(secFarm.Parent.Parent, "Auto  Farm  Level", sectionIcons.FarmAutomation)
+		local secAFL = createSection(secFarm.Parent.Parent, "Auto Farm Level", sectionIcons.FarmAutomation)
 		local Q = {
 			enabled = false, hitDelay = 0.05, aoeRange = 80, flySpeed = 270, hoverHeight = 6,
 				lastHit = 0, combo = 1, questName = "?", questCat = nil, taskType = nil, questIndex = 1,
@@ -11319,7 +11357,7 @@ function showMainPanel()
 		end
 
 		-- ===== CONFIGURAÇÕES NA INTERFACE =====
-		addToggle(secAFL, "Auto  Farm  Level", function(state)
+		addToggle(secAFL, "Auto Farm Level", function(state)
 			if state then Q.start() else
 				Q.stop()
 				Q.updateStatus("💤 Desligado", Color3.fromRGB(150, 150, 180))
@@ -11377,7 +11415,7 @@ function showMainPanel()
 			addSlider(secAFL, "Vida mínima para subir", 5, 95, 30, function(val) Q.healthPct = val end, 0, "%")
 			addSlider(secAFL, "Altura de segurança", 30, 200, 90, function(val) Q.safeHeight = val end, 0, " studs")
 
-			local secBoss = createSection(secFarm.Parent.Parent, "Auto  Kill  Boss", sectionIcons.FarmAutomation)
+			local secBoss = createSection(secFarm.Parent.Parent, "Auto Kill Boss", sectionIcons.FarmAutomation)
 
 			-- status do boss: uma linha minúscula
 			local bossStatus = Instance.new("TextLabel")
@@ -11400,7 +11438,7 @@ function showMainPanel()
 				bossStatus.TextColor3 = color or Color3.fromRGB(150, 150, 180)
 			end)
 
-			addToggle(secBoss, "Auto  Kill  Boss", function(state)
+			addToggle(secBoss, "Auto Kill Boss", function(state)
 				if state then BossLogic.start() else BossLogic.stop() end
 			end, false)
 
@@ -12381,9 +12419,9 @@ function showMainPanel()
 	local configPage = pages["Config"]
 	local secConfig = createSection(configPage, "Design", sectionIcons.Theme)
 	
-	-- Opacidade: ligada = painel totalmente opaco; desligada = translúcido (padrão)
+	-- Opacidade: desligada = painel opaco (padrão); ligada = translúcido
 	addToggle(secConfig, "Opacidade", function(state)
-		panelTransparencyValue = state and 0 or 0.2
+		panelTransparencyValue = state and 0.28 or 0.04
 		mainPanel.BackgroundTransparency = panelTransparencyValue
 		floatingBtn.BackgroundTransparency = panelTransparencyValue
 		if AetherisMinimize.bar then AetherisMinimize.bar.BackgroundTransparency = math.min(panelTransparencyValue, 0.15) end
