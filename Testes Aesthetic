@@ -3570,49 +3570,34 @@ function showMainPanel()
 				task.delay(0.42, function() ring:Destroy() end)
 			end
 
-			-- ===== a "aba" de favoritos (cobre a página atual) =====
-			local overlay = Instance.new("ScrollingFrame")
-			overlay.Name = "FavoritesView"
-			overlay.Size = UDim2.new(1, -8, 1, -8)
-			overlay.Position = UDim2.new(0, 4, 0, 4)
-			overlay.BackgroundColor3 = Color3.fromRGB(12, 16, 26)
-			overlay.BackgroundTransparency = 0
-			overlay.BorderSizePixel = 0
-			overlay.ScrollBarThickness = 2
-			overlay.ScrollBarImageColor3 = Color3.fromRGB(70, 80, 105)
-			overlay.CanvasSize = UDim2.new(0, 0, 0, 0)
-			overlay.Visible = false
-			overlay.ZIndex = 150
-			overlay.Parent = contentContainer
+			-- ===== a "aba" de favoritos: uma página de verdade (mesmo caminho das outras abas) =====
+			local favPage = createPage("Favoritos")
+			local favCols = pageColumns[favPage]
+			local leftCol, rightCol = favCols.left, favCols.right
+
+			local favHeader = Instance.new("Frame")
+			favHeader.Name = "FavoritesHeader"
+			favHeader.Size = UDim2.new(1, -4, 0, 22)
+			favHeader.BackgroundTransparency = 1
+			favHeader.BorderSizePixel = 0
+			favHeader.LayoutOrder = -3
+			favHeader.Parent = favPage
 
 			local favTitle = Instance.new("TextLabel")
-			favTitle.Size = UDim2.new(1, -12, 0, 18)
-			favTitle.Position = UDim2.new(0, 6, 0, 2)
+			favTitle.Size = UDim2.new(1, -70, 1, 0)
+			favTitle.Position = UDim2.new(0, 4, 0, 0)
 			favTitle.BackgroundTransparency = 1
 			favTitle.Font = Enum.Font.GothamBold
 			favTitle.Text = "★ Favoritos"
 			favTitle.TextColor3 = YELLOW
 			favTitle.TextSize = 12
 			favTitle.TextXAlignment = Enum.TextXAlignment.Left
-			favTitle.Parent = overlay
-
-			local hint = Instance.new("TextLabel")
-			hint.Size = UDim2.new(1, -12, 0, 40)
-			hint.Position = UDim2.new(0, 6, 0, 30)
-			hint.BackgroundTransparency = 1
-			hint.Font = Enum.Font.GothamMedium
-			hint.Text = "Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar."
-			hint.TextColor3 = DIM
-			hint.TextSize = 10
-			hint.TextWrapped = true
-			hint.TextXAlignment = Enum.TextXAlignment.Left
-			hint.TextYAlignment = Enum.TextYAlignment.Top
-			hint.Parent = overlay
+			favTitle.Parent = favHeader
 
 			local clearBtn = Instance.new("TextButton")
 			clearBtn.Name = "ClearFavorites"
-			clearBtn.AnchorPoint = Vector2.new(1, 0)
-			clearBtn.Position = UDim2.new(1, -8, 0, 3)
+			clearBtn.AnchorPoint = Vector2.new(1, 0.5)
+			clearBtn.Position = UDim2.new(1, -4, 0.5, 0)
 			clearBtn.Size = UDim2.new(0, 58, 0, 16)
 			clearBtn.BackgroundColor3 = Color3.fromRGB(17, 23, 36)
 			clearBtn.BorderSizePixel = 0
@@ -3622,7 +3607,7 @@ function showMainPanel()
 			clearBtn.TextSize = 8
 			clearBtn.TextColor3 = DIM
 			clearBtn.Visible = false
-			clearBtn.Parent = overlay
+			clearBtn.Parent = favHeader
 			local clc = Instance.new("UICorner")
 			clc.CornerRadius = UDim.new(0, 5)
 			clc.Parent = clearBtn
@@ -3639,69 +3624,18 @@ function showMainPanel()
 				TweenService:Create(cls, TweenInfo.new(0.12), {Color = EDGE}):Play()
 			end)
 
-			local holder = Instance.new("Frame")
-			holder.Position = UDim2.new(0, 0, 0, 26)
-			holder.Size = UDim2.new(1, -4, 0, 0)
-			holder.BackgroundTransparency = 1
-			holder.BorderSizePixel = 0
-			holder.Parent = overlay
-			local function makeCol(x)
-				local col = Instance.new("Frame")
-				col.Size = UDim2.new(0.5, -7, 1, 0)
-				col.Position = UDim2.new(x, x == 0 and 0 or 7, 0, 0)
-				col.BackgroundTransparency = 1
-				col.BorderSizePixel = 0
-				col.Parent = holder
-				local cl = Instance.new("UIListLayout")
-				cl.SortOrder = Enum.SortOrder.LayoutOrder
-				cl.Padding = UDim.new(0, 6)
-				cl.Parent = col
-				return col, cl
-			end
-			local leftCol, leftLayout = makeCol(0)
-			local rightCol, rightLayout = makeCol(0.5)
-			local favDivider = Instance.new("Frame")
-			favDivider.AnchorPoint = Vector2.new(0.5, 0)
-			favDivider.Position = UDim2.new(0.5, 0, 0, 2)
-			favDivider.Size = UDim2.new(0, 1, 1, -4)
-			favDivider.BackgroundColor3 = Color3.fromRGB(58, 70, 100)
-			favDivider.BorderSizePixel = 0
-			favDivider.Active = false
-			favDivider.Parent = holder
-			local favDivGrad = Instance.new("UIGradient")
-			favDivGrad.Rotation = 90
-			favDivGrad.Transparency = NumberSequence.new({
-				NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.08, 0.3),
-				NumberSequenceKeypoint.new(0.92, 0.3), NumberSequenceKeypoint.new(1, 1)
-			})
-			favDivGrad.Parent = favDivider
-
-			-- soma direta das alturas das seções (não depende do layout já ter sido calculado)
-			local function colHeight(col, layout)
-				local h = AetherisLayoutHeight(layout)
-				if h <= 0 then
-					local total, count = 0, 0
-					for _, c in ipairs(col:GetChildren()) do
-						if c:IsA("GuiObject") then
-							total = total + c.Size.Y.Offset
-							count = count + 1
-						end
-					end
-					h = total + 6 * math.max(count - 1, 0)
-				end
-				return h
-			end
-			local function refreshHolder()
-				local hL, hR = colHeight(leftCol, leftLayout), colHeight(rightCol, rightLayout)
-				local h = math.max(hL, hR)
-				leftCol.Size = UDim2.new(0.5, -7, 0, hL)
-				rightCol.Size = UDim2.new(0.5, -7, 0, hR)
-				holder.Size = UDim2.new(1, -4, 0, h)
-				favDivider.Size = UDim2.new(0, 1, 1, -4)
-				overlay.CanvasSize = UDim2.new(0, 0, 0, 26 + h + 10)
-			end
-			leftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(refreshHolder)
-			rightLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(refreshHolder)
+			local hint = Instance.new("TextLabel")
+			hint.Size = UDim2.new(1, -4, 0, 40)
+			hint.BackgroundTransparency = 1
+			hint.Font = Enum.Font.GothamMedium
+			hint.Text = "Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar."
+			hint.TextColor3 = DIM
+			hint.TextSize = 10
+			hint.TextWrapped = true
+			hint.TextXAlignment = Enum.TextXAlignment.Left
+			hint.TextYAlignment = Enum.TextYAlignment.Top
+			hint.LayoutOrder = -2
+			hint.Parent = favPage
 
 			-- move as seções favoritas para a aba (e devolve as desmarcadas ao lugar de origem)
 			local function layoutView()
@@ -3730,12 +3664,6 @@ function showMainPanel()
 				end
 				hint.Visible = (#favs == 0)
 				clearBtn.Visible = (#favs > 0)
-				-- diagnóstico (F9): mostra o que a aba de favoritos recebeu
-				print("[Aetheris Fav] favoritos:", #favs, "| overlay visível:", overlay.Visible, "| overlay tam:", tostring(overlay.AbsoluteSize))
-				for _, e in ipairs(favs) do
-					print("  -", e.key, "| pai:", e.section.Parent and e.section.Parent.Name or "nil", "| altura:", e.section.Size.Y.Offset, "| abs:", tostring(e.section.AbsoluteSize))
-				end
-				refreshHolder()
 			end
 			local function setTitle(open)
 				if open then
@@ -3747,15 +3675,12 @@ function showMainPanel()
 			end
 			function F.openView()
 				F.viewOpen = true
-				overlay.Visible = true -- visível antes de organizar, para o layout calcular as alturas
 				layoutView()
-				task.defer(refreshHolder)
-				task.delay(0.1, refreshHolder)
-				task.delay(0.4, refreshHolder)
-				overlay.CanvasPosition = Vector2.new(0, 0)
-				overlay.Position = UDim2.new(0, 4, 0, 16)
-				overlay.Visible = true
-				TweenService:Create(overlay, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0, 4, 0, 4)}):Play()
+				for _, pg in pairs(pages) do pg.Visible = false end
+				favPage.CanvasPosition = Vector2.new(0, 0)
+				favPage.Position = UDim2.new(0, 4, 0, 18)
+				favPage.Visible = true
+				TweenService:Create(favPage, TweenInfo.new(0.28, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(0, 4, 0, 4)}):Play()
 				setTitle(true)
 				starHover(false)
 			end
@@ -3765,7 +3690,15 @@ function showMainPanel()
 				for _, e in ipairs(F.entries) do
 					if e.section.Parent ~= e.origin then e.section.Parent = e.origin end
 				end
-				overlay.Visible = false
+				favPage.Visible = false
+				-- se a aba clicada já era a ativa, ela não se reabre sozinha: reabre aqui
+				task.delay(0.2, function()
+					if F.viewOpen or not activePage then return end
+					if not activePage.Visible then
+						activePage.Position = UDim2.new(0, 4, 0, 4)
+						activePage.Visible = true
+					end
+				end)
 				setTitle(false)
 				starHover(false)
 			end
