@@ -4376,7 +4376,7 @@ function showMainPanel()
 
 		-- Selo "NOVO" ao lado do nome das seções adicionadas recentemente.
 		do
-			local NEW_SECTIONS = {["Auto Stats"] = true, ["Auto Habilidades"] = true, ["Auto Kill Boss"] = true, ["FPS Boost"] = true}
+			local NEW_SECTIONS = {["Auto Stats"] = true, ["Auto Habilidades"] = true, ["Auto Kill Boss"] = true, ["FPS Boost"] = true, ["Modificar Barco"] = true}
 			if NEW_SECTIONS[title] then
 				local chip = Instance.new("TextLabel")
 				chip.Name = "NewBadge"
@@ -5440,22 +5440,47 @@ function showMainPanel()
 		scrollLayout.Padding = UDim.new(0, 8)
 		scrollLayout.Parent = scroll
 
+		-- Um único card organizado: todos os blocos da Home ficam dentro dele, separados por linhas finas.
+		local homeCard = Instance.new("Frame")
+		homeCard.Name = "HomeCard"
+		homeCard.Size = UDim2.new(1, -6, 0, 0)
+		homeCard.AutomaticSize = Enum.AutomaticSize.Y
+		homeCard.BackgroundColor3 = CARD_BG
+		homeCard.BackgroundTransparency = 0.05
+		homeCard.BorderSizePixel = 0
+		homeCard.ClipsDescendants = true
+		homeCard.LayoutOrder = 1
+		homeCard.Parent = scroll
+		local hcc = Instance.new("UICorner")
+		hcc.CornerRadius = UDim.new(0, 12)
+		hcc.Parent = homeCard
+		local hcs = Instance.new("UIStroke")
+		hcs.Color = CARD_STROKE
+		hcs.Thickness = 1
+		hcs.Parent = homeCard
+		local homeLayout = Instance.new("UIListLayout")
+		homeLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		homeLayout.Padding = UDim.new(0, 0)
+		homeLayout.Parent = homeCard
+
 		local function makeCard(order, height)
 			local c = Instance.new("Frame")
-			c.Size = UDim2.new(1, -6, 0, height)
-			c.BackgroundColor3 = CARD_BG
-			c.BackgroundTransparency = 0.05
+			c.Size = UDim2.new(1, 0, 0, height)
+			c.BackgroundTransparency = 1
 			c.BorderSizePixel = 0
 			c.ClipsDescendants = true
 			c.LayoutOrder = order
-			c.Parent = scroll
-			local cc = Instance.new("UICorner")
-			cc.CornerRadius = UDim.new(0, 10)
-			cc.Parent = c
-			local cs = Instance.new("UIStroke")
-			cs.Color = CARD_STROKE
-			cs.Thickness = 1
-			cs.Parent = c
+			c.Parent = homeCard
+			if order < 6 then
+				local line = Instance.new("Frame")
+				line.Name = "Divider"
+				line.Size = UDim2.new(1, -28, 0, 1)
+				line.Position = UDim2.new(0, 14, 1, -1)
+				line.BackgroundColor3 = CARD_STROKE
+				line.BorderSizePixel = 0
+				line.ZIndex = 2
+				line.Parent = c
+			end
 			return c
 		end
 
@@ -12790,7 +12815,7 @@ function showMainPanel()
 
 		-- Etiquetas NOVO / BETA
 		safe("etiquetas", function()
-			local tags = {["Auto Stats"] = "NOVO", ["Auto Aura"] = "NOVO", ["Auto Observação"] = "BETA", ["Auto Habilidade da Raça (V3)"] = "NOVO"}
+			local tags = {["Ativar ESP Flower"] = "NOVO"}
 			for _, d in ipairs(screenGui:GetDescendants()) do
 				if d:IsA("TextLabel") and tags[d.Text] and d.Parent and d.Parent:IsA("Frame") then
 					local tg = Instance.new("TextLabel")
