@@ -138,7 +138,7 @@ do
 		{"Diálogo", "Dialogue"}, {"Direto", "Direct"}, {"Nada encontrado.", "Nothing found."},
 		{"Nenhuma opção encontrada.", "No options found."}, {"opções", "options"}, {"opção", "option"},
 		{"Selecione", "Select"}, {"alvos", "targets"}, {"alvo", "target"}, {"jogadores", "players"},
-		{"Geral", "General"}, {"Script feito por Noahzin", "Script made by Noahzin"}, {"Subir quando a vida estiver baixa", "Rise when health is low"}, {"Vida mínima para subir", "Health % to rise"}, {"Altura de segurança", "Safe height"}, {"Carregar save automaticamente", "Auto load save"}, {"Ao abrir o hub, aplica sozinho a última configuração salva ou usada.", "On launch, automatically applies the last saved or used config."}, {"Boss: ", "Boss: "}, {"Todos", "All"}, {"Recuperando no alto...", "Recovering up high..."}, {"Vida baixa", "Low health"}, {"Pegar quest do boss", "Take boss quest"}, {"Altura sobre o boss", "Height above boss"}, {"Aguardando boss...", "Waiting for boss..."}, {"Sons de clique", "Click Sounds"}, {"Som de clique", "Click Sound"}, {"Volume do som", "Sound Volume"}, {"Som: ", "Sound: "}, {"Clássico", "Classic"}, {"Suave", "Soft"}, {"Tecla", "Key"}, {"Página", "Page"}, {"Botão", "Button"}, {"Interruptor", "Switch"}, {"Clique rápido", "Fast Click"}, {"Estalo", "Snap"}, {"Bolha", "Bubble"}, {"Grave", "Bass"}, {"Nenhum", "None"}, {"Tema pronto", "Preset Theme"}, {"Oceano", "Ocean"}, {"Gelo", "Ice"}, {"funções alteradas", "functions changed"}, {"Fechar o Aetheris Hub?", "Close Aetheris Hub?"}, {"O painel será fechado por completo. Para abrir de novo, execute o script outra vez.", "The panel will be closed completely. To open it again, run the script again."}, {"Fechar", "Close"}, {"Tem certeza de que deseja excluir", "Are you sure you want to delete"}, {"Essa ação não pode ser desfeita.", "This action cannot be undone."}, {"direto", "direct"}, {"incompatível", "incompatible"}, {"Módulo", "Module"}, {"diálogo", "dialog"}, {"INIMIGOS (NPC)", "ENEMIES (NPC)"}, {"BAÚ", "CHEST"}, {"PLAYERS", "PLAYERS"}, {"BERRIES", "BERRIES"}, {"ESP Inimigos (NPC)", "ESP Enemies (NPC)"}, {"Inimigos", "Enemies"}, {"inimigos", "enemies"},
+		{"Geral", "General"}, {"Script feito por Noahzin", "Script made by Noahzin"}, {"EXECUTORES SUPORTADOS", "SUPPORTED EXECUTORS"}, {"Subir quando a vida estiver baixa", "Rise when health is low"}, {"Vida mínima para subir", "Health % to rise"}, {"Altura de segurança", "Safe height"}, {"Carregar save automaticamente", "Auto load save"}, {"Ao abrir o hub, aplica sozinho a última configuração salva ou usada.", "On launch, automatically applies the last saved or used config."}, {"Boss: ", "Boss: "}, {"Todos", "All"}, {"Recuperando no alto...", "Recovering up high..."}, {"Vida baixa", "Low health"}, {"Pegar quest do boss", "Take boss quest"}, {"Altura sobre o boss", "Height above boss"}, {"Aguardando boss...", "Waiting for boss..."}, {"Sons de clique", "Click Sounds"}, {"Som de clique", "Click Sound"}, {"Volume do som", "Sound Volume"}, {"Som: ", "Sound: "}, {"Clássico", "Classic"}, {"Suave", "Soft"}, {"Tecla", "Key"}, {"Página", "Page"}, {"Botão", "Button"}, {"Interruptor", "Switch"}, {"Clique rápido", "Fast Click"}, {"Estalo", "Snap"}, {"Bolha", "Bubble"}, {"Grave", "Bass"}, {"Nenhum", "None"}, {"Tema pronto", "Preset Theme"}, {"Oceano", "Ocean"}, {"Gelo", "Ice"}, {"funções alteradas", "functions changed"}, {"Fechar o Aetheris Hub?", "Close Aetheris Hub?"}, {"O painel será fechado por completo. Para abrir de novo, execute o script outra vez.", "The panel will be closed completely. To open it again, run the script again."}, {"Fechar", "Close"}, {"Tem certeza de que deseja excluir", "Are you sure you want to delete"}, {"Essa ação não pode ser desfeita.", "This action cannot be undone."}, {"direto", "direct"}, {"incompatível", "incompatible"}, {"Módulo", "Module"}, {"diálogo", "dialog"}, {"INIMIGOS (NPC)", "ENEMIES (NPC)"}, {"BAÚ", "CHEST"}, {"PLAYERS", "PLAYERS"}, {"BERRIES", "BERRIES"}, {"ESP Inimigos (NPC)", "ESP Enemies (NPC)"}, {"Inimigos", "Enemies"}, {"inimigos", "enemies"},
 		{"inimigo", "enemy"}, {"Cor", "Color"}, {"Sem quest", "No quest"}, {"Tecla para ocultar", "Key to hide"},
 		{"Atalho de ocultar ativado", "Hide shortcut enabled"}, {"Aliados", "Allies"}, {"Jogadores", "Players"}, {"Jogador", "Player"},
 		{"tipo:", "type:"}, {"Automatização", "Automation"}, {"Personagem indisponível ou morto", "Character unavailable or dead"},
@@ -1444,6 +1444,7 @@ do
 			local checkScale = Instance.new("UIScale")
 			checkScale.Parent = check
 			local gradients = {}
+			local bars = {}
 			local function stroke(cx, cy, length, rotation)
 				local bar = Instance.new("Frame")
 				bar.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -1452,12 +1453,14 @@ do
 				bar.Rotation = rotation
 				bar.BackgroundColor3 = WHITE
 				bar.BorderSizePixel = 0
+				bar.Visible = false
 				bar.Parent = check
+				table.insert(bars, bar)
 				local barCorner = Instance.new("UICorner")
 				barCorner.CornerRadius = UDim.new(1, 0)
 				barCorner.Parent = bar
 				local g = Instance.new("UIGradient")
-				g.Color = ColorSequence.new(PURPLE, BLUE)
+				g.Color = ColorSequence.new(Color3.fromRGB(176, 120, 255), Color3.fromRGB(126, 62, 236))
 				g.Rotation = 90
 				g.Enabled = false
 				g.Parent = bar
@@ -1465,6 +1468,43 @@ do
 			end
 			stroke(4.8, 10, 5.5, -45)
 			stroke(9.8, 8, 10.5, 42)
+
+			-- pendente: bolinha apagada
+			local dot = Instance.new("Frame")
+			dot.AnchorPoint = Vector2.new(0.5, 0.5)
+			dot.Position = UDim2.new(0.5, 0, 0.5, 0)
+			dot.Size = UDim2.new(0, 5, 0, 5)
+			dot.BackgroundColor3 = Color3.fromRGB(60, 70, 100)
+			dot.BorderSizePixel = 0
+			dot.Parent = check
+			local dotc = Instance.new("UICorner")
+			dotc.CornerRadius = UDim.new(1, 0)
+			dotc.Parent = dot
+
+			-- carregando: aro com arco que gira
+			local spin = Instance.new("Frame")
+			spin.AnchorPoint = Vector2.new(0.5, 0.5)
+			spin.Position = UDim2.new(0.5, 0, 0.5, 0)
+			spin.Size = UDim2.new(0, 14, 0, 14)
+			spin.BackgroundTransparency = 1
+			spin.Visible = false
+			spin.Parent = check
+			local spinc = Instance.new("UICorner")
+			spinc.CornerRadius = UDim.new(1, 0)
+			spinc.Parent = spin
+			local spinStroke = Instance.new("UIStroke")
+			spinStroke.Color = WHITE
+			spinStroke.Thickness = 2
+			spinStroke.Parent = spin
+			local spinGrad = Instance.new("UIGradient")
+			spinGrad.Color = ColorSequence.new(Color3.fromRGB(176, 120, 255), Color3.fromRGB(70, 150, 255))
+			spinGrad.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0),
+				NumberSequenceKeypoint.new(0.5, 0.15),
+				NumberSequenceKeypoint.new(0.51, 0.9),
+				NumberSequenceKeypoint.new(1, 0.9)
+			})
+			spinGrad.Parent = spinStroke
 
 			local label = Instance.new("TextLabel")
 			label.Size = UDim2.new(1, -26, 1, 0)
@@ -1477,12 +1517,25 @@ do
 			label.TextXAlignment = Enum.TextXAlignment.Left
 			label.Parent = row
 
-			checklist[index] = {gradients = gradients, scale = checkScale, label = label}
+			checklist[index] = {gradients = gradients, scale = checkScale, label = label, bars = bars, dot = dot, spin = spin, spinGrad = spinGrad}
 		end
+	end
+	local activeItem
+	local function startItem(index)
+		local item = checklist[index]
+		if not item then return end
+		activeItem = item
+		item.dot.Visible = false
+		item.spin.Visible = true
+		TweenService:Create(item.label, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(200, 210, 235)}):Play()
 	end
 	local function completeItem(index)
 		local item = checklist[index]
 		if not item then return end
+		if activeItem == item then activeItem = nil end
+		item.spin.Visible = false
+		item.dot.Visible = false
+		for _, b in ipairs(item.bars) do b.Visible = true end
 		for _, g in ipairs(item.gradients) do g.Enabled = true end
 		item.scale.Scale = 1.6
 		TweenService:Create(item.scale, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
@@ -1501,6 +1554,7 @@ do
 			return
 		end
 		ringGradient.Rotation = (ringGradient.Rotation + dt * 300) % 360
+		if activeItem then activeItem.spinGrad.Rotation = (activeItem.spinGrad.Rotation + dt * 420) % 360 end
 		percentLabel.Text = string.format("%d%%", math.floor(loadBarFill.Size.X.Scale * 100 + 0.5))
 	end)
 
@@ -1529,6 +1583,7 @@ do
 		local stepTime = 0.5
 		task.wait(0.45)
 		for index, step in ipairs(steps) do
+			startItem(index)
 			statusBase = step.text
 			statusAnimated = true
 			loadStatus.Text = step.text .. "..."
@@ -1564,7 +1619,7 @@ function showMainPanel()
 	mainPanel.Position = UDim2.new(0.5, 0, 0.5, 0)
 	mainPanel.AnchorPoint = Vector2.new(0.5, 0.5)
 	mainPanel.BackgroundColor3 = Color3.fromRGB(12, 16, 26)
-	mainPanel.BackgroundTransparency = math.min(panelTransparencyValue, 0.04)
+	mainPanel.BackgroundTransparency = panelTransparencyValue
 	mainPanel.BorderSizePixel = 0
 	mainPanel.ClipsDescendants = false
 	mainPanel.Parent = screenGui
@@ -2485,7 +2540,7 @@ function showMainPanel()
 			-- restaura os valores para a próxima abertura
 			panelAnimScale.Scale = 1
 			mainPanel.Position = savedPanelPosition
-			mainPanel.BackgroundTransparency = math.min(panelTransparencyValue, 0.04)
+			mainPanel.BackgroundTransparency = panelTransparencyValue
 			panelStroke.Transparency = 0.45
 		else
 			-- ===== MAXIMIZAR =====
@@ -2530,7 +2585,7 @@ function showMainPanel()
 				Position = target
 			}):Play()
 			TweenService:Create(panelAnimScale, TweenInfo.new(dur, A.maxStyle, Enum.EasingDirection.Out, 0, false, 0), {Scale = 1}):Play()
-			TweenService:Create(mainPanel, TweenInfo.new(dur * 0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {BackgroundTransparency = math.min(panelTransparencyValue, 0.04)}):Play()
+			TweenService:Create(mainPanel, TweenInfo.new(dur * 0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {BackgroundTransparency = panelTransparencyValue}):Play()
 			TweenService:Create(panelStroke, TweenInfo.new(dur * 0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Transparency = 0.45, Thickness = 1}):Play()
 			task.wait(dur)
 		end
@@ -3426,10 +3481,10 @@ function showMainPanel()
 		-----------------------------------------------------------------
 		do
 			local FAV_FILE = "AetherisHub_Favorites.json"
-			local YELLOW = Color3.fromRGB(165, 120, 255) -- roxo (nome mantido)
+			local YELLOW = Color3.fromRGB(130, 150, 255) -- roxo (nome mantido)
 			local DIM = Color3.fromRGB(125, 115, 175)
-			local EDGE = Color3.fromRGB(70, 58, 120)
-			local GLASS = Color3.fromRGB(150, 120, 255)
+			local EDGE = Color3.fromRGB(55, 65, 125)
+			local GLASS = Color3.fromRGB(255, 255, 255)
 
 			AetherisFav = {entries = {}, byKey = {}, saved = {}, order = 0, viewOpen = false}
 			local F = AetherisFav
@@ -3462,8 +3517,8 @@ function showMainPanel()
 			favBtn.Name = "FavoritesButton"
 			favBtn.Size = UDim2.new(0, 22, 0, 22)
 			favBtn.Position = UDim2.new(1, -262, 0, 11)
-			favBtn.BackgroundColor3 = GLASS
-			favBtn.BackgroundTransparency = 0.8
+			favBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			favBtn.BackgroundTransparency = 0.78
 			favBtn.BorderSizePixel = 0
 			favBtn.AutoButtonColor = false
 			favBtn.Text = ""
@@ -3476,9 +3531,14 @@ function showMainPanel()
 			favStroke.Transparency = 0.55
 			favStroke.Thickness = 1
 			favStroke.Parent = favBtn
+			local favStrokeG = Instance.new("UIGradient")
+			favStrokeG.Rotation = 45
+			favStrokeG.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(70, 150, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 80, 255))})
+			favStrokeG.Parent = favStroke
 			local favShine = Instance.new("UIGradient")
-			favShine.Rotation = 90
-			favShine.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 0.6)})
+			favShine.Rotation = 45
+			favShine.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(70, 150, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 80, 255))})
+			favShine.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 0.35)})
 			favShine.Parent = favBtn
 			local favStar = Instance.new("TextLabel")
 			favStar.Size = UDim2.new(1, 0, 1, 0)
@@ -3531,7 +3591,7 @@ function showMainPanel()
 				hoverToken = hoverToken + 1
 				local my = hoverToken
 				local lit = on or F.viewOpen
-				TweenService:Create(favStar, TweenInfo.new(0.15), {TextColor3 = lit and Color3.fromRGB(205, 175, 255) or YELLOW}):Play()
+				TweenService:Create(favStar, TweenInfo.new(0.15), {TextColor3 = lit and Color3.fromRGB(215, 225, 255) or YELLOW}):Play()
 				TweenService:Create(favStroke, TweenInfo.new(0.15), {Transparency = lit and 0.1 or 0.55}):Play()
 				TweenService:Create(favBtn, TweenInfo.new(0.15), {BackgroundTransparency = lit and 0.6 or 0.8}):Play()
 				TweenService:Create(favScale, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = on and 1.3 or 1}):Play()
@@ -3587,7 +3647,7 @@ function showMainPanel()
 			favHeader.Name = "FavoritesHeader"
 			favHeader.Size = UDim2.new(1, -4, 0, 40)
 			favHeader.BackgroundColor3 = GLASS
-			favHeader.BackgroundTransparency = 0.86
+			favHeader.BackgroundTransparency = 0.8
 			favHeader.BorderSizePixel = 0
 			favHeader.LayoutOrder = -3
 			favHeader.Parent = favPage
@@ -3596,12 +3656,16 @@ function showMainPanel()
 			fhc.Parent = favHeader
 			local fhs = Instance.new("UIStroke")
 			fhs.Color = YELLOW
-			fhs.Transparency = 0.6
+			fhs.Transparency = 0.35
 			fhs.Thickness = 1
 			fhs.Parent = favHeader
+			local fhsg = Instance.new("UIGradient")
+			fhsg.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(70, 150, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 80, 255))})
+			fhsg.Parent = fhs
 			local fhg = Instance.new("UIGradient")
-			fhg.Rotation = 90
-			fhg.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 0.55)})
+			fhg.Rotation = 20
+			fhg.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(70, 150, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 80, 255))})
+			fhg.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 0.1)})
 			fhg.Parent = favHeader
 
 			local favTitle = Instance.new("TextLabel")
@@ -3610,7 +3674,7 @@ function showMainPanel()
 			favTitle.BackgroundTransparency = 1
 			favTitle.Font = Enum.Font.GothamBold
 			favTitle.Text = "★ Favoritos"
-			favTitle.TextColor3 = Color3.fromRGB(205, 175, 255)
+			favTitle.TextColor3 = Color3.fromRGB(175, 190, 255)
 			favTitle.TextSize = 13
 			favTitle.TextXAlignment = Enum.TextXAlignment.Left
 			favTitle.Parent = favHeader
@@ -3662,7 +3726,7 @@ function showMainPanel()
 			hint.Name = "FavoritesEmpty"
 			hint.Size = UDim2.new(1, -4, 0, 120)
 			hint.BackgroundColor3 = GLASS
-			hint.BackgroundTransparency = 0.92
+			hint.BackgroundTransparency = 0.9
 			hint.BorderSizePixel = 0
 			hint.LayoutOrder = -2
 			hint.Parent = favPage
@@ -3671,9 +3735,17 @@ function showMainPanel()
 			hc.Parent = hint
 			local hs = Instance.new("UIStroke")
 			hs.Color = YELLOW
-			hs.Transparency = 0.75
+			hs.Transparency = 0.5
 			hs.Thickness = 1
 			hs.Parent = hint
+			local hsg = Instance.new("UIGradient")
+			hsg.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(70, 150, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 80, 255))})
+			hsg.Parent = hs
+			local hgg = Instance.new("UIGradient")
+			hgg.Rotation = 90
+			hgg.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(70, 150, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 80, 255))})
+			hgg.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.2), NumberSequenceKeypoint.new(1, 0.7)})
+			hgg.Parent = hint
 			local hStar = Instance.new("TextLabel")
 			hStar.Size = UDim2.new(1, 0, 0, 44)
 			hStar.Position = UDim2.new(0, 0, 0, 14)
@@ -3724,12 +3796,12 @@ function showMainPanel()
 					chip.Position = UDim2.new(1, -48, 0, 6)
 					chip.Size = UDim2.new(0, 0, 0, 14)
 					chip.AutomaticSize = Enum.AutomaticSize.X
-					chip.BackgroundColor3 = GLASS
-					chip.BackgroundTransparency = 0.78
+					chip.BackgroundColor3 = Color3.fromRGB(110, 110, 255)
+					chip.BackgroundTransparency = 0.72
 					chip.BorderSizePixel = 0
 					chip.Font = Enum.Font.GothamMedium
 					chip.TextSize = 8
-					chip.TextColor3 = Color3.fromRGB(205, 175, 255)
+					chip.TextColor3 = Color3.fromRGB(190, 200, 255)
 					chip.Parent = e.section
 					local cc = Instance.new("UICorner")
 					cc.CornerRadius = UDim.new(1, 0)
@@ -4254,7 +4326,7 @@ function showMainPanel()
 
 		-- ★ favoritar: ao lado da setinha de minimizar. Marcada = aparece na aba de favoritos do cabeçalho.
 		do
-			local STAR_ON, STAR_OFF = Color3.fromRGB(165, 120, 255), Color3.fromRGB(95, 105, 130)
+			local STAR_ON, STAR_OFF = Color3.fromRGB(130, 150, 255), Color3.fromRGB(95, 105, 130)
 			local starBtn = Instance.new("TextButton")
 			starBtn.Name = "SectionFavoriteStar"
 			starBtn.Size = UDim2.new(0, 18, 0, 20)
@@ -5442,9 +5514,46 @@ function showMainPanel()
 		-----------------------------------------------------------------
 		-- 2) FPS / Ping + gráfico
 		-----------------------------------------------------------------
+		-- Executores suportados
+		do
+			local ex = makeCard(5, 56)
+			ex.Name = "SupportedExecutors"
+			lbl(ex, "EXECUTORES SUPORTADOS", 8, UDim2.new(0, 14, 0, 9), UDim2.new(1, -28, 0, 10), GRAY, Enum.Font.GothamBold)
+			local x = 14
+			for _, name in ipairs({"Delta"}) do
+				local width = 18 + #name * 6 + 8
+				local chip = Instance.new("Frame")
+				chip.Position = UDim2.new(0, x, 0, 26)
+				chip.Size = UDim2.new(0, width, 0, 20)
+				chip.BackgroundColor3 = Color3.fromRGB(22, 30, 48)
+				chip.BorderSizePixel = 0
+				chip.Parent = ex
+				local cc = Instance.new("UICorner")
+				cc.CornerRadius = UDim.new(0, 6)
+				cc.Parent = chip
+				local cs = Instance.new("UIStroke")
+				cs.Color = Color3.fromRGB(70, 90, 190)
+				cs.Transparency = 0.3
+				cs.Thickness = 1
+				cs.Parent = chip
+				local dot = Instance.new("Frame")
+				dot.Size = UDim2.new(0, 6, 0, 6)
+				dot.Position = UDim2.new(0, 8, 0.5, -3)
+				dot.BackgroundColor3 = GOOD
+				dot.BorderSizePixel = 0
+				dot.Parent = chip
+				local dc = Instance.new("UICorner")
+				dc.CornerRadius = UDim.new(1, 0)
+				dc.Parent = dot
+				local t = lbl(chip, name, 10, UDim2.new(0, 20, 0, 0), UDim2.new(1, -24, 1, 0), Color3.fromRGB(220, 228, 250), Enum.Font.GothamBold)
+				AetherisBlueGradient(t, 0)
+				x = x + width + 6
+			end
+		end
+
 		-- Créditos
 		do
-			local credits = makeCard(5, 52)
+			local credits = makeCard(6, 52)
 			credits.Name = "Credits"
 			local logo = Instance.new("ImageLabel")
 			logo.Size = UDim2.new(0, 30, 0, 30)
