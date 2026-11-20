@@ -3611,13 +3611,24 @@ function showMainPanel()
 				table.sort(favs, function(a, b) return a.section.LayoutOrder < b.section.LayoutOrder end)
 				for i, e in ipairs(favs) do
 					local target = (i % 2 == 1) and leftCol or rightCol
-					if e.section.Parent ~= target then e.section.Parent = target end
+					if e.section.Parent ~= target then
+						if e.visibleBeforeFavorites == nil then e.visibleBeforeFavorites = e.section.Visible end
+						e.section.Parent = target
+					end
+					e.section.Visible = true
 				end
 				for _, e in ipairs(F.entries) do
-					if not e.fav and e.section.Parent ~= e.origin then e.section.Parent = e.origin end
+					if not e.fav and e.section.Parent ~= e.origin then
+						e.section.Parent = e.origin
+						if e.visibleBeforeFavorites ~= nil then
+							e.section.Visible = e.visibleBeforeFavorites
+							e.visibleBeforeFavorites = nil
+						end
+					end
 				end
 				hint.Visible = (#favs == 0)
 				refreshHolder()
+				task.defer(refreshHolder)
 			end
 			local function setTitle(open)
 				if open then
@@ -3628,9 +3639,12 @@ function showMainPanel()
 			end
 			function F.openView()
 				F.viewOpen = true
+				overlay.Visible = true
 				layoutView()
 				overlay.CanvasPosition = Vector2.new(0, 0)
-				overlay.Visible = true
+				task.defer(function()
+					if F.viewOpen then refreshHolder() end
+				end)
 				setTitle(true)
 				starHover(false)
 			end
@@ -3639,6 +3653,10 @@ function showMainPanel()
 				F.viewOpen = false
 				for _, e in ipairs(F.entries) do
 					if e.section.Parent ~= e.origin then e.section.Parent = e.origin end
+					if e.visibleBeforeFavorites ~= nil then
+						e.section.Visible = e.visibleBeforeFavorites
+						e.visibleBeforeFavorites = nil
+					end
 				end
 				overlay.Visible = false
 				setTitle(false)
@@ -4079,6 +4097,7 @@ function showMainPanel()
 			starBtn.TextSize = 12
 			starBtn.TextColor3 = STAR_OFF
 			starBtn.Parent = section
+			starBtn.ZIndex = sHeaderBtn.ZIndex + 1
 			local isFav, hovering = false, false
 			local function paint()
 				TweenService:Create(starBtn, TweenInfo.new(0.15), {TextColor3 = (isFav or hovering) and STAR_ON or STAR_OFF}):Play()
@@ -4131,7 +4150,7 @@ function showMainPanel()
 					TweenService:Create(starBtn, TweenInfo.new(0.15), {TextSize = 12}):Play()
 				end
 			end)
-			starBtn.MouseButton1Click:Connect(function()
+			starBtn.Activated:Connect(function()
 				if entry and AetherisFav then AetherisFav.toggle(entry) end
 			end)
 		end
