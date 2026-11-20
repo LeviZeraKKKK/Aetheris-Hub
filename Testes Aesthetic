@@ -3713,12 +3713,28 @@ function showMainPanel()
 				for i, e in ipairs(favs) do
 					local target = (i % 2 == 1) and leftCol or rightCol
 					if e.section.Parent ~= target then e.section.Parent = target end
+					e.section.Visible = true
+					-- garante altura: seção de página nunca visitada pode ter ficado com altura 0
+					if e.section.Size.Y.Offset < 30 then
+						for _, c in ipairs(e.section:GetChildren()) do
+							local lay = c:IsA("Frame") and c:FindFirstChildOfClass("UIListLayout")
+							if lay then
+								e.section.Size = UDim2.new(e.section.Size.X.Scale, e.section.Size.X.Offset, 0, AetherisLayoutHeight(lay) + 34)
+								break
+							end
+						end
+					end
 				end
 				for _, e in ipairs(F.entries) do
 					if not e.fav and e.section.Parent ~= e.origin then e.section.Parent = e.origin end
 				end
 				hint.Visible = (#favs == 0)
 				clearBtn.Visible = (#favs > 0)
+				-- diagnóstico (F9): mostra o que a aba de favoritos recebeu
+				print("[Aetheris Fav] favoritos:", #favs, "| overlay visível:", overlay.Visible, "| overlay tam:", tostring(overlay.AbsoluteSize))
+				for _, e in ipairs(favs) do
+					print("  -", e.key, "| pai:", e.section.Parent and e.section.Parent.Name or "nil", "| altura:", e.section.Size.Y.Offset, "| abs:", tostring(e.section.AbsoluteSize))
+				end
 				refreshHolder()
 			end
 			local function setTitle(open)
