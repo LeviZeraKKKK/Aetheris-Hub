@@ -3676,9 +3676,28 @@ function showMainPanel()
 			})
 			favDivGrad.Parent = favDivider
 
+			-- soma direta das alturas das seções (não depende do layout já ter sido calculado)
+			local function colHeight(col, layout)
+				local h = AetherisLayoutHeight(layout)
+				if h <= 0 then
+					local total, count = 0, 0
+					for _, c in ipairs(col:GetChildren()) do
+						if c:IsA("GuiObject") then
+							total = total + c.Size.Y.Offset
+							count = count + 1
+						end
+					end
+					h = total + 6 * math.max(count - 1, 0)
+				end
+				return h
+			end
 			local function refreshHolder()
-				local h = math.max(AetherisLayoutHeight(leftLayout), AetherisLayoutHeight(rightLayout))
+				local hL, hR = colHeight(leftCol, leftLayout), colHeight(rightCol, rightLayout)
+				local h = math.max(hL, hR)
+				leftCol.Size = UDim2.new(0.5, -7, 0, hL)
+				rightCol.Size = UDim2.new(0.5, -7, 0, hR)
 				holder.Size = UDim2.new(1, -4, 0, h)
+				favDivider.Size = UDim2.new(0, 1, 1, -4)
 				overlay.CanvasSize = UDim2.new(0, 0, 0, 26 + h + 10)
 			end
 			leftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(refreshHolder)
@@ -3712,7 +3731,11 @@ function showMainPanel()
 			end
 			function F.openView()
 				F.viewOpen = true
+				overlay.Visible = true -- visível antes de organizar, para o layout calcular as alturas
 				layoutView()
+				task.defer(refreshHolder)
+				task.delay(0.1, refreshHolder)
+				task.delay(0.4, refreshHolder)
 				overlay.CanvasPosition = Vector2.new(0, 0)
 				overlay.Position = UDim2.new(0, 4, 0, 16)
 				overlay.Visible = true
