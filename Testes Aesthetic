@@ -145,6 +145,7 @@ do
 		{"indisponível", "unavailable"}, {"não encontrado", "not found"}, {" de ", " of "},
 		{"Velocidade máx", "Max speed"}, {"Aceleração (por frame)", "Acceleration (per frame)"}, {"Altura sobre a água", "Height above water"},
 		{"Acelerar Barco", "Boost Boat"}, {"Modificar Barco", "Ship Modifier"}, {"Notificações", "Notifications"}, {"Notificação de teste", "Test notification"}, {"Tempo da notificação", "Notification time"}, {"Painel carregado com sucesso", "Panel loaded successfully"}, {"Posição", "Position"}, {"Embaixo", "Bottom"}, {"Em cima", "Top"}, {"Barco", "Boat"}, {"Entre em um barco", "Get in a boat"}, {"Desligado", "Off"},
+		{"★ Favoritos", "★ Favorites"}, {"Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar.", "No favorite sections yet. Tap the ★ next to a section name to favorite it."},
 		{"Utilidades", "Utilities"},
 		{"Remover Partículas", "Remove Particles"}, {"Remover Rastros e Feixes", "Remove Trails and Beams"}, {"Remover Luzes", "Remove Lights"},
 		{"Sem Sombras nas Peças", "No Part Shadows"}, {"Materiais Simples", "Simple Materials"}, {"Remover Reflexos das Peças", "Remove Part Reflections"},
@@ -3401,6 +3402,276 @@ function showMainPanel()
 			end)
 		end
 
+		-----------------------------------------------------------------
+		-- FAVORITOS: a ★ ao lado da busca abre uma "aba" com as seções favoritadas.
+		-- Para favoritar, use a ★ no cabeçalho de cada seção (ao lado da setinha de minimizar).
+		-----------------------------------------------------------------
+		do
+			local FAV_FILE = "AetherisHub_Favorites.json"
+			local YELLOW = Color3.fromRGB(255, 205, 60)
+			local DIM = Color3.fromRGB(130, 140, 165)
+			local EDGE = Color3.fromRGB(38, 48, 68)
+
+			AetherisFav = {entries = {}, byKey = {}, saved = {}, order = 0, viewOpen = false}
+			local F = AetherisFav
+
+			-- favoritos salvos de outras vezes
+			pcall(function()
+				if not readfile then return end
+				local ok, content = pcall(readfile, FAV_FILE)
+				if ok and type(content) == "string" and content ~= "" then
+					local data = HttpService:JSONDecode(content)
+					if type(data) == "table" then
+						for _, k in ipairs(data) do F.saved[k] = true end
+					end
+				end
+			end)
+			local function saveFavorites()
+				pcall(function()
+					if not writefile then return end
+					local list = {}
+					for _, e in ipairs(F.entries) do
+						if e.fav then table.insert(list, e.key) end
+					end
+					table.sort(list)
+					writefile(FAV_FILE, HttpService:JSONEncode(list))
+				end)
+			end
+
+			-- ===== botão ★ do cabeçalho (quadradinho, cantos discretos) =====
+			local favBtn = Instance.new("TextButton")
+			favBtn.Name = "FavoritesButton"
+			favBtn.Size = UDim2.new(0, 22, 0, 22)
+			favBtn.Position = UDim2.new(1, -262, 0, 11)
+			favBtn.BackgroundColor3 = Color3.fromRGB(17, 23, 36)
+			favBtn.BorderSizePixel = 0
+			favBtn.AutoButtonColor = false
+			favBtn.Text = ""
+			favBtn.Parent = body
+			local favCorner = Instance.new("UICorner")
+			favCorner.CornerRadius = UDim.new(0, 6)
+			favCorner.Parent = favBtn
+			local favStroke = Instance.new("UIStroke")
+			favStroke.Color = EDGE
+			favStroke.Thickness = 1
+			favStroke.Parent = favBtn
+			local favStar = Instance.new("TextLabel")
+			favStar.Size = UDim2.new(1, 0, 1, 0)
+			favStar.BackgroundTransparency = 1
+			favStar.Font = Enum.Font.GothamBold
+			favStar.Text = "★"
+			favStar.TextSize = 12
+			favStar.TextColor3 = DIM
+			favStar.Active = false
+			favStar.Parent = favBtn
+			local favScale = Instance.new("UIScale")
+			favScale.Parent = favStar
+
+			local hoverToken = 0
+			local function starHover(on)
+				hoverToken = hoverToken + 1
+				local my = hoverToken
+				local lit = on or F.viewOpen
+				TweenService:Create(favStar, TweenInfo.new(0.15), {TextColor3 = lit and YELLOW or DIM}):Play()
+				TweenService:Create(favStroke, TweenInfo.new(0.15), {Color = lit and YELLOW or EDGE}):Play()
+				TweenService:Create(favScale, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = on and 1.3 or 1}):Play()
+				if on then
+					-- balançadinha da estrela
+					task.spawn(function()
+						for _, rot in ipairs({16, -12, 6, 0}) do
+							if hoverToken ~= my then return end
+							TweenService:Create(favStar, TweenInfo.new(0.09, Enum.EasingStyle.Sine), {Rotation = rot}):Play()
+							task.wait(0.09)
+						end
+					end)
+				else
+					TweenService:Create(favStar, TweenInfo.new(0.12), {Rotation = 0}):Play()
+				end
+			end
+			favBtn.MouseEnter:Connect(function() starHover(true) end)
+			favBtn.MouseLeave:Connect(function() starHover(false) end)
+			favBtn.InputBegan:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.Touch then starHover(true) end
+			end)
+			favBtn.InputEnded:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.Touch then starHover(false) end
+			end)
+
+			local function burst()
+				local ring = Instance.new("Frame")
+				ring.AnchorPoint = Vector2.new(0.5, 0.5)
+				ring.Position = UDim2.new(0.5, 0, 0.5, 0)
+				ring.Size = UDim2.new(0, 8, 0, 8)
+				ring.BackgroundTransparency = 1
+				ring.Active = false
+				ring.ZIndex = 5
+				ring.Parent = favBtn
+				local rc = Instance.new("UICorner")
+				rc.CornerRadius = UDim.new(1, 0)
+				rc.Parent = ring
+				local rs = Instance.new("UIStroke")
+				rs.Color = YELLOW
+				rs.Thickness = 1.5
+				rs.Parent = ring
+				TweenService:Create(ring, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, 34, 0, 34)}):Play()
+				TweenService:Create(rs, TweenInfo.new(0.4), {Transparency = 1}):Play()
+				task.delay(0.42, function() ring:Destroy() end)
+			end
+
+			-- ===== a "aba" de favoritos (cobre a página atual) =====
+			local overlay = Instance.new("ScrollingFrame")
+			overlay.Name = "FavoritesView"
+			overlay.Size = UDim2.new(1, -8, 1, -8)
+			overlay.Position = UDim2.new(0, 4, 0, 4)
+			overlay.BackgroundColor3 = Color3.fromRGB(12, 16, 26)
+			overlay.BackgroundTransparency = 0
+			overlay.BorderSizePixel = 0
+			overlay.ScrollBarThickness = 2
+			overlay.ScrollBarImageColor3 = Color3.fromRGB(70, 80, 105)
+			overlay.CanvasSize = UDim2.new(0, 0, 0, 0)
+			overlay.Visible = false
+			overlay.ZIndex = 150
+			overlay.Parent = contentContainer
+
+			local favTitle = Instance.new("TextLabel")
+			favTitle.Size = UDim2.new(1, -12, 0, 18)
+			favTitle.Position = UDim2.new(0, 6, 0, 2)
+			favTitle.BackgroundTransparency = 1
+			favTitle.Font = Enum.Font.GothamBold
+			favTitle.Text = "★ Favoritos"
+			favTitle.TextColor3 = YELLOW
+			favTitle.TextSize = 12
+			favTitle.TextXAlignment = Enum.TextXAlignment.Left
+			favTitle.Parent = overlay
+
+			local hint = Instance.new("TextLabel")
+			hint.Size = UDim2.new(1, -12, 0, 40)
+			hint.Position = UDim2.new(0, 6, 0, 30)
+			hint.BackgroundTransparency = 1
+			hint.Font = Enum.Font.GothamMedium
+			hint.Text = "Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar."
+			hint.TextColor3 = DIM
+			hint.TextSize = 10
+			hint.TextWrapped = true
+			hint.TextXAlignment = Enum.TextXAlignment.Left
+			hint.TextYAlignment = Enum.TextYAlignment.Top
+			hint.Parent = overlay
+
+			local holder = Instance.new("Frame")
+			holder.Position = UDim2.new(0, 0, 0, 26)
+			holder.Size = UDim2.new(1, -4, 0, 0)
+			holder.BackgroundTransparency = 1
+			holder.BorderSizePixel = 0
+			holder.Parent = overlay
+			local function makeCol(x)
+				local col = Instance.new("Frame")
+				col.Size = UDim2.new(0.5, -7, 1, 0)
+				col.Position = UDim2.new(x, x == 0 and 0 or 7, 0, 0)
+				col.BackgroundTransparency = 1
+				col.BorderSizePixel = 0
+				col.Parent = holder
+				local cl = Instance.new("UIListLayout")
+				cl.SortOrder = Enum.SortOrder.LayoutOrder
+				cl.Padding = UDim.new(0, 6)
+				cl.Parent = col
+				return col, cl
+			end
+			local leftCol, leftLayout = makeCol(0)
+			local rightCol, rightLayout = makeCol(0.5)
+			local favDivider = Instance.new("Frame")
+			favDivider.AnchorPoint = Vector2.new(0.5, 0)
+			favDivider.Position = UDim2.new(0.5, 0, 0, 2)
+			favDivider.Size = UDim2.new(0, 1, 1, -4)
+			favDivider.BackgroundColor3 = Color3.fromRGB(58, 70, 100)
+			favDivider.BorderSizePixel = 0
+			favDivider.Active = false
+			favDivider.Parent = holder
+			local favDivGrad = Instance.new("UIGradient")
+			favDivGrad.Rotation = 90
+			favDivGrad.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.08, 0.3),
+				NumberSequenceKeypoint.new(0.92, 0.3), NumberSequenceKeypoint.new(1, 1)
+			})
+			favDivGrad.Parent = favDivider
+
+			local function refreshHolder()
+				local h = math.max(AetherisLayoutHeight(leftLayout), AetherisLayoutHeight(rightLayout))
+				holder.Size = UDim2.new(1, -4, 0, h)
+				overlay.CanvasSize = UDim2.new(0, 0, 0, 26 + h + 10)
+			end
+			leftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(refreshHolder)
+			rightLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(refreshHolder)
+
+			-- move as seções favoritas para a aba (e devolve as desmarcadas ao lugar de origem)
+			local function layoutView()
+				local favs = {}
+				for _, e in ipairs(F.entries) do
+					if e.fav then table.insert(favs, e) end
+				end
+				table.sort(favs, function(a, b) return a.section.LayoutOrder < b.section.LayoutOrder end)
+				for i, e in ipairs(favs) do
+					local target = (i % 2 == 1) and leftCol or rightCol
+					if e.section.Parent ~= target then e.section.Parent = target end
+				end
+				for _, e in ipairs(F.entries) do
+					if not e.fav and e.section.Parent ~= e.origin then e.section.Parent = e.origin end
+				end
+				hint.Visible = (#favs == 0)
+				refreshHolder()
+			end
+			local function setTitle(open)
+				if open then
+					pageTitle.Text = (AetherisI18n and AetherisI18n.lang == "en") and "Favorites" or "Favoritos"
+				else
+					pageTitle.Text = tabTextFor(activeTitleData)
+				end
+			end
+			function F.openView()
+				F.viewOpen = true
+				layoutView()
+				overlay.CanvasPosition = Vector2.new(0, 0)
+				overlay.Visible = true
+				setTitle(true)
+				starHover(false)
+			end
+			function F.closeView()
+				if not F.viewOpen then return end
+				F.viewOpen = false
+				for _, e in ipairs(F.entries) do
+					if e.section.Parent ~= e.origin then e.section.Parent = e.origin end
+				end
+				overlay.Visible = false
+				setTitle(false)
+				starHover(false)
+			end
+			favBtn.MouseButton1Click:Connect(function()
+				burst()
+				if F.viewOpen then F.closeView() else F.openView() end
+			end)
+			-- clicar em qualquer aba da barra lateral fecha a aba de favoritos
+			for _, data in ipairs(tabButtonsList) do
+				data.Button.MouseButton1Click:Connect(function() F.closeView() end)
+			end
+
+			-- ===== cadastro das seções (chamado por createSection) =====
+			function F.register(key, section, origin, applyVisual, legacyKey)
+				F.order = F.order + 1
+				section.LayoutOrder = F.order
+				local wasSaved = F.saved[key] == true or (legacyKey and F.saved[legacyKey] == true)
+				local e = {key = key, section = section, origin = origin, fav = wasSaved, apply = applyVisual}
+				table.insert(F.entries, e)
+				F.byKey[key] = e
+				applyVisual(e.fav, false)
+				return e
+			end
+			function F.toggle(e)
+				e.fav = not e.fav
+				e.apply(e.fav, true)
+				saveFavorites()
+				if F.viewOpen then layoutView() end
+			end
+		end
+
 		-- Cartão do usuário no rodapé da barra lateral.
 		local userCard = Instance.new("Frame")
 		userCard.Name = "UserCard"
@@ -3705,7 +3976,7 @@ function showMainPanel()
 		table.insert(themeImages, iconLabel)
 
 		local sTitle = Instance.new("TextLabel")
-		sTitle.Size = UDim2.new(1, -36, 0, 20)
+		sTitle.Size = UDim2.new(1, -62, 0, 20)
 		sTitle.Position = UDim2.new(0, 28, 0, 3)
 		sTitle.BackgroundTransparency = 1
 		sTitle.Font = currentGlobalFont
@@ -3793,6 +4064,77 @@ function showMainPanel()
 		sHeaderBtn.MouseLeave:Connect(function()
 			TweenService:Create(sTitle, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(220, 220, 220)}):Play()
 		end)
+
+		-- ★ favoritar: ao lado da setinha de minimizar. Marcada = aparece na aba de favoritos do cabeçalho.
+		do
+			local STAR_ON, STAR_OFF = Color3.fromRGB(255, 205, 60), Color3.fromRGB(95, 105, 130)
+			local starBtn = Instance.new("TextButton")
+			starBtn.Name = "SectionFavoriteStar"
+			starBtn.Size = UDim2.new(0, 18, 0, 20)
+			starBtn.Position = UDim2.new(1, -44, 0, 3)
+			starBtn.BackgroundTransparency = 1
+			starBtn.AutoButtonColor = false
+			starBtn.Font = Enum.Font.GothamBold
+			starBtn.Text = "★"
+			starBtn.TextSize = 12
+			starBtn.TextColor3 = STAR_OFF
+			starBtn.Parent = section
+			local isFav, hovering = false, false
+			local function paint()
+				TweenService:Create(starBtn, TweenInfo.new(0.15), {TextColor3 = (isFav or hovering) and STAR_ON or STAR_OFF}):Play()
+			end
+			local entry
+			if AetherisFav then
+				local pageName = "?"
+				if pageTarget then
+					pageName = pageTarget:GetAttribute("AetherisPage") or pageTarget.Name or "?"
+				end
+				local sectionTitle = tostring(title)
+				local favoriteKey = tostring(pageName) .. "|" .. sectionTitle
+				local legacyKey = (pageTarget and pageTarget.Name or "?") .. "|" .. sectionTitle
+				entry = AetherisFav.register(favoriteKey, section, parentFrame, function(fav, animate)
+					isFav = fav
+					paint()
+					if animate and fav then
+						-- efeitinho ao favoritar: a estrela cresce e dá uma volta
+						task.spawn(function()
+							TweenService:Create(starBtn, TweenInfo.new(0.16, Enum.EasingStyle.Quad), {TextSize = 19, Rotation = 180}):Play()
+							task.wait(0.16)
+							TweenService:Create(starBtn, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {TextSize = 12, Rotation = 360}):Play()
+							task.wait(0.22)
+							starBtn.Rotation = 0
+						end)
+					end
+				end, legacyKey)
+			end
+			starBtn.MouseEnter:Connect(function()
+				hovering = true
+				paint()
+				TweenService:Create(starBtn, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {TextSize = 15}):Play()
+			end)
+			starBtn.MouseLeave:Connect(function()
+				hovering = false
+				paint()
+				TweenService:Create(starBtn, TweenInfo.new(0.15), {TextSize = 12}):Play()
+			end)
+			starBtn.InputBegan:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.Touch then
+					hovering = true
+					paint()
+					TweenService:Create(starBtn, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {TextSize = 15}):Play()
+				end
+			end)
+			starBtn.InputEnded:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.Touch then
+					hovering = false
+					paint()
+					TweenService:Create(starBtn, TweenInfo.new(0.15), {TextSize = 12}):Play()
+				end
+			end)
+			starBtn.MouseButton1Click:Connect(function()
+				if entry and AetherisFav then AetherisFav.toggle(entry) end
+			end)
+		end
 
 		-- Rótulos nunca passam por baixo dos controles: nomes longos quebram em 2 linhas pequenas
 		-- (linhas de 26px) ou são cortados com "…", sem aumentar a altura das funções.
@@ -6967,26 +7309,22 @@ function showMainPanel()
 		addSlider(secBoat, "Aceleração (por frame)", 5, 100, 20, function(v) AetherisBoat.setAccel(v) end, 0, "")
 		addSlider(secBoat, "Altura sobre a água", 0, 150, 0, function(v) AetherisBoat.setHeight(v) end, 0, " studs")
 
-		local infoRow = Instance.new("Frame")
-		infoRow.Size = UDim2.new(1, 0, 0, 40)
-		infoRow.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
-		infoRow.BackgroundTransparency = 0.3
-		infoRow.BorderSizePixel = 0
-		infoRow.Parent = secBoat
-		local infoCorner = Instance.new("UICorner")
-		infoCorner.CornerRadius = UDim.new(0, 6)
-		infoCorner.Parent = infoRow
+		-- status do barco: uma linha minúscula
 		local infoLabel = Instance.new("TextLabel")
-		infoLabel.Size = UDim2.new(1, -16, 1, 0)
-		infoLabel.Position = UDim2.new(0, 8, 0, 0)
+		infoLabel.Size = UDim2.new(1, 0, 0, 12)
 		infoLabel.BackgroundTransparency = 1
 		infoLabel.Font = currentGlobalFont
 		infoLabel.Text = "💤 Desligado"
 		infoLabel.TextColor3 = Color3.fromRGB(150, 150, 180)
-		infoLabel.TextSize = 9
-		infoLabel.TextWrapped = true
+		infoLabel.TextSize = 8
+		infoLabel.TextWrapped = false
+		infoLabel.TextTruncate = Enum.TextTruncate.AtEnd
 		infoLabel.TextXAlignment = Enum.TextXAlignment.Left
-		infoLabel.Parent = infoRow
+		infoLabel.Parent = secBoat
+		local infoPad = Instance.new("UIPadding")
+		infoPad.PaddingLeft = UDim.new(0, 4)
+		infoPad.PaddingRight = UDim.new(0, 4)
+		infoPad.Parent = infoLabel
 
 		task.spawn(function()
 			while screenGui.Parent do
@@ -6996,7 +7334,7 @@ function showMainPanel()
 					infoLabel.Text = "💤 Desligado"
 					infoLabel.TextColor3 = Color3.fromRGB(150, 150, 180)
 				elseif st.boatName and st.attached then
-					infoLabel.Text = string.format("🚤 %s\n⚡ Boost: %.0f | Max: %.0f | Alt: %+d", st.boatName, st.speed, st.maxSpeed, st.height)
+					infoLabel.Text = string.format("🚤 %s · ⚡ %.0f / %.0f · Alt %+d", st.boatName, st.speed, st.maxSpeed, st.height)
 					infoLabel.TextColor3 = st.accelerating and Color3.fromRGB(100, 255, 150) or Color3.fromRGB(200, 200, 200)
 				else
 					infoLabel.Text = "🚤 Entre em um barco"
@@ -9104,12 +9442,11 @@ function showMainPanel()
 			return box
 		end
 
-		-- (sem caixa de level/quest: Q.updateLevelInfo fica inerte quando Q.levelLabel é nil)
-		-- (sem caixa de status: Q.updateStatus fica inerte quando Q.statusLabel é nil)
+		-- (os estados do farm são duas linhas minúsculas no topo da seção, criadas na interface)
 
 		function Q.updateStatus(txt, color)
 			if Q.statusLabel and Q.statusLabel.Parent then
-				Q.statusLabel.Text = txt
+				Q.statusLabel.Text = (tostring(txt):gsub("\n", " · "))
 				if color then Q.statusLabel.TextColor3 = color end
 			end
 		end
@@ -9250,12 +9587,11 @@ function showMainPanel()
 			if not Q.levelLabel or not Q.levelLabel.Parent then return end
 			local lvl = Q.getLevel()
 			local best = Q.pickBest()
-			local methodTag = Q.method == 1 and "🟢 Dir" or "🔵 Dlg"
 			local weaponTag = ({Any = "🎲", Melee = "🥊", Fruit = "🍎", Sword = "⚔️"})[Q.weapon] or "?"
 			if best then
-				Q.levelLabel.Text = string.format("👤 Lv %d | 🎯 %s (%d) | #%d\n%s %s", lvl, tostring(best.questName), best.levelReq, best.index, methodTag, weaponTag)
+				Q.levelLabel.Text = string.format("Lv %d · matar: %s · quest %s (Lv %d) · %s", lvl, tostring(best.taskType or "?"), tostring(best.questName), best.levelReq, weaponTag)
 			else
-				Q.levelLabel.Text = string.format("👤 Lv %d | ❌ Sem quest | %s %s", lvl, methodTag, weaponTag)
+				Q.levelLabel.Text = string.format("Lv %d · sem quest · %s", lvl, weaponTag)
 			end
 		end
 
@@ -10682,6 +11018,31 @@ function showMainPanel()
 			return Q
 		end)()
 
+		-- Estados bem pequenos (uma linha cada): level/alvo e o que o farm está fazendo
+		do
+			local function makeTinyInfo(text, color)
+				local l = Instance.new("TextLabel")
+				l.Size = UDim2.new(1, 0, 0, 12)
+				l.BackgroundTransparency = 1
+				l.Font = currentGlobalFont
+				l.TextSize = 8
+				l.TextColor3 = color
+				l.TextXAlignment = Enum.TextXAlignment.Left
+				l.TextTruncate = Enum.TextTruncate.AtEnd
+				l.TextWrapped = false
+				l.Text = text
+				l.Parent = secAFL
+				local pad = Instance.new("UIPadding")
+				pad.PaddingLeft = UDim.new(0, 4)
+				pad.PaddingRight = UDim.new(0, 4)
+				pad.Parent = l
+				return l
+			end
+			Q.levelLabel = makeTinyInfo("Lv --", Color3.fromRGB(150, 190, 230))
+			Q.statusLabel = makeTinyInfo("💤 Desligado", Color3.fromRGB(150, 150, 180))
+			pcall(Q.updateLevelInfo)
+		end
+
 		-- ===== CONFIGURAÇÕES NA INTERFACE =====
 		addToggle(secAFL, "Auto  Farm  Level", function(state)
 			if state then Q.start() else
@@ -10743,29 +11104,24 @@ function showMainPanel()
 
 			local secBoss = createSection(secFarm.Parent.Parent, "Auto  Kill  Boss", sectionIcons.FarmAutomation)
 
-			-- status do boss
-			local bossStatusRow = Instance.new("Frame")
-			bossStatusRow.Size = UDim2.new(1, 0, 0, 34)
-			bossStatusRow.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
-			bossStatusRow.BackgroundTransparency = 0.3
-			bossStatusRow.BorderSizePixel = 0
-			bossStatusRow.Parent = secBoss
-			local bossStatusCorner = Instance.new("UICorner")
-			bossStatusCorner.CornerRadius = UDim.new(0, 6)
-			bossStatusCorner.Parent = bossStatusRow
+			-- status do boss: uma linha minúscula
 			local bossStatus = Instance.new("TextLabel")
-			bossStatus.Size = UDim2.new(1, -16, 1, 0)
-			bossStatus.Position = UDim2.new(0, 8, 0, 0)
+			bossStatus.Size = UDim2.new(1, 0, 0, 12)
 			bossStatus.BackgroundTransparency = 1
 			bossStatus.Font = currentGlobalFont
 			bossStatus.Text = "💤 Desligado"
 			bossStatus.TextColor3 = Color3.fromRGB(150, 150, 180)
-			bossStatus.TextSize = 10
-			bossStatus.TextWrapped = true
+			bossStatus.TextSize = 8
+			bossStatus.TextWrapped = false
+			bossStatus.TextTruncate = Enum.TextTruncate.AtEnd
 			bossStatus.TextXAlignment = Enum.TextXAlignment.Left
-			bossStatus.Parent = bossStatusRow
+			bossStatus.Parent = secBoss
+			local bossStatusPad = Instance.new("UIPadding")
+			bossStatusPad.PaddingLeft = UDim.new(0, 4)
+			bossStatusPad.PaddingRight = UDim.new(0, 4)
+			bossStatusPad.Parent = bossStatus
 			BossLogic.setStatusHandler(function(text, color)
-				bossStatus.Text = text
+				bossStatus.Text = (tostring(text):gsub("\n", " · "))
 				bossStatus.TextColor3 = color or Color3.fromRGB(150, 150, 180)
 			end)
 
