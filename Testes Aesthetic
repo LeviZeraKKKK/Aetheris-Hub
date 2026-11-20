@@ -145,7 +145,7 @@ do
 		{"indisponível", "unavailable"}, {"não encontrado", "not found"}, {" de ", " of "},
 		{"Velocidade máx", "Max speed"}, {"Aceleração (por frame)", "Acceleration (per frame)"}, {"Altura sobre a água", "Height above water"},
 		{"Acelerar Barco", "Boost Boat"}, {"Modificar Barco", "Ship Modifier"}, {"Notificações", "Notifications"}, {"Notificação de teste", "Test notification"}, {"Tempo da notificação", "Notification time"}, {"Painel carregado com sucesso", "Panel loaded successfully"}, {"Posição", "Position"}, {"Embaixo", "Bottom"}, {"Em cima", "Top"}, {"Barco", "Boat"}, {"Entre em um barco", "Get in a boat"}, {"Desligado", "Off"},
-		{"★ Favoritos", "★ Favorites"}, {"Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar.", "No favorite sections yet. Tap the ★ next to a section name to favorite it."},
+		{"★ Favoritos", "★ Favorites"}, {"Voar até o botão", "Fly to button"}, {"Deslizar", "Slide"}, {"Mola (elástico)", "Spring (elastic)"}, {"Animação: ", "Animation: "}, {"Limpar tudo", "Clear all"}, {"Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar.", "No favorite sections yet. Tap the ★ next to a section name to favorite it."},
 		{"Utilidades", "Utilities"},
 		{"Remover Partículas", "Remove Particles"}, {"Remover Rastros e Feixes", "Remove Trails and Beams"}, {"Remover Luzes", "Remove Lights"},
 		{"Sem Sombras nas Peças", "No Part Shadows"}, {"Materiais Simples", "Simple Materials"}, {"Remover Reflexos das Peças", "Remove Part Reflections"},
@@ -2169,6 +2169,14 @@ function showMainPanel()
 	-- Modo "Barra superior": pílula pequena no topo da tela (arrastável) que substitui o botão flutuante.
 	-- Fica numa tabela global (AetherisMinimize) para não gastar variáveis locais.
 	AetherisMinimize = AetherisMinimize or {mode = "Barra"}
+	-- Tipos de animação de minimizar/maximizar (escolhidos em Config > Design)
+	AetherisMinimize.anim = AetherisMinimize.anim or "Voar"
+	AetherisMinimize.animCfg = {
+		Voar = {fly = true, slide = 0, scale = 0.04, minStyle = Enum.EasingStyle.Quart, maxStyle = Enum.EasingStyle.Back, minDur = 0.46, maxDur = 0.55},
+		Zoom = {fly = false, slide = 0, scale = 0.04, minStyle = Enum.EasingStyle.Quad, maxStyle = Enum.EasingStyle.Back, minDur = 0.3, maxDur = 0.4},
+		Deslizar = {fly = false, slide = 90, scale = 0.92, minStyle = Enum.EasingStyle.Sine, maxStyle = Enum.EasingStyle.Quint, minDur = 0.32, maxDur = 0.42},
+		Mola = {fly = false, slide = 0, scale = 0.04, minStyle = Enum.EasingStyle.Back, maxStyle = Enum.EasingStyle.Elastic, minDur = 0.34, maxDur = 0.75},
+	}
 	do
 		local M = AetherisMinimize
 		local BAR_W, BAR_H = 226, 36
@@ -2446,12 +2454,17 @@ function showMainPanel()
 			currentPanelSize = mainPanel.Size
 			savedPanelPosition = mainPanel.Position
 			local target = AetherisMinimize.center()
-			local dur = 0.46
+			local A = AetherisMinimize.animCfg[AetherisMinimize.anim] or AetherisMinimize.animCfg.Voar
+			local dur = A.minDur
 			local flyInfo = TweenInfo.new(dur, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut)
-			TweenService:Create(mainPanel, flyInfo, {
-				Position = UDim2.fromOffset(target.X, target.Y)
-			}):Play()
-			TweenService:Create(panelAnimScale, TweenInfo.new(dur, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Scale = 0.04}):Play()
+			local posTo = UDim2.fromOffset(target.X, target.Y)
+			if not A.fly then
+				posTo = UDim2.new(savedPanelPosition.X.Scale, savedPanelPosition.X.Offset, savedPanelPosition.Y.Scale, savedPanelPosition.Y.Offset + A.slide)
+			end
+			if A.fly or A.slide > 0 then
+				TweenService:Create(mainPanel, flyInfo, {Position = posTo}):Play()
+			end
+			TweenService:Create(panelAnimScale, TweenInfo.new(dur, A.minStyle, Enum.EasingDirection.In), {Scale = A.scale}):Play()
 			TweenService:Create(mainPanel, TweenInfo.new(dur * 0.9, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play()
 			TweenService:Create(panelStroke, TweenInfo.new(dur, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Transparency = 1}):Play()
 
@@ -2478,7 +2491,8 @@ function showMainPanel()
 			-- ===== MAXIMIZAR =====
 			local from = AetherisMinimize.center()
 			local target = savedPanelPosition or mainPanel.Position
-			local dur = 0.55
+			local A = AetherisMinimize.animCfg[AetherisMinimize.anim] or AetherisMinimize.animCfg.Voar
+			local dur = A.maxDur
 			-- o botão encolhe enquanto o painel já está nascendo dele
 			if AetherisMinimize.mode == "Barra" then
 				AetherisMinimize.hideBar()
@@ -2488,8 +2502,12 @@ function showMainPanel()
 			end
 			rippleAt(from, currentThemeColor)
 
-			panelAnimScale.Scale = 0.04
-			mainPanel.Position = UDim2.fromOffset(from.X, from.Y)
+			panelAnimScale.Scale = A.scale
+			if A.fly then
+				mainPanel.Position = UDim2.fromOffset(from.X, from.Y)
+			else
+				mainPanel.Position = UDim2.new(target.X.Scale, target.X.Offset, target.Y.Scale, target.Y.Offset + A.slide)
+			end
 			mainPanel.BackgroundTransparency = 1
 			panelStroke.Transparency = 1
 			panelStroke.Thickness = 4
@@ -2511,7 +2529,7 @@ function showMainPanel()
 			TweenService:Create(mainPanel, TweenInfo.new(dur, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
 				Position = target
 			}):Play()
-			TweenService:Create(panelAnimScale, TweenInfo.new(dur, Enum.EasingStyle.Back, Enum.EasingDirection.Out, 0, false, 0), {Scale = 1}):Play()
+			TweenService:Create(panelAnimScale, TweenInfo.new(dur, A.maxStyle, Enum.EasingDirection.Out, 0, false, 0), {Scale = 1}):Play()
 			TweenService:Create(mainPanel, TweenInfo.new(dur * 0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {BackgroundTransparency = math.min(panelTransparencyValue, 0.04)}):Play()
 			TweenService:Create(panelStroke, TweenInfo.new(dur * 0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Transparency = 0.45, Thickness = 1}):Play()
 			task.wait(dur)
@@ -3467,6 +3485,40 @@ function showMainPanel()
 			local favScale = Instance.new("UIScale")
 			favScale.Parent = favStar
 
+			-- bolinha minúscula com a quantidade de favoritos
+			local countBadge = Instance.new("TextLabel")
+			countBadge.Name = "FavCount"
+			countBadge.AnchorPoint = Vector2.new(0.5, 0.5)
+			countBadge.Position = UDim2.new(1, -1, 0, 1)
+			countBadge.Size = UDim2.new(0, 10, 0, 10)
+			countBadge.BackgroundColor3 = YELLOW
+			countBadge.BorderSizePixel = 0
+			countBadge.Font = Enum.Font.GothamBold
+			countBadge.TextSize = 6
+			countBadge.TextColor3 = Color3.fromRGB(20, 20, 28)
+			countBadge.Text = "0"
+			countBadge.Visible = false
+			countBadge.Active = false
+			countBadge.ZIndex = 6
+			countBadge.Parent = favBtn
+			local cbc = Instance.new("UICorner")
+			cbc.CornerRadius = UDim.new(1, 0)
+			cbc.Parent = countBadge
+			local function favCount()
+				local n = 0
+				for _, e in ipairs(F.entries) do if e.fav then n = n + 1 end end
+				return n
+			end
+			local function updateBadge(pop)
+				local n = favCount()
+				countBadge.Text = tostring(n)
+				countBadge.Visible = n > 0
+				if pop and n > 0 then
+					countBadge.Size = UDim2.new(0, 15, 0, 15)
+					TweenService:Create(countBadge, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 10, 0, 10)}):Play()
+				end
+			end
+
 			local hoverToken = 0
 			local function starHover(on)
 				hoverToken = hoverToken + 1
@@ -3557,6 +3609,36 @@ function showMainPanel()
 			hint.TextYAlignment = Enum.TextYAlignment.Top
 			hint.Parent = overlay
 
+			local clearBtn = Instance.new("TextButton")
+			clearBtn.Name = "ClearFavorites"
+			clearBtn.AnchorPoint = Vector2.new(1, 0)
+			clearBtn.Position = UDim2.new(1, -8, 0, 3)
+			clearBtn.Size = UDim2.new(0, 58, 0, 16)
+			clearBtn.BackgroundColor3 = Color3.fromRGB(17, 23, 36)
+			clearBtn.BorderSizePixel = 0
+			clearBtn.AutoButtonColor = false
+			clearBtn.Font = Enum.Font.GothamMedium
+			clearBtn.Text = "Limpar tudo"
+			clearBtn.TextSize = 8
+			clearBtn.TextColor3 = DIM
+			clearBtn.Visible = false
+			clearBtn.Parent = overlay
+			local clc = Instance.new("UICorner")
+			clc.CornerRadius = UDim.new(0, 5)
+			clc.Parent = clearBtn
+			local cls = Instance.new("UIStroke")
+			cls.Color = EDGE
+			cls.Thickness = 1
+			cls.Parent = clearBtn
+			clearBtn.MouseEnter:Connect(function()
+				TweenService:Create(clearBtn, TweenInfo.new(0.12), {TextColor3 = Color3.fromRGB(255, 120, 120)}):Play()
+				TweenService:Create(cls, TweenInfo.new(0.12), {Color = Color3.fromRGB(255, 120, 120)}):Play()
+			end)
+			clearBtn.MouseLeave:Connect(function()
+				TweenService:Create(clearBtn, TweenInfo.new(0.12), {TextColor3 = DIM}):Play()
+				TweenService:Create(cls, TweenInfo.new(0.12), {Color = EDGE}):Play()
+			end)
+
 			local holder = Instance.new("Frame")
 			holder.Position = UDim2.new(0, 0, 0, 26)
 			holder.Size = UDim2.new(1, -4, 0, 0)
@@ -3611,40 +3693,30 @@ function showMainPanel()
 				table.sort(favs, function(a, b) return a.section.LayoutOrder < b.section.LayoutOrder end)
 				for i, e in ipairs(favs) do
 					local target = (i % 2 == 1) and leftCol or rightCol
-					if e.section.Parent ~= target then
-						if e.visibleBeforeFavorites == nil then e.visibleBeforeFavorites = e.section.Visible end
-						e.section.Parent = target
-					end
-					e.section.Visible = true
+					if e.section.Parent ~= target then e.section.Parent = target end
 				end
 				for _, e in ipairs(F.entries) do
-					if not e.fav and e.section.Parent ~= e.origin then
-						e.section.Parent = e.origin
-						if e.visibleBeforeFavorites ~= nil then
-							e.section.Visible = e.visibleBeforeFavorites
-							e.visibleBeforeFavorites = nil
-						end
-					end
+					if not e.fav and e.section.Parent ~= e.origin then e.section.Parent = e.origin end
 				end
 				hint.Visible = (#favs == 0)
+				clearBtn.Visible = (#favs > 0)
 				refreshHolder()
-				task.defer(refreshHolder)
 			end
 			local function setTitle(open)
 				if open then
-					pageTitle.Text = (AetherisI18n and AetherisI18n.lang == "en") and "Favorites" or "Favoritos"
+					local n = favCount()
+					pageTitle.Text = ((AetherisI18n and AetherisI18n.lang == "en") and "Favorites" or "Favoritos") .. (n > 0 and (" (" .. n .. ")") or "")
 				else
 					pageTitle.Text = tabTextFor(activeTitleData)
 				end
 			end
 			function F.openView()
 				F.viewOpen = true
-				overlay.Visible = true
 				layoutView()
 				overlay.CanvasPosition = Vector2.new(0, 0)
-				task.defer(function()
-					if F.viewOpen then refreshHolder() end
-				end)
+				overlay.Position = UDim2.new(0, 4, 0, 16)
+				overlay.Visible = true
+				TweenService:Create(overlay, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0, 4, 0, 4)}):Play()
 				setTitle(true)
 				starHover(false)
 			end
@@ -3653,10 +3725,6 @@ function showMainPanel()
 				F.viewOpen = false
 				for _, e in ipairs(F.entries) do
 					if e.section.Parent ~= e.origin then e.section.Parent = e.origin end
-					if e.visibleBeforeFavorites ~= nil then
-						e.section.Visible = e.visibleBeforeFavorites
-						e.visibleBeforeFavorites = nil
-					end
 				end
 				overlay.Visible = false
 				setTitle(false)
@@ -3672,22 +3740,36 @@ function showMainPanel()
 			end
 
 			-- ===== cadastro das seções (chamado por createSection) =====
-			function F.register(key, section, origin, applyVisual, legacyKey)
+			function F.register(key, section, origin, applyVisual)
 				F.order = F.order + 1
 				section.LayoutOrder = F.order
-				local wasSaved = F.saved[key] == true or (legacyKey and F.saved[legacyKey] == true)
-				local e = {key = key, section = section, origin = origin, fav = wasSaved, apply = applyVisual}
+				local e = {key = key, section = section, origin = origin, fav = F.saved[key] == true, apply = applyVisual}
 				table.insert(F.entries, e)
 				F.byKey[key] = e
 				applyVisual(e.fav, false)
+				updateBadge(false)
 				return e
 			end
 			function F.toggle(e)
 				e.fav = not e.fav
 				e.apply(e.fav, true)
 				saveFavorites()
-				if F.viewOpen then layoutView() end
+				updateBadge(true)
+				if F.viewOpen then layoutView(); setTitle(true) end
+				if AetherisNotify then
+					local en = AetherisI18n and AetherisI18n.lang == "en"
+					AetherisNotify(e.fav and (en and "★ Added to favorites" or "★ Adicionada aos favoritos") or (en and "☆ Removed from favorites" or "☆ Removida dos favoritos"), YELLOW)
+				end
 			end
+			clearBtn.MouseButton1Click:Connect(function()
+				for _, e in ipairs(F.entries) do
+					if e.fav then e.fav = false; e.apply(false, true) end
+				end
+				saveFavorites()
+				updateBadge(false)
+				layoutView()
+				setTitle(true)
+			end)
 		end
 
 		-- Cartão do usuário no rodapé da barra lateral.
@@ -4097,21 +4179,13 @@ function showMainPanel()
 			starBtn.TextSize = 12
 			starBtn.TextColor3 = STAR_OFF
 			starBtn.Parent = section
-			starBtn.ZIndex = sHeaderBtn.ZIndex + 1
 			local isFav, hovering = false, false
 			local function paint()
 				TweenService:Create(starBtn, TweenInfo.new(0.15), {TextColor3 = (isFav or hovering) and STAR_ON or STAR_OFF}):Play()
 			end
 			local entry
 			if AetherisFav then
-				local pageName = "?"
-				if pageTarget then
-					pageName = pageTarget:GetAttribute("AetherisPage") or pageTarget.Name or "?"
-				end
-				local sectionTitle = tostring(title)
-				local favoriteKey = tostring(pageName) .. "|" .. sectionTitle
-				local legacyKey = (pageTarget and pageTarget.Name or "?") .. "|" .. sectionTitle
-				entry = AetherisFav.register(favoriteKey, section, parentFrame, function(fav, animate)
+				entry = AetherisFav.register((pageTarget and pageTarget.Name or "?") .. "|" .. tostring(title), section, parentFrame, function(fav, animate)
 					isFav = fav
 					paint()
 					if animate and fav then
@@ -4124,7 +4198,7 @@ function showMainPanel()
 							starBtn.Rotation = 0
 						end)
 					end
-				end, legacyKey)
+				end)
 			end
 			starBtn.MouseEnter:Connect(function()
 				hovering = true
@@ -4136,21 +4210,7 @@ function showMainPanel()
 				paint()
 				TweenService:Create(starBtn, TweenInfo.new(0.15), {TextSize = 12}):Play()
 			end)
-			starBtn.InputBegan:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.Touch then
-					hovering = true
-					paint()
-					TweenService:Create(starBtn, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {TextSize = 15}):Play()
-				end
-			end)
-			starBtn.InputEnded:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.Touch then
-					hovering = false
-					paint()
-					TweenService:Create(starBtn, TweenInfo.new(0.15), {TextSize = 12}):Play()
-				end
-			end)
-			starBtn.Activated:Connect(function()
+			starBtn.MouseButton1Click:Connect(function()
 				if entry and AetherisFav then AetherisFav.toggle(entry) end
 			end)
 		end
@@ -12156,6 +12216,28 @@ function showMainPanel()
 			if minLabels[v] then
 				AetherisMinimize.mode = v
 				minDD.setValue(v, minLabels[v])
+			end
+		end)
+
+		-- Tipo de animação de minimizar/maximizar (4 opções)
+		local animLabels = {Voar = "Voar até o botão", Zoom = "Zoom", Deslizar = "Deslizar", Mola = "Mola (elástico)"}
+		local animOrder = {"Voar", "Zoom", "Deslizar", "Mola"}
+		local animDD = AetherisDropdown(secConfig, {
+			prefix = "Animação: ",
+			label = animLabels[AetherisMinimize.anim],
+			value = AetherisMinimize.anim,
+			maxRows = 4,
+			getOptions = function()
+				local opts = {}
+				for _, k in ipairs(animOrder) do table.insert(opts, {label = animLabels[k], value = k}) end
+				return opts
+			end,
+			onSelect = function(value) AetherisMinimize.anim = value end,
+		})
+		registerConfigBinding(secConfig, "Animação de minimizar", function() return AetherisMinimize.anim end, function(v)
+			if animLabels[v] then
+				AetherisMinimize.anim = v
+				animDD.setValue(v, animLabels[v])
 			end
 		end)
 	end
