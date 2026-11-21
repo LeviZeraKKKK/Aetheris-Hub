@@ -145,7 +145,7 @@ do
 		{"indisponível", "unavailable"}, {"não encontrado", "not found"}, {" de ", " of "},
 		{"Velocidade máx", "Max speed"}, {"Aceleração (por frame)", "Acceleration (per frame)"}, {"Altura sobre a água", "Height above water"},
 		{"Acelerar Barco", "Boost Boat"}, {"Modificar Barco", "Ship Modifier"}, {"Notificações", "Notifications"}, {"Notificação de teste", "Test notification"}, {"Tempo da notificação", "Notification time"}, {"Painel carregado com sucesso", "Panel loaded successfully"}, {"Posição", "Position"}, {"Embaixo", "Bottom"}, {"Em cima", "Top"}, {"Barco", "Boat"}, {"Entre em um barco", "Get in a boat"}, {"Desligado", "Off"},
-		{"★ Favoritos", "★ Favorites"}, {"Voar até o botão", "Fly to button"}, {"Deslizar", "Slide"}, {"Mola (elástico)", "Spring (elastic)"}, {"Animação: ", "Animation: "}, {"Limpar tudo", "Clear all"}, {"NOVO", "NEW"}, {"Farm por Material", "Material Farm"}, {"Raid Automática", "Auto Raid"}, {"Lista de Eventos", "Event List"}, {"Material: ", "Material: "}, {"Parar ao ter (0 = nunca)", "Stop at amount (0 = never)"}, {"Iniciar a raid sozinho", "Start raid automatically"}, {"Pagar com: ", "Pay with: "}, {"Dinheiro (Beli)", "Money (Beli)"}, {"Fruta (a mais barata)", "Fruit (cheapest)"}, {"Avisar quando um evento começar", "Notify when an event starts"}, {"Ilha Mirage", "Mirage Island"}, {"Ilha Kitsune", "Kitsune Island"}, {"Ilha Pré-histórica", "Prehistoric Island"}, {"Lua Cheia", "Full Moon"}, {"Inativo", "Inactive"}, {"Ativo", "Active"},  {"Nada fixado ainda", "Nothing pinned yet"}, {" seção fixada", " section pinned"}, {" seções fixadas", " sections pinned"}, {"Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar.", "No favorite sections yet. Tap the ★ next to a section name to favorite it."},
+		{"★ Favoritos", "★ Favorites"}, {"Voar até o botão", "Fly to button"}, {"Deslizar", "Slide"}, {"Mola (elástico)", "Spring (elastic)"}, {"Animação: ", "Animation: "}, {"Limpar tudo", "Clear all"}, {"NOVO", "NEW"}, {"Auto Raça V4", "Auto Race V4"}, {"Rotação de Skills", "Skill Rotation"}, {"Auto Guardar Fruta", "Auto Store Fruit"}, {"Auto Comprar da Loja", "Auto Buy from Shop"}, {"Só ativar com inimigo por perto", "Only activate with enemy nearby"}, {"Só com inimigo por perto", "Only with enemy nearby"}, {"Usar Click (ataque básico)", "Use Click (basic attack)"}, {"Intervalo entre skills", "Delay between skills"}, {"Alcance do inimigo", "Enemy range"}, {"Preço máximo", "Max price"}, {"Comprar: ", "Buy: "}, {"A mais barata", "Cheapest"}, {"A mais cara possível", "Most expensive possible"}, {"Fruta específica", "Specific fruit"}, {"Equipada", "Held"},  {"Farm por Material", "Material Farm"}, {"Raid Automática", "Auto Raid"}, {"Lista de Eventos", "Event List"}, {"Material: ", "Material: "}, {"Parar ao ter (0 = nunca)", "Stop at amount (0 = never)"}, {"Iniciar a raid sozinho", "Start raid automatically"}, {"Pagar com: ", "Pay with: "}, {"Dinheiro (Beli)", "Money (Beli)"}, {"Fruta (a mais barata)", "Fruit (cheapest)"}, {"Avisar quando um evento começar", "Notify when an event starts"}, {"Ilha Mirage", "Mirage Island"}, {"Ilha Kitsune", "Kitsune Island"}, {"Ilha Pré-histórica", "Prehistoric Island"}, {"Lua Cheia", "Full Moon"}, {"Inativo", "Inactive"}, {"Ativo", "Active"},  {"Nada fixado ainda", "Nothing pinned yet"}, {" seção fixada", " section pinned"}, {" seções fixadas", " sections pinned"}, {"Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar.", "No favorite sections yet. Tap the ★ next to a section name to favorite it."},
 		{"Utilidades", "Utilities"},
 		{"Remover Partículas", "Remove Particles"}, {"Remover Rastros e Feixes", "Remove Trails and Beams"}, {"Remover Luzes", "Remove Lights"},
 		{"Sem Sombras nas Peças", "No Part Shadows"}, {"Materiais Simples", "Simple Materials"}, {"Remover Reflexos das Peças", "Remove Part Reflections"},
@@ -4376,7 +4376,7 @@ function showMainPanel()
 
 		-- Selo "NOVO" ao lado do nome das seções adicionadas recentemente.
 		do
-			local NEW_SECTIONS = {["Auto Stats"] = true, ["Auto Habilidades"] = true, ["Auto Kill Boss"] = true, ["FPS Boost"] = true, ["Modificar Barco"] = true, ["Farm por Material"] = true, ["Raid Automática"] = true, ["Lista de Eventos"] = true}
+			local NEW_SECTIONS = {["Auto Stats"] = true, ["Auto Habilidades"] = true, ["Auto Kill Boss"] = true, ["FPS Boost"] = true, ["Modificar Barco"] = true, ["Farm por Material"] = true, ["Raid Automática"] = true, ["Lista de Eventos"] = true, ["Auto Raça V4"] = true, ["Rotação de Skills"] = true, ["Auto Guardar Fruta"] = true, ["Auto Comprar da Loja"] = true}
 			if NEW_SECTIONS[title] then
 				local chip = Instance.new("TextLabel")
 				chip.Name = "NewBadge"
@@ -11902,7 +11902,7 @@ function showMainPanel()
 			end
 			local function holdFruit()
 				local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-				local function isFruit(t) return toolType(t) == "Fruit" end
+				local function isFruit(t) return t:IsA("Tool") and t.Name:find("Fruit$") ~= nil end
 				local tool = findTool(isFruit)
 				if not tool then
 					-- sem fruta na mochila: abre o inventário e tira a de menor valor
@@ -12352,6 +12352,328 @@ function showMainPanel()
 						task.wait(2)
 					end
 				end)
+			end
+
+			-- =====================================================================
+			-- AUTO RAÇA V4, ROTAÇÃO DE SKILLS, AUTO GUARDAR FRUTA e AUTO COMPRAR DA LOJA
+			-- =====================================================================
+			local VIM
+			pcall(function() VIM = game:GetService("VirtualInputManager") end)
+			local function pressKey(code)
+				if not VIM then return false end
+				pcall(function() VIM:SendKeyEvent(true, code, false, game) end)
+				task.wait(0.06)
+				pcall(function() VIM:SendKeyEvent(false, code, false, game) end)
+				return true
+			end
+			local function clickScreen()
+				if not VIM then return end
+				local cam = workspace.CurrentCamera
+				local size = cam and cam.ViewportSize or Vector2.new(800, 600)
+				pcall(function() VIM:SendMouseButtonEvent(size.X / 2, size.Y / 2, 0, true, game, 0) end)
+				task.wait(0.03)
+				pcall(function() VIM:SendMouseButtonEvent(size.X / 2, size.Y / 2, 0, false, game, 0) end)
+			end
+			local function enemyNear(range)
+				local char = player.Character
+				local hrp = char and char:FindFirstChild("HumanoidRootPart")
+				local folder = workspace:FindFirstChild("Enemies")
+				if not hrp or not folder then return false end
+				for _, obj in ipairs(folder:GetChildren()) do
+					if obj:IsA("Model") then
+						local hum = obj:FindFirstChildOfClass("Humanoid")
+						local part = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Head")
+						if hum and hum.Health > 0 and part and (part.Position - hrp.Position).Magnitude <= range then return true end
+					end
+				end
+				return false
+			end
+			local function getComm()
+				if E.comm then return E.comm end
+				local r = ReplicatedStorage:FindFirstChild("Remotes")
+				E.comm = r and r:FindFirstChild("CommF_") or nil
+				return E.comm
+			end
+			local function simpleDD(sec, prefix, opts, default, rows, onSelect, bindName, getter)
+				local labels = {}
+				for _, o in ipairs(opts) do labels[o[1]] = o[2] end
+				local dd
+				dd = AetherisDropdown(sec, {
+					prefix = prefix,
+					label = labels[default],
+					value = default,
+					maxRows = rows,
+					boxWidth = 130,
+					getOptions = function()
+						local r = {}
+						for _, o in ipairs(opts) do table.insert(r, {label = o[2], value = o[1]}) end
+						return r
+					end,
+					onSelect = onSelect,
+				})
+				registerConfigBinding(sec, bindName, getter, function(v)
+					if labels[v] then onSelect(v); dd.setValue(v, labels[v]) end
+				end)
+			end
+
+			-- ----- Auto Raça V4 -----
+			do
+				local sec = createSection(page, "Auto Raça V4", sectionIcons.Physical)
+				local st = tiny(sec, "💤 Desligado")
+				local V = {token = 0, combatOnly = false}
+				addToggle(sec, "Auto Raça V4", function(state)
+					V.token = V.token + 1
+					if not state then st.Text = "💤 Desligado"; st.TextColor3 = Color3.fromRGB(150, 150, 180) return end
+					local my = V.token
+					task.spawn(function()
+						while V.token == my and screenGui.Parent do
+							local char = player.Character
+							local energy = char and char:FindFirstChild("RaceEnergy")
+							local trans = char and char:FindFirstChild("RaceTransformed")
+							if not char then
+								st.Text = "⏳ Sem personagem"
+							elseif not energy then
+								st.Text = "❓ Barra da raça não achada"
+								st.TextColor3 = Color3.fromRGB(255, 160, 120)
+							else
+								local e = tonumber(energy.Value) or 0
+								if trans and trans.Value then
+									st.Text = "⚡ V4 ativa"
+									st.TextColor3 = Color3.fromRGB(110, 255, 160)
+								elseif e >= 1 then
+									if V.combatOnly and not enemyNear(150) then
+										st.Text = "⏳ Barra cheia — aguardando inimigo"
+										st.TextColor3 = Color3.fromRGB(190, 190, 230)
+									else
+										st.Text = "⚡ Ativando V4"
+										st.TextColor3 = Color3.fromRGB(190, 160, 255)
+										if not pressKey(Enum.KeyCode.Y) then
+											local ce = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("CommE")
+											if ce then pcall(function() ce:FireServer("ActivateAbility") end) end
+										end
+										task.wait(1.5)
+									end
+								else
+									st.Text = "🔋 Carregando: " .. math.floor(math.clamp(e, 0, 1) * 100) .. "%"
+									st.TextColor3 = Color3.fromRGB(150, 200, 255)
+								end
+							end
+							task.wait(0.5)
+						end
+					end)
+				end, false)
+				addToggle(sec, "Só ativar com inimigo por perto", function(state) V.combatOnly = state end, false)
+			end
+
+			-- ----- Rotação de Skills -----
+			do
+				local sec = createSection(page, "Rotação de Skills", sectionIcons.Physical)
+				local st = tiny(sec, "💤 Desligado")
+				local R = {token = 0, keys = {Z = true, X = true, C = true, V = false, F = false}, click = false,
+					interval = 0.8, weapon = "Held", nearOnly = true, range = 120}
+				local KEYCODES = {Z = Enum.KeyCode.Z, X = Enum.KeyCode.X, C = Enum.KeyCode.C, V = Enum.KeyCode.V, F = Enum.KeyCode.F}
+				local ORDER = {"Z", "X", "C", "V", "F"}
+				local function equipRot()
+					if R.weapon == "Held" or tick() - E.lastEquip < 1 then return end
+					local char = player.Character
+					local hum = char and char:FindFirstChildOfClass("Humanoid")
+					if not hum then return end
+					local function matches(t)
+						if toolType(t) ~= R.weapon then return false end
+						if R.weapon == "Fruit" and t.Name:find("Fruit$") then return false end -- fruta crua não é arma
+						return true
+					end
+					local cur = char:FindFirstChildOfClass("Tool")
+					if cur and matches(cur) then return end
+					E.lastEquip = tick()
+					local bp = player:FindFirstChild("Backpack")
+					if bp then
+						for _, t in ipairs(bp:GetChildren()) do
+							if t:IsA("Tool") and matches(t) then pcall(function() hum:EquipTool(t) end) return end
+						end
+					end
+				end
+				local function ready()
+					if not R.nearOnly then return true end
+					return enemyNear(R.range)
+				end
+				addToggle(sec, "Rotação de Skills", function(state)
+					R.token = R.token + 1
+					if not state then st.Text = "💤 Desligado"; st.TextColor3 = Color3.fromRGB(150, 150, 180) return end
+					if not VIM then
+						note("Seu executor não tem VirtualInputManager", Color3.fromRGB(255, 120, 120))
+					end
+					local my = R.token
+					-- skills em sequência
+					task.spawn(function()
+						while R.token == my and screenGui.Parent do
+							if ready() then
+								equipRot()
+								local used = false
+								for _, k in ipairs(ORDER) do
+									if R.token ~= my then break end
+									if R.keys[k] and ready() then
+										pressKey(KEYCODES[k])
+										st.Text = "🔁 Skill " .. k
+										st.TextColor3 = Color3.fromRGB(150, 220, 255)
+										used = true
+										task.wait(R.interval)
+									end
+								end
+								if not used then task.wait(0.2) end
+							else
+								st.Text = "⏳ Aguardando inimigo"
+								st.TextColor3 = Color3.fromRGB(190, 190, 230)
+								task.wait(0.3)
+							end
+						end
+					end)
+					-- click (ataque básico) em paralelo
+					task.spawn(function()
+						while R.token == my and screenGui.Parent do
+							if R.click and ready() then clickScreen() end
+							task.wait(0.15)
+						end
+					end)
+				end, false)
+				simpleDD(sec, "Arma: ", {{"Held", "Equipada"}, {"Fruit", "Fruta"}, {"Melee", "Melee"}, {"Sword", "Espada"}}, "Held", 4,
+					function(v) R.weapon = v; if R.warn then R.warn.Visible = (v == "Fruit") end end, "Rotação: arma", function() return R.weapon end)
+				R.warn = AetherisFruitWarn(sec)
+				addToggle(sec, "Usar Click (ataque básico)", function(state) R.click = state end, false)
+				for _, k in ipairs(ORDER) do
+					addToggle(sec, "Skill " .. k, function(state) R.keys[k] = state end, R.keys[k])
+				end
+				addSlider(sec, "Intervalo entre skills", 0.2, 5, 0.8, function(v) R.interval = v end, 1, "s")
+				addToggle(sec, "Só com inimigo por perto", function(state) R.nearOnly = state end, true)
+				addSlider(sec, "Alcance do inimigo", 20, 300, 120, function(v) R.range = v end, 0, " studs")
+			end
+
+			-- ----- Auto Guardar Fruta -----
+			do
+				local sec = createSection(page, "Auto Guardar Fruta", sectionIcons.World)
+				local st = tiny(sec, "💤 Desligado")
+				local G = {token = 0, lastTry = {}}
+				addToggle(sec, "Auto Guardar Fruta", function(state)
+					G.token = G.token + 1
+					if not state then st.Text = "💤 Desligado"; st.TextColor3 = Color3.fromRGB(150, 150, 180) return end
+					st.Text = "👀 Vigiando frutas"
+					st.TextColor3 = Color3.fromRGB(150, 220, 255)
+					local my = G.token
+					task.spawn(function()
+						while G.token == my and screenGui.Parent do
+							-- não guarda a fruta que a Raid Automática vai usar para pagar o chip
+							local busyRaid = E.enabled and E.mode == "raid" and E.pay == "Fruta"
+							local comm = getComm()
+							if comm and not busyRaid then
+								local char = player.Character
+								for _, holder in ipairs({player:FindFirstChild("Backpack") or char, char or player:FindFirstChild("Backpack")}) do
+									if holder then
+										for _, t in ipairs(holder:GetChildren()) do
+											-- fruta crua do chão: "Nome Fruit". A fruta já comida (arma) não termina em "Fruit"
+											if t:IsA("Tool") and t.Name:find("Fruit$") and tick() - (G.lastTry[t] or 0) > 5 then
+												G.lastTry[t] = tick()
+												local name = t:GetAttribute("OriginalName") or t.Name
+												local ok = pcall(function() comm:InvokeServer("StoreFruit", name, t) end)
+												st.Text = (ok and "📦 Guardando: " or "⚠️ Falhou: ") .. t.Name
+												st.TextColor3 = ok and Color3.fromRGB(110, 255, 160) or Color3.fromRGB(255, 160, 120)
+												task.wait(0.5)
+											end
+										end
+									end
+								end
+							end
+							task.wait(1.5)
+						end
+					end)
+				end, false)
+			end
+
+			-- ----- Auto Comprar da Loja -----
+			do
+				local sec = createSection(page, "Auto Comprar da Loja", sectionIcons.World)
+				local st = tiny(sec, "💤 Desligado")
+				local S = {token = 0, mode = "cheap", pick = "Rocket", maxK = 1000, bought = {}}
+				local FRUITS = {"Rocket", "Spin", "Blade", "Spring", "Bomb", "Smoke", "Spike", "Flame", "Ice", "Sand", "Dark", "Eagle",
+					"Diamond", "Light", "Rubber", "Ghost", "Magma", "Quake", "Buddha", "Love", "Creation", "Spider", "Sound", "Phoenix",
+					"Portal", "Rumble", "Pain", "Blizzard", "Gravity", "Mammoth", "T-Rex", "Dough", "Shadow", "Venom", "Control",
+					"Spirit", "Dragon", "Leopard", "Kitsune", "Yeti", "Gas"}
+				local function beliNow()
+					local d = player:FindFirstChild("Data")
+					local b = d and d:FindFirstChild("Beli")
+					return b and tonumber(b.Value) or 0
+				end
+				local function formatBeli(n)
+					local s = tostring(math.floor(n))
+					local r = s:reverse():gsub("(%d%d%d)", "%1,"):reverse()
+					return (r:gsub("^,", ""))
+				end
+				local function tryBuy()
+					local comm = getComm()
+					if not comm then st.Text = "❓ CommF_ não achado" return end
+					local beli = beliNow()
+					local cands = {}
+					for _, adv in ipairs({false, true}) do
+						local ok, list = pcall(function() return comm:InvokeServer("GetFruits", adv) end)
+						if ok and type(list) == "table" then
+							for _, f in ipairs(list) do
+								if type(f) == "table" and f.OnSale == true and type(f.Name) == "string" then
+									local price = tonumber(f.Price)
+									local okName = true
+									if S.mode == "pick" then okName = f.Name:lower():find(S.pick:lower(), 1, true) ~= nil end
+									if okName and price and price <= S.maxK * 1000 and price <= beli
+										and tick() - (S.bought[f.Name] or 0) > 90 then
+										table.insert(cands, {name = f.Name, price = price, adv = adv})
+									end
+								end
+							end
+						end
+					end
+					if #cands == 0 then
+						st.Text = "🛒 Nada para comprar agora (" .. formatBeli(beli) .. " Beli)"
+						st.TextColor3 = Color3.fromRGB(150, 200, 255)
+						return
+					end
+					if S.mode == "rich" then
+						table.sort(cands, function(a, b) return a.price > b.price end)
+					else
+						table.sort(cands, function(a, b) return a.price < b.price end)
+					end
+					local c = cands[1]
+					S.bought[c.name] = tick()
+					local before = beliNow()
+					pcall(function() comm:InvokeServer("PurchaseRawFruit", c.name, c.adv) end)
+					task.wait(1)
+					if beliNow() < before then
+						st.Text = "✅ Comprou " .. c.name .. " (" .. formatBeli(c.price) .. ")"
+						st.TextColor3 = Color3.fromRGB(110, 255, 160)
+						note("Comprou " .. c.name, Color3.fromRGB(110, 255, 160))
+					else
+						st.Text = "⚠️ Compra não confirmada: " .. c.name
+						st.TextColor3 = Color3.fromRGB(255, 160, 120)
+					end
+				end
+				addToggle(sec, "Auto Comprar da Loja", function(state)
+					S.token = S.token + 1
+					if not state then st.Text = "💤 Desligado"; st.TextColor3 = Color3.fromRGB(150, 150, 180) return end
+					local my = S.token
+					st.Text = "🛒 Conferindo a loja..."
+					task.spawn(function()
+						while S.token == my and screenGui.Parent do
+							local ok, err = pcall(tryBuy)
+							if not ok then warn("[Aetheris] loja:", err) end
+							for _ = 1, 20 do
+								if S.token ~= my then break end
+								task.wait(1)
+							end
+						end
+					end)
+				end, false)
+				simpleDD(sec, "Comprar: ", {{"cheap", "A mais barata"}, {"rich", "A mais cara possível"}, {"pick", "Fruta específica"}}, "cheap", 3,
+					function(v) S.mode = v end, "Loja: modo", function() return S.mode end)
+				local pickOpts = {}
+				for _, n in ipairs(FRUITS) do table.insert(pickOpts, {n, n}) end
+				simpleDD(sec, "Fruta específica: ", pickOpts, "Rocket", 6, function(v) S.pick = v end, "Loja: fruta", function() return S.pick end)
+				addSlider(sec, "Preço máximo", 0, 5000, 1000, function(v) S.maxK = v end, 0, "k")
 			end
 
 			screenGui.Destroying:Connect(function() E.enabled = false; releaseAll() end)
