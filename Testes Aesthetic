@@ -16,7 +16,7 @@ local map = workspace:WaitForChild("Map", 5) or workspace
 if playerGui:FindFirstChild("AetherisHub") then
 	playerGui.AetherisHub:Destroy()
 end
-.
+
 -- ScreenGui Principal
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AetherisHub"
@@ -12528,29 +12528,25 @@ function showMainPanel()
 									st.TextColor3 = Color3.fromRGB(190, 190, 230)
 									task.wait(0.5)
 								else
-									if R.mode == "Click" then
-										-- mesmo ataque do Melee/Espada: RegisterAttack + RegisterHit nos inimigos próximos
-										if tick() - Q.lastHit >= Q.hitDelay and Q.hitEvent then
-											local targets = Q.scanEnemies(Q.aoeRange)
-											if #targets > 0 then
-												Q.lastHit = tick()
-												Q.combo = (Q.combo % 4) + 1
-												if Q.attackEvent then pcall(function() Q.attackEvent:FireServer(0.3, Q.combo) end) end
-												local extras = {}
-												for i = 2, #targets do table.insert(extras, {targets[i].char, targets[i].part}) end
-												pcall(function() Q.hitEvent:FireServer(targets[1].part, extras) end)
-												st.Text = "🖱️ Click (ataque normal)"
-												st.TextColor3 = Color3.fromRGB(150, 220, 255)
-											else
-												st.Text = "⏳ Sem inimigo no alcance"
-												st.TextColor3 = Color3.fromRGB(190, 190, 230)
-											end
-										end
-										task.wait(0.03)
-									elseif not pickTarget() then
+									local part = pickTarget()
+									if not part then
 										st.Text = "⏳ Sem inimigo no alcance"
 										st.TextColor3 = Color3.fromRGB(190, 190, 230)
 										task.wait(0.3)
+									elseif R.mode == "Click" then
+										local v = aimAt(part)
+										if v then
+											task.wait(0.04)
+											pcall(function() VIM:SendMouseButtonEvent(v.X, v.Y, 0, true, game, 0) end)
+											task.wait(0.03)
+											pcall(function() VIM:SendMouseButtonEvent(v.X, v.Y, 0, false, game, 0) end)
+											st.Text = "🖱️ Click no inimigo"
+											st.TextColor3 = Color3.fromRGB(150, 220, 255)
+										else
+											st.Text = "👀 Inimigo fora da tela"
+											st.TextColor3 = Color3.fromRGB(255, 205, 110)
+										end
+										task.wait(0.15)
 									else
 										local used = false
 										for _, k in ipairs(ORDER) do
