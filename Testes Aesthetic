@@ -145,7 +145,7 @@ do
 		{"indisponível", "unavailable"}, {"não encontrado", "not found"}, {" de ", " of "},
 		{"Velocidade máx", "Max speed"}, {"Aceleração (por frame)", "Acceleration (per frame)"}, {"Altura sobre a água", "Height above water"},
 		{"Acelerar Barco", "Boost Boat"}, {"Modificar Barco", "Ship Modifier"}, {"Notificações", "Notifications"}, {"Notificação de teste", "Test notification"}, {"Tempo da notificação", "Notification time"}, {"Painel carregado com sucesso", "Panel loaded successfully"}, {"Posição", "Position"}, {"Embaixo", "Bottom"}, {"Em cima", "Top"}, {"Barco", "Boat"}, {"Entre em um barco", "Get in a boat"}, {"Desligado", "Off"},
-		{"★ Favoritos", "★ Favorites"}, {"Voar até o botão", "Fly to button"}, {"Deslizar", "Slide"}, {"Mola (elástico)", "Spring (elastic)"}, {"Animação: ", "Animation: "}, {"Limpar tudo", "Clear all"}, {"NOVO", "NEW"}, {"Nada fixado ainda", "Nothing pinned yet"}, {" seção fixada", " section pinned"}, {" seções fixadas", " sections pinned"}, {"Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar.", "No favorite sections yet. Tap the ★ next to a section name to favorite it."},
+		{"★ Favoritos", "★ Favorites"}, {"Voar até o botão", "Fly to button"}, {"Deslizar", "Slide"}, {"Mola (elástico)", "Spring (elastic)"}, {"Animação: ", "Animation: "}, {"Limpar tudo", "Clear all"}, {"NOVO", "NEW"}, {"Farm por Material", "Material Farm"}, {"Raid Automática", "Auto Raid"}, {"Lista de Eventos", "Event List"}, {"Material: ", "Material: "}, {"Parar ao ter (0 = nunca)", "Stop at amount (0 = never)"}, {"Iniciar a raid sozinho", "Start raid automatically"}, {"Avisar quando um evento começar", "Notify when an event starts"}, {"Ilha Mirage", "Mirage Island"}, {"Ilha Kitsune", "Kitsune Island"}, {"Ilha Pré-histórica", "Prehistoric Island"}, {"Lua Cheia", "Full Moon"}, {"Inativo", "Inactive"}, {"Ativo", "Active"},  {"Nada fixado ainda", "Nothing pinned yet"}, {" seção fixada", " section pinned"}, {" seções fixadas", " sections pinned"}, {"Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar.", "No favorite sections yet. Tap the ★ next to a section name to favorite it."},
 		{"Utilidades", "Utilities"},
 		{"Remover Partículas", "Remove Particles"}, {"Remover Rastros e Feixes", "Remove Trails and Beams"}, {"Remover Luzes", "Remove Lights"},
 		{"Sem Sombras nas Peças", "No Part Shadows"}, {"Materiais Simples", "Simple Materials"}, {"Remover Reflexos das Peças", "Remove Part Reflections"},
@@ -1460,7 +1460,7 @@ do
 				barCorner.CornerRadius = UDim.new(1, 0)
 				barCorner.Parent = bar
 				local g = Instance.new("UIGradient")
-				g.Color = ColorSequence.new(Color3.fromRGB(176, 120, 255), Color3.fromRGB(126, 62, 236))
+				g.Color = ColorSequence.new(Color3.fromRGB(110, 190, 255), Color3.fromRGB(56, 132, 255))
 				g.Rotation = 90
 				g.Enabled = false
 				g.Parent = bar
@@ -1497,7 +1497,7 @@ do
 			spinStroke.Thickness = 2
 			spinStroke.Parent = spin
 			local spinGrad = Instance.new("UIGradient")
-			spinGrad.Color = ColorSequence.new(Color3.fromRGB(176, 120, 255), Color3.fromRGB(70, 150, 255))
+			spinGrad.Color = ColorSequence.new(Color3.fromRGB(110, 190, 255), Color3.fromRGB(56, 132, 255))
 			spinGrad.Transparency = NumberSequence.new({
 				NumberSequenceKeypoint.new(0, 0),
 				NumberSequenceKeypoint.new(0.5, 0.15),
@@ -4376,7 +4376,7 @@ function showMainPanel()
 
 		-- Selo "NOVO" ao lado do nome das seções adicionadas recentemente.
 		do
-			local NEW_SECTIONS = {["Auto Stats"] = true, ["Auto Habilidades"] = true, ["Auto Kill Boss"] = true, ["FPS Boost"] = true, ["Modificar Barco"] = true}
+			local NEW_SECTIONS = {["Auto Stats"] = true, ["Auto Habilidades"] = true, ["Auto Kill Boss"] = true, ["FPS Boost"] = true, ["Modificar Barco"] = true, ["Farm por Material"] = true, ["Raid Automática"] = true, ["Lista de Eventos"] = true}
 			if NEW_SECTIONS[title] then
 				local chip = Instance.new("TextLabel")
 				chip.Name = "NewBadge"
@@ -5231,6 +5231,11 @@ function showMainPanel()
 		end
 		toggleBtn.MouseButton1Click:Connect(function() setToggleState(not toggleStateRef.isToggled) end)
 		registerConfigBinding(parent, configName or name, function() return toggleStateRef.isToggled end, setToggleState)
+		AetherisToggleSet = AetherisToggleSet or {}
+		AetherisToggleSet[parent] = AetherisToggleSet[parent] or {}
+		AetherisToggleSet[parent][name] = setToggleState
+		AetherisToggleByName = AetherisToggleByName or {}
+		AetherisToggleByName[name] = setToggleState
 	end
 
 	-- decimals/suffix são opcionais: sem eles o slider continua inteiro, como sempre foi.
@@ -11527,6 +11532,710 @@ function showMainPanel()
 			addSlider(secBoss, "Altura de segurança", 30, 200, 90, function(val) BossLogic.safeHeight = val end, 0, " studs")
 
 		end
+
+		-----------------------------------------------------------------
+		-- TAREFAS EXTRAS: Farm por Material, Raid Automática e Lista de Eventos
+		-- (uma tarefa roda por vez; ligar uma desliga a outra; o Auto Farm Level fica em pausa)
+		-----------------------------------------------------------------
+		pcall(function()
+			local page = secFarm.Parent.Parent
+			local Lighting = game:GetService("Lighting")
+			local WEAPON_LABELS = {Melee = "Melee", Fruit = "Fruta", Sword = "Espada"}
+			local E = {
+				enabled = false, mode = nil, token = 0, orig = {}, lastHit = 0, lastEquip = 0, combo = 1, lastBuso = 0,
+				known = {}, have = nil, lastCount = 0, lastRaidTry = 0, wasRaid = false,
+				cfg = {
+					material = {weapon = "Melee", height = 12, speed = 270},
+					raid = {weapon = "Melee", height = 12, speed = 270},
+					travel = {weapon = "Melee", height = 25, speed = 270},
+				},
+				material = nil, goal = 0, chip = "Flame", autoRaid = true, gotoFn = nil, gotoName = "",
+			}
+			local say = {}
+			local setters = {}
+			local function note(text, color)
+				if AetherisNotify then pcall(AetherisNotify, text, color or Color3.fromRGB(150, 190, 255), 3) end
+			end
+			local function cfg() return E.cfg[E.mode or "material"] end
+
+			-- ===== remotes =====
+			local function init()
+				if E.ready then return true end
+				pcall(function()
+					local net = require(ReplicatedStorage.Modules.Net)
+					E.hit = net:RemoteEvent("RegisterHit")
+					E.atk = net:RemoteEvent("RegisterAttack")
+				end)
+				if not E.hit then
+					for _, o in ipairs(ReplicatedStorage:GetDescendants()) do
+						if o:IsA("RemoteEvent") then
+							if o.Name == "RegisterHit" then E.hit = o elseif o.Name == "RegisterAttack" then E.atk = o end
+						end
+					end
+				end
+				local r = ReplicatedStorage:FindFirstChild("Remotes")
+				E.comm = r and r:FindFirstChild("CommF_") or nil
+				E.ready = (E.hit ~= nil and E.comm ~= nil)
+				return E.ready
+			end
+
+			-- ===== arma / ataque =====
+			local function toolType(tool)
+				if not tool or not tool:IsA("Tool") then return nil end
+				local wt = tool:GetAttribute("WeaponType")
+				if wt == "Demon Fruit" then return "Fruit" end
+				if wt == "Sword" or wt == "Melee" or wt == "Gun" then return wt end
+				if tool:HasTag("MeleeTool") then return "Melee" end
+				if tool:HasTag("GunTool") then return "Gun" end
+				local n = tool.Name:lower()
+				if n:find("fruit") then return "Fruit" end
+				if n:find("sword") or n:find("blade") or n:find("katana") or n:find("saber") then return "Sword" end
+				if n:find("fighting") or n:find("karate") or n:find("combat") then return "Melee" end
+				if tool:GetAttribute("FruitType") then return "Fruit" end
+				return nil
+			end
+			local function equip()
+				if tick() - E.lastEquip < 1 then return end
+				local char = player.Character
+				local hum = char and char:FindFirstChildOfClass("Humanoid")
+				if not hum then return end
+				local want = cfg().weapon
+				local cur = char:FindFirstChildOfClass("Tool")
+				if cur and toolType(cur) == want then return end
+				E.lastEquip = tick()
+				local bp = player:FindFirstChild("Backpack")
+				if bp then
+					for _, tool in ipairs(bp:GetChildren()) do
+						if tool:IsA("Tool") and toolType(tool) == want then
+							pcall(function() hum:EquipTool(tool) end)
+							return
+						end
+					end
+				end
+			end
+			local function buso()
+				if tick() - E.lastBuso < 4 then return end
+				E.lastBuso = tick()
+				local char = player.Character
+				if char and not char:FindFirstChild("HasBuso") and E.comm then
+					pcall(function() E.comm:InvokeServer("Buso") end)
+				end
+			end
+			local function hit(range)
+				if tick() - E.lastHit < 0.05 then return end
+				local char = player.Character
+				local hrp = char and char:FindFirstChild("HumanoidRootPart")
+				local tool = char and char:FindFirstChildOfClass("Tool")
+				local folder = workspace:FindFirstChild("Enemies")
+				if not hrp or not tool or not folder or not E.hit then return end
+				if not tool:FindFirstChild("LocalEquippedWeaponPointer") then return end
+				local list = {}
+				for _, obj in ipairs(folder:GetChildren()) do
+					if obj:IsA("Model") then
+						local hum = obj:FindFirstChildOfClass("Humanoid")
+						local part = obj:FindFirstChild("Head") or obj:FindFirstChild("UpperTorso") or obj:FindFirstChild("HumanoidRootPart")
+						if hum and hum.Health > 0 and part and (part.Position - hrp.Position).Magnitude <= range then
+							table.insert(list, {obj, part})
+						end
+					end
+				end
+				if #list == 0 then return end
+				E.lastHit = tick()
+				E.combo = (E.combo % 4) + 1
+				if E.atk then pcall(function() E.atk:FireServer(0.3, E.combo) end) end
+				local extras = {}
+				for i = 2, #list do table.insert(extras, list[i]) end
+				pcall(function() E.hit:FireServer(list[1][2], extras) end)
+			end
+
+			-- ===== noclip / voo =====
+			local function noclipOn()
+				if E.noclipConn then return end
+				table.clear(E.orig)
+				E.noclipConn = RunService.Stepped:Connect(function()
+					if not E.enabled then return end
+					local c = player.Character
+					if not c then return end
+					for _, part in ipairs(c:GetDescendants()) do
+						if part:IsA("BasePart") then
+							if E.orig[part] == nil then E.orig[part] = part.CanCollide end
+							part.CanCollide = false
+						end
+					end
+				end)
+			end
+			local function noclipOff()
+				if E.noclipConn then E.noclipConn:Disconnect(); E.noclipConn = nil end
+				for part, o in pairs(E.orig) do
+					if part and part.Parent then part.CanCollide = o end
+				end
+				table.clear(E.orig)
+			end
+			local function fly(hrp, v)
+				if not E.bv or E.bv.Parent ~= hrp then
+					if E.bv then E.bv:Destroy() end
+					E.bv = Instance.new("BodyVelocity")
+					E.bv.Name = "AetherisTaskFly"
+					E.bv.MaxForce = Vector3.new(1e8, 1e8, 1e8)
+					E.bv.P = 15000
+					E.bv.Velocity = Vector3.zero
+					E.bv.Parent = hrp
+				end
+				E.bv.Velocity = v
+			end
+			local function stopFly()
+				if E.bv then E.bv:Destroy(); E.bv = nil end
+			end
+			local function flyTo(hrp, target)
+				local offset = target - hrp.Position
+				local dist = offset.Magnitude
+				if dist < 0.1 then fly(hrp, Vector3.zero) return end
+				local speed
+				if dist > 4 then speed = math.min(dist * 3, cfg().speed * 1.5) else speed = math.max(dist * 8, 20) end
+				speed = math.min(speed, dist * 6)
+				fly(hrp, (offset / dist) * speed)
+			end
+
+			-- ===== buscas =====
+			local function nameMatch(name, names)
+				for _, n in ipairs(names) do
+					if name == n or name:sub(1, #n + 2) == n .. " [" then return true end
+				end
+				return false
+			end
+			local function nearestEnemy(names, hrp)
+				local folder = workspace:FindFirstChild("Enemies")
+				local best, bd = nil, math.huge
+				if not folder then return nil end
+				for _, obj in ipairs(folder:GetChildren()) do
+					if obj:IsA("Model") and (names == nil or nameMatch(obj.Name, names)) then
+						local hum = obj:FindFirstChildOfClass("Humanoid")
+						local part = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Head") or obj:FindFirstChildWhichIsA("BasePart")
+						if hum and hum.Health > 0 and part then
+							local d = (part.Position - hrp.Position).Magnitude
+							if d < bd then best, bd = {model = obj, part = part, dist = d}, d end
+						end
+					end
+				end
+				return best
+			end
+			local function nearestSpawn(names, hrp)
+				local origin = workspace:FindFirstChild("_WorldOrigin")
+				local folder = origin and origin:FindFirstChild("EnemySpawns")
+				if folder then
+					for _, sp in ipairs(folder:GetChildren()) do
+						if nameMatch(sp.Name, names) then
+							local ok, pos = pcall(function() return sp:GetPivot().Position end)
+							if ok then E.known[tostring(pos)] = {name = sp.Name, pos = pos} end
+						end
+					end
+				end
+				local best, bd = nil, math.huge
+				for _, e in pairs(E.known) do
+					if nameMatch(e.name, names) then
+						local d = (e.pos - hrp.Position).Magnitude
+						if d < bd then best, bd = e.pos, d end
+					end
+				end
+				return best, bd
+			end
+			local function itemCount(item)
+				if not E.comm then return nil end
+				local ok, inv = pcall(function() return E.comm:InvokeServer("getInventory") end)
+				if ok and type(inv) == "table" then
+					for _, it in pairs(inv) do
+						if type(it) == "table" and it.Name == item then return it.Count or it.count or 1 end
+					end
+					return 0
+				end
+				return nil
+			end
+
+			-- ===== controle =====
+			local function releaseAll()
+				stopFly()
+				noclipOff()
+				AetherisBossBusy = (BossLogic and BossLogic.enabled) and true or false
+			end
+			local function stopMode(mode)
+				if E.mode ~= mode then return end
+				E.enabled = false
+				E.mode = nil
+				E.token = E.token + 1
+				releaseAll()
+				if say[mode] then say[mode]("💤 Desligado", Color3.fromRGB(150, 150, 180)) end
+			end
+			local function finish(mode)
+				-- desliga também o toggle na interface
+				local f = setters[mode]
+				if f then f(false) else stopMode(mode) end
+			end
+
+			local step
+			local function start(mode)
+				if not init() then
+					note("Não achei os remotes do jogo", Color3.fromRGB(255, 120, 120))
+					finish(mode)
+					return
+				end
+				if E.enabled and E.mode ~= mode then
+					local prev = E.mode
+					if setters[prev] then setters[prev](false) else stopMode(prev) end
+				end
+				if BossLogic and BossLogic.enabled and AetherisToggleByName and AetherisToggleByName["Auto Kill Boss"] then
+					AetherisToggleByName["Auto Kill Boss"](false)
+				end
+				E.enabled = true
+				E.mode = mode
+				E.token = E.token + 1
+				local my = E.token
+				E.wasRaid = false
+				task.spawn(function()
+					while E.enabled and E.token == my do
+						AetherisBossBusy = true
+						local ok, err = pcall(step)
+						if not ok then warn("[Aetheris] tarefa extra:", err) end
+						task.wait()
+					end
+				end)
+			end
+
+			-- ===== passos =====
+			local function stepMaterial(hrp)
+				local mat = E.material
+				if not mat then say.material("Escolha um material", Color3.fromRGB(255, 205, 110)) stopFly() return end
+				if E.goal > 0 and tick() - E.lastCount > 6 then
+					E.lastCount = tick()
+					local c = itemCount(mat.item)
+					if c then
+						E.have = c
+						if c >= E.goal then
+							note("Meta atingida: " .. c .. " " .. mat.item, Color3.fromRGB(110, 255, 160))
+							finish("material")
+							return
+						end
+					end
+				end
+				local tag = mat.item .. (E.have and (" (" .. E.have .. ")") or "")
+				equip()
+				buso()
+				local t = nearestEnemy(mat.names, hrp)
+				if t then
+					noclipOn()
+					say.material("⚔️ " .. tag .. " — atacando", Color3.fromRGB(150, 220, 255))
+					flyTo(hrp, t.part.Position + Vector3.new(0, cfg().height, 0))
+					hit(80)
+					return
+				end
+				local sp, d = nearestSpawn(mat.names, hrp)
+				if sp then
+					noclipOn()
+					if d > 70 then
+						say.material("🧭 " .. tag .. " — indo ao spawn (" .. math.floor(d) .. "m)", Color3.fromRGB(150, 200, 255))
+					else
+						say.material("⏳ " .. tag .. " — esperando respawn", Color3.fromRGB(190, 190, 230))
+					end
+					flyTo(hrp, sp + Vector3.new(0, cfg().height, 0))
+				else
+					say.material("❓ Nenhum inimigo desse material aqui (outro mar?)", Color3.fromRGB(255, 160, 120))
+					stopFly()
+				end
+			end
+
+			local function raidActive()
+				local gui = player:FindFirstChild("PlayerGui")
+				local main = gui and gui:FindFirstChild("Main")
+				local timer = main and main:FindFirstChild("Timer")
+				if timer and timer.Visible then return true end
+				local origin = workspace:FindFirstChild("_WorldOrigin")
+				local locs = origin and origin:FindFirstChild("Locations")
+				return (locs and locs:FindFirstChild("Island 1")) ~= nil
+			end
+			local function raidButton()
+				local map = workspace:FindFirstChild("Map")
+				if not map then return nil end
+				for _, holderName in ipairs({"CircleIsland", "Boat Castle"}) do
+					local holder = map:FindFirstChild(holderName)
+					local sum = holder and (holder:FindFirstChild("RaidSummon2") or holder:FindFirstChild("RaidSummon"))
+					local btn = sum and sum:FindFirstChild("Button")
+					local main = btn and btn:FindFirstChild("Main")
+					local cd = main and main:FindFirstChildOfClass("ClickDetector")
+					if cd then return cd, main end
+				end
+				return nil
+			end
+			local function stepRaid(hrp)
+				equip()
+				buso()
+				if raidActive() then
+					E.wasRaid = true
+					noclipOn()
+					local t = nearestEnemy(nil, hrp)
+					if t then
+						say.raid("⚔️ Raid — limpando inimigos", Color3.fromRGB(150, 220, 255))
+						flyTo(hrp, t.part.Position + Vector3.new(0, cfg().height, 0))
+						hit(80)
+						return
+					end
+					local origin = workspace:FindFirstChild("_WorldOrigin")
+					local locs = origin and origin:FindFirstChild("Locations")
+					if locs then
+						for i = 5, 1, -1 do
+							local isl = locs:FindFirstChild("Island " .. i)
+							if isl then
+								local ok, pos = pcall(function() return isl:GetPivot().Position end)
+								if ok then
+									say.raid("🏝️ Raid — indo para a ilha " .. i, Color3.fromRGB(180, 200, 255))
+									flyTo(hrp, pos + Vector3.new(0, 60, 0))
+									return
+								end
+							end
+						end
+					end
+					say.raid("⏳ Raid — aguardando inimigos", Color3.fromRGB(190, 190, 230))
+					fly(hrp, Vector3.zero)
+					return
+				end
+				if E.wasRaid then
+					E.wasRaid = false
+					note("Raid concluída", Color3.fromRGB(110, 255, 160))
+					if not E.autoRaid then finish("raid") return end
+				end
+				if not E.autoRaid then
+					say.raid("⏳ Aguardando você iniciar a raid", Color3.fromRGB(190, 190, 230))
+					stopFly()
+					return
+				end
+				local cd, main = raidButton()
+				if not cd then
+					say.raid("❓ Botão da raid não achado (só no 2º/3º mar)", Color3.fromRGB(255, 160, 120))
+					stopFly()
+					return
+				end
+				noclipOn()
+				local d = (main.Position - hrp.Position).Magnitude
+				if d > 25 then
+					say.raid("🧭 Indo ao botão da raid (" .. math.floor(d) .. "m)", Color3.fromRGB(150, 200, 255))
+					flyTo(hrp, main.Position + Vector3.new(0, 6, 0))
+					return
+				end
+				fly(hrp, Vector3.zero)
+				if tick() - E.lastRaidTry > 8 then
+					E.lastRaidTry = tick()
+					say.raid("🔮 Iniciando raid (" .. E.chip .. ")", Color3.fromRGB(190, 160, 255))
+					pcall(function() E.comm:InvokeServer("RaidsNpc", "Select", E.chip) end)
+					task.wait(0.6)
+					if fireclickdetector then
+						pcall(fireclickdetector, cd)
+					else
+						note("Seu executor não tem fireclickdetector", Color3.fromRGB(255, 120, 120))
+					end
+				end
+			end
+
+			local function stepGoto(hrp)
+				local pos = E.gotoFn and E.gotoFn()
+				if not pos then
+					note("Evento terminou", Color3.fromRGB(255, 160, 120))
+					finish("travel")
+					return
+				end
+				noclipOn()
+				local d = (pos - hrp.Position).Magnitude
+				if d < 60 then
+					note("Chegou em " .. E.gotoName, Color3.fromRGB(110, 255, 160))
+					finish("travel")
+					return
+				end
+				say.travel("🧭 Indo para " .. E.gotoName .. " (" .. math.floor(d) .. "m)", Color3.fromRGB(150, 200, 255))
+				flyTo(hrp, pos + Vector3.new(0, cfg().height, 0))
+			end
+
+			step = function()
+				local char = player.Character
+				local hrp = char and char:FindFirstChild("HumanoidRootPart")
+				local hum = char and char:FindFirstChildOfClass("Humanoid")
+				if not hrp or not hum or hum.Health <= 0 then return end
+				if E.mode == "material" then stepMaterial(hrp)
+				elseif E.mode == "raid" then stepRaid(hrp)
+				elseif E.mode == "travel" then stepGoto(hrp) end
+			end
+
+			-- ===== interface =====
+			local function tiny(sec, text)
+				local l = Instance.new("TextLabel")
+				l.Size = UDim2.new(1, 0, 0, 12)
+				l.BackgroundTransparency = 1
+				l.Font = currentGlobalFont
+				l.TextSize = 8
+				l.TextColor3 = Color3.fromRGB(150, 150, 180)
+				l.TextXAlignment = Enum.TextXAlignment.Left
+				l.TextTruncate = Enum.TextTruncate.AtEnd
+				l.TextWrapped = false
+				l.Text = text
+				l.Parent = sec
+				local pad = Instance.new("UIPadding")
+				pad.PaddingLeft = UDim.new(0, 4)
+				pad.PaddingRight = UDim.new(0, 4)
+				pad.Parent = l
+				return l
+			end
+			local function bindStatus(mode, label)
+				say[mode] = function(text, color)
+					label.Text = text
+					label.TextColor3 = color or Color3.fromRGB(150, 150, 180)
+				end
+			end
+			local function toggleSetter(sec, name)
+				return AetherisToggleSet and AetherisToggleSet[sec] and AetherisToggleSet[sec][name] or nil
+			end
+			local function weaponDropdown(sec, mode, tag)
+				local dd
+				dd = AetherisDropdown(sec, {
+					prefix = "Arma: ",
+					label = "Melee",
+					value = "Melee",
+					maxRows = 3,
+					boxWidth = 130,
+					getOptions = function()
+						local opts = {}
+						for _, v in ipairs({"Melee", "Fruit", "Sword"}) do table.insert(opts, {label = WEAPON_LABELS[v], value = v}) end
+						return opts
+					end,
+					onSelect = function(v) E.cfg[mode].weapon = v end,
+				})
+				registerConfigBinding(sec, tag .. ": arma", function() return E.cfg[mode].weapon end, function(v)
+					if WEAPON_LABELS[v] then E.cfg[mode].weapon = v; dd.setValue(v, WEAPON_LABELS[v]) end
+				end)
+			end
+
+			-- ----- Farm por Material -----
+			local MATS = {
+				{"Scrap Metal", {"Pirate", "Brute", "Mercenary", "Swan Pirate"}},
+				{"Leather", {"Pirate", "Brute", "Bandit", "Mercenary", "Swan Pirate", "Pirate Millionaire"}},
+				{"Fish Tail", {"Fishman Warrior", "Fishman Commando", "Fishman Raider", "Fishman Captain"}},
+				{"Magma Ore", {"Military Soldier", "Military Spy", "Lava Pirate", "Magma Ninja"}},
+				{"Angel Wings", {"God's Guard", "Shanda", "Royal Squad", "Royal Soldier"}},
+				{"Mystic Droplet", {"Sea Soldier", "Water Fighter"}},
+				{"Vampire Fang", {"Vampire"}},
+				{"Radioactive Material", {"Factory Staff"}},
+				{"Ectoplasm", {"Ship Deckhand", "Ship Engineer", "Ship Steward", "Ship Officer"}},
+				{"Conjured Cocoa", {"Chocolate Bar Battler", "Cocoa Warrior"}},
+				{"Dragon Scale", {"Dragon Crew Warrior", "Dragon Crew Archer"}},
+				{"Gunpowder", {"Pistol Billionaire"}},
+				{"Mini Tusk", {"Mythological Pirate"}},
+				{"Demonic Wisp", {"Demonic Soul"}},
+			}
+			local function findMat(item)
+				for _, m in ipairs(MATS) do if m[1] == item then return {item = m[1], names = m[2]} end end
+				return nil
+			end
+			do
+				local sec = createSection(page, "Farm por Material", sectionIcons.FarmAutomation)
+				bindStatus("material", tiny(sec, "💤 Desligado"))
+				addToggle(sec, "Farm por Material", function(state)
+					if state then start("material") else stopMode("material") end
+				end, false)
+				setters.material = toggleSetter(sec, "Farm por Material")
+				local dd
+				dd = AetherisDropdown(sec, {
+					prefix = "Material: ",
+					label = "Scrap Metal",
+					value = "Scrap Metal",
+					maxRows = 6,
+					boxWidth = 130,
+					getOptions = function()
+						local opts = {}
+						for _, m in ipairs(MATS) do table.insert(opts, {label = m[1], value = m[1]}) end
+						return opts
+					end,
+					onSelect = function(v) E.material = findMat(v); E.have = nil; E.lastCount = 0 end,
+				})
+				E.material = findMat("Scrap Metal")
+				registerConfigBinding(sec, "Material: item", function() return E.material and E.material.item or "Scrap Metal" end, function(v)
+					local m = type(v) == "string" and findMat(v)
+					if m then E.material = m; dd.setValue(v, v) end
+				end)
+				addSlider(sec, "Parar ao ter (0 = nunca)", 0, 500, 0, function(v) E.goal = v end, 0)
+				weaponDropdown(sec, "material", "Material")
+				addSlider(sec, "Velocidade de voo", 10, 300, 270, function(v) E.cfg.material.speed = v end, 0)
+				addSlider(sec, "Altura sobre o inimigo", 2, 30, 12, function(v) E.cfg.material.height = v end, 0, " studs")
+			end
+
+			-- ----- Raid Automática -----
+			do
+				local sec = createSection(page, "Raid Automática", sectionIcons.FarmAutomation)
+				bindStatus("raid", tiny(sec, "💤 Desligado"))
+				addToggle(sec, "Raid Automática", function(state)
+					if state then start("raid") else stopMode("raid") end
+				end, false)
+				setters.raid = toggleSetter(sec, "Raid Automática")
+				local CHIPS = {"Flame", "Ice", "Quake", "Light", "Dark", "String", "Rumble", "Magma", "Human: Buddha", "Sand", "Bird: Phoenix", "Dough"}
+				local dd
+				dd = AetherisDropdown(sec, {
+					prefix = "Chip: ",
+					label = "Flame",
+					value = "Flame",
+					maxRows = 6,
+					boxWidth = 130,
+					getOptions = function()
+						local opts = {}
+						for _, c in ipairs(CHIPS) do table.insert(opts, {label = c, value = c}) end
+						return opts
+					end,
+					onSelect = function(v) E.chip = v end,
+				})
+				registerConfigBinding(sec, "Raid: chip", function() return E.chip end, function(v)
+					if table.find(CHIPS, v) then E.chip = v; dd.setValue(v, v) end
+				end)
+				addToggle(sec, "Iniciar a raid sozinho", function(state) E.autoRaid = state end, true)
+				weaponDropdown(sec, "raid", "Raid")
+				addSlider(sec, "Velocidade de voo", 10, 300, 270, function(v) E.cfg.raid.speed = v end, 0)
+				addSlider(sec, "Altura sobre o inimigo", 2, 30, 12, function(v) E.cfg.raid.height = v end, 0, " studs")
+			end
+
+			-- ----- Lista de Eventos -----
+			do
+				local sec = createSection(page, "Lista de Eventos", sectionIcons.FarmAutomation)
+				bindStatus("travel", tiny(sec, "Toque em Ir para voar até o evento"))
+				local function modelPos(inst)
+					local ok, p = pcall(function() return inst:GetPivot().Position end)
+					return ok and p or nil
+				end
+				local function mapIsland(name)
+					return function()
+						local map = workspace:FindFirstChild("Map")
+						local isl = map and map:FindFirstChild(name)
+						if isl then return true, modelPos(isl) end
+						return false
+					end
+				end
+				local function inFolder(folderName, pattern, exclude)
+					return function()
+						local f = workspace:FindFirstChild(folderName)
+						if f then
+							for _, c in ipairs(f:GetChildren()) do
+								local n = c.Name
+								if n:find(pattern) and not (exclude and n:find(exclude)) then return true, modelPos(c) end
+							end
+						end
+						return false
+					end
+				end
+				local EVENTS = {
+					{"Ilha Mirage", mapIsland("MysticIsland")},
+					{"Ilha Kitsune", mapIsland("KitsuneIsland")},
+					{"Ilha Pré-histórica", mapIsland("PrehistoricIsland")},
+					{"Sea Beast", inFolder("SeaBeasts", ".", "Leviathan")},
+					{"Leviathan", inFolder("SeaBeasts", "Leviathan")},
+					{"Terrorshark", inFolder("Enemies", "^Terrorshark")},
+					{"Lua Cheia", function()
+						local sky = Lighting:FindFirstChildOfClass("Sky")
+						return sky ~= nil and tostring(sky.MoonTextureId):find("9709149431", 1, true) ~= nil
+					end},
+				}
+				local rows = {}
+				for i, ev in ipairs(EVENTS) do
+					local row = Instance.new("Frame")
+					row.Size = UDim2.new(1, 0, 0, 24)
+					row.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
+					row.BackgroundTransparency = 0.3
+					row.BorderSizePixel = 0
+					row.LayoutOrder = i
+					row.Parent = sec
+					local rc = Instance.new("UICorner")
+					rc.CornerRadius = UDim.new(0, 5)
+					rc.Parent = row
+					local dot = Instance.new("Frame")
+					dot.Size = UDim2.new(0, 6, 0, 6)
+					dot.Position = UDim2.new(0, 8, 0.5, -3)
+					dot.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
+					dot.BorderSizePixel = 0
+					dot.Parent = row
+					local dc = Instance.new("UICorner")
+					dc.CornerRadius = UDim.new(1, 0)
+					dc.Parent = dot
+					local nameL = Instance.new("TextLabel")
+					nameL.Size = UDim2.new(1, -112, 1, 0)
+					nameL.Position = UDim2.new(0, 20, 0, 0)
+					nameL.BackgroundTransparency = 1
+					nameL.Font = currentGlobalFont
+					nameL.Text = ev[1]
+					nameL.TextColor3 = currentTextColor
+					nameL.TextSize = 10
+					nameL.TextXAlignment = Enum.TextXAlignment.Left
+					nameL.TextTruncate = Enum.TextTruncate.AtEnd
+					nameL.Parent = row
+					local stL = Instance.new("TextLabel")
+					stL.Size = UDim2.new(0, 46, 1, 0)
+					stL.Position = UDim2.new(1, -86, 0, 0)
+					stL.BackgroundTransparency = 1
+					stL.Font = currentGlobalFont
+					stL.Text = "Inativo"
+					stL.TextColor3 = Color3.fromRGB(120, 125, 150)
+					stL.TextSize = 8
+					stL.TextXAlignment = Enum.TextXAlignment.Right
+					stL.Parent = row
+					local go = Instance.new("TextButton")
+					go.Size = UDim2.new(0, 30, 0, 16)
+					go.Position = UDim2.new(1, -36, 0.5, -8)
+					go.BackgroundColor3 = Color3.fromRGB(56, 132, 255)
+					go.BackgroundTransparency = 0.6
+					go.AutoButtonColor = false
+					go.Font = Enum.Font.GothamBold
+					go.Text = "Ir"
+					go.TextColor3 = Color3.fromRGB(255, 255, 255)
+					go.TextSize = 9
+					go.Visible = false
+					go.Parent = row
+					local gc = Instance.new("UICorner")
+					gc.CornerRadius = UDim.new(0, 5)
+					gc.Parent = go
+					go.MouseButton1Click:Connect(function()
+						if E.enabled and E.mode == "travel" then
+							stopMode("travel")
+							return
+						end
+						E.gotoName = ev[1]
+						E.gotoFn = function()
+							local active, pos = ev[2]()
+							return active and pos or nil
+						end
+						-- tarefa "travel" não tem toggle: o fim dela só chama stopMode
+						setters.travel = function() stopMode("travel") end
+						start("travel")
+					end)
+					rows[i] = {dot = dot, st = stL, go = go, active = false}
+				end
+
+				local announce = false
+				addToggle(sec, "Avisar quando um evento começar", function(state) announce = state end, false)
+				task.spawn(function()
+					local first = true
+					while sec.Parent do
+						for i, ev in ipairs(EVENTS) do
+							local ok, active, pos = pcall(ev[2])
+							active = ok and active == true
+							local r = rows[i]
+							if r then
+								if active and not r.active and announce and not first then
+									note("Evento: " .. ev[1], Color3.fromRGB(190, 160, 255))
+								end
+								r.active = active
+								r.dot.BackgroundColor3 = active and Color3.fromRGB(80, 220, 130) or Color3.fromRGB(80, 80, 100)
+								r.st.Text = active and "Ativo" or "Inativo"
+								r.st.TextColor3 = active and Color3.fromRGB(110, 255, 160) or Color3.fromRGB(120, 125, 150)
+								r.go.Visible = active and pos ~= nil
+							end
+						end
+						first = false
+						task.wait(2)
+					end
+				end)
+			end
+
+			screenGui.Destroying:Connect(function() E.enabled = false; releaseAll() end)
+		end)
 
 		task.spawn(function()
 			task.wait(1)
