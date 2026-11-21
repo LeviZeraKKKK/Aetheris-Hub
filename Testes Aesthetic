@@ -12216,7 +12216,7 @@ function showMainPanel()
 
 			-- ----- Lista de Eventos -----
 			do
-				local sec = createSection(page, "Lista de Eventos", sectionIcons.FarmAutomation)
+				local sec = createSection(pages["Misc"], "Lista de Eventos", sectionIcons.Travel)
 				bindStatus("travel", tiny(sec, "Toque em Ir para voar até o evento"))
 				local function modelPos(inst)
 					local ok, p = pcall(function() return inst:GetPivot().Position end)
@@ -12418,7 +12418,7 @@ function showMainPanel()
 
 			-- ----- Auto Raça V4 -----
 			do
-				local sec = createSection(page, "Auto Raça V4", sectionIcons.Physical)
+				local sec = createSection(pages["Auto"], "Auto Raça V4", sectionIcons.Physical)
 				local st = tiny(sec, "💤 Desligado")
 				local V = {token = 0, combatOnly = false}
 				addToggle(sec, "Auto Raça V4", function(state)
@@ -12467,7 +12467,7 @@ function showMainPanel()
 
 			-- ----- Rotação de Skills -----
 			do
-				local sec = createSection(page, "Rotação de Skills", sectionIcons.Physical)
+				local sec = createSection(pages["Combate"], "Rotação de Skills", sectionIcons.Physical)
 				local st = tiny(sec, "💤 Desligado")
 				local R = {token = 0, keys = {Z = true, X = true, C = true, V = false, F = false}, click = false,
 					interval = 0.8, weapon = "Held", nearOnly = true, range = 120}
@@ -12550,7 +12550,8 @@ function showMainPanel()
 
 			-- ----- Auto Guardar Fruta -----
 			do
-				local sec = createSection(page, "Auto Guardar Fruta", sectionIcons.World)
+				local sec = createSection(pages["Fruta"], "Auto Guardar Fruta", sectionIcons.FruitAutomation)
+				pcall(function() sec.Parent.LayoutOrder = 50 end)
 				local st = tiny(sec, "💤 Desligado")
 				local G = {token = 0, lastTry = {}}
 				addToggle(sec, "Auto Guardar Fruta", function(state)
@@ -12590,7 +12591,8 @@ function showMainPanel()
 
 			-- ----- Auto Comprar da Loja -----
 			do
-				local sec = createSection(page, "Auto Comprar da Loja", sectionIcons.World)
+				local sec = createSection(pages["Fruta"], "Auto Comprar da Loja", sectionIcons.FruitAutomation)
+				pcall(function() sec.Parent.LayoutOrder = 51 end)
 				local st = tiny(sec, "💤 Desligado")
 				local S = {token = 0, mode = "cheap", pick = "Rocket", maxK = 1000, bought = {}}
 				local FRUITS = {"Rocket", "Spin", "Blade", "Spring", "Bomb", "Smoke", "Spike", "Flame", "Ice", "Sand", "Dark", "Eagle",
