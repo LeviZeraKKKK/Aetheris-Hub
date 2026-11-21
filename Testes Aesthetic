@@ -16,7 +16,7 @@ local map = workspace:WaitForChild("Map", 5) or workspace
 if playerGui:FindFirstChild("AetherisHub") then
 	playerGui.AetherisHub:Destroy()
 end
-
+.
 -- ScreenGui Principal
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AetherisHub"
@@ -145,7 +145,7 @@ do
 		{"indisponível", "unavailable"}, {"não encontrado", "not found"}, {" de ", " of "},
 		{"Velocidade máx", "Max speed"}, {"Aceleração (por frame)", "Acceleration (per frame)"}, {"Altura sobre a água", "Height above water"},
 		{"Acelerar Barco", "Boost Boat"}, {"Modificar Barco", "Ship Modifier"}, {"Notificações", "Notifications"}, {"Notificação de teste", "Test notification"}, {"Tempo da notificação", "Notification time"}, {"Painel carregado com sucesso", "Panel loaded successfully"}, {"Posição", "Position"}, {"Embaixo", "Bottom"}, {"Em cima", "Top"}, {"Barco", "Boat"}, {"Entre em um barco", "Get in a boat"}, {"Desligado", "Off"},
-		{"★ Favoritos", "★ Favorites"}, {"Voar até o botão", "Fly to button"}, {"Deslizar", "Slide"}, {"Mola (elástico)", "Spring (elastic)"}, {"Animação: ", "Animation: "}, {"Limpar tudo", "Clear all"}, {"NOVO", "NEW"}, {"Auto Raça V4", "Auto Race V4"}, {"Rotação de Skills", "Skill Rotation"}, {"Auto Guardar Fruta", "Auto Store Fruit"}, {"Auto Comprar da Loja", "Auto Buy from Shop"}, {"Só ativar com inimigo por perto", "Only activate with enemy nearby"}, {"Só com inimigo por perto", "Only with enemy nearby"}, {"Usar Click (ataque básico)", "Use Click (basic attack)"}, {"Intervalo entre skills", "Delay between skills"}, {"Alcance do inimigo", "Enemy range"}, {"Preço máximo", "Max price"}, {"Comprar: ", "Buy: "}, {"A mais barata", "Cheapest"}, {"A mais cara possível", "Most expensive possible"}, {"Fruta específica", "Specific fruit"}, {"Equipada", "Held"},  {"Farm por Material", "Material Farm"}, {"Raid Automática", "Auto Raid"}, {"Lista de Eventos", "Event List"}, {"Material: ", "Material: "}, {"Parar ao ter (0 = nunca)", "Stop at amount (0 = never)"}, {"Iniciar a raid sozinho", "Start raid automatically"}, {"Pagar com: ", "Pay with: "}, {"Dinheiro (Beli)", "Money (Beli)"}, {"Fruta (a mais barata)", "Fruit (cheapest)"}, {"Avisar quando um evento começar", "Notify when an event starts"}, {"Ilha Mirage", "Mirage Island"}, {"Ilha Kitsune", "Kitsune Island"}, {"Ilha Pré-histórica", "Prehistoric Island"}, {"Lua Cheia", "Full Moon"}, {"Inativo", "Inactive"}, {"Ativo", "Active"},  {"Nada fixado ainda", "Nothing pinned yet"}, {" seção fixada", " section pinned"}, {" seções fixadas", " sections pinned"}, {"Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar.", "No favorite sections yet. Tap the ★ next to a section name to favorite it."},
+		{"★ Favoritos", "★ Favorites"}, {"Voar até o botão", "Fly to button"}, {"Deslizar", "Slide"}, {"Mola (elástico)", "Spring (elastic)"}, {"Animação: ", "Animation: "}, {"Limpar tudo", "Clear all"}, {"NOVO", "NEW"}, {"Auto Raça V4", "Auto Race V4"}, {"Rotação de Skills", "Skill Rotation"}, {"Auto Guardar Fruta", "Auto Store Fruit"}, {"Auto Comprar da Loja", "Auto Buy from Shop"}, {"Só ativar com inimigo por perto", "Only activate with enemy nearby"}, {"Só com inimigo por perto", "Only with enemy nearby"}, {"Usar Click (ataque básico)", "Use Click (basic attack)"}, {"Intervalo entre skills", "Delay between skills"}, {"Alcance do inimigo", "Enemy range"}, {"Preço máximo", "Max price"}, {"Comprar: ", "Buy: "}, {"A mais barata", "Cheapest"}, {"A mais cara possível", "Most expensive possible"}, {"Fruta específica", "Specific fruit"}, {"Equipada", "Held"}, {"Arma de fogo", "Gun"}, {"Modo: ", "Mode: "}, {"Rotação desligada", "Rotation off"},  {"Farm por Material", "Material Farm"}, {"Raid Automática", "Auto Raid"}, {"Lista de Eventos", "Event List"}, {"Material: ", "Material: "}, {"Parar ao ter (0 = nunca)", "Stop at amount (0 = never)"}, {"Iniciar a raid sozinho", "Start raid automatically"}, {"Pagar com: ", "Pay with: "}, {"Dinheiro (Beli)", "Money (Beli)"}, {"Fruta (a mais barata)", "Fruit (cheapest)"}, {"Avisar quando um evento começar", "Notify when an event starts"}, {"Ilha Mirage", "Mirage Island"}, {"Ilha Kitsune", "Kitsune Island"}, {"Ilha Pré-histórica", "Prehistoric Island"}, {"Lua Cheia", "Full Moon"}, {"Inativo", "Inactive"}, {"Ativo", "Active"},  {"Nada fixado ainda", "Nothing pinned yet"}, {" seção fixada", " section pinned"}, {" seções fixadas", " sections pinned"}, {"Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar.", "No favorite sections yet. Tap the ★ next to a section name to favorite it."},
 		{"Utilidades", "Utilities"},
 		{"Remover Partículas", "Remove Particles"}, {"Remover Rastros e Feixes", "Remove Trails and Beams"}, {"Remover Luzes", "Remove Lights"},
 		{"Sem Sombras nas Peças", "No Part Shadows"}, {"Materiais Simples", "Simple Materials"}, {"Remover Reflexos das Peças", "Remove Part Reflections"},
@@ -4376,7 +4376,7 @@ function showMainPanel()
 
 		-- Selo "NOVO" ao lado do nome das seções adicionadas recentemente.
 		do
-			local NEW_SECTIONS = {["Auto Stats"] = true, ["Auto Habilidades"] = true, ["Auto Kill Boss"] = true, ["FPS Boost"] = true, ["Modificar Barco"] = true, ["Farm por Material"] = true, ["Raid Automática"] = true, ["Lista de Eventos"] = true, ["Auto Raça V4"] = true, ["Rotação de Skills"] = true, ["Auto Guardar Fruta"] = true, ["Auto Comprar da Loja"] = true}
+			local NEW_SECTIONS = {["Auto Stats"] = true, ["Auto Habilidades"] = true, ["Auto Kill Boss"] = true, ["FPS Boost"] = true, ["Modificar Barco"] = true, ["Farm por Material"] = true, ["Raid Automática"] = true, ["Lista de Eventos"] = true, ["Rotação de Skills"] = true}
 			if NEW_SECTIONS[title] then
 				local chip = Instance.new("TextLabel")
 				chip.Name = "NewBadge"
@@ -6338,6 +6338,7 @@ function showMainPanel()
 	-- Tudo dentro de do...end e em tabelas (A e K) para não gastar variáveis locais (limite de 200).
 	do
 		local secAuto = createSection(pages["Auto"], "Auto Habilidades", sectionIcons.Physical)
+		AetherisSecAuto = secAuto
 		local CollectionSvc = game:GetService("CollectionService")
 		local ContextSvc = game:GetService("ContextActionService")
 		local A = {auraToken = 0, raceToken = 0}
@@ -9731,6 +9732,7 @@ function showMainPanel()
 	-----------------------------------------------------------------
 	do
 		local secAFL = createSection(secFarm.Parent.Parent, "Auto Farm Level", sectionIcons.FarmAutomation)
+		AetherisSecAFL = secAFL
 		local Q = {
 			enabled = false, hitDelay = 0.05, aoeRange = 80, flySpeed = 270, hoverHeight = 6,
 				lastHit = 0, combo = 1, questName = "?", questCat = nil, taskType = nil, questIndex = 1,
@@ -11422,15 +11424,17 @@ function showMainPanel()
 		end, false)
 
 		local weaponWarn = nil
-		local weaponLabels = {Melee = "Melee", Fruit = "Fruta", Sword = "Espada"}
+		local weaponLabels = {Melee = "Melee", Fruit = "Fruta", Sword = "Espada", Gun = "Arma de fogo"}
 		local weaponIcons = {
 			Melee = {Image = "rbxassetid://7733955664"}, -- mão de combate
 			Fruit = {Image = "rbxassetid://16898612629", Offset = Vector2.new(563, 869), RectSize = Vector2.new(48, 48)}, -- fruta
 			Sword = {Image = "rbxassetid://16898613777", Offset = Vector2.new(967, 759), RectSize = Vector2.new(48, 48)}, -- espadas
+			Gun = sectionIcons.SilentGun,
 		}
 		local function applyWeapon(v)
 			Q.weapon = v
 			if weaponWarn then weaponWarn.Visible = (v == "Fruit") end
+			if AetherisRotRefresh then AetherisRotRefresh() end
 			Q.updateLevelInfo()
 		end
 		local weaponDD = AetherisDropdown(secAFL, {
@@ -11438,12 +11442,13 @@ function showMainPanel()
 			label = weaponLabels.Melee,
 			icon = weaponIcons.Melee,
 			value = "Melee",
-			maxRows = 3,
+			maxRows = 4,
 			getOptions = function()
 				return {
 					{label = weaponLabels.Melee, value = "Melee", icon = weaponIcons.Melee},
 					{label = weaponLabels.Fruit, value = "Fruit", icon = weaponIcons.Fruit},
 					{label = weaponLabels.Sword, value = "Sword", icon = weaponIcons.Sword},
+					{label = weaponLabels.Gun, value = "Gun", icon = weaponIcons.Gun},
 				}
 			end,
 			onSelect = applyWeapon,
@@ -12418,7 +12423,7 @@ function showMainPanel()
 
 			-- ----- Auto Raça V4 -----
 			do
-				local sec = createSection(pages["Auto"], "Auto Raça V4", sectionIcons.Physical)
+				local sec = AetherisSecAuto or createSection(pages["Auto"], "Auto Raça V4", sectionIcons.Physical)
 				local st = tiny(sec, "💤 Desligado")
 				local V = {token = 0, combatOnly = false}
 				addToggle(sec, "Auto Raça V4", function(state)
@@ -12465,93 +12470,152 @@ function showMainPanel()
 				addToggle(sec, "Só ativar com inimigo por perto", function(state) V.combatOnly = state end, false)
 			end
 
-			-- ----- Rotação de Skills -----
+			-- ----- Rotação de Skills: fica dentro do Auto Farm Level e só aparece com Fruta ou Arma de fogo -----
 			do
-				local sec = createSection(pages["Combate"], "Rotação de Skills", sectionIcons.Physical)
-				local st = tiny(sec, "💤 Desligado")
-				local R = {token = 0, keys = {Z = true, X = true, C = true, V = false, F = false}, click = false,
-					interval = 0.8, weapon = "Held", nearOnly = true, range = 120}
-				local KEYCODES = {Z = Enum.KeyCode.Z, X = Enum.KeyCode.X, C = Enum.KeyCode.C, V = Enum.KeyCode.V, F = Enum.KeyCode.F}
-				local ORDER = {"Z", "X", "C", "V", "F"}
-				local function equipRot()
-					if R.weapon == "Held" or tick() - E.lastEquip < 1 then return end
-					local char = player.Character
-					local hum = char and char:FindFirstChildOfClass("Humanoid")
-					if not hum then return end
-					local function matches(t)
-						if toolType(t) ~= R.weapon then return false end
-						if R.weapon == "Fruit" and t.Name:find("Fruit$") then return false end -- fruta crua não é arma
-						return true
+				local sec = AetherisSecAFL
+				if sec then
+					local R = {token = 0, keys = {Z = true, X = true, C = true, V = false, F = false}, mode = "Click", interval = 0.8, range = 120}
+					local KEYCODES = {Z = Enum.KeyCode.Z, X = Enum.KeyCode.X, C = Enum.KeyCode.C, V = Enum.KeyCode.V, F = Enum.KeyCode.F}
+					local ORDER = {"Z", "X", "C", "V", "F"}
+					local before = {}
+					for _, c in ipairs(sec:GetChildren()) do before[c] = true end
+
+					local function weaponOk()
+						return Q.weapon == "Fruit" or Q.weapon == "Gun"
 					end
-					local cur = char:FindFirstChildOfClass("Tool")
-					if cur and matches(cur) then return end
-					E.lastEquip = tick()
-					local bp = player:FindFirstChild("Backpack")
-					if bp then
-						for _, t in ipairs(bp:GetChildren()) do
-							if t:IsA("Tool") and matches(t) then pcall(function() hum:EquipTool(t) end) return end
-						end
-					end
-				end
-				local function ready()
-					if not R.nearOnly then return true end
-					return enemyNear(R.range)
-				end
-				addToggle(sec, "Rotação de Skills", function(state)
-					R.token = R.token + 1
-					if not state then st.Text = "💤 Desligado"; st.TextColor3 = Color3.fromRGB(150, 150, 180) return end
-					if not VIM then
-						note("Seu executor não tem VirtualInputManager", Color3.fromRGB(255, 120, 120))
-					end
-					local my = R.token
-					-- skills em sequência
-					task.spawn(function()
-						while R.token == my and screenGui.Parent do
-							if ready() then
-								equipRot()
-								local used = false
-								for _, k in ipairs(ORDER) do
-									if R.token ~= my then break end
-									if R.keys[k] and ready() then
-										pressKey(KEYCODES[k])
-										st.Text = "🔁 Skill " .. k
-										st.TextColor3 = Color3.fromRGB(150, 220, 255)
-										used = true
-										task.wait(R.interval)
-									end
+					local function pickTarget()
+						local char = player.Character
+						local hrp = char and char:FindFirstChild("HumanoidRootPart")
+						local folder = workspace:FindFirstChild("Enemies")
+						if not hrp or not folder then return nil end
+						local best, bd = nil, R.range
+						for _, obj in ipairs(folder:GetChildren()) do
+							if obj:IsA("Model") then
+								local hum = obj:FindFirstChildOfClass("Humanoid")
+								local part = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Head")
+								if hum and hum.Health > 0 and part then
+									local d = (part.Position - hrp.Position).Magnitude
+									if d <= bd then best, bd = part, d end
 								end
-								if not used then task.wait(0.2) end
-							else
-								st.Text = "⏳ Aguardando inimigo"
-								st.TextColor3 = Color3.fromRGB(190, 190, 230)
-								task.wait(0.3)
 							end
 						end
-					end)
-					-- click (ataque básico) em paralelo
-					task.spawn(function()
-						while R.token == my and screenGui.Parent do
-							if R.click and ready() then clickScreen() end
-							task.wait(0.15)
+						return best
+					end
+					-- Mira só com o cursor (não gira a câmera): leva o mouse até onde o inimigo aparece na tela.
+					local function aimAt(part)
+						if not VIM then return nil end
+						local cam = workspace.CurrentCamera
+						if not cam then return nil end
+						local v, onScreen = cam:WorldToViewportPoint(part.Position)
+						if not onScreen or v.Z <= 0 then return nil end
+						pcall(function() VIM:SendMouseMoveEvent(v.X, v.Y, game) end)
+						return v
+					end
+					local function active()
+						return Q.enabled and weaponOk() and not Q.retreating
+					end
+
+					local st = tiny(sec, "💤 Rotação desligada")
+					addToggle(sec, "Rotação de Skills", function(state)
+						R.token = R.token + 1
+						if not state then st.Text = "💤 Rotação desligada"; st.TextColor3 = Color3.fromRGB(150, 150, 180) return end
+						if not VIM then note("Seu executor não tem VirtualInputManager", Color3.fromRGB(255, 120, 120)) end
+						local my = R.token
+						task.spawn(function()
+							while R.token == my and screenGui.Parent do
+								if not active() then
+									st.Text = "⏳ Aguardando Auto Farm Level com Fruta/Arma de fogo"
+									st.TextColor3 = Color3.fromRGB(190, 190, 230)
+									task.wait(0.5)
+								else
+									if R.mode == "Click" then
+										-- mesmo ataque do Melee/Espada: RegisterAttack + RegisterHit nos inimigos próximos
+										if tick() - Q.lastHit >= Q.hitDelay and Q.hitEvent then
+											local targets = Q.scanEnemies(Q.aoeRange)
+											if #targets > 0 then
+												Q.lastHit = tick()
+												Q.combo = (Q.combo % 4) + 1
+												if Q.attackEvent then pcall(function() Q.attackEvent:FireServer(0.3, Q.combo) end) end
+												local extras = {}
+												for i = 2, #targets do table.insert(extras, {targets[i].char, targets[i].part}) end
+												pcall(function() Q.hitEvent:FireServer(targets[1].part, extras) end)
+												st.Text = "🖱️ Click (ataque normal)"
+												st.TextColor3 = Color3.fromRGB(150, 220, 255)
+											else
+												st.Text = "⏳ Sem inimigo no alcance"
+												st.TextColor3 = Color3.fromRGB(190, 190, 230)
+											end
+										end
+										task.wait(0.03)
+									elseif not pickTarget() then
+										st.Text = "⏳ Sem inimigo no alcance"
+										st.TextColor3 = Color3.fromRGB(190, 190, 230)
+										task.wait(0.3)
+									else
+										local used = false
+										for _, k in ipairs(ORDER) do
+											if R.token ~= my or not active() then break end
+											if R.keys[k] then
+												local p = pickTarget()
+												if p then
+													if aimAt(p) then
+														task.wait(0.06)
+														pressKey(KEYCODES[k])
+														used = true
+														st.Text = "🔁 Skill " .. k .. " no inimigo"
+														st.TextColor3 = Color3.fromRGB(150, 220, 255)
+														task.wait(R.interval)
+													else
+														st.Text = "👀 Inimigo fora da tela"
+														st.TextColor3 = Color3.fromRGB(255, 205, 110)
+													end
+												end
+											end
+										end
+										if not used then task.wait(0.2) end
+									end
+								end
+							end
+						end)
+					end, false)
+
+					simpleDD(sec, "Modo: ", {{"Click", "Click"}, {"Skill", "Skills"}}, "Click", 2,
+						function(v) R.mode = v; if AetherisRotRefresh then AetherisRotRefresh() end end, "Rotação: modo", function() return R.mode end)
+
+					local midStart = {}
+					for _, c in ipairs(sec:GetChildren()) do midStart[c] = true end
+					for _, k in ipairs(ORDER) do
+						addToggle(sec, "Skill " .. k, function(state) R.keys[k] = state end, R.keys[k])
+					end
+					addSlider(sec, "Intervalo entre skills", 0.2, 5, 0.8, function(v) R.interval = v end, 1, "s")
+					local skillRows = {}
+					for _, c in ipairs(sec:GetChildren()) do
+						if not midStart[c] then skillRows[c] = true end
+					end
+					addSlider(sec, "Alcance do inimigo", 20, 300, 120, function(v) R.range = v end, 0, " studs")
+
+					local rows = {}
+					for _, c in ipairs(sec:GetChildren()) do
+						if not before[c] and c:IsA("GuiObject") then table.insert(rows, c) end
+					end
+					AetherisRotRefresh = function()
+						local show = weaponOk()
+						for _, r in ipairs(rows) do
+							if skillRows[r] then
+								r.Visible = show and R.mode == "Skill"
+							else
+								r.Visible = show
+							end
 						end
-					end)
-				end, false)
-				simpleDD(sec, "Arma: ", {{"Held", "Equipada"}, {"Fruit", "Fruta"}, {"Melee", "Melee"}, {"Sword", "Espada"}}, "Held", 4,
-					function(v) R.weapon = v; if R.warn then R.warn.Visible = (v == "Fruit") end end, "Rotação: arma", function() return R.weapon end)
-				R.warn = AetherisFruitWarn(sec)
-				addToggle(sec, "Usar Click (ataque básico)", function(state) R.click = state end, false)
-				for _, k in ipairs(ORDER) do
-					addToggle(sec, "Skill " .. k, function(state) R.keys[k] = state end, R.keys[k])
+					end
+					AetherisRotRefresh()
 				end
-				addSlider(sec, "Intervalo entre skills", 0.2, 5, 0.8, function(v) R.interval = v end, 1, "s")
-				addToggle(sec, "Só com inimigo por perto", function(state) R.nearOnly = state end, true)
-				addSlider(sec, "Alcance do inimigo", 20, 300, 120, function(v) R.range = v end, 0, " studs")
 			end
 
-			-- ----- Auto Guardar Fruta -----
+			-- ----- Auto Guardar Fruta e Auto Comprar da Loja: entram na seção "Automatização" da aba Fruta -----
+			AetherisBuildFruitAuto = function(secFruta)
 			do
-				local sec = createSection(pages["Fruta"], "Auto Guardar Fruta", sectionIcons.FruitAutomation)
-				pcall(function() sec.Parent.LayoutOrder = 50 end)
+				local sec = secFruta
 				local st = tiny(sec, "💤 Desligado")
 				local G = {token = 0, lastTry = {}}
 				addToggle(sec, "Auto Guardar Fruta", function(state)
@@ -12591,8 +12655,7 @@ function showMainPanel()
 
 			-- ----- Auto Comprar da Loja -----
 			do
-				local sec = createSection(pages["Fruta"], "Auto Comprar da Loja", sectionIcons.FruitAutomation)
-				pcall(function() sec.Parent.LayoutOrder = 51 end)
+				local sec = secFruta
 				local st = tiny(sec, "💤 Desligado")
 				local S = {token = 0, mode = "cheap", pick = "Rocket", maxK = 1000, bought = {}}
 				local FRUITS = {"Rocket", "Spin", "Blade", "Spring", "Bomb", "Smoke", "Spike", "Flame", "Ice", "Sand", "Dark", "Eagle",
@@ -12677,6 +12740,8 @@ function showMainPanel()
 				simpleDD(sec, "Fruta específica: ", pickOpts, "Rocket", 6, function(v) S.pick = v end, "Loja: fruta", function() return S.pick end)
 				addSlider(sec, "Preço máximo", 0, 5000, 1000, function(v) S.maxK = v end, 0, "k")
 			end
+
+			end -- AetherisBuildFruitAuto
 
 			screenGui.Destroying:Connect(function() E.enabled = false; releaseAll() end)
 		end)
@@ -13461,6 +13526,7 @@ function showMainPanel()
 	rollStatusStroke.Thickness = 1
 	rollStatusStroke.Parent = rollStatusLabel
 	table.insert(themeSections, rollStatusStroke)
+	if AetherisBuildFruitAuto then pcall(AetherisBuildFruitAuto, secFrutaAction) end
 
 	local rollOnceBusy = false
 	rollOnceButton.MouseButton1Click:Connect(function()
@@ -16359,7 +16425,9 @@ function FVX.playRows(col)
 end
 
 local function createRow(sc, accent)
-    local row = Instance.new("Frame")
+    local row = Instance.new("TextButton")
+    row.Text = ""
+    row.AutoButtonColor = false
     row.Size = UDim2.new(1, -4, 0, 26)
     row.BorderSizePixel = 0
     row.BackgroundColor3 = Color3.fromRGB(35, 39, 54)
@@ -16431,6 +16499,46 @@ local function createRow(sc, accent)
     Instance.new("UICorner", bar).CornerRadius = UDim.new(1, 0)
 
     local entry = {row = row, name = name, price = priceLabel, pill = pill, baseColor = row.BackgroundColor3}
+    -- Toque na fruta para comprar: 1º toque pede confirmação, 2º toque (em 3s) compra.
+    row.Activated:Connect(function()
+        local fruitName, adv, cost = entry.fruitName, entry.adv, entry.cost
+        if not fruitName then return end
+        local function note(text, color)
+            if AetherisNotify then pcall(AetherisNotify, text, color or Color3.fromRGB(150, 190, 255), 3) end
+        end
+        if cost and getBeli() < cost then
+            note("Beli insuficiente para " .. fruitName, Color3.fromRGB(255, 160, 120))
+            return
+        end
+        if not entry.confirmAt or tick() - entry.confirmAt > 3 then
+            entry.confirmAt = tick()
+            local old = entry.price.Text
+            entry.price.Text = "Comprar?"
+            task.delay(3, function()
+                if entry.confirmAt and tick() - entry.confirmAt >= 2.9 then
+                    entry.confirmAt = nil
+                    if entry.fruitName == fruitName then entry.price.Text = old end
+                end
+            end)
+            return
+        end
+        entry.confirmAt = nil
+        entry.price.Text = "Comprando..."
+        task.spawn(function()
+            local before = getBeli()
+            pcall(function()
+                local remote = StateUtil and StateUtil.CommRemoteFunc
+                if remote then remote:InvokeServer("PurchaseRawFruit", fruitName, adv) end
+            end)
+            task.wait(1)
+            if getBeli() < before then
+                note("Comprou " .. fruitName, Color3.fromRGB(110, 255, 160))
+            else
+                note("Compra não confirmada: " .. fruitName, Color3.fromRGB(255, 160, 120))
+            end
+            if AetherisStockRefresh then AetherisStockRefresh() end
+        end)
+    end)
     row.MouseEnter:Connect(function()
         TweenService:Create(row, TweenInfo.new(0.12), {BackgroundColor3 = entry.baseColor:Lerp(accent, 0.18)}):Play()
         TweenService:Create(bar, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 3, 0, 14)}):Play()
@@ -16513,6 +16621,7 @@ local function render(adv, fruits)
             entry.baseColor = entry.row.BackgroundColor3
             entry.name.Text = fruit.Name
             local price = getFruitPrice(fruit)
+            entry.fruitName, entry.adv, entry.cost, entry.confirmAt = fruit.Name, adv, price, nil
             entry.price.Text = price and formatBeli(price) or "N/D"
             if not price then
                 entry.price.TextColor3 = Color3.fromRGB(155, 160, 176)
@@ -16617,6 +16726,7 @@ local function refreshAll()
     fetchCol(false)
     fetchCol(true)
 end
+AetherisStockRefresh = refreshAll
 
 -- Liga o saldo do jogador com retry para o caso de Data/Beli ainda não existir.
 task.spawn(function()
