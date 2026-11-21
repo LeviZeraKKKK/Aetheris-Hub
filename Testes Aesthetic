@@ -145,7 +145,7 @@ do
 		{"indisponível", "unavailable"}, {"não encontrado", "not found"}, {" de ", " of "},
 		{"Velocidade máx", "Max speed"}, {"Aceleração (por frame)", "Acceleration (per frame)"}, {"Altura sobre a água", "Height above water"},
 		{"Acelerar Barco", "Boost Boat"}, {"Modificar Barco", "Ship Modifier"}, {"Notificações", "Notifications"}, {"Notificação de teste", "Test notification"}, {"Tempo da notificação", "Notification time"}, {"Painel carregado com sucesso", "Panel loaded successfully"}, {"Posição", "Position"}, {"Embaixo", "Bottom"}, {"Em cima", "Top"}, {"Barco", "Boat"}, {"Entre em um barco", "Get in a boat"}, {"Desligado", "Off"},
-		{"★ Favoritos", "★ Favorites"}, {"Voar até o botão", "Fly to button"}, {"Deslizar", "Slide"}, {"Mola (elástico)", "Spring (elastic)"}, {"Animação: ", "Animation: "}, {"Limpar tudo", "Clear all"}, {"NOVO", "NEW"}, {"Farm por Material", "Material Farm"}, {"Raid Automática", "Auto Raid"}, {"Lista de Eventos", "Event List"}, {"Material: ", "Material: "}, {"Parar ao ter (0 = nunca)", "Stop at amount (0 = never)"}, {"Iniciar a raid sozinho", "Start raid automatically"}, {"Avisar quando um evento começar", "Notify when an event starts"}, {"Ilha Mirage", "Mirage Island"}, {"Ilha Kitsune", "Kitsune Island"}, {"Ilha Pré-histórica", "Prehistoric Island"}, {"Lua Cheia", "Full Moon"}, {"Inativo", "Inactive"}, {"Ativo", "Active"},  {"Nada fixado ainda", "Nothing pinned yet"}, {" seção fixada", " section pinned"}, {" seções fixadas", " sections pinned"}, {"Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar.", "No favorite sections yet. Tap the ★ next to a section name to favorite it."},
+		{"★ Favoritos", "★ Favorites"}, {"Voar até o botão", "Fly to button"}, {"Deslizar", "Slide"}, {"Mola (elástico)", "Spring (elastic)"}, {"Animação: ", "Animation: "}, {"Limpar tudo", "Clear all"}, {"NOVO", "NEW"}, {"Farm por Material", "Material Farm"}, {"Raid Automática", "Auto Raid"}, {"Lista de Eventos", "Event List"}, {"Material: ", "Material: "}, {"Parar ao ter (0 = nunca)", "Stop at amount (0 = never)"}, {"Iniciar a raid sozinho", "Start raid automatically"}, {"Pagar com: ", "Pay with: "}, {"Dinheiro (Beli)", "Money (Beli)"}, {"Fruta (a mais barata)", "Fruit (cheapest)"}, {"Avisar quando um evento começar", "Notify when an event starts"}, {"Ilha Mirage", "Mirage Island"}, {"Ilha Kitsune", "Kitsune Island"}, {"Ilha Pré-histórica", "Prehistoric Island"}, {"Lua Cheia", "Full Moon"}, {"Inativo", "Inactive"}, {"Ativo", "Active"},  {"Nada fixado ainda", "Nothing pinned yet"}, {" seção fixada", " section pinned"}, {" seções fixadas", " sections pinned"}, {"Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar.", "No favorite sections yet. Tap the ★ next to a section name to favorite it."},
 		{"Utilidades", "Utilities"},
 		{"Remover Partículas", "Remove Particles"}, {"Remover Rastros e Feixes", "Remove Trails and Beams"}, {"Remover Luzes", "Remove Lights"},
 		{"Sem Sombras nas Peças", "No Part Shadows"}, {"Materiais Simples", "Simple Materials"}, {"Remover Reflexos das Peças", "Remove Part Reflections"},
@@ -9760,6 +9760,33 @@ function showMainPanel()
 			},
 		}
 
+		-- Aviso da fruta (precisa ter CLICK): usado nas seções de Boss, Material e Raid
+		function AetherisFruitWarn(sec)
+			local box = Instance.new("TextLabel")
+			box.Name = "FruitClickWarning"
+			box.Size = UDim2.new(1, 0, 0, 40)
+			box.BackgroundColor3 = Color3.fromRGB(60, 46, 16)
+			box.BackgroundTransparency = 0.2
+			box.BorderSizePixel = 0
+			box.Font = currentGlobalFont
+			box.TextSize = 9
+			box.TextColor3 = Color3.fromRGB(255, 205, 110)
+			box.TextWrapped = true
+			box.TextXAlignment = Enum.TextXAlignment.Left
+			box.TextYAlignment = Enum.TextYAlignment.Center
+			box.Text = "⚠️ Para usar a Fruta, ela precisa ter CLICK (a habilidade de clique/ataque básico). Fruta sem click não ataca."
+			box.Visible = false
+			box.Parent = sec
+			local c = Instance.new("UICorner")
+			c.CornerRadius = UDim.new(0, 5)
+			c.Parent = box
+			local pad = Instance.new("UIPadding")
+			pad.PaddingLeft = UDim.new(0, 8)
+			pad.PaddingRight = UDim.new(0, 8)
+			pad.Parent = box
+			return box
+		end
+
 		-- Painéis de informação (nível/quest e status)
 		local function makeInfoBox(height, text)
 			local box = Instance.new("TextLabel")
@@ -11496,7 +11523,7 @@ function showMainPanel()
 
 			addToggle(secBoss, "Pegar quest do boss", function(state) BossLogic.wantQuest = state end, false)
 
-			local bossWeaponDD
+			local bossWeaponDD, bossWarn
 			bossWeaponDD = AetherisDropdown(secBoss, {
 				prefix = "Arma: ",
 				label = weaponLabels.Melee,
@@ -11511,11 +11538,13 @@ function showMainPanel()
 					end
 					return opts
 				end,
-				onSelect = function(v) BossLogic.weapon = v end,
+				onSelect = function(v) BossLogic.weapon = v; if bossWarn then bossWarn.Visible = (v == "Fruit") end end,
 			})
+			bossWarn = AetherisFruitWarn(secBoss)
 			registerConfigBinding(secBoss, "Boss: arma", function() return BossLogic.weapon end, function(v)
 				if weaponLabels[v] then
 					BossLogic.weapon = v
+					bossWarn.Visible = (v == "Fruit")
 					bossWeaponDD.setValue(v, weaponLabels[v], weaponIcons[v])
 				end
 			end)
@@ -11549,7 +11578,7 @@ function showMainPanel()
 					raid = {weapon = "Melee", height = 12, speed = 270},
 					travel = {weapon = "Melee", height = 25, speed = 270},
 				},
-				material = nil, goal = 0, chip = "Flame", autoRaid = true, gotoFn = nil, gotoName = "",
+				material = nil, goal = 0, chip = "Flame", pay = "Beli", autoRaid = true, gotoFn = nil, gotoName = "",
 			}
 			local say = {}
 			local setters = {}
@@ -11842,6 +11871,78 @@ function showMainPanel()
 				end
 			end
 
+			-- ===== comprar o chip: com Beli ou com uma fruta (a de menor valor) =====
+			local function findTool(pred)
+				local char = player.Character
+				local bp = player:FindFirstChild("Backpack")
+				for _, holder in ipairs({char, bp}) do
+					if holder then
+						for _, t in ipairs(holder:GetChildren()) do
+							if t:IsA("Tool") and pred(t) then return t end
+						end
+					end
+				end
+				return nil
+			end
+			local function hasChip()
+				return findTool(function(t) return t.Name:lower():find("microchip", 1, true) ~= nil end) ~= nil
+			end
+			local function cheapestStoredFruit()
+				if not E.comm then return nil end
+				local ok, inv = pcall(function() return E.comm:InvokeServer("getInventory") end)
+				if not ok or type(inv) ~= "table" then return nil end
+				local best
+				for _, it in pairs(inv) do
+					if type(it) == "table" and it.Type == "Blox Fruit" and (it.Count or 1) > 0 then
+						local v = tonumber(it.Value) or math.huge
+						if not best or v < best.value then best = {name = it.Name, value = v} end
+					end
+				end
+				return best
+			end
+			local function holdFruit()
+				local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+				local function isFruit(t) return toolType(t) == "Fruit" end
+				local tool = findTool(isFruit)
+				if not tool then
+					-- sem fruta na mochila: abre o inventário e tira a de menor valor
+					local best = cheapestStoredFruit()
+					if not best then return false, "sem fruta no inventário" end
+					say.raid("🎒 Tirando " .. best.name .. " do inventário", Color3.fromRGB(255, 205, 110))
+					pcall(function() E.comm:InvokeServer("LoadFruit", best.name) end)
+					for _ = 1, 16 do
+						task.wait(0.25)
+						tool = findTool(isFruit)
+						if tool then break end
+					end
+					if not tool then return false, "não consegui tirar a fruta" end
+				end
+				if hum and tool.Parent ~= player.Character then pcall(function() hum:EquipTool(tool) end) end
+				task.wait(0.3)
+				return true
+			end
+			local function ensureChip()
+				if hasChip() then return true end
+				if E.pay == "Fruta" then
+					local ok, why = holdFruit()
+					if not ok then
+						say.raid("⚠️ " .. why, Color3.fromRGB(255, 160, 120))
+						return false
+					end
+				else
+					-- Beli: guarda a fruta da mão para o jogo cobrar em dinheiro
+					local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+					if hum then pcall(function() hum:UnequipTools() end) end
+				end
+				say.raid("🔮 Comprando chip " .. E.chip .. " (" .. (E.pay == "Fruta" and "fruta" or "Beli") .. ")", Color3.fromRGB(190, 160, 255))
+				pcall(function() E.comm:InvokeServer("RaidsNpc", "Select", E.chip) end)
+				task.wait(0.8)
+				if not hasChip() then
+					say.raid("⚠️ Compra do chip não confirmada", Color3.fromRGB(255, 160, 120))
+				end
+				return true
+			end
+
 			local function raidActive()
 				local gui = player:FindFirstChild("PlayerGui")
 				local main = gui and gui:FindFirstChild("Main")
@@ -11922,9 +12023,11 @@ function showMainPanel()
 				fly(hrp, Vector3.zero)
 				if tick() - E.lastRaidTry > 8 then
 					E.lastRaidTry = tick()
+					if not ensureChip() then return end
 					say.raid("🔮 Iniciando raid (" .. E.chip .. ")", Color3.fromRGB(190, 160, 255))
-					pcall(function() E.comm:InvokeServer("RaidsNpc", "Select", E.chip) end)
-					task.wait(0.6)
+					local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+					if hum then pcall(function() hum:UnequipTools() end) end
+					task.wait(0.3)
 					if fireclickdetector then
 						pcall(fireclickdetector, cd)
 					else
@@ -11990,7 +12093,7 @@ function showMainPanel()
 				return AetherisToggleSet and AetherisToggleSet[sec] and AetherisToggleSet[sec][name] or nil
 			end
 			local function weaponDropdown(sec, mode, tag)
-				local dd
+				local dd, warn
 				dd = AetherisDropdown(sec, {
 					prefix = "Arma: ",
 					label = "Melee",
@@ -12002,10 +12105,11 @@ function showMainPanel()
 						for _, v in ipairs({"Melee", "Fruit", "Sword"}) do table.insert(opts, {label = WEAPON_LABELS[v], value = v}) end
 						return opts
 					end,
-					onSelect = function(v) E.cfg[mode].weapon = v end,
+					onSelect = function(v) E.cfg[mode].weapon = v; if warn then warn.Visible = (v == "Fruit") end end,
 				})
+				warn = AetherisFruitWarn(sec)
 				registerConfigBinding(sec, tag .. ": arma", function() return E.cfg[mode].weapon end, function(v)
-					if WEAPON_LABELS[v] then E.cfg[mode].weapon = v; dd.setValue(v, WEAPON_LABELS[v]) end
+					if WEAPON_LABELS[v] then E.cfg[mode].weapon = v; dd.setValue(v, WEAPON_LABELS[v]); warn.Visible = (v == "Fruit") end
 				end)
 			end
 
@@ -12087,6 +12191,22 @@ function showMainPanel()
 				})
 				registerConfigBinding(sec, "Raid: chip", function() return E.chip end, function(v)
 					if table.find(CHIPS, v) then E.chip = v; dd.setValue(v, v) end
+				end)
+				local payLabels = {Beli = "Dinheiro (Beli)", Fruta = "Fruta (a mais barata)"}
+				local payDD
+				payDD = AetherisDropdown(sec, {
+					prefix = "Pagar com: ",
+					label = payLabels.Beli,
+					value = "Beli",
+					maxRows = 2,
+					boxWidth = 130,
+					getOptions = function()
+						return {{label = payLabels.Beli, value = "Beli"}, {label = payLabels.Fruta, value = "Fruta"}}
+					end,
+					onSelect = function(v) E.pay = v end,
+				})
+				registerConfigBinding(sec, "Raid: pagamento", function() return E.pay end, function(v)
+					if payLabels[v] then E.pay = v; payDD.setValue(v, payLabels[v]) end
 				end)
 				addToggle(sec, "Iniciar a raid sozinho", function(state) E.autoRaid = state end, true)
 				weaponDropdown(sec, "raid", "Raid")
