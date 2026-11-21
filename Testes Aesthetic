@@ -145,7 +145,7 @@ do
 		{"indisponível", "unavailable"}, {"não encontrado", "not found"}, {" de ", " of "},
 		{"Velocidade máx", "Max speed"}, {"Aceleração (por frame)", "Acceleration (per frame)"}, {"Altura sobre a água", "Height above water"},
 		{"Acelerar Barco", "Boost Boat"}, {"Modificar Barco", "Ship Modifier"}, {"Notificações", "Notifications"}, {"Notificação de teste", "Test notification"}, {"Tempo da notificação", "Notification time"}, {"Painel carregado com sucesso", "Panel loaded successfully"}, {"Posição", "Position"}, {"Embaixo", "Bottom"}, {"Em cima", "Top"}, {"Barco", "Boat"}, {"Entre em um barco", "Get in a boat"}, {"Desligado", "Off"},
-		{"★ Favoritos", "★ Favorites"}, {"Voar até o botão", "Fly to button"}, {"Deslizar", "Slide"}, {"Mola (elástico)", "Spring (elastic)"}, {"Animação: ", "Animation: "}, {"Limpar tudo", "Clear all"}, {"NOVO", "NEW"}, {"Auto Raça V4", "Auto Race V4"}, {"Rotação de Skills", "Skill Rotation"}, {"Auto Guardar Fruta", "Auto Store Fruit"}, {"Auto Comprar da Loja", "Auto Buy from Shop"}, {"Só ativar com inimigo por perto", "Only activate with enemy nearby"}, {"Só com inimigo por perto", "Only with enemy nearby"}, {"Usar Click (ataque básico)", "Use Click (basic attack)"}, {"Intervalo entre skills", "Delay between skills"}, {"Alcance do inimigo", "Enemy range"}, {"Preço máximo", "Max price"}, {"Comprar: ", "Buy: "}, {"A mais barata", "Cheapest"}, {"A mais cara possível", "Most expensive possible"}, {"Fruta específica", "Specific fruit"}, {"Equipada", "Held"}, {"Arma de fogo", "Gun"}, {"Modo: ", "Mode: "}, {"Rotação desligada", "Rotation off"},  {"Farm por Material", "Material Farm"}, {"Raid Automática", "Auto Raid"}, {"Lista de Eventos", "Event List"}, {"Material: ", "Material: "}, {"Parar ao ter (0 = nunca)", "Stop at amount (0 = never)"}, {"Iniciar a raid sozinho", "Start raid automatically"}, {"Pagar com: ", "Pay with: "}, {"Dinheiro (Beli)", "Money (Beli)"}, {"Fruta (a mais barata)", "Fruit (cheapest)"}, {"Avisar quando um evento começar", "Notify when an event starts"}, {"Ilha Mirage", "Mirage Island"}, {"Ilha Kitsune", "Kitsune Island"}, {"Ilha Pré-histórica", "Prehistoric Island"}, {"Lua Cheia", "Full Moon"}, {"Inativo", "Inactive"}, {"Ativo", "Active"},  {"Nada fixado ainda", "Nothing pinned yet"}, {" seção fixada", " section pinned"}, {" seções fixadas", " sections pinned"}, {"Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar.", "No favorite sections yet. Tap the ★ next to a section name to favorite it."},
+		{"★ Favoritos", "★ Favorites"}, {"Voar até o botão", "Fly to button"}, {"Deslizar", "Slide"}, {"Mola (elástico)", "Spring (elastic)"}, {"Animação: ", "Animation: "}, {"Limpar tudo", "Clear all"}, {"NOVO", "NEW"}, {"Silent Aim Universal", "Universal Silent Aim"}, {"Players e NPCs", "Players and NPCs"}, {"Só players", "Players only"}, {"Só NPCs", "NPCs only"}, {"Mais perto da mira", "Closest to aim"}, {"Mais perto de mim", "Closest to me"}, {"Menor vida", "Lowest health"}, {"Alvos: ", "Targets: "}, {"Prioridade: ", "Priority: "}, {"Parte: ", "Part: "}, {"Tronco", "Torso"}, {"Cabeça", "Head"}, {"FOV (0 = tela toda)", "FOV (0 = whole screen)"}, {"Ignorar amigos do Roblox", "Ignore Roblox friends"}, {"Ignorar aliados do Aim", "Ignore Aim allies"},  {"Limpar Stun/Busy", "Clear Stun/Busy"}, {"Impedir cair no chão (ragdoll)", "Prevent falling down (ragdoll)"}, {"Restaurar velocidade e pulo congelados", "Restore frozen speed and jump"},  {"Bosses vivos agora", "Live bosses"}, {"Fruta no mapa", "Fruit on map"}, {"Copiar Job ID", "Copy Job ID"}, {"Tempo no servidor", "Server time"}, {"Tempo de uso do hub", "Hub uptime"}, {"Tarefa extra", "Extra task"}, {"Nenhum boss vivo por perto.", "No live boss nearby."},  {"Sobre o Aetheris Hub", "About Aetheris Hub"}, {"Como usar", "How to use"}, {"Novidades", "What's new"}, {"Avisos", "Notices"}, {"Script feito por Noahzin.", "Script made by Noahzin."}, {"Executor suportado: Delta.", "Supported executor: Delta."}, {"Use por sua conta e risco.", "Use at your own risk."},  {"Auto Raça V4", "Auto Race V4"}, {"Rotação de Skills", "Skill Rotation"}, {"Auto Guardar Fruta", "Auto Store Fruit"}, {"Auto Comprar da Loja", "Auto Buy from Shop"}, {"Só ativar com inimigo por perto", "Only activate with enemy nearby"}, {"Só com inimigo por perto", "Only with enemy nearby"}, {"Usar Click (ataque básico)", "Use Click (basic attack)"}, {"Intervalo entre skills", "Delay between skills"}, {"Alcance do inimigo", "Enemy range"}, {"Preço máximo", "Max price"}, {"Comprar: ", "Buy: "}, {"A mais barata", "Cheapest"}, {"A mais cara possível", "Most expensive possible"}, {"Fruta específica", "Specific fruit"}, {"Equipada", "Held"}, {"Arma de fogo", "Gun"}, {"Modo: ", "Mode: "}, {"Rotação desligada", "Rotation off"},  {"Farm por Material", "Material Farm"}, {"Raid Automática", "Auto Raid"}, {"Lista de Eventos", "Event List"}, {"Material: ", "Material: "}, {"Parar ao ter (0 = nunca)", "Stop at amount (0 = never)"}, {"Iniciar a raid sozinho", "Start raid automatically"}, {"Pagar com: ", "Pay with: "}, {"Dinheiro (Beli)", "Money (Beli)"}, {"Fruta (a mais barata)", "Fruit (cheapest)"}, {"Avisar quando um evento começar", "Notify when an event starts"}, {"Ilha Mirage", "Mirage Island"}, {"Ilha Kitsune", "Kitsune Island"}, {"Ilha Pré-histórica", "Prehistoric Island"}, {"Lua Cheia", "Full Moon"}, {"Inativo", "Inactive"}, {"Ativo", "Active"},  {"Nada fixado ainda", "Nothing pinned yet"}, {" seção fixada", " section pinned"}, {" seções fixadas", " sections pinned"}, {"Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar.", "No favorite sections yet. Tap the ★ next to a section name to favorite it."},
 		{"Utilidades", "Utilities"},
 		{"Remover Partículas", "Remove Particles"}, {"Remover Rastros e Feixes", "Remove Trails and Beams"}, {"Remover Luzes", "Remove Lights"},
 		{"Sem Sombras nas Peças", "No Part Shadows"}, {"Materiais Simples", "Simple Materials"}, {"Remover Reflexos das Peças", "Remove Part Reflections"},
@@ -2883,7 +2883,8 @@ function showMainPanel()
 		{Name = "Farming", Image = "rbxassetid://16898613777", Offset = Vector2.new(918, 306)},
 		{Name = "Fruta", En = "Fruit", Image = "rbxassetid://16898612629", Offset = Vector2.new(563, 869)},
 		{Name = "Misc", Image = "rbxassetid://7733970390", Offset = Vector2.new(0, 0), RectSize = Vector2.new(0, 0)},
-		{Name = "Config", Image = "rbxassetid://16898613777", Offset = Vector2.new(771, 257)}
+		{Name = "Config", Image = "rbxassetid://16898613777", Offset = Vector2.new(771, 257)},
+		{Name = "Information", Display = "Information", En = "Information", Image = "rbxassetid://6031068421", Offset = Vector2.new(0, 0), RectSize = Vector2.new(0, 0)}
 	}
 
 		-- Ícones por significado: sprites de atlas usam recortes 48x48; assets individuais definem RectSize próprio.
@@ -12281,7 +12282,7 @@ function showMainPanel()
 
 			-- ----- Lista de Eventos -----
 			do
-				local sec = createSection(pages["Misc"], "Lista de Eventos", sectionIcons.Travel)
+				local sec = createSection(pages["Information"], "Lista de Eventos", sectionIcons.Travel)
 				bindStatus("travel", tiny(sec, "Toque em Ir para voar até o evento"))
 				local function modelPos(inst)
 					local ok, p = pcall(function() return inst:GetPivot().Position end)
@@ -12314,6 +12315,15 @@ function showMainPanel()
 					{"Sea Beast", inFolder("SeaBeasts", ".", "Leviathan")},
 					{"Leviathan", inFolder("SeaBeasts", "Leviathan")},
 					{"Terrorshark", inFolder("Enemies", "^Terrorshark")},
+					{"Fruta no mapa", function()
+						for _, c in ipairs(workspace:GetChildren()) do
+							if c:IsA("Tool") and c.Name:find("Fruit$") then
+								local h = c:FindFirstChild("Handle")
+								return true, h and h.Position or nil
+							end
+						end
+						return false
+					end},
 					{"Lua Cheia", function()
 						local sky = Lighting:FindFirstChildOfClass("Sky")
 						return sky ~= nil and tostring(sky.MoonTextureId):find("9709149431", 1, true) ~= nil
@@ -12676,6 +12686,8 @@ function showMainPanel()
 			AetherisBuildFruitAuto = function(secFruta)
 			do
 				local sec = secFruta
+				local beforeG = {}
+				for _, c in ipairs(sec:GetChildren()) do beforeG[c] = true end
 				local st = tiny(sec, "💤 Desligado")
 				local G = {token = 0, lastTry = {}}
 				addToggle(sec, "Auto Guardar Fruta", function(state)
@@ -12711,6 +12723,14 @@ function showMainPanel()
 						end
 					end)
 				end, false)
+				-- sobe o Auto Guardar Fruta (toggle + status) para o topo da seção Automatização
+				local newOnes = {}
+				for _, c in ipairs(sec:GetChildren()) do
+					if not beforeG[c] and c:IsA("GuiObject") then table.insert(newOnes, c) end
+				end
+				for idx, c in ipairs(newOnes) do
+					c.LayoutOrder = -20 + (#newOnes - idx) -- o toggle (criado por último) fica em cima do status
+				end
 			end
 
 			-- ----- Auto Comprar da Loja -----
@@ -12802,6 +12822,490 @@ function showMainPanel()
 			end
 
 			end -- AetherisBuildFruitAuto
+
+			-- ===== Silent Aim Universal (aba Combate): vale para todas as armas, frutas e estilos =====
+			-- Faz o jogo "ler" o mouse apontando para o alvo (Mouse.Hit / Target / X / Y / UnitRay e
+			-- UserInputService:GetMouseLocation), então qualquer skill ou arma que mire no mouse acerta o alvo,
+			-- sem mexer na câmera nem no cursor.
+			do
+				local sec = createSection(pages["Combate"], "Silent Aim Universal", sectionIcons.SilentGun)
+				local st = tiny(sec, "💤 Desligado")
+				local UIS = game:GetService("UserInputService")
+				local GuiSvc = game:GetService("GuiService")
+				local mouse = player:GetMouse()
+				local S = {
+					on = false, targets = "Both", priority = "Mouse", part = "Root", fov = 300, range = 600,
+					friends = true, allies = true,
+					target = nil, tpart = nil, pos = nil, sx = 0, sy = 0, name = "", dist = 0,
+					hooked = false, conn = nil, last = 0,
+				}
+
+				local function installHooks()
+					if S.hooked then return true end
+					if not (hookmetamethod and newcclosure and getnamecallmethod) then return false end
+					local checker = checkcaller or function() return false end
+					local ok = pcall(function()
+						local oldIndex
+						oldIndex = hookmetamethod(game, "__index", newcclosure(function(self, key)
+							if S.on and S.pos and self == mouse and not checker() then
+								if key == "Hit" then
+									return CFrame.new(S.pos)
+								elseif key == "Target" then
+									return S.tpart
+								elseif key == "X" then
+									return S.sx
+								elseif key == "Y" then
+									return S.sy
+								elseif key == "UnitRay" then
+									local cam = workspace.CurrentCamera
+									if cam then
+										local o = cam.CFrame.Position
+										return Ray.new(o, (S.pos - o).Unit)
+									end
+								end
+							end
+							return oldIndex(self, key)
+						end))
+						local oldNamecall
+						oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+							if S.on and S.pos and not checker() and self == UIS then
+								if getnamecallmethod() == "GetMouseLocation" then
+									return Vector2.new(S.sx, S.sy + GuiSvc:GetGuiInset().Y)
+								end
+							end
+							return oldNamecall(self, ...)
+						end))
+					end)
+					S.hooked = ok
+					return ok
+				end
+
+				local function aimPoint()
+					local cam = workspace.CurrentCamera
+					if UIS:GetLastInputType() == Enum.UserInputType.Touch or UIS.MouseBehavior == Enum.MouseBehavior.LockCenter then
+						return cam and cam.ViewportSize / 2 or Vector2.new(400, 300)
+					end
+					return UIS:GetMouseLocation()
+				end
+
+				local function isAllowed(plr)
+					if S.friends then
+						local ok, f = pcall(function() return player:IsFriendsWith(plr.UserId) end)
+						if ok and f then return false end
+					end
+					if S.allies and aimAllies[plr] then return false end
+					return true
+				end
+
+				local function pickTarget()
+					local cam = workspace.CurrentCamera
+					local char = player.Character
+					local hrp = char and char:FindFirstChild("HumanoidRootPart")
+					if not cam or not hrp then return nil end
+					local center = aimPoint()
+					local best, bestScore
+					local function consider(model, label)
+						local hum = model:FindFirstChildOfClass("Humanoid")
+						if not hum or hum.Health <= 0 then return end
+						local root = model:FindFirstChild("HumanoidRootPart")
+						local part = (S.part == "Head" and model:FindFirstChild("Head")) or root
+						if not part or not root then return end
+						local dist = (root.Position - hrp.Position).Magnitude
+						if dist > S.range then return end
+						local v, onScreen = cam:WorldToViewportPoint(part.Position)
+						if v.Z <= 0 then return end
+						local fovDist = (Vector2.new(v.X, v.Y) - center).Magnitude
+						if S.fov > 0 and (fovDist > S.fov or not onScreen) then return end
+						local score
+						if S.priority == "Mouse" then score = fovDist
+						elseif S.priority == "Near" then score = dist
+						else score = hum.Health end
+						if not bestScore or score < bestScore then
+							bestScore = score
+							best = {part = part, model = model, name = label, dist = dist, v = v}
+						end
+					end
+					if S.targets ~= "NPC" then
+						for _, plr in ipairs(Players:GetPlayers()) do
+							if plr ~= player and plr.Character and isAllowed(plr) then consider(plr.Character, plr.Name) end
+						end
+					end
+					if S.targets ~= "Players" then
+						local folder = workspace:FindFirstChild("Enemies")
+						if folder then
+							for _, m in ipairs(folder:GetChildren()) do
+								if m:IsA("Model") then consider(m, m.Name) end
+							end
+						end
+					end
+					return best
+				end
+
+				local function update()
+					if tick() - S.last < 0.05 then return end
+					S.last = tick()
+					local t = pickTarget()
+					if t then
+						S.target, S.tpart, S.pos = t.model, t.part, t.part.Position
+						S.sx, S.sy = t.v.X, t.v.Y - GuiSvc:GetGuiInset().Y
+						S.name, S.dist = t.name, t.dist
+					else
+						S.target, S.tpart, S.pos = nil, nil, nil
+					end
+				end
+
+				local lastStatus = 0
+				addToggle(sec, "Silent Aim Universal", function(state)
+					S.on = state
+					if S.conn then S.conn:Disconnect(); S.conn = nil end
+					S.target, S.tpart, S.pos = nil, nil, nil
+					if not state then
+						st.Text = "💤 Desligado"
+						st.TextColor3 = Color3.fromRGB(150, 150, 180)
+						return
+					end
+					if not installHooks() then
+						S.on = false
+						st.Text = "❌ Executor sem hookmetamethod"
+						st.TextColor3 = Color3.fromRGB(255, 120, 120)
+						note("Seu executor não suporta hookmetamethod", Color3.fromRGB(255, 120, 120))
+						return
+					end
+					S.conn = RunService.RenderStepped:Connect(function()
+						pcall(update)
+						if tick() - lastStatus > 0.3 then
+							lastStatus = tick()
+							if S.pos then
+								st.Text = "🎯 " .. S.name .. " (" .. math.floor(S.dist) .. "m)"
+								st.TextColor3 = Color3.fromRGB(110, 255, 160)
+							else
+								st.Text = "👀 Sem alvo"
+								st.TextColor3 = Color3.fromRGB(190, 190, 230)
+							end
+						end
+					end)
+				end, false)
+				simpleDD(sec, "Alvos: ", {{"Both", "Players e NPCs"}, {"Players", "Só players"}, {"NPC", "Só NPCs"}}, "Both", 3,
+					function(v) S.targets = v end, "Silent: alvos", function() return S.targets end)
+				simpleDD(sec, "Prioridade: ", {{"Mouse", "Mais perto da mira"}, {"Near", "Mais perto de mim"}, {"Health", "Menor vida"}}, "Mouse", 3,
+					function(v) S.priority = v end, "Silent: prioridade", function() return S.priority end)
+				simpleDD(sec, "Parte: ", {{"Root", "Tronco"}, {"Head", "Cabeça"}}, "Root", 2,
+					function(v) S.part = v end, "Silent: parte", function() return S.part end)
+				addSlider(sec, "FOV (0 = tela toda)", 0, 1000, 300, function(v) S.fov = v end, 0, " px")
+				addSlider(sec, "Alcance", 50, 3000, 600, function(v) S.range = v end, 0, " studs")
+				addToggle(sec, "Ignorar amigos do Roblox", function(state) S.friends = state end, true)
+				addToggle(sec, "Ignorar aliados do Aim", function(state) S.allies = state end, true)
+				screenGui.Destroying:Connect(function() S.on = false; if S.conn then S.conn:Disconnect() end end)
+			end
+
+			-- ===== Anti Stun (aba Combate) =====
+			do
+				local sec = createSection(pages["Combate"], "Anti Stun", sectionIcons.Physical)
+				local st = tiny(sec, "💤 Desligado")
+				local A = {conn = nil, clearStun = true, noRagdoll = true, restoreSpeed = true, cleared = 0,
+					lastWalk = nil, lastJump = nil, lastTick = 0}
+				local STUN_NAMES = {Stun = true, Stunned = true, Busy = true, Freeze = true, Frozen = true, Slowed = true}
+				local BAD_STATES = {Enum.HumanoidStateType.Ragdoll, Enum.HumanoidStateType.FallingDown, Enum.HumanoidStateType.PlatformStanding}
+				local function stateGuard(hum, enable)
+					for _, t in ipairs({Enum.HumanoidStateType.Ragdoll, Enum.HumanoidStateType.FallingDown}) do
+						pcall(function() hum:SetStateEnabled(t, enable) end)
+					end
+				end
+				local function step()
+					local char = player.Character
+					local hum = char and char:FindFirstChildOfClass("Humanoid")
+					if not char or not hum or hum.Health <= 0 then return end
+					local hit = false
+					if A.clearStun then
+						for _, c in ipairs(char:GetChildren()) do
+							if STUN_NAMES[c.Name] then
+								if c:IsA("NumberValue") or c:IsA("IntValue") then
+									if c.Value ~= 0 then c.Value = 0; hit = true end
+								elseif c:IsA("BoolValue") then
+									if c.Value then c.Value = false; hit = true end
+								end
+							end
+						end
+						for name in pairs(STUN_NAMES) do
+							local v = char:GetAttribute(name)
+							if v == true then pcall(function() char:SetAttribute(name, false) end); hit = true
+							elseif type(v) == "number" and v ~= 0 then pcall(function() char:SetAttribute(name, 0) end); hit = true end
+						end
+					end
+					if A.noRagdoll then
+						if hum.PlatformStand then hum.PlatformStand = false; hit = true end
+						local cur = hum:GetState()
+						for _, bad in ipairs(BAD_STATES) do
+							if cur == bad then pcall(function() hum:ChangeState(Enum.HumanoidStateType.GettingUp) end); hit = true break end
+						end
+					end
+					if A.restoreSpeed then
+						-- guarda os últimos valores normais e devolve quando o jogo zera (congelamento)
+						if hum.WalkSpeed > 0 then A.lastWalk = hum.WalkSpeed elseif A.lastWalk then hum.WalkSpeed = A.lastWalk; hit = true end
+						if hum.UseJumpPower then
+							if hum.JumpPower > 0 then A.lastJump = hum.JumpPower elseif A.lastJump then hum.JumpPower = A.lastJump; hit = true end
+						else
+							if hum.JumpHeight > 0 then A.lastJump = hum.JumpHeight elseif A.lastJump then hum.JumpHeight = A.lastJump; hit = true end
+						end
+					end
+					if hit then
+						A.cleared = A.cleared + 1
+						if tick() - A.lastTick > 0.3 then
+							A.lastTick = tick()
+							st.Text = "🛡️ Stun removido (" .. A.cleared .. "x)"
+							st.TextColor3 = Color3.fromRGB(110, 255, 160)
+						end
+					end
+				end
+				addToggle(sec, "Anti Stun", function(state)
+					if A.conn then A.conn:Disconnect(); A.conn = nil end
+					local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+					if not state then
+						if hum then stateGuard(hum, true) end
+						st.Text = "💤 Desligado"
+						st.TextColor3 = Color3.fromRGB(150, 150, 180)
+						return
+					end
+					A.cleared = 0
+					A.lastWalk, A.lastJump = nil, nil
+					st.Text = "🛡️ Protegido"
+					st.TextColor3 = Color3.fromRGB(150, 220, 255)
+					A.conn = RunService.Heartbeat:Connect(function()
+						pcall(step)
+					end)
+				end, false)
+				addToggle(sec, "Limpar Stun/Busy", function(state) A.clearStun = state end, true)
+				addToggle(sec, "Impedir cair no chão (ragdoll)", function(state)
+					A.noRagdoll = state
+					local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+					if hum and A.conn then stateGuard(hum, not state) end
+				end, true)
+				addToggle(sec, "Restaurar velocidade e pulo congelados", function(state) A.restoreSpeed = state end, true)
+				screenGui.Destroying:Connect(function() if A.conn then A.conn:Disconnect() end end)
+			end
+
+			-- ===== Aba Information: painel ao vivo (servidor, jogador, bosses, sessão) + guia =====
+			do
+				local infoPage = pages["Information"]
+				if infoPage then
+					local t0 = tick()
+					local function para(sec, text, height)
+						local l = Instance.new("TextLabel")
+						l.Size = UDim2.new(1, 0, 0, height)
+						l.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
+						l.BackgroundTransparency = 0.48
+						l.BorderSizePixel = 0
+						l.Font = currentGlobalFont
+						l.Text = text
+						l.TextColor3 = Color3.fromRGB(190, 192, 210)
+						l.TextSize = 9
+						l.TextWrapped = true
+						l.TextXAlignment = Enum.TextXAlignment.Left
+						l.TextYAlignment = Enum.TextYAlignment.Center
+						l.Parent = sec
+						local pad = Instance.new("UIPadding")
+						pad.PaddingLeft = UDim.new(0, 8)
+						pad.PaddingRight = UDim.new(0, 8)
+						pad.Parent = l
+						local c = Instance.new("UICorner")
+						c.CornerRadius = UDim.new(0, 5)
+						c.Parent = l
+						return l
+					end
+					-- linha "nome ........ valor" que é atualizada ao vivo
+					local function kv(sec, key)
+						local row = Instance.new("Frame")
+						row.Size = UDim2.new(1, 0, 0, 22)
+						row.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
+						row.BackgroundTransparency = 0.48
+						row.BorderSizePixel = 0
+						row.Parent = sec
+						local rc = Instance.new("UICorner")
+						rc.CornerRadius = UDim.new(0, 5)
+						rc.Parent = row
+						local k = Instance.new("TextLabel")
+						k.Size = UDim2.new(0.45, -8, 1, 0)
+						k.Position = UDim2.new(0, 8, 0, 0)
+						k.BackgroundTransparency = 1
+						k.Font = currentGlobalFont
+						k.Text = key
+						k.TextColor3 = Color3.fromRGB(150, 152, 175)
+						k.TextSize = 9
+						k.TextXAlignment = Enum.TextXAlignment.Left
+						k.TextTruncate = Enum.TextTruncate.AtEnd
+						k.Parent = row
+						local v = Instance.new("TextLabel")
+						v.Size = UDim2.new(0.55, -8, 1, 0)
+						v.Position = UDim2.new(0.45, 0, 0, 0)
+						v.BackgroundTransparency = 1
+						v.Font = currentGlobalFont
+						v.Text = "—"
+						v.TextColor3 = Color3.fromRGB(235, 237, 250)
+						v.TextSize = 9
+						v.TextXAlignment = Enum.TextXAlignment.Right
+						v.TextTruncate = Enum.TextTruncate.AtEnd
+						v.Parent = row
+						return v
+					end
+					local function fmt(n)
+						local str = tostring(math.floor(tonumber(n) or 0))
+						local r = str:reverse():gsub("(%d%d%d)", "%1,"):reverse()
+						return (r:gsub("^,", ""))
+					end
+					local function clock(sec)
+						sec = math.floor(sec)
+						return string.format("%02d:%02d:%02d", math.floor(sec / 3600), math.floor(sec / 60) % 60, sec % 60)
+					end
+					local function dataValue(name)
+						local d = player:FindFirstChild("Data")
+						local o = d and d:FindFirstChild(name)
+						return o and o.Value or nil
+					end
+					local SEAS = {[2753915549] = "1º Mar", [4442272183] = "2º Mar", [7449423635] = "3º Mar"}
+
+					-- Esquerda: Lista de Eventos (criada acima), depois Bosses, Jogador, Como usar, Avisos
+					-- Direita: Servidor, Sessão, Sobre, Novidades
+					local secServer = createSection(infoPage, "Servidor", sectionIcons.Travel)
+					local vPlayers = kv(secServer, "Jogadores")
+					local vSea = kv(secServer, "Mar")
+					local vPing = kv(secServer, "Ping")
+					local vUptime = kv(secServer, "Tempo no servidor")
+					local vJob = kv(secServer, "Job ID")
+					if setclipboard then
+						local cp = Instance.new("TextButton")
+						cp.Size = UDim2.new(1, 0, 0, 22)
+						cp.BackgroundColor3 = Color3.fromRGB(56, 132, 255)
+						cp.BackgroundTransparency = 0.7
+						cp.BorderSizePixel = 0
+						cp.AutoButtonColor = false
+						cp.Font = currentGlobalFont
+						cp.Text = "Copiar Job ID"
+						cp.TextColor3 = Color3.fromRGB(235, 237, 250)
+						cp.TextSize = 9
+						cp.Parent = secServer
+						local cc = Instance.new("UICorner")
+						cc.CornerRadius = UDim.new(0, 5)
+						cc.Parent = cp
+						cp.MouseButton1Click:Connect(function()
+							pcall(setclipboard, game.JobId)
+							cp.Text = "Copiado!"
+							task.delay(1.2, function() if cp.Parent then cp.Text = "Copiar Job ID" end end)
+						end)
+					end
+
+					local secBoss = createSection(infoPage, "Bosses vivos agora", sectionIcons.FarmAutomation)
+					local bossLbl = para(secBoss, "Procurando...", 96)
+					bossLbl.TextYAlignment = Enum.TextYAlignment.Top
+					bossLbl.TextWrapped = true
+					local bossPad = Instance.new("UIPadding")
+					bossPad.PaddingTop = UDim.new(0, 6)
+					bossPad.PaddingLeft = UDim.new(0, 8)
+					bossPad.PaddingRight = UDim.new(0, 8)
+					bossPad.Parent = bossLbl
+
+					local secSession = createSection(infoPage, "Sessão", sectionIcons.Theme)
+					local vSess = kv(secSession, "Tempo de uso do hub")
+					local vAfl = kv(secSession, "Auto Farm Level")
+					local vBossOn = kv(secSession, "Auto Kill Boss")
+					local vTask = kv(secSession, "Tarefa extra")
+
+					local secPlayer = createSection(infoPage, "Jogador", sectionIcons.Physical)
+					local vLevel = kv(secPlayer, "Nível")
+					local vBeli = kv(secPlayer, "Beli")
+					local vFrag = kv(secPlayer, "Fragmentos")
+					local vRace = kv(secPlayer, "Raça")
+					local vBounty = kv(secPlayer, "Bounty/Honra")
+
+					local secAbout = createSection(infoPage, "Sobre o Aetheris Hub", sectionIcons.Theme)
+					para(secAbout, "Script feito por Noahzin.", 22)
+					para(secAbout, "Executor suportado: Delta.", 22)
+					para(secAbout, "Hub de automação para Blox Fruits: farm, bosses, raid, frutas, ESP e utilidades.", 36)
+
+					local secHow = createSection(infoPage, "Como usar", sectionIcons.Keybind)
+					para(secHow, "Esconder ou mostrar o painel: Right Ctrl (dá para trocar em Config > Atalhos).", 36)
+					para(secHow, "Use a lupa no topo para buscar qualquer função pelo nome.", 36)
+					para(secHow, "Toque na estrela ★ ao lado do nome de uma seção para favoritá-la. A estrela no topo abre as favoritas.", 48)
+					para(secHow, "Config > Save salva suas opções, e o Auto Load carrega tudo ao executar o script.", 36)
+
+					local secNew = createSection(infoPage, "Novidades", sectionIcons.FarmAutomation)
+					para(secNew, "Farming: Farm por Material e Raid Automática (com compra do chip por Beli ou fruta).", 36)
+					para(secNew, "Automático: Auto Raça V4.", 22)
+					para(secNew, "Auto Farm Level: Rotação de Skills (Click ou Skills) com Fruta ou Arma de fogo.", 36)
+					para(secNew, "Fruta: Auto Guardar Fruta e Auto Comprar da Loja. Toque numa fruta do estoque para comprar.", 36)
+					para(secNew, "Information: eventos, servidor, jogador e bosses ao vivo.", 22)
+
+					local secWarn = createSection(infoPage, "Avisos", sectionIcons.FruitEsp)
+					para(secWarn, "Algumas funções dependem de nomes internos do jogo. Se alguma falhar, veja o status da própria seção ou o console (F9).", 48)
+					para(secWarn, "Use por sua conta e risco.", 22)
+
+					local BOSSES = {"Rip_Indra", "Dough King", "Soul Reaper", "Darkbeard", "Cake Prince", "Cake Queen", "Cursed Captain",
+						"Tyrant of the Skies", "Order", "Longma", "Stone", "Island Empress", "Greybeard", "Don Swan", "Diamond", "Jeremy",
+						"Fajita", "Orbitus", "Smoke Admiral", "Awakened Ice Admiral", "Magma Admiral", "Vice Admiral", "Warden",
+						"Chief Warden", "Swan", "Saber Expert", "The Gorilla King", "Bobby", "Cyborg", "Thunder God", "Fishman Lord",
+						"Wysper", "Mob Leader", "Kilo Admiral", "Captain Elephant", "Beautiful Pirate", "Cake Prince", "Dark Beard"}
+					local function refresh()
+						local ok1 = pcall(function()
+							vPlayers.Text = #Players:GetPlayers() .. " / " .. Players.MaxPlayers
+							vSea.Text = SEAS[game.PlaceId] or "Desconhecido"
+							local ping = "—"
+							pcall(function() ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString() end)
+							vPing.Text = ping
+							vUptime.Text = clock(workspace.DistributedGameTime)
+							vJob.Text = string.sub(game.JobId, 1, 8) .. "..."
+						end)
+						pcall(function()
+							vSess.Text = clock(tick() - t0)
+							vAfl.Text = (Q and Q.enabled) and "Ligado" or "Desligado"
+							vBossOn.Text = (BossLogic and BossLogic.enabled) and "Ligado" or "Desligado"
+							local names = {raid = "Raid Automática", material = "Farm por Material", travel = "Indo a um evento"}
+							vTask.Text = (E.enabled and names[E.mode]) or "Nenhuma"
+						end)
+						pcall(function()
+							vLevel.Text = fmt(dataValue("Level"))
+							vBeli.Text = fmt(dataValue("Beli"))
+							vFrag.Text = fmt(dataValue("Fragments"))
+							vRace.Text = tostring(dataValue("Race") or "—")
+							vBounty.Text = fmt(dataValue("Bounty") or dataValue("Honor"))
+						end)
+						pcall(function()
+							local folder = workspace:FindFirstChild("Enemies")
+							local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+							local found, seen = {}, {}
+							if folder then
+								for _, obj in ipairs(folder:GetChildren()) do
+									local hum = obj:IsA("Model") and obj:FindFirstChildOfClass("Humanoid")
+									if hum and hum.Health > 0 then
+										for _, b in ipairs(BOSSES) do
+											if (obj.Name == b or obj.Name:sub(1, #b + 2) == b .. " [") and not seen[obj] then
+												seen[obj] = true
+												local part = obj:FindFirstChild("HumanoidRootPart")
+												local d = (hrp and part) and math.floor((part.Position - hrp.Position).Magnitude) or nil
+												table.insert(found, {name = b, dist = d or 1e9})
+											end
+										end
+									end
+								end
+							end
+							table.sort(found, function(a, b) return a.dist < b.dist end)
+							if #found == 0 then
+								bossLbl.Text = "Nenhum boss vivo por perto."
+							else
+								local lines = {}
+								for i = 1, math.min(#found, 6) do
+									lines[i] = "• " .. found[i].name .. (found[i].dist < 1e9 and ("  —  " .. found[i].dist .. "m") or "")
+								end
+								bossLbl.Text = table.concat(lines, "\n")
+							end
+						end)
+					end
+					task.spawn(function()
+						while secServer.Parent do
+							refresh()
+							task.wait(2)
+						end
+					end)
+				end
+			end
 
 			screenGui.Destroying:Connect(function() E.enabled = false; releaseAll() end)
 		end)
