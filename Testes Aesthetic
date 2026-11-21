@@ -11737,7 +11737,7 @@ function showMainPanel()
 				end
 				return false
 			end
-			local function nearestEnemy(names, hrp)
+			local function nearestEnemy(names, hrp, filter)
 				local folder = workspace:FindFirstChild("Enemies")
 				local best, bd = nil, math.huge
 				if not folder then return nil end
@@ -11745,7 +11745,7 @@ function showMainPanel()
 					if obj:IsA("Model") and (names == nil or nameMatch(obj.Name, names)) then
 						local hum = obj:FindFirstChildOfClass("Humanoid")
 						local part = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Head") or obj:FindFirstChildWhichIsA("BasePart")
-						if hum and hum.Health > 0 and part then
+						if hum and hum.Health > 0 and part and (not filter or filter(part.Position)) then
 							local d = (part.Position - hrp.Position).Magnitude
 							if d < bd then best, bd = {model = obj, part = part, dist = d}, d end
 						end
@@ -11824,6 +11824,9 @@ function showMainPanel()
 				E.token = E.token + 1
 				local my = E.token
 				E.wasRaid = false
+				E.raidPhase = "button"
+				E.raidEndAt = nil
+				E.raidClickAt = nil
 				task.spawn(function()
 					while E.enabled and E.token == my do
 						AetherisBossBusy = true
@@ -11948,14 +11951,21 @@ function showMainPanel()
 				return true
 			end
 
-			local function raidActive()
-				local gui = player:FindFirstChild("PlayerGui")
-				local main = gui and gui:FindFirstChild("Main")
-				local timer = main and main:FindFirstChild("Timer")
-				if timer and timer.Visible then return true end
+			-- ilhas da raid (só existem enquanto a raid está rodando)
+			local function raidIslands()
 				local origin = workspace:FindFirstChild("_WorldOrigin")
 				local locs = origin and origin:FindFirstChild("Locations")
-				return (locs and locs:FindFirstChild("Island 1")) ~= nil
+				local list = {}
+				if locs then
+					for i = 1, 5 do
+						local isl = locs:FindFirstChild("Island " .. i)
+						if isl then
+							local ok, pos = pcall(function() return isl:GetPivot().Position end)
+							if ok then list[i] = pos end
+						end
+					end
+				end
+				return list
 			end
 			local function raidButton()
 				local map = workspace:FindFirstChild("Map")
@@ -11970,43 +11980,90 @@ function showMainPanel()
 				end
 				return nil
 			end
+			-- Fases: "button" (ir ao botão e comprar/iniciar) -> "loading" (espera a raid e o mapa carregarem)
+			--        -> "fight" (só inimigos das ilhas da raid) -> volta obrigatoriamente para "button"
 			local function stepRaid(hrp)
+				E.raidPhase = E.raidPhase or "button"
+				local islands = raidIslands()
+				local hasIslands = next(islands) ~= nil
 				equip()
 				buso()
-				if raidActive() then
-					E.wasRaid = true
+
+				-- raid já rodando (ex.: você mesmo iniciou): vai direto para o carregamento
+				if hasIslands and E.raidPhase == "button" then
+					E.raidPhase = "loading"
+					E.raidLoadedAt = nil
+				end
+
+				if E.raidPhase == "fight" then
+					if not hasIslands then
+						-- terminou: não fica atacando, volta ao botão
+						if not E.raidEndAt then E.raidEndAt = tick() end
+						if tick() - E.raidEndAt > 3 then
+							E.raidEndAt = nil
+							E.raidPhase = "button"
+							note("Raid concluída", Color3.fromRGB(110, 255, 160))
+							if not E.autoRaid then finish("raid") return end
+						else
+							say.raid("🏁 Raid terminando...", Color3.fromRGB(190, 190, 230))
+							stopFly()
+						end
+						return
+					end
+					E.raidEndAt = nil
 					noclipOn()
-					local t = nearestEnemy(nil, hrp)
+					local function nearIsland(pos)
+						for _, ip in pairs(islands) do
+							if (ip - pos).Magnitude <= 450 then return true end
+						end
+						return false
+					end
+					local t = nearestEnemy(nil, hrp, nearIsland)
 					if t then
 						say.raid("⚔️ Raid — limpando inimigos", Color3.fromRGB(150, 220, 255))
 						flyTo(hrp, t.part.Position + Vector3.new(0, cfg().height, 0))
 						hit(80)
 						return
 					end
-					local origin = workspace:FindFirstChild("_WorldOrigin")
-					local locs = origin and origin:FindFirstChild("Locations")
-					if locs then
-						for i = 5, 1, -1 do
-							local isl = locs:FindFirstChild("Island " .. i)
-							if isl then
-								local ok, pos = pcall(function() return isl:GetPivot().Position end)
-								if ok then
-									say.raid("🏝️ Raid — indo para a ilha " .. i, Color3.fromRGB(180, 200, 255))
-									flyTo(hrp, pos + Vector3.new(0, 60, 0))
-									return
-								end
-							end
+					for i = 5, 1, -1 do
+						if islands[i] then
+							say.raid("🏝️ Raid — indo para a ilha " .. i, Color3.fromRGB(180, 200, 255))
+							flyTo(hrp, islands[i] + Vector3.new(0, 60, 0))
+							return
 						end
 					end
-					say.raid("⏳ Raid — aguardando inimigos", Color3.fromRGB(190, 190, 230))
-					fly(hrp, Vector3.zero)
 					return
 				end
-				if E.wasRaid then
-					E.wasRaid = false
-					note("Raid concluída", Color3.fromRGB(110, 255, 160))
-					if not E.autoRaid then finish("raid") return end
+
+				if E.raidPhase == "loading" then
+					-- espera o mapa da raid carregar antes de atacar qualquer coisa
+					if not hasIslands then
+						if E.raidClickAt and tick() - E.raidClickAt > 30 then
+							E.raidPhase = "button" -- a raid não começou: tenta de novo
+							E.raidClickAt = nil
+							return
+						end
+						say.raid("⏳ Raid iniciada — esperando o mapa carregar...", Color3.fromRGB(190, 160, 255))
+						fly(hrp, Vector3.zero)
+						return
+					end
+					if not E.raidLoadedAt then
+						E.raidLoadedAt = tick()
+						for _, ip in pairs(islands) do
+							pcall(function() player:RequestStreamAroundAsync(ip, 3) end)
+						end
+					end
+					if tick() - E.raidLoadedAt < 5 then
+						say.raid("🗺️ Carregando o mapa da raid...", Color3.fromRGB(190, 160, 255))
+						fly(hrp, Vector3.zero)
+						return
+					end
+					E.raidPhase = "fight"
+					E.raidEndAt = nil
+					return
 				end
+
+				-- fase "button": obrigatoriamente vai ao botão
 				if not E.autoRaid then
 					say.raid("⏳ Aguardando você iniciar a raid", Color3.fromRGB(190, 190, 230))
 					stopFly()
@@ -12035,6 +12092,9 @@ function showMainPanel()
 					task.wait(0.3)
 					if fireclickdetector then
 						pcall(fireclickdetector, cd)
+						E.raidClickAt = tick()
+						E.raidLoadedAt = nil
+						E.raidPhase = "loading"
 					else
 						note("Seu executor não tem fireclickdetector", Color3.fromRGB(255, 120, 120))
 					end
@@ -12528,25 +12588,29 @@ function showMainPanel()
 									st.TextColor3 = Color3.fromRGB(190, 190, 230)
 									task.wait(0.5)
 								else
-									local part = pickTarget()
-									if not part then
+									if R.mode == "Click" then
+										-- mesmo ataque do Melee/Espada: RegisterAttack + RegisterHit nos inimigos próximos
+										if tick() - Q.lastHit >= Q.hitDelay and Q.hitEvent then
+											local targets = Q.scanEnemies(Q.aoeRange)
+											if #targets > 0 then
+												Q.lastHit = tick()
+												Q.combo = (Q.combo % 4) + 1
+												if Q.attackEvent then pcall(function() Q.attackEvent:FireServer(0.3, Q.combo) end) end
+												local extras = {}
+												for i = 2, #targets do table.insert(extras, {targets[i].char, targets[i].part}) end
+												pcall(function() Q.hitEvent:FireServer(targets[1].part, extras) end)
+												st.Text = "🖱️ Click (ataque normal)"
+												st.TextColor3 = Color3.fromRGB(150, 220, 255)
+											else
+												st.Text = "⏳ Sem inimigo no alcance"
+												st.TextColor3 = Color3.fromRGB(190, 190, 230)
+											end
+										end
+										task.wait(0.03)
+									elseif not pickTarget() then
 										st.Text = "⏳ Sem inimigo no alcance"
 										st.TextColor3 = Color3.fromRGB(190, 190, 230)
 										task.wait(0.3)
-									elseif R.mode == "Click" then
-										local v = aimAt(part)
-										if v then
-											task.wait(0.04)
-											pcall(function() VIM:SendMouseButtonEvent(v.X, v.Y, 0, true, game, 0) end)
-											task.wait(0.03)
-											pcall(function() VIM:SendMouseButtonEvent(v.X, v.Y, 0, false, game, 0) end)
-											st.Text = "🖱️ Click no inimigo"
-											st.TextColor3 = Color3.fromRGB(150, 220, 255)
-										else
-											st.Text = "👀 Inimigo fora da tela"
-											st.TextColor3 = Color3.fromRGB(255, 205, 110)
-										end
-										task.wait(0.15)
 									else
 										local used = false
 										for _, k in ipairs(ORDER) do
