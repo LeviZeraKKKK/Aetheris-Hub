@@ -12673,7 +12673,10 @@ function showMainPanel()
 					if not comm then st.Text = "❓ CommF_ não achado" return end
 					local beli = beliNow()
 					local cands = {}
+					local mirageUp = false
+					pcall(function() mirageUp = workspace.Map:FindFirstChild("MysticIsland") ~= nil end)
 					for _, adv in ipairs({false, true}) do
+						if adv and not mirageUp then continue end
 						local ok, list = pcall(function() return comm:InvokeServer("GetFruits", adv) end)
 						if ok and type(list) == "table" then
 							for _, f in ipairs(list) do
@@ -16943,6 +16946,14 @@ local colTop = 57
 local colH = PH - colTop - 9
 local columns = {}
 
+local function mirageSpawned()
+    local ok, r = pcall(function()
+        local map = workspace:FindFirstChild("Map")
+        return map ~= nil and map:FindFirstChild("MysticIsland") ~= nil
+    end)
+    return ok and r == true
+end
+
 local function makeColumn(adv, x, label, accent, interval)
     local col = Instance.new("Frame")
     col.Name = adv and "AdvancedStock" or "NormalStock"
@@ -17042,10 +17053,29 @@ local function makeColumn(adv, x, label, accent, interval)
     timerLabel.Parent = head
     table.insert(allTextLabels, timerLabel)
 
+    local warnLbl
+    if adv then
+        warnLbl = Instance.new("TextLabel")
+        warnLbl.Name = "MirageWarning"
+        warnLbl.Size = UDim2.new(1, -12, 0, 22)
+        warnLbl.Position = UDim2.new(0, 6, 0, 50)
+        warnLbl.BackgroundColor3 = Color3.fromRGB(60, 45, 20)
+        warnLbl.BackgroundTransparency = 0.35
+        warnLbl.BorderSizePixel = 0
+        warnLbl.Font = Enum.Font.GothamSemibold
+        warnLbl.TextSize = 8
+        warnLbl.TextWrapped = true
+        warnLbl.TextColor3 = Color3.fromRGB(255, 205, 120)
+        warnLbl.Text = "⚠ Só dá para comprar frutas da Ilha Mirage com ela spawnada no servidor"
+        warnLbl.ZIndex = 13
+        warnLbl.Parent = col
+        Instance.new("UICorner", warnLbl).CornerRadius = UDim.new(0, 5)
+    end
+
     local sc = Instance.new("ScrollingFrame")
     sc.Name = "FruitList"
-    sc.Size = UDim2.new(1, -10, 1, -57)
-    sc.Position = UDim2.new(0, 5, 0, 52)
+    sc.Size = adv and UDim2.new(1, -10, 1, -80) or UDim2.new(1, -10, 1, -57)
+    sc.Position = adv and UDim2.new(0, 5, 0, 76) or UDim2.new(0, 5, 0, 52)
     sc.BackgroundTransparency = 1
     sc.BorderSizePixel = 0
     sc.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -17063,6 +17093,7 @@ local function makeColumn(adv, x, label, accent, interval)
         lastStock = {},
         interval = interval,
         timer = timerLabel,
+        warn = warnLbl,
         lastCycle = nil,
         progFill = progFill
     }
@@ -17175,6 +17206,10 @@ local function createRow(sc, accent)
         if not fruitName then return end
         local function note(text, color)
             if AetherisNotify then pcall(AetherisNotify, text, color or Color3.fromRGB(150, 190, 255), 3) end
+        end
+        if adv and not mirageSpawned() then
+            note("Só dá para comprar da Mirage com a ilha spawnada no servidor", Color3.fromRGB(255, 205, 120))
+            return
         end
         if cost and getBeli() < cost then
             note("Beli insuficiente para " .. fruitName, Color3.fromRGB(255, 160, 120))
@@ -17361,6 +17396,17 @@ local function updateRefreshCountdown(now)
         col.lastCycle = cycle
         local remaining = col.interval - (now % col.interval)
         col.timer.Text = "Atualiza em " .. formatCountdown(remaining)
+        if col.warn then
+            if mirageSpawned() then
+                col.warn.Text = "✔ Ilha Mirage spawnada: dá para comprar"
+                col.warn.TextColor3 = Color3.fromRGB(130, 240, 160)
+                col.warn.BackgroundColor3 = Color3.fromRGB(20, 55, 32)
+            else
+                col.warn.Text = "⚠ Só dá para comprar frutas da Ilha Mirage com ela spawnada no servidor"
+                col.warn.TextColor3 = Color3.fromRGB(255, 205, 120)
+                col.warn.BackgroundColor3 = Color3.fromRGB(60, 45, 20)
+            end
+        end
         if col.progFill then
             TweenService:Create(col.progFill, TweenInfo.new(0.95, Enum.EasingStyle.Linear), {Size = UDim2.new(math.clamp(remaining / col.interval, 0, 1), 0, 1, 0)}):Play()
         end
