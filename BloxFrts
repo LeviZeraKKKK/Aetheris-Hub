@@ -145,7 +145,7 @@ do
 		{"indisponível", "unavailable"}, {"não encontrado", "not found"}, {" de ", " of "},
 		{"Velocidade máx", "Max speed"}, {"Aceleração (por frame)", "Acceleration (per frame)"}, {"Altura sobre a água", "Height above water"},
 		{"Acelerar Barco", "Boost Boat"}, {"Modificar Barco", "Ship Modifier"}, {"Notificações", "Notifications"}, {"Notificação de teste", "Test notification"}, {"Tempo da notificação", "Notification time"}, {"Painel carregado com sucesso", "Panel loaded successfully"}, {"Posição", "Position"}, {"Embaixo", "Bottom"}, {"Em cima", "Top"}, {"Barco", "Boat"}, {"Entre em um barco", "Get in a boat"}, {"Desligado", "Off"},
-		{"★ Favoritos", "★ Favorites"}, {"Voar até o botão", "Fly to button"}, {"Deslizar", "Slide"}, {"Mola (elástico)", "Spring (elastic)"}, {"Animação: ", "Animation: "}, {"Limpar tudo", "Clear all"}, {"NOVO", "NEW"}, {"Dash Longo", "Long Dash"}, {"Velocidade extra do dash", "Extra dash speed"}, {"Duração máxima do impulso", "Max boost duration"}, {"Mudar de direção durante o dash", "Change direction during dash"}, {"Parar em paredes", "Stop at walls"}, {"Silent Aim Universal", "Universal Silent Aim"}, {"Players e NPCs", "Players and NPCs"}, {"Só players", "Players only"}, {"Só NPCs", "NPCs only"}, {"Mais perto da referência", "Closest to reference"}, {"Mais perto de mim", "Closest to me"}, {"Menor vida", "Lowest health"}, {"Alvos: ", "Targets: "}, {"Prioridade: ", "Priority: "}, {"Parte: ", "Part: "}, {"Tronco", "Torso"}, {"Cabeça", "Head"}, {"Aim FOV (0 = tela toda)", "Aim FOV (0 = whole screen)"}, {"Mirar no que está: ", "Aim at what is: "}, {"No centro da tela", "At the screen center"}, {"Perto do meu click", "Near my click"}, {"Mostrar círculo do Aim FOV", "Show Aim FOV circle"}, {"Ignorar amigos do Roblox", "Ignore Roblox friends"}, {"Só mirar em skills e ataques (não afeta Soru/Dash)", "Only aim skills and attacks (not Soru/Dash)"}, {"Ignorar aliados do Aim", "Ignore Aim allies"},  {"Limpar Stun/Busy", "Clear Stun/Busy"}, {"Impedir cair no chão (ragdoll)", "Prevent falling down (ragdoll)"}, {"Restaurar velocidade e pulo congelados", "Restore frozen speed and jump"},  {"Bosses vivos agora", "Live bosses"}, {"Fruta no mapa", "Fruit on map"}, {"Copiar Job ID", "Copy Job ID"}, {"Tempo no servidor", "Server time"}, {"Tempo de uso do hub", "Hub uptime"}, {"Tarefa extra", "Extra task"}, {"Nenhum boss vivo por perto.", "No live boss nearby."},  {"Sobre o Aetheris Hub", "About Aetheris Hub"}, {"Como usar", "How to use"}, {"Novidades", "What's new"}, {"Avisos", "Notices"}, {"Script feito por Noahzin.", "Script made by Noahzin."}, {"Executor suportado: Delta.", "Supported executor: Delta."}, {"Use por sua conta e risco.", "Use at your own risk."},  {"Auto Raça V4", "Auto Race V4"}, {"Rotação de Skills", "Skill Rotation"}, {"Auto Guardar Fruta", "Auto Store Fruit"}, {"Auto Comprar da Loja", "Auto Buy from Shop"}, {"Só ativar com inimigo por perto", "Only activate with enemy nearby"}, {"Só com inimigo por perto", "Only with enemy nearby"}, {"Usar Click (ataque básico)", "Use Click (basic attack)"}, {"Intervalo entre skills", "Delay between skills"}, {"Alcance do inimigo", "Enemy range"}, {"Preço máximo", "Max price"}, {"Comprar: ", "Buy: "}, {"A mais barata", "Cheapest"}, {"A mais cara possível", "Most expensive possible"}, {"Fruta específica", "Specific fruit"}, {"Equipada", "Held"}, {"Arma de fogo", "Gun"}, {"Modo: ", "Mode: "}, {"Rotação desligada", "Rotation off"},  {"Farm por Material", "Material Farm"}, {"Auto Mastery", "Auto Mastery"}, {"Método: ", "Method: "}, {"Padrão (mouse)", "Default (mouse)"}, {"Completo (mouse + raios)", "Full (mouse + rays)"}, {"Cursor real", "Real cursor"}, {"Girar câmera", "Rotate camera"}, {"Mirar à frente do alvo (prever movimento)", "Lead the target (predict movement)"}, {"Parar na maestria (0 = nunca)", "Stop at mastery (0 = never)"}, {"Alcance para achar inimigos", "Enemy search range"}, {"Usar skills (Fruta/Espada/Arma)", "Use skills (Fruit/Sword/Gun)"}, {"Raid Automática", "Auto Raid"}, {"Lista de Eventos", "Event List"}, {"Material: ", "Material: "}, {"Parar ao ter (0 = nunca)", "Stop at amount (0 = never)"}, {"Iniciar a raid sozinho", "Start raid automatically"}, {"Pagar com: ", "Pay with: "}, {"Dinheiro (Beli)", "Money (Beli)"}, {"Fruta (a mais barata)", "Fruit (cheapest)"}, {"Avisar quando um evento começar", "Notify when an event starts"}, {"Ilha Mirage", "Mirage Island"}, {"Ilha Kitsune", "Kitsune Island"}, {"Ilha Pré-histórica", "Prehistoric Island"}, {"Lua Cheia", "Full Moon"}, {"Inativo", "Inactive"}, {"Ativo", "Active"},  {"Nada fixado ainda", "Nothing pinned yet"}, {" seção fixada", " section pinned"}, {" seções fixadas", " sections pinned"}, {"Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar.", "No favorite sections yet. Tap the ★ next to a section name to favorite it."},
+		{"★ Favoritos", "★ Favorites"}, {"Voar até o botão", "Fly to button"}, {"Deslizar", "Slide"}, {"Mola (elástico)", "Spring (elastic)"}, {"Animação: ", "Animation: "}, {"Limpar tudo", "Clear all"}, {"NOVO", "NEW"}, {"Dash Longo", "Long Dash"}, {"Velocidade extra do dash", "Extra dash speed"}, {"Duração máxima do impulso", "Max boost duration"}, {"Mudar de direção durante o dash", "Change direction during dash"}, {"Parar em paredes", "Stop at walls"}, {"Silent Aim Universal", "Universal Silent Aim"}, {"Players e NPCs", "Players and NPCs"}, {"Só players", "Players only"}, {"Só NPCs", "NPCs only"}, {"Mais perto da referência", "Closest to reference"}, {"Mais perto de mim", "Closest to me"}, {"Menor vida", "Lowest health"}, {"Alvos: ", "Targets: "}, {"Prioridade: ", "Priority: "}, {"Parte: ", "Part: "}, {"Tronco", "Torso"}, {"Cabeça", "Head"}, {"Aim FOV (0 = tela toda)", "Aim FOV (0 = whole screen)"}, {"Mirar no que está: ", "Aim at what is: "}, {"No centro da tela", "At the screen center"}, {"Perto do meu click", "Near my click"}, {"Mostrar círculo do Aim FOV", "Show Aim FOV circle"}, {"Ignorar amigos do Roblox", "Ignore Roblox friends"}, {"Só mirar em skills e ataques (não afeta Soru/Dash)", "Only aim skills and attacks (not Soru/Dash)"}, {"Ignorar aliados do Aim", "Ignore Aim allies"},  {"Limpar Stun/Busy", "Clear Stun/Busy"}, {"Impedir cair no chão (ragdoll)", "Prevent falling down (ragdoll)"}, {"Restaurar velocidade e pulo congelados", "Restore frozen speed and jump"},  {"Bosses vivos agora", "Live bosses"}, {"Fruta no mapa", "Fruit on map"}, {"Copiar Job ID", "Copy Job ID"}, {"Tempo no servidor", "Server time"}, {"Tempo de uso do hub", "Hub uptime"}, {"Tarefa extra", "Extra task"}, {"Nenhum boss vivo por perto.", "No live boss nearby."},  {"Sobre o Aetheris Hub", "About Aetheris Hub"}, {"Como usar", "How to use"}, {"Novidades", "What's new"}, {"Avisos", "Notices"}, {"Script feito por Noahzin.", "Script made by Noahzin."}, {"Executor suportado: Delta.", "Supported executor: Delta."}, {"Use por sua conta e risco.", "Use at your own risk."},  {"Auto Raça V4", "Auto Race V4"}, {"Rotação de Skills", "Skill Rotation"}, {"Auto Guardar Fruta", "Auto Store Fruit"}, {"Auto Comprar da Loja", "Auto Buy from Shop"}, {"Só ativar com inimigo por perto", "Only activate with enemy nearby"}, {"Só com inimigo por perto", "Only with enemy nearby"}, {"Usar Click (ataque básico)", "Use Click (basic attack)"}, {"Intervalo entre skills", "Delay between skills"}, {"Alcance do inimigo", "Enemy range"}, {"Preço máximo", "Max price"}, {"Comprar: ", "Buy: "}, {"A mais barata", "Cheapest"}, {"A mais cara possível", "Most expensive possible"}, {"Fruta específica", "Specific fruit"}, {"Equipada", "Held"}, {"Arma de fogo", "Gun"}, {"Modo: ", "Mode: "}, {"Rotação desligada", "Rotation off"},  {"Farm por Material", "Material Farm"}, {"Auto Mastery", "Auto Mastery"}, {"Método: ", "Method: "}, {"Padrão (mouse)", "Default (mouse)"}, {"Aim Assist do jogo + mouse", "Game Aim Assist + mouse"}, {"Mouse do jogo + Aim Assist (recomendado)", "Game mouse + Aim Assist (recommended)"}, {"AAIM do jogo (só players)", "Game AAIM (players only)"}, {"Aim Assist do jogo (sem hook)", "Game Aim Assist (no hook)"}, {"Completo (mouse + raios)", "Full (mouse + rays)"}, {"Cursor real", "Real cursor"}, {"Girar câmera", "Rotate camera"}, {"Mirar à frente do alvo (prever movimento)", "Lead the target (predict movement)"}, {"Parar na maestria (0 = nunca)", "Stop at mastery (0 = never)"}, {"Alcance para achar inimigos", "Enemy search range"}, {"Usar skills (Fruta/Espada/Arma)", "Use skills (Fruit/Sword/Gun)"}, {"Raid Automática", "Auto Raid"}, {"Lista de Eventos", "Event List"}, {"Material: ", "Material: "}, {"Parar ao ter (0 = nunca)", "Stop at amount (0 = never)"}, {"Iniciar a raid sozinho", "Start raid automatically"}, {"Pagar com: ", "Pay with: "}, {"Dinheiro (Beli)", "Money (Beli)"}, {"Fruta (a mais barata)", "Fruit (cheapest)"}, {"Avisar quando um evento começar", "Notify when an event starts"}, {"Ilha Mirage", "Mirage Island"}, {"Ilha Kitsune", "Kitsune Island"}, {"Ilha Pré-histórica", "Prehistoric Island"}, {"Lua Cheia", "Full Moon"}, {"Inativo", "Inactive"}, {"Ativo", "Active"},  {"Nada fixado ainda", "Nothing pinned yet"}, {" seção fixada", " section pinned"}, {" seções fixadas", " sections pinned"}, {"Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar.", "No favorite sections yet. Tap the ★ next to a section name to favorite it."},
 		{"Utilidades", "Utilities"},
 		{"Remover Partículas", "Remove Particles"}, {"Remover Rastros e Feixes", "Remove Trails and Beams"}, {"Remover Luzes", "Remove Lights"},
 		{"Sem Sombras nas Peças", "No Part Shadows"}, {"Materiais Simples", "Simple Materials"}, {"Remover Reflexos das Peças", "Remove Part Reflections"},
@@ -12130,8 +12130,9 @@ function showMainPanel()
 				if tool and toolType(tool) == want and tick() - E.masteryAt > 2 then
 					E.masteryAt = tick()
 					local lv = tool:FindFirstChild("Level")
-					if lv and lv:IsA("ValueBase") then
-						E.masteryNow = tonumber(lv.Value)
+					local mv = tool:GetAttribute("Level") or (lv and lv:IsA("ValueBase") and lv.Value) or nil
+					if mv then
+						E.masteryNow = tonumber(mv)
 						if E.masteryGoal > 0 and E.masteryNow and E.masteryNow >= E.masteryGoal then
 							note("Maestria " .. E.masteryNow .. " atingida (" .. tool.Name .. ")", Color3.fromRGB(110, 255, 160))
 							finish("mastery")
@@ -12915,7 +12916,7 @@ function showMainPanel()
 					friends = true, allies = true,
 					target = nil, tpart = nil, pos = nil, sx = 0, sy = 0, name = "", dist = 0,
 					hooked = false, conn = nil, last = 0,
-					method = "Default", lead = false, leadTime = 0.15, cursorSaved = nil,
+					method = "GameRay", lead = false, leadTime = 0.15, cursorSaved = nil,
 					skillsOnly = true, windowUntil = 0, exemptUntil = 0, touch = false, inputConn = nil, inputEnd = nil,
 				}
 				-- A mira só vale logo depois de uma skill/ataque (Z X C V F, clique ou toque); movimento como Soru/Dash/TP
@@ -12969,6 +12970,47 @@ function showMainPanel()
 					end
 				end
 
+				-- ===== Aim Assist do próprio jogo (sem hook): ajusta o AimAssistSettings que o script de combate já usa =====
+				-- O tiro de arma de fogo chama AimAssist.getTargetInfo(); ele escolhe a cabeça de Characters/Enemies dentro
+				-- de MaxDistance e do raio em pixels. Aumentando esses limites o próprio jogo mira no alvo.
+				local assistCfg, assistOrig
+				local function getAssistCfg()
+					if assistCfg then return assistCfg end
+					local ok, m = pcall(function() return require(ReplicatedStorage.Modules:WaitForChild("AimAssistSettings", 2)) end)
+					if ok and type(m) == "table" and type(m.Profiles) == "table" then assistCfg = m end
+					return assistCfg
+				end
+				local function applyAssist(on)
+					local cfgT = getAssistCfg()
+					if not cfgT then return false end
+					if on then
+						if not assistOrig then
+							assistOrig = {}
+							for name, prof in pairs(cfgT.Profiles) do
+								if type(prof) == "table" and not assistOrig[prof] then
+									assistOrig[prof] = {Enabled = prof.Enabled, MaxDistance = prof.MaxDistance,
+										AssistRadiusPixels = prof.AssistRadiusPixels, InnerRadiusPixels = prof.InnerRadiusPixels}
+								end
+							end
+						end
+						local radius = S.fov > 0 and S.fov or 4000
+						for _, prof in pairs(cfgT.Profiles) do
+							if type(prof) == "table" then
+								prof.Enabled = true
+								prof.MaxDistance = S.range
+								prof.AssistRadiusPixels = radius
+								prof.InnerRadiusPixels = radius
+							end
+						end
+					elseif assistOrig then
+						for prof, o in pairs(assistOrig) do
+							for k, v in pairs(o) do prof[k] = v end
+						end
+						assistOrig = nil
+					end
+					return true
+				end
+
 				local function installHooks()
 					if S.hooked then return true end
 					if not (hookmetamethod and newcclosure and getnamecallmethod) then return false end
@@ -12976,7 +13018,7 @@ function showMainPanel()
 					local ok = pcall(function()
 						local oldIndex
 						oldIndex = hookmetamethod(game, "__index", newcclosure(function(self, key)
-							if S.on and S.pos and self == mouse and (S.method == "Default" or S.method == "Full") and S.active() and not checker() then
+							if S.on and S.pos and self == mouse and (S.method == "Default" or S.method == "Full" or S.method == "AssistMouse") and S.active() and not checker() then
 								if key == "Hit" then
 									return CFrame.new(S.pos)
 								elseif key == "Target" then
@@ -13000,11 +13042,25 @@ function showMainPanel()
 						end))
 						local oldNamecall
 						oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
-							if S.on and S.pos and (S.method == "Default" or S.method == "Full") and S.active() and not checker() then
+							if S.on and S.pos and (S.method == "Default" or S.method == "Full" or S.method == "AssistMouse" or S.method == "GameRay") and S.active() and not checker() then
 								local method = getnamecallmethod()
-								if self == UIS then
+								if self == UIS and S.method ~= "GameRay" then
 									if method == "GetMouseLocation" then
 										return Vector2.new(S.sx, S.sy + GuiSvc:GetGuiInset().Y)
+									end
+								elseif S.method == "GameRay" then
+									-- O jogo calcula Mouse.Hit/Target (ReplicatedStorage.Mouse e WrapMouse) com um raio longo que sai da câmera
+									-- (FindPartOnRay*). Apontando esse raio para o alvo, o próprio jogo monta Hit e Target no alvo.
+									if self == workspace and (method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRayWithWhitelist" or method == "FindPartOnRay") then
+										local args = {...}
+										local ray = args[1]
+										local cam = workspace.CurrentCamera
+										if typeof(ray) == "Ray" and cam and ray.Direction.Magnitude >= 500 and (ray.Origin - cam.CFrame.Position).Magnitude < 8 then
+											local o = ray.Origin
+											local d = S.pos - o
+											args[1] = Ray.new(o, d.Unit * (d.Magnitude + 1.5))
+											return oldNamecall(self, table.unpack(args, 1, select("#", ...)))
+										end
 									end
 								elseif S.method == "Full" then
 									if self == workspace.CurrentCamera and (method == "ScreenPointToRay" or method == "ViewportPointToRay") then
@@ -13119,11 +13175,13 @@ function showMainPanel()
 					if S.inputEnd then S.inputEnd:Disconnect(); S.inputEnd = nil end
 					S.target, S.tpart, S.pos = nil, nil, nil
 					if not state then
+						pcall(applyAssist, false)
+						pcall(function() player:SetAttribute("AAIM", nil) end)
 						st.Text = "💤 Desligado"
 						st.TextColor3 = Color3.fromRGB(150, 150, 180)
 						return
 					end
-					if not installHooks() then
+					if not installHooks() and S.method ~= "Assist" and S.method ~= "AAIM" then
 						S.on = false
 						st.Text = "❌ Executor sem hookmetamethod"
 						st.TextColor3 = Color3.fromRGB(255, 120, 120)
@@ -13134,6 +13192,14 @@ function showMainPanel()
 					S.inputEnd = UIS.InputEnded:Connect(function(input) pcall(onInputEnded, input) end)
 					S.conn = RunService.RenderStepped:Connect(function()
 						pcall(update)
+						if tick() - (S.assistAt or 0) > 0.5 then
+							S.assistAt = tick()
+							pcall(function()
+								local want = (S.method == "AAIM") or nil
+								if player:GetAttribute("AAIM") ~= want then player:SetAttribute("AAIM", want) end
+							end)
+							pcall(applyAssist, S.method == "Assist" or S.method == "AssistMouse" or S.method == "GameRay")
+						end
 						pcall(function()
 							local now = tick()
 							local windowOpen = S.pos and S.windowUntil > now and S.exemptUntil <= now
@@ -13169,8 +13235,8 @@ function showMainPanel()
 						end
 					end)
 				end, false)
-				simpleDD(sec, "Método: ", {{"Default", "Padrão (mouse)"}, {"Full", "Completo (mouse + raios)"}, {"Cursor", "Cursor real"}, {"Camera", "Girar câmera"}}, "Default", 4,
-					function(v) S.method = v; S.cursorSaved = nil end, "Silent: método", function() return S.method end)
+				simpleDD(sec, "Método: ", {{"GameRay", "Mouse do jogo + Aim Assist (recomendado)"}, {"AAIM", "AAIM do jogo (só players)"}, {"AssistMouse", "Aim Assist do jogo + mouse"}, {"Assist", "Aim Assist do jogo (sem hook)"}, {"Default", "Padrão (mouse)"}, {"Full", "Completo (mouse + raios)"}, {"Cursor", "Cursor real"}, {"Camera", "Girar câmera"}}, "GameRay", 6,
+					function(v) S.method = v; S.cursorSaved = nil; S.assistAt = 0; if v ~= "Assist" and v ~= "AssistMouse" and v ~= "GameRay" then pcall(applyAssist, false) end end, "Silent: método", function() return S.method end)
 				addToggle(sec, "Mirar à frente do alvo (prever movimento)", function(state) S.lead = state end, false)
 				simpleDD(sec, "Alvos: ", {{"Both", "Players e NPCs"}, {"Players", "Só players"}, {"NPC", "Só NPCs"}}, "Both", 3,
 					function(v) S.targets = v end, "Silent: alvos", function() return S.targets end)
@@ -13178,12 +13244,12 @@ function showMainPanel()
 					function(v) S.priority = v end, "Silent: prioridade", function() return S.priority end)
 				simpleDD(sec, "Parte: ", {{"Root", "Tronco"}, {"Head", "Cabeça"}}, "Root", 2,
 					function(v) S.part = v end, "Silent: parte", function() return S.part end)
-				addSlider(sec, "FOV (0 = tela toda)", 0, 1000, 300, function(v) S.fov = v end, 0, " px")
-				addSlider(sec, "Alcance", 50, 3000, 600, function(v) S.range = v end, 0, " studs")
+				addSlider(sec, "FOV (0 = tela toda)", 0, 1000, 300, function(v) S.fov = v; S.assistAt = 0 end, 0, " px")
+				addSlider(sec, "Alcance", 50, 3000, 600, function(v) S.range = v; S.assistAt = 0 end, 0, " studs")
 				addToggle(sec, "Só mirar em skills e ataques (não afeta Soru/Dash)", function(state) S.skillsOnly = state end, true)
 				addToggle(sec, "Ignorar amigos do Roblox", function(state) S.friends = state end, true)
 				addToggle(sec, "Ignorar aliados do Aim", function(state) S.allies = state end, true)
-				screenGui.Destroying:Connect(function() S.on = false; if S.conn then S.conn:Disconnect() end; if S.inputConn then S.inputConn:Disconnect() end; if S.inputEnd then S.inputEnd:Disconnect() end end)
+				screenGui.Destroying:Connect(function() S.on = false; pcall(applyAssist, false); pcall(function() player:SetAttribute("AAIM", nil) end); if S.conn then S.conn:Disconnect() end; if S.inputConn then S.inputConn:Disconnect() end; if S.inputEnd then S.inputEnd:Disconnect() end end)
 			end
 
 			-- ===== Anti Stun (aba Combate) =====
