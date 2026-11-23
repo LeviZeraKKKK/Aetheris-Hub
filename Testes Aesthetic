@@ -12928,45 +12928,19 @@ function showMainPanel()
 										local o = cam.CFrame.Position
 										return Ray.new(o, (S.pos - o).Unit)
 									end
-								elseif key == "Origin" then
-									local cam = workspace.CurrentCamera
-									if cam then return CFrame.new(cam.CFrame.Position, S.pos) end
-								elseif key == "Icon" or key == "TargetFilter" then
-									-- não mexe
 								end
 							end
 							return oldIndex(self, key)
 						end))
 						local oldNamecall
 						oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
-							if S.on and S.pos and S.active() and not checker() then
-								local method = getnamecallmethod()
-								if self == UIS then
-									if method == "GetMouseLocation" then
-										return Vector2.new(S.sx, S.sy + GuiSvc:GetGuiInset().Y)
-									end
-								elseif self == workspace.CurrentCamera then
-									-- jogo converte a posição da tela em raio: devolve um raio que já passa pelo alvo
-									if method == "ScreenPointToRay" or method == "ViewportPointToRay" then
-										local o = self.CFrame.Position
-										return Ray.new(o, (S.pos - o).Unit)
-									end
+							if S.on and S.pos and S.active() and not checker() and self == UIS then
+								if getnamecallmethod() == "GetMouseLocation" then
+									return Vector2.new(S.sx, S.sy + GuiSvc:GetGuiInset().Y)
 								end
 							end
 							return oldNamecall(self, ...)
 						end))
-					end)
-					-- reforço: chamadas diretas (UIS.GetMouseLocation sem namecall) também veem o mouse no alvo
-					pcall(function()
-						if hookfunction then
-							local oldGML
-							oldGML = hookfunction(UIS.GetMouseLocation, newcclosure(function(self, ...)
-								if S.on and S.pos and S.active() and not checker() then
-									return Vector2.new(S.sx, S.sy + GuiSvc:GetGuiInset().Y)
-								end
-								return oldGML(self, ...)
-							end))
-						end
 					end)
 					S.hooked = ok
 					return ok
