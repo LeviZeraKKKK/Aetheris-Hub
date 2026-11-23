@@ -145,7 +145,7 @@ do
 		{"indisponível", "unavailable"}, {"não encontrado", "not found"}, {" de ", " of "},
 		{"Velocidade máx", "Max speed"}, {"Aceleração (por frame)", "Acceleration (per frame)"}, {"Altura sobre a água", "Height above water"},
 		{"Acelerar Barco", "Boost Boat"}, {"Modificar Barco", "Ship Modifier"}, {"Notificações", "Notifications"}, {"Notificação de teste", "Test notification"}, {"Tempo da notificação", "Notification time"}, {"Painel carregado com sucesso", "Panel loaded successfully"}, {"Posição", "Position"}, {"Embaixo", "Bottom"}, {"Em cima", "Top"}, {"Barco", "Boat"}, {"Entre em um barco", "Get in a boat"}, {"Desligado", "Off"},
-		{"★ Favoritos", "★ Favorites"}, {"Voar até o botão", "Fly to button"}, {"Deslizar", "Slide"}, {"Mola (elástico)", "Spring (elastic)"}, {"Animação: ", "Animation: "}, {"Limpar tudo", "Clear all"}, {"NOVO", "NEW"}, {"Silent Aim Universal", "Universal Silent Aim"}, {"Players e NPCs", "Players and NPCs"}, {"Só players", "Players only"}, {"Só NPCs", "NPCs only"}, {"Mais perto da mira", "Closest to aim"}, {"Mais perto de mim", "Closest to me"}, {"Menor vida", "Lowest health"}, {"Alvos: ", "Targets: "}, {"Prioridade: ", "Priority: "}, {"Parte: ", "Part: "}, {"Tronco", "Torso"}, {"Cabeça", "Head"}, {"FOV (0 = tela toda)", "FOV (0 = whole screen)"}, {"Ignorar amigos do Roblox", "Ignore Roblox friends"}, {"Ignorar aliados do Aim", "Ignore Aim allies"},  {"Limpar Stun/Busy", "Clear Stun/Busy"}, {"Impedir cair no chão (ragdoll)", "Prevent falling down (ragdoll)"}, {"Restaurar velocidade e pulo congelados", "Restore frozen speed and jump"},  {"Bosses vivos agora", "Live bosses"}, {"Fruta no mapa", "Fruit on map"}, {"Copiar Job ID", "Copy Job ID"}, {"Tempo no servidor", "Server time"}, {"Tempo de uso do hub", "Hub uptime"}, {"Tarefa extra", "Extra task"}, {"Nenhum boss vivo por perto.", "No live boss nearby."},  {"Sobre o Aetheris Hub", "About Aetheris Hub"}, {"Como usar", "How to use"}, {"Novidades", "What's new"}, {"Avisos", "Notices"}, {"Script feito por Noahzin.", "Script made by Noahzin."}, {"Executor suportado: Delta.", "Supported executor: Delta."}, {"Use por sua conta e risco.", "Use at your own risk."},  {"Auto Raça V4", "Auto Race V4"}, {"Rotação de Skills", "Skill Rotation"}, {"Auto Guardar Fruta", "Auto Store Fruit"}, {"Auto Comprar da Loja", "Auto Buy from Shop"}, {"Só ativar com inimigo por perto", "Only activate with enemy nearby"}, {"Só com inimigo por perto", "Only with enemy nearby"}, {"Usar Click (ataque básico)", "Use Click (basic attack)"}, {"Intervalo entre skills", "Delay between skills"}, {"Alcance do inimigo", "Enemy range"}, {"Preço máximo", "Max price"}, {"Comprar: ", "Buy: "}, {"A mais barata", "Cheapest"}, {"A mais cara possível", "Most expensive possible"}, {"Fruta específica", "Specific fruit"}, {"Equipada", "Held"}, {"Arma de fogo", "Gun"}, {"Modo: ", "Mode: "}, {"Rotação desligada", "Rotation off"},  {"Farm por Material", "Material Farm"}, {"Raid Automática", "Auto Raid"}, {"Lista de Eventos", "Event List"}, {"Material: ", "Material: "}, {"Parar ao ter (0 = nunca)", "Stop at amount (0 = never)"}, {"Iniciar a raid sozinho", "Start raid automatically"}, {"Pagar com: ", "Pay with: "}, {"Dinheiro (Beli)", "Money (Beli)"}, {"Fruta (a mais barata)", "Fruit (cheapest)"}, {"Avisar quando um evento começar", "Notify when an event starts"}, {"Ilha Mirage", "Mirage Island"}, {"Ilha Kitsune", "Kitsune Island"}, {"Ilha Pré-histórica", "Prehistoric Island"}, {"Lua Cheia", "Full Moon"}, {"Inativo", "Inactive"}, {"Ativo", "Active"},  {"Nada fixado ainda", "Nothing pinned yet"}, {" seção fixada", " section pinned"}, {" seções fixadas", " sections pinned"}, {"Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar.", "No favorite sections yet. Tap the ★ next to a section name to favorite it."},
+		{"★ Favoritos", "★ Favorites"}, {"Voar até o botão", "Fly to button"}, {"Deslizar", "Slide"}, {"Mola (elástico)", "Spring (elastic)"}, {"Animação: ", "Animation: "}, {"Limpar tudo", "Clear all"}, {"NOVO", "NEW"}, {"Dash Longo", "Long Dash"}, {"Velocidade extra do dash", "Extra dash speed"}, {"Duração máxima do impulso", "Max boost duration"}, {"Mudar de direção durante o dash", "Change direction during dash"}, {"Parar em paredes", "Stop at walls"}, {"Silent Aim Universal", "Universal Silent Aim"}, {"Players e NPCs", "Players and NPCs"}, {"Só players", "Players only"}, {"Só NPCs", "NPCs only"}, {"Mais perto da referência", "Closest to reference"}, {"Mais perto de mim", "Closest to me"}, {"Menor vida", "Lowest health"}, {"Alvos: ", "Targets: "}, {"Prioridade: ", "Priority: "}, {"Parte: ", "Part: "}, {"Tronco", "Torso"}, {"Cabeça", "Head"}, {"Aim FOV (0 = tela toda)", "Aim FOV (0 = whole screen)"}, {"Mirar no que está: ", "Aim at what is: "}, {"No centro da tela", "At the screen center"}, {"Perto do meu click", "Near my click"}, {"Mostrar círculo do Aim FOV", "Show Aim FOV circle"}, {"Ignorar amigos do Roblox", "Ignore Roblox friends"}, {"Só mirar em skills e ataques (não afeta Soru/Dash)", "Only aim skills and attacks (not Soru/Dash)"}, {"Ignorar aliados do Aim", "Ignore Aim allies"},  {"Limpar Stun/Busy", "Clear Stun/Busy"}, {"Impedir cair no chão (ragdoll)", "Prevent falling down (ragdoll)"}, {"Restaurar velocidade e pulo congelados", "Restore frozen speed and jump"},  {"Bosses vivos agora", "Live bosses"}, {"Fruta no mapa", "Fruit on map"}, {"Copiar Job ID", "Copy Job ID"}, {"Tempo no servidor", "Server time"}, {"Tempo de uso do hub", "Hub uptime"}, {"Tarefa extra", "Extra task"}, {"Nenhum boss vivo por perto.", "No live boss nearby."},  {"Sobre o Aetheris Hub", "About Aetheris Hub"}, {"Como usar", "How to use"}, {"Novidades", "What's new"}, {"Avisos", "Notices"}, {"Script feito por Noahzin.", "Script made by Noahzin."}, {"Executor suportado: Delta.", "Supported executor: Delta."}, {"Use por sua conta e risco.", "Use at your own risk."},  {"Auto Raça V4", "Auto Race V4"}, {"Rotação de Skills", "Skill Rotation"}, {"Auto Guardar Fruta", "Auto Store Fruit"}, {"Auto Comprar da Loja", "Auto Buy from Shop"}, {"Só ativar com inimigo por perto", "Only activate with enemy nearby"}, {"Só com inimigo por perto", "Only with enemy nearby"}, {"Usar Click (ataque básico)", "Use Click (basic attack)"}, {"Intervalo entre skills", "Delay between skills"}, {"Alcance do inimigo", "Enemy range"}, {"Preço máximo", "Max price"}, {"Comprar: ", "Buy: "}, {"A mais barata", "Cheapest"}, {"A mais cara possível", "Most expensive possible"}, {"Fruta específica", "Specific fruit"}, {"Equipada", "Held"}, {"Arma de fogo", "Gun"}, {"Modo: ", "Mode: "}, {"Rotação desligada", "Rotation off"},  {"Farm por Material", "Material Farm"}, {"Raid Automática", "Auto Raid"}, {"Lista de Eventos", "Event List"}, {"Material: ", "Material: "}, {"Parar ao ter (0 = nunca)", "Stop at amount (0 = never)"}, {"Iniciar a raid sozinho", "Start raid automatically"}, {"Pagar com: ", "Pay with: "}, {"Dinheiro (Beli)", "Money (Beli)"}, {"Fruta (a mais barata)", "Fruit (cheapest)"}, {"Avisar quando um evento começar", "Notify when an event starts"}, {"Ilha Mirage", "Mirage Island"}, {"Ilha Kitsune", "Kitsune Island"}, {"Ilha Pré-histórica", "Prehistoric Island"}, {"Lua Cheia", "Full Moon"}, {"Inativo", "Inactive"}, {"Ativo", "Active"},  {"Nada fixado ainda", "Nothing pinned yet"}, {" seção fixada", " section pinned"}, {" seções fixadas", " sections pinned"}, {"Nenhuma seção favorita ainda. Toque na ★ ao lado do nome de uma seção para favoritar.", "No favorite sections yet. Tap the ★ next to a section name to favorite it."},
 		{"Utilidades", "Utilities"},
 		{"Remover Partículas", "Remove Particles"}, {"Remover Rastros e Feixes", "Remove Trails and Beams"}, {"Remover Luzes", "Remove Lights"},
 		{"Sem Sombras nas Peças", "No Part Shadows"}, {"Materiais Simples", "Simple Materials"}, {"Remover Reflexos das Peças", "Remove Part Reflections"},
@@ -2786,7 +2786,7 @@ function showMainPanel()
 
 		local layout = Instance.new("UIListLayout")
 		layout.SortOrder = Enum.SortOrder.LayoutOrder
-		layout.Padding = UDim.new(0, 6)
+		layout.Padding = UDim.new(0, 4)
 		layout.Parent = page
 
 		layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
@@ -2794,7 +2794,7 @@ function showMainPanel()
 		end)
 
 		-- Duas colunas com uma linha vertical no meio (a aba Info tem layout próprio).
-		if name ~= "Info" then
+		if name ~= "Info" and name ~= "Information" then
 			local holder = Instance.new("Frame")
 			holder.Name = "Columns"
 			holder.Size = UDim2.new(1, -4, 0, 0)
@@ -2814,7 +2814,7 @@ function showMainPanel()
 				col.Parent = holder
 				local cl = Instance.new("UIListLayout")
 				cl.SortOrder = Enum.SortOrder.LayoutOrder
-				cl.Padding = UDim.new(0, 6)
+				cl.Padding = UDim.new(0, 4)
 				cl.Parent = col
 				return col, cl
 			end
@@ -2883,8 +2883,8 @@ function showMainPanel()
 		{Name = "Farming", Image = "rbxassetid://16898613777", Offset = Vector2.new(918, 306)},
 		{Name = "Fruta", En = "Fruit", Image = "rbxassetid://16898612629", Offset = Vector2.new(563, 869)},
 		{Name = "Misc", Image = "rbxassetid://7733970390", Offset = Vector2.new(0, 0), RectSize = Vector2.new(0, 0)},
-		{Name = "Config", Image = "rbxassetid://16898613777", Offset = Vector2.new(771, 257)},
-		{Name = "Information", Display = "Information", En = "Information", Image = "rbxassetid://6031068421", Offset = Vector2.new(0, 0), RectSize = Vector2.new(0, 0)}
+		{Name = "Information", Display = "Information", En = "Information", Image = "rbxassetid://6031068421", Offset = Vector2.new(0, 0), RectSize = Vector2.new(0, 0)},
+		{Name = "Config", Image = "rbxassetid://16898613777", Offset = Vector2.new(771, 257)}
 	}
 
 		-- Ícones por significado: sprites de atlas usam recortes 48x48; assets individuais definem RectSize próprio.
@@ -4255,7 +4255,7 @@ function showMainPanel()
 
 		local sLayout = Instance.new("UIListLayout")
 		sLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		sLayout.Padding = UDim.new(0, 4)
+		sLayout.Padding = UDim.new(0, 3)
 		sLayout.Parent = sContainer
 
 		-- Seção recolhível: a setinha no canto do cabeçalho esconde/mostra as funções dela.
@@ -5163,7 +5163,7 @@ function showMainPanel()
 
 	local function addToggle(parent, name, callback, defaultState, configName)
 		local toggleFrame = Instance.new("Frame")
-		toggleFrame.Size = UDim2.new(1, 0, 0, 26)
+		toggleFrame.Size = UDim2.new(1, 0, 0, 22)
 		toggleFrame.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
 		toggleFrame.BackgroundTransparency = 0.3
 		toggleFrame.Parent = parent
@@ -5189,14 +5189,14 @@ function showMainPanel()
 		label.Font = currentGlobalFont
 		label.Text = name
 		label.TextColor3 = currentTextColor
-		label.TextSize = 11
+		label.TextSize = 10
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.Parent = toggleFrame
 		table.insert(allTextLabels, label)
 
 		local toggleBtn = Instance.new("TextButton")
-		toggleBtn.Size = UDim2.new(0, 28, 0, 16)
-		toggleBtn.Position = UDim2.new(1, -34, 0.5, -8)
+		toggleBtn.Size = UDim2.new(0, 26, 0, 14)
+		toggleBtn.Position = UDim2.new(1, -32, 0.5, -7)
 		toggleBtn.BackgroundColor3 = defaultState and currentThemeColor or Color3.fromRGB(50, 50, 70)
 		toggleBtn.Text = ""
 		toggleBtn.Parent = toggleFrame
@@ -5206,8 +5206,8 @@ function showMainPanel()
 		tCorner.Parent = toggleBtn
 
 		local circle = Instance.new("Frame")
-		circle.Size = UDim2.new(0, 12, 0, 12)
-		circle.Position = defaultState and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
+		circle.Size = UDim2.new(0, 10, 0, 10)
+		circle.Position = defaultState and UDim2.new(1, -12, 0.5, -5) or UDim2.new(0, 2, 0.5, -5)
 		circle.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 		circle.Parent = toggleBtn
 
@@ -5220,7 +5220,7 @@ function showMainPanel()
 
 		local function setToggleState(state)
 			toggleStateRef.isToggled = state == true
-			local targetPos = toggleStateRef.isToggled and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
+			local targetPos = toggleStateRef.isToggled and UDim2.new(1, -12, 0.5, -5) or UDim2.new(0, 2, 0.5, -5)
 			local targetColor = toggleStateRef.isToggled and currentThemeColor or Color3.fromRGB(50, 50, 70)
 			local targetLedColor = toggleStateRef.isToggled and accentBlue or Color3.fromRGB(80, 80, 100)
 			TweenService:Create(circle, TweenInfo.new(0.18), {Position = targetPos}):Play()
@@ -5250,7 +5250,7 @@ function showMainPanel()
 		end
 
 		local sliderFrame = Instance.new("Frame")
-		sliderFrame.Size = UDim2.new(1, 0, 0, 38)
+		sliderFrame.Size = UDim2.new(1, 0, 0, 32)
 		sliderFrame.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
 		sliderFrame.BackgroundTransparency = 0.3
 		sliderFrame.Parent = parent
@@ -5260,20 +5260,20 @@ function showMainPanel()
 		corner.Parent = sliderFrame
 
 		local label = Instance.new("TextLabel")
-		label.Size = UDim2.new(1, -16, 0, 16)
-		label.Position = UDim2.new(0, 8, 0, 3)
+		label.Size = UDim2.new(1, -16, 0, 14)
+		label.Position = UDim2.new(0, 8, 0, 2)
 		label.BackgroundTransparency = 1
 		label.Font = currentGlobalFont
 		label.Text = name .. ": " .. formatSliderValue(default)
 		label.TextColor3 = currentTextColor
-		label.TextSize = 11
+		label.TextSize = 10
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.Parent = sliderFrame
 		table.insert(allTextLabels, label)
 
 		local bar = Instance.new("Frame")
 		bar.Size = UDim2.new(1, -16, 0, 4)
-		bar.Position = UDim2.new(0, 8, 0, 24)
+		bar.Position = UDim2.new(0, 8, 0, 21)
 		bar.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
 		bar.BorderSizePixel = 0
 		bar.Parent = sliderFrame
@@ -12282,8 +12282,6 @@ function showMainPanel()
 
 			-- ----- Lista de Eventos -----
 			do
-				local sec = createSection(pages["Information"], "Lista de Eventos", sectionIcons.Travel)
-				bindStatus("travel", tiny(sec, "Toque em Ir para voar até o evento"))
 				local function modelPos(inst)
 					local ok, p = pcall(function() return inst:GetPivot().Position end)
 					return ok and p or nil
@@ -12329,64 +12327,9 @@ function showMainPanel()
 						return sky ~= nil and tostring(sky.MoonTextureId):find("9709149431", 1, true) ~= nil
 					end},
 				}
-				local rows = {}
-				for i, ev in ipairs(EVENTS) do
-					local row = Instance.new("Frame")
-					row.Size = UDim2.new(1, 0, 0, 24)
-					row.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
-					row.BackgroundTransparency = 0.3
-					row.BorderSizePixel = 0
-					row.LayoutOrder = i
-					row.Parent = sec
-					local rc = Instance.new("UICorner")
-					rc.CornerRadius = UDim.new(0, 5)
-					rc.Parent = row
-					local dot = Instance.new("Frame")
-					dot.Size = UDim2.new(0, 6, 0, 6)
-					dot.Position = UDim2.new(0, 8, 0.5, -3)
-					dot.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
-					dot.BorderSizePixel = 0
-					dot.Parent = row
-					local dc = Instance.new("UICorner")
-					dc.CornerRadius = UDim.new(1, 0)
-					dc.Parent = dot
-					local nameL = Instance.new("TextLabel")
-					nameL.Size = UDim2.new(1, -112, 1, 0)
-					nameL.Position = UDim2.new(0, 20, 0, 0)
-					nameL.BackgroundTransparency = 1
-					nameL.Font = currentGlobalFont
-					nameL.Text = ev[1]
-					nameL.TextColor3 = currentTextColor
-					nameL.TextSize = 10
-					nameL.TextXAlignment = Enum.TextXAlignment.Left
-					nameL.TextTruncate = Enum.TextTruncate.AtEnd
-					nameL.Parent = row
-					local stL = Instance.new("TextLabel")
-					stL.Size = UDim2.new(0, 46, 1, 0)
-					stL.Position = UDim2.new(1, -86, 0, 0)
-					stL.BackgroundTransparency = 1
-					stL.Font = currentGlobalFont
-					stL.Text = "Inativo"
-					stL.TextColor3 = Color3.fromRGB(120, 125, 150)
-					stL.TextSize = 8
-					stL.TextXAlignment = Enum.TextXAlignment.Right
-					stL.Parent = row
-					local go = Instance.new("TextButton")
-					go.Size = UDim2.new(0, 30, 0, 16)
-					go.Position = UDim2.new(1, -36, 0.5, -8)
-					go.BackgroundColor3 = Color3.fromRGB(56, 132, 255)
-					go.BackgroundTransparency = 0.6
-					go.AutoButtonColor = false
-					go.Font = Enum.Font.GothamBold
-					go.Text = "Ir"
-					go.TextColor3 = Color3.fromRGB(255, 255, 255)
-					go.TextSize = 9
-					go.Visible = false
-					go.Parent = row
-					local gc = Instance.new("UICorner")
-					gc.CornerRadius = UDim.new(0, 5)
-					gc.Parent = go
-					go.MouseButton1Click:Connect(function()
+				AetherisEventsApi = {
+					list = EVENTS,
+					startGo = function(ev)
 						if E.enabled and E.mode == "travel" then
 							stopMode("travel")
 							return
@@ -12396,37 +12339,10 @@ function showMainPanel()
 							local active, pos = ev[2]()
 							return active and pos or nil
 						end
-						-- tarefa "travel" não tem toggle: o fim dela só chama stopMode
 						setters.travel = function() stopMode("travel") end
 						start("travel")
-					end)
-					rows[i] = {dot = dot, st = stL, go = go, active = false}
-				end
-
-				local announce = false
-				addToggle(sec, "Avisar quando um evento começar", function(state) announce = state end, false)
-				task.spawn(function()
-					local first = true
-					while sec.Parent do
-						for i, ev in ipairs(EVENTS) do
-							local ok, active, pos = pcall(ev[2])
-							active = ok and active == true
-							local r = rows[i]
-							if r then
-								if active and not r.active and announce and not first then
-									note("Evento: " .. ev[1], Color3.fromRGB(190, 160, 255))
-								end
-								r.active = active
-								r.dot.BackgroundColor3 = active and Color3.fromRGB(80, 220, 130) or Color3.fromRGB(80, 80, 100)
-								r.st.Text = active and "Ativo" or "Inativo"
-								r.st.TextColor3 = active and Color3.fromRGB(110, 255, 160) or Color3.fromRGB(120, 125, 150)
-								r.go.Visible = active and pos ~= nil
-							end
-						end
-						first = false
-						task.wait(2)
-					end
-				end)
+					end,
+				}
 			end
 
 			-- =====================================================================
@@ -12757,7 +12673,10 @@ function showMainPanel()
 					if not comm then st.Text = "❓ CommF_ não achado" return end
 					local beli = beliNow()
 					local cands = {}
+					local mirageUp = false
+					pcall(function() mirageUp = workspace.Map:FindFirstChild("MysticIsland") ~= nil end)
 					for _, adv in ipairs({false, true}) do
+						if adv and not mirageUp then continue end
 						local ok, list = pcall(function() return comm:InvokeServer("GetFruits", adv) end)
 						if ok and type(list) == "table" then
 							for _, f in ipairs(list) do
@@ -12823,6 +12742,104 @@ function showMainPanel()
 
 			end -- AetherisBuildFruitAuto
 
+			-- ===== Dash Longo (aba Player) =====
+			-- O jogo coloca "DashTrail" dentro do seu personagem (Workspace.Characters.<seu nome>) quando você dá dash.
+			-- Enquanto ele existir, o script dá micro teleportes para a frente (parece que o dash vai mais longe)
+			-- e a direção acompanha o seu movimento na hora (WASD/analógico), então dá para mudar de direção no dash.
+			do
+				local sec = createSection(pages["Player"], "Dash Longo", sectionIcons.Physical)
+				local st = tiny(sec, "💤 Desligado")
+				local D = {on = false, speed = 100, maxDur = 0.6, steer = true, walls = true, conns = {}, count = 0, running = false}
+				local SKIP = {"fly", "travel", "aetheris", "boat"}
+				local function skipName(n)
+					n = n:lower()
+					for _, p in ipairs(SKIP) do
+						if n:find(p, 1, true) then return true end
+					end
+					return false
+				end
+				local function flat(v)
+					local f = Vector3.new(v.X, 0, v.Z)
+					return f.Magnitude > 0.01 and f.Unit or nil
+				end
+				local function runDash(char, trail)
+					if D.running then return end
+					local hrp = char:FindFirstChild("HumanoidRootPart")
+					local hum = char:FindFirstChildOfClass("Humanoid")
+					if not hrp or not hum then return end
+					D.running = true
+					D.count = D.count + 1
+					local t0 = tick()
+					local dir = flat(hrp.AssemblyLinearVelocity) or flat(hrp.CFrame.LookVector) or Vector3.new(0, 0, -1)
+					local params = RaycastParams.new()
+					params.FilterType = Enum.RaycastFilterType.Exclude
+					params.FilterDescendantsInstances = {char}
+					local conn
+					conn = RunService.Heartbeat:Connect(function(dt)
+						if not D.on or not trail.Parent or tick() - t0 > D.maxDur or not hrp.Parent then
+							conn:Disconnect()
+							D.running = false
+							return
+						end
+						if D.steer then
+							local md = flat(hum.MoveDirection)
+							if md then dir = md end
+							-- faz o impulso do próprio jogo seguir a nova direção
+							for _, c in ipairs(hrp:GetChildren()) do
+								if not skipName(c.Name) then
+									if c:IsA("BodyVelocity") then
+										local v = c.Velocity
+										local m = Vector3.new(v.X, 0, v.Z).Magnitude
+										if m > 1 then c.Velocity = Vector3.new(dir.X * m, v.Y, dir.Z * m) end
+									elseif c:IsA("LinearVelocity") then
+										local v = c.VectorVelocity
+										local m = Vector3.new(v.X, 0, v.Z).Magnitude
+										if m > 1 then c.VectorVelocity = Vector3.new(dir.X * m, v.Y, dir.Z * m) end
+									end
+								end
+							end
+						end
+						local step = D.speed * dt
+						if D.walls then
+							local hit = workspace:Raycast(hrp.Position, dir * (step + 2), params)
+							if hit then step = math.max(0, hit.Distance - 2) end
+						end
+						if step > 0 then
+							hrp.CFrame = hrp.CFrame + dir * step
+						end
+					end)
+					st.Text = "💨 Dash longo (" .. D.count .. ")"
+					st.TextColor3 = Color3.fromRGB(110, 255, 160)
+				end
+				local function bindChar(char)
+					for _, cn in ipairs(D.conns) do if cn.char then cn.conn:Disconnect() end end
+					local c1 = char.ChildAdded:Connect(function(c)
+						if c.Name == "DashTrail" and D.on then pcall(runDash, char, c) end
+					end)
+					D.conns[#D.conns + 1] = {char = true, conn = c1}
+				end
+				addToggle(sec, "Dash Longo", function(state)
+					D.on = state
+					for _, cn in ipairs(D.conns) do cn.conn:Disconnect() end
+					D.conns = {}
+					D.running = false
+					if not state then
+						st.Text = "💤 Desligado"
+						st.TextColor3 = Color3.fromRGB(150, 150, 180)
+						return
+					end
+					st.Text = "💨 Pronto — faça um dash"
+					st.TextColor3 = Color3.fromRGB(150, 220, 255)
+					D.conns[#D.conns + 1] = {conn = player.CharacterAdded:Connect(function(ch) task.defer(bindChar, ch) end)}
+					if player.Character then bindChar(player.Character) end
+				end, false)
+				addSlider(sec, "Velocidade extra do dash", 0, 400, 100, function(v) D.speed = v end, 0, " studs/s")
+				addSlider(sec, "Duração máxima do impulso", 0.1, 1.5, 0.6, function(v) D.maxDur = v end, 1, "s")
+				addToggle(sec, "Mudar de direção durante o dash", function(state) D.steer = state end, true)
+				addToggle(sec, "Parar em paredes", function(state) D.walls = state end, true)
+				screenGui.Destroying:Connect(function() D.on = false; for _, cn in ipairs(D.conns) do cn.conn:Disconnect() end end)
+			end
+
 			-- ===== Silent Aim Universal (aba Combate): vale para todas as armas, frutas e estilos =====
 			-- Faz o jogo "ler" o mouse apontando para o alvo (Mouse.Hit / Target / X / Y / UnitRay e
 			-- UserInputService:GetMouseLocation), então qualquer skill ou arma que mire no mouse acerta o alvo,
@@ -12838,7 +12855,56 @@ function showMainPanel()
 					friends = true, allies = true,
 					target = nil, tpart = nil, pos = nil, sx = 0, sy = 0, name = "", dist = 0,
 					hooked = false, conn = nil, last = 0,
+					skillsOnly = true, windowUntil = 0, exemptUntil = 0, touch = false, inputConn = nil, inputEnd = nil,
 				}
+				-- A mira só vale logo depois de uma skill/ataque (Z X C V F, clique ou toque); movimento como Soru/Dash/TP
+				-- usa o mouse de verdade, para não teleportar você até o inimigo.
+				S.active = function()
+					if not S.skillsOnly then return true end
+					local now = tick()
+					if S.exemptUntil > now then return false end
+					if S.touch then return true end
+					return S.windowUntil > now
+				end
+				local SKILL_KEYS = {[Enum.KeyCode.Z] = true, [Enum.KeyCode.X] = true, [Enum.KeyCode.C] = true, [Enum.KeyCode.V] = true, [Enum.KeyCode.F] = true}
+				local MOVE_PATTERNS = {"soru", "dash", "geppo", "flash"}
+				local function isMoveButton(pos)
+					local ok, objs = pcall(function() return player.PlayerGui:GetGuiObjectsAtPosition(pos.X, pos.Y) end)
+					if not ok then return false end
+					for _, o in ipairs(objs) do
+						local cur = o
+						for _ = 1, 4 do
+							if not cur or cur == player.PlayerGui then break end
+							local n = cur.Name:lower()
+							for _, p in ipairs(MOVE_PATTERNS) do
+								if n:find(p, 1, true) then return true end
+							end
+							cur = cur.Parent
+						end
+					end
+					return false
+				end
+				local function onInputBegan(input)
+					local t = input.UserInputType
+					if t == Enum.UserInputType.Keyboard then
+						S.touch = false
+						if SKILL_KEYS[input.KeyCode] then S.windowUntil = tick() + 0.7 end
+					elseif t == Enum.UserInputType.MouseButton1 then
+						S.touch = false
+						S.windowUntil = tick() + 0.7
+					elseif t == Enum.UserInputType.Touch then
+						S.touch = true
+						if isMoveButton(Vector2.new(input.Position.X, input.Position.Y)) then
+							S.exemptUntil = tick() + 1.2
+						end
+					end
+				end
+				local function onInputEnded(input)
+					local t = input.UserInputType
+					if (t == Enum.UserInputType.Keyboard and SKILL_KEYS[input.KeyCode]) or t == Enum.UserInputType.MouseButton1 then
+						S.windowUntil = math.max(S.windowUntil, tick() + 0.4)
+					end
+				end
 
 				local function installHooks()
 					if S.hooked then return true end
@@ -12847,7 +12913,7 @@ function showMainPanel()
 					local ok = pcall(function()
 						local oldIndex
 						oldIndex = hookmetamethod(game, "__index", newcclosure(function(self, key)
-							if S.on and S.pos and self == mouse and not checker() then
+							if S.on and S.pos and self == mouse and S.active() and not checker() then
 								if key == "Hit" then
 									return CFrame.new(S.pos)
 								elseif key == "Target" then
@@ -12862,19 +12928,45 @@ function showMainPanel()
 										local o = cam.CFrame.Position
 										return Ray.new(o, (S.pos - o).Unit)
 									end
+								elseif key == "Origin" then
+									local cam = workspace.CurrentCamera
+									if cam then return CFrame.new(cam.CFrame.Position, S.pos) end
+								elseif key == "Icon" or key == "TargetFilter" then
+									-- não mexe
 								end
 							end
 							return oldIndex(self, key)
 						end))
 						local oldNamecall
 						oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
-							if S.on and S.pos and not checker() and self == UIS then
-								if getnamecallmethod() == "GetMouseLocation" then
-									return Vector2.new(S.sx, S.sy + GuiSvc:GetGuiInset().Y)
+							if S.on and S.pos and S.active() and not checker() then
+								local method = getnamecallmethod()
+								if self == UIS then
+									if method == "GetMouseLocation" then
+										return Vector2.new(S.sx, S.sy + GuiSvc:GetGuiInset().Y)
+									end
+								elseif self == workspace.CurrentCamera then
+									-- jogo converte a posição da tela em raio: devolve um raio que já passa pelo alvo
+									if method == "ScreenPointToRay" or method == "ViewportPointToRay" then
+										local o = self.CFrame.Position
+										return Ray.new(o, (S.pos - o).Unit)
+									end
 								end
 							end
 							return oldNamecall(self, ...)
 						end))
+					end)
+					-- reforço: chamadas diretas (UIS.GetMouseLocation sem namecall) também veem o mouse no alvo
+					pcall(function()
+						if hookfunction then
+							local oldGML
+							oldGML = hookfunction(UIS.GetMouseLocation, newcclosure(function(self, ...)
+								if S.on and S.pos and S.active() and not checker() then
+									return Vector2.new(S.sx, S.sy + GuiSvc:GetGuiInset().Y)
+								end
+								return oldGML(self, ...)
+							end))
+						end
 					end)
 					S.hooked = ok
 					return ok
@@ -12958,6 +13050,8 @@ function showMainPanel()
 				addToggle(sec, "Silent Aim Universal", function(state)
 					S.on = state
 					if S.conn then S.conn:Disconnect(); S.conn = nil end
+					if S.inputConn then S.inputConn:Disconnect(); S.inputConn = nil end
+					if S.inputEnd then S.inputEnd:Disconnect(); S.inputEnd = nil end
 					S.target, S.tpart, S.pos = nil, nil, nil
 					if not state then
 						st.Text = "💤 Desligado"
@@ -12971,6 +13065,8 @@ function showMainPanel()
 						note("Seu executor não suporta hookmetamethod", Color3.fromRGB(255, 120, 120))
 						return
 					end
+					S.inputConn = UIS.InputBegan:Connect(function(input) pcall(onInputBegan, input) end)
+					S.inputEnd = UIS.InputEnded:Connect(function(input) pcall(onInputEnded, input) end)
 					S.conn = RunService.RenderStepped:Connect(function()
 						pcall(update)
 						if tick() - lastStatus > 0.3 then
@@ -12993,9 +13089,10 @@ function showMainPanel()
 					function(v) S.part = v end, "Silent: parte", function() return S.part end)
 				addSlider(sec, "FOV (0 = tela toda)", 0, 1000, 300, function(v) S.fov = v end, 0, " px")
 				addSlider(sec, "Alcance", 50, 3000, 600, function(v) S.range = v end, 0, " studs")
+				addToggle(sec, "Só mirar em skills e ataques (não afeta Soru/Dash)", function(state) S.skillsOnly = state end, true)
 				addToggle(sec, "Ignorar amigos do Roblox", function(state) S.friends = state end, true)
 				addToggle(sec, "Ignorar aliados do Aim", function(state) S.allies = state end, true)
-				screenGui.Destroying:Connect(function() S.on = false; if S.conn then S.conn:Disconnect() end end)
+				screenGui.Destroying:Connect(function() S.on = false; if S.conn then S.conn:Disconnect() end; if S.inputConn then S.inputConn:Disconnect() end; if S.inputEnd then S.inputEnd:Disconnect() end end)
 			end
 
 			-- ===== Anti Stun (aba Combate) =====
@@ -13084,68 +13181,60 @@ function showMainPanel()
 				screenGui.Destroying:Connect(function() if A.conn then A.conn:Disconnect() end end)
 			end
 
-			-- ===== Aba Information: painel ao vivo (servidor, jogador, bosses, sessão) + guia =====
+			-- ===== Aba Information: um card grande com tudo (sem rolagem) =====
 			do
 				local infoPage = pages["Information"]
-				if infoPage then
+				local API = AetherisEventsApi
+				if infoPage and API then
 					local t0 = tick()
-					local function para(sec, text, height)
-						local l = Instance.new("TextLabel")
-						l.Size = UDim2.new(1, 0, 0, height)
-						l.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
-						l.BackgroundTransparency = 0.48
-						l.BorderSizePixel = 0
-						l.Font = currentGlobalFont
-						l.Text = text
-						l.TextColor3 = Color3.fromRGB(190, 192, 210)
-						l.TextSize = 9
-						l.TextWrapped = true
-						l.TextXAlignment = Enum.TextXAlignment.Left
-						l.TextYAlignment = Enum.TextYAlignment.Center
-						l.Parent = sec
-						local pad = Instance.new("UIPadding")
-						pad.PaddingLeft = UDim.new(0, 8)
-						pad.PaddingRight = UDim.new(0, 8)
-						pad.Parent = l
-						local c = Instance.new("UICorner")
-						c.CornerRadius = UDim.new(0, 5)
-						c.Parent = l
-						return l
+					local ACC = Color3.fromRGB(150, 170, 255)
+					local GRAYT = Color3.fromRGB(140, 143, 168)
+					local WHITET = Color3.fromRGB(232, 234, 248)
+					local function mk(class, props, parent)
+						local o = Instance.new(class)
+						for k, v in pairs(props) do o[k] = v end
+						o.Parent = parent
+						return o
 					end
-					-- linha "nome ........ valor" que é atualizada ao vivo
-					local function kv(sec, key)
-						local row = Instance.new("Frame")
-						row.Size = UDim2.new(1, 0, 0, 22)
-						row.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
-						row.BackgroundTransparency = 0.48
-						row.BorderSizePixel = 0
-						row.Parent = sec
-						local rc = Instance.new("UICorner")
-						rc.CornerRadius = UDim.new(0, 5)
-						rc.Parent = row
-						local k = Instance.new("TextLabel")
-						k.Size = UDim2.new(0.45, -8, 1, 0)
-						k.Position = UDim2.new(0, 8, 0, 0)
-						k.BackgroundTransparency = 1
-						k.Font = currentGlobalFont
-						k.Text = key
-						k.TextColor3 = Color3.fromRGB(150, 152, 175)
-						k.TextSize = 9
-						k.TextXAlignment = Enum.TextXAlignment.Left
-						k.TextTruncate = Enum.TextTruncate.AtEnd
-						k.Parent = row
-						local v = Instance.new("TextLabel")
-						v.Size = UDim2.new(0.55, -8, 1, 0)
-						v.Position = UDim2.new(0.45, 0, 0, 0)
-						v.BackgroundTransparency = 1
-						v.Font = currentGlobalFont
-						v.Text = "—"
-						v.TextColor3 = Color3.fromRGB(235, 237, 250)
-						v.TextSize = 9
-						v.TextXAlignment = Enum.TextXAlignment.Right
-						v.TextTruncate = Enum.TextTruncate.AtEnd
-						v.Parent = row
-						return v
+					local function round(o, r) return mk("UICorner", {CornerRadius = UDim.new(0, r)}, o) end
+					local function label(parent, text, pos, size, color, align, bold)
+						return mk("TextLabel", {
+							BackgroundTransparency = 1, Position = pos, Size = size, Font = bold and Enum.Font.GothamBold or currentGlobalFont,
+							Text = text, TextColor3 = color, TextSize = 8, TextXAlignment = align or Enum.TextXAlignment.Left,
+							TextYAlignment = Enum.TextYAlignment.Top, TextWrapped = true,
+						}, parent)
+					end
+
+					local card = mk("Frame", {
+						Name = "InfoCard", Size = UDim2.new(1, -4, 1, -16), BackgroundColor3 = Color3.fromRGB(11, 14, 24),
+						BackgroundTransparency = 0.1, BorderSizePixel = 0, ClipsDescendants = true,
+					}, infoPage)
+					round(card, 10)
+					mk("UIStroke", {Color = Color3.fromRGB(70, 82, 150), Transparency = 0.45, Thickness = 1}, card)
+
+					label(card, "ℹ  Informações", UDim2.new(0, 10, 0, 5), UDim2.new(0.4, 0, 0, 14), ACC, nil, true).TextSize = 10
+					label(card, "Aetheris Hub · Script por Noahzin · Executor: Delta", UDim2.new(0.4, 0, 0, 7), UDim2.new(0.6, -10, 0, 12), GRAYT, Enum.TextXAlignment.Right)
+					mk("Frame", {Position = UDim2.new(0, 8, 0, 22), Size = UDim2.new(1, -16, 0, 1), BackgroundColor3 = Color3.fromRGB(70, 82, 150), BackgroundTransparency = 0.6, BorderSizePixel = 0}, card)
+
+					local body = mk("Frame", {Position = UDim2.new(0, 8, 0, 27), Size = UDim2.new(1, -16, 1, -33), BackgroundTransparency = 1, BorderSizePixel = 0}, card)
+					local function row(y, h)
+						return mk("Frame", {Position = UDim2.new(0, 0, y, 0), Size = UDim2.new(1, 0, h, -3), BackgroundTransparency = 1, BorderSizePixel = 0}, body)
+					end
+					local function block(parent, x, w, title)
+						local f = mk("Frame", {
+							Position = UDim2.new(x, 2, 0, 0), Size = UDim2.new(w, -4, 1, 0), BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+							BackgroundTransparency = 0.95, BorderSizePixel = 0, ClipsDescendants = true,
+						}, parent)
+						round(f, 6)
+						mk("UIStroke", {Color = Color3.fromRGB(90, 100, 160), Transparency = 0.8, Thickness = 1}, f)
+						label(f, title, UDim2.new(0, 7, 0, 3), UDim2.new(1, -14, 0, 11), ACC, nil, true)
+						return f
+					end
+					-- bloco "nome ..... valor" com os valores atualizados ao vivo
+					local function kvBlock(parent, x, w, title, keys)
+						local f = block(parent, x, w, title)
+						label(f, table.concat(keys, "\n"), UDim2.new(0, 7, 0, 16), UDim2.new(0.5, -7, 1, -18), GRAYT)
+						return label(f, "", UDim2.new(0.4, 0, 0, 16), UDim2.new(0.6, -7, 1, -18), WHITET, Enum.TextXAlignment.Right)
 					end
 					local function fmt(n)
 						local str = tostring(math.floor(tonumber(n) or 0))
@@ -13162,144 +13251,190 @@ function showMainPanel()
 						return o and o.Value or nil
 					end
 					local SEAS = {[2753915549] = "1º Mar", [4442272183] = "2º Mar", [7449423635] = "3º Mar"}
-
-					-- Esquerda: Lista de Eventos (criada acima), depois Bosses, Jogador, Como usar, Avisos
-					-- Direita: Servidor, Sessão, Sobre, Novidades
-					local secServer = createSection(infoPage, "Servidor", sectionIcons.Travel)
-					local vPlayers = kv(secServer, "Jogadores")
-					local vSea = kv(secServer, "Mar")
-					local vPing = kv(secServer, "Ping")
-					local vUptime = kv(secServer, "Tempo no servidor")
-					local vJob = kv(secServer, "Job ID")
-					if setclipboard then
-						local cp = Instance.new("TextButton")
-						cp.Size = UDim2.new(1, 0, 0, 22)
-						cp.BackgroundColor3 = Color3.fromRGB(56, 132, 255)
-						cp.BackgroundTransparency = 0.7
-						cp.BorderSizePixel = 0
-						cp.AutoButtonColor = false
-						cp.Font = currentGlobalFont
-						cp.Text = "Copiar Job ID"
-						cp.TextColor3 = Color3.fromRGB(235, 237, 250)
-						cp.TextSize = 9
-						cp.Parent = secServer
-						local cc = Instance.new("UICorner")
-						cc.CornerRadius = UDim.new(0, 5)
-						cc.Parent = cp
-						cp.MouseButton1Click:Connect(function()
-							pcall(setclipboard, game.JobId)
-							cp.Text = "Copiado!"
-							task.delay(1.2, function() if cp.Parent then cp.Text = "Copiar Job ID" end end)
-						end)
+					local function seaName()
+						if SEAS[game.PlaceId] then return SEAS[game.PlaceId] end
+						local n
+						pcall(function() n = Q and Q.detectSea and Q.detectSea() end)
+						return n and (n .. "º Mar") or "?"
+					end
+					local function bountyValue()
+						local ls = player:FindFirstChild("leaderstats")
+						if ls then
+							for _, nm in ipairs({"Bounty/Honor", "Bounty", "Honor"}) do
+								local o = ls:FindFirstChild(nm)
+								if o and o.Value ~= nil then return o.Value end
+							end
+							for _, o in ipairs(ls:GetChildren()) do
+								local l = o.Name:lower()
+								if l:find("bounty") or l:find("honor") then return o.Value end
+							end
+						end
+						return dataValue("Bounty") or dataValue("Honor") or dataValue("Bounty/Honor")
 					end
 
-					local secBoss = createSection(infoPage, "Bosses vivos agora", sectionIcons.FarmAutomation)
-					local bossLbl = para(secBoss, "Procurando...", 96)
-					bossLbl.TextYAlignment = Enum.TextYAlignment.Top
-					bossLbl.TextWrapped = true
-					local bossPad = Instance.new("UIPadding")
-					bossPad.PaddingTop = UDim.new(0, 6)
-					bossPad.PaddingLeft = UDim.new(0, 8)
-					bossPad.PaddingRight = UDim.new(0, 8)
-					bossPad.Parent = bossLbl
+					-- Linha 1: Servidor | Jogador | Sessão
+					local r1 = row(0, 0.34)
+					local vServer = kvBlock(r1, 0, 1 / 3, "Servidor", {"Jogadores", "Mar", "Ping", "Tempo no servidor", "Job ID"})
+					local vPlayer = kvBlock(r1, 1 / 3, 1 / 3, "Jogador", {"Nível", "Beli", "Fragmentos", "Raça", "Bounty/Honra"})
+					local vSess = kvBlock(r1, 2 / 3, 1 / 3, "Sessão", {"Tempo de uso", "Auto Farm Level", "Auto Kill Boss", "Tarefa extra"})
 
-					local secSession = createSection(infoPage, "Sessão", sectionIcons.Theme)
-					local vSess = kv(secSession, "Tempo de uso do hub")
-					local vAfl = kv(secSession, "Auto Farm Level")
-					local vBossOn = kv(secSession, "Auto Kill Boss")
-					local vTask = kv(secSession, "Tarefa extra")
+					-- Linha 2: Eventos (chips em grade, com Ir)
+					local r2 = row(0.34, 0.32)
+					local evBlock = block(r2, 0, 1, "Eventos")
+					local travelLbl = label(evBlock, "Toque em Ir para voar até o evento", UDim2.new(0, 52, 0, 4), UDim2.new(1, -150, 0, 10), GRAYT)
+					bindStatus("travel", travelLbl)
+					local announce = false
+					local annBtn = mk("TextButton", {
+						AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -6, 0, 2), Size = UDim2.new(0, 82, 0, 12),
+						BackgroundColor3 = Color3.fromRGB(56, 132, 255), BackgroundTransparency = 0.8, BorderSizePixel = 0, AutoButtonColor = false,
+						Font = currentGlobalFont, Text = "🔔 Avisar: não", TextColor3 = WHITET, TextSize = 8,
+					}, evBlock)
+					round(annBtn, 4)
+					annBtn.MouseButton1Click:Connect(function()
+						announce = not announce
+						annBtn.Text = announce and "🔔 Avisar: sim" or "🔔 Avisar: não"
+						annBtn.BackgroundTransparency = announce and 0.5 or 0.8
+					end)
+					local grid = mk("Frame", {Position = UDim2.new(0, 5, 0, 17), Size = UDim2.new(1, -10, 1, -20), BackgroundTransparency = 1, BorderSizePixel = 0}, evBlock)
+					mk("UIGridLayout", {CellSize = UDim2.new(0.25, -3, 0.5, -2), CellPadding = UDim2.new(0, 3, 0, 3), SortOrder = Enum.SortOrder.LayoutOrder}, grid)
+					local chips = {}
+					for i, ev in ipairs(API.list) do
+						local chip = mk("Frame", {BackgroundColor3 = Color3.fromRGB(19, 20, 30), BackgroundTransparency = 0.3, BorderSizePixel = 0, LayoutOrder = i}, grid)
+						round(chip, 4)
+						local dot = mk("Frame", {Position = UDim2.new(0, 5, 0.5, -2), Size = UDim2.new(0, 4, 0, 4), BackgroundColor3 = Color3.fromRGB(80, 80, 100), BorderSizePixel = 0}, chip)
+						round(dot, 4)
+						local nm = label(chip, ev[1], UDim2.new(0, 13, 0, 0), UDim2.new(1, -34, 1, 0), GRAYT)
+						nm.TextYAlignment = Enum.TextYAlignment.Center
+						nm.TextWrapped = false
+						nm.TextTruncate = Enum.TextTruncate.AtEnd
+						local go = mk("TextButton", {
+							AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -3, 0.5, 0), Size = UDim2.new(0, 18, 0, 11),
+							BackgroundColor3 = Color3.fromRGB(56, 132, 255), BackgroundTransparency = 0.5, BorderSizePixel = 0, AutoButtonColor = false,
+							Font = Enum.Font.GothamBold, Text = "Ir", TextColor3 = Color3.fromRGB(255, 255, 255), TextSize = 8, Visible = false,
+						}, chip)
+						round(go, 3)
+						go.MouseButton1Click:Connect(function() API.startGo(ev) end)
+						chips[i] = {dot = dot, nm = nm, go = go, active = false}
+					end
 
-					local secPlayer = createSection(infoPage, "Jogador", sectionIcons.Physical)
-					local vLevel = kv(secPlayer, "Nível")
-					local vBeli = kv(secPlayer, "Beli")
-					local vFrag = kv(secPlayer, "Fragmentos")
-					local vRace = kv(secPlayer, "Raça")
-					local vBounty = kv(secPlayer, "Bounty/Honra")
-
-					local secAbout = createSection(infoPage, "Sobre o Aetheris Hub", sectionIcons.Theme)
-					para(secAbout, "Script feito por Noahzin.", 22)
-					para(secAbout, "Executor suportado: Delta.", 22)
-					para(secAbout, "Hub de automação para Blox Fruits: farm, bosses, raid, frutas, ESP e utilidades.", 36)
-
-					local secHow = createSection(infoPage, "Como usar", sectionIcons.Keybind)
-					para(secHow, "Esconder ou mostrar o painel: Right Ctrl (dá para trocar em Config > Atalhos).", 36)
-					para(secHow, "Use a lupa no topo para buscar qualquer função pelo nome.", 36)
-					para(secHow, "Toque na estrela ★ ao lado do nome de uma seção para favoritá-la. A estrela no topo abre as favoritas.", 48)
-					para(secHow, "Config > Save salva suas opções, e o Auto Load carrega tudo ao executar o script.", 36)
-
-					local secNew = createSection(infoPage, "Novidades", sectionIcons.FarmAutomation)
-					para(secNew, "Farming: Farm por Material e Raid Automática (com compra do chip por Beli ou fruta).", 36)
-					para(secNew, "Automático: Auto Raça V4.", 22)
-					para(secNew, "Auto Farm Level: Rotação de Skills (Click ou Skills) com Fruta ou Arma de fogo.", 36)
-					para(secNew, "Fruta: Auto Guardar Fruta e Auto Comprar da Loja. Toque numa fruta do estoque para comprar.", 36)
-					para(secNew, "Information: eventos, servidor, jogador e bosses ao vivo.", 22)
-
-					local secWarn = createSection(infoPage, "Avisos", sectionIcons.FruitEsp)
-					para(secWarn, "Algumas funções dependem de nomes internos do jogo. Se alguma falhar, veja o status da própria seção ou o console (F9).", 48)
-					para(secWarn, "Use por sua conta e risco.", 22)
+					-- Linha 3: Bosses vivos | Guia
+					local r3 = row(0.66, 0.34)
+					r3.Size = UDim2.new(1, 0, 0.34, 0)
+					local bossBlock = block(r3, 0, 0.36, "Bosses vivos (mundo todo)")
+					local bossLbl = label(bossBlock, "Procurando...", UDim2.new(0, 7, 0, 16), UDim2.new(1, -14, 1, -18), WHITET)
+					local moonBlock = block(r3, 0.36, 0.24, "Lua Cheia")
+					local moonLbl = label(moonBlock, "...", UDim2.new(0, 7, 0, 16), UDim2.new(1, -14, 1, -18), WHITET)
+					local guide = block(r3, 0.6, 0.4, "Guia")
+					label(guide, "• Right Ctrl esconde/mostra o painel · a lupa busca funções · ★ favorita seções.\n"
+						.. "• Config > Save salva suas opções; Auto Load carrega ao executar.\n"
+						.. "• Novo: Material, Raid, Eventos, Raça V4, Skills, Guardar/Comprar fruta, Anti Stun, Silent Aim.\n"
+						.. "• Algumas funções dependem de nomes do jogo: veja o status da seção ou o F9.\n"
+						.. "• Use por sua conta e risco.",
+						UDim2.new(0, 7, 0, 16), UDim2.new(1, -14, 1, -18), GRAYT)
 
 					local BOSSES = {"Rip_Indra", "Dough King", "Soul Reaper", "Darkbeard", "Cake Prince", "Cake Queen", "Cursed Captain",
 						"Tyrant of the Skies", "Order", "Longma", "Stone", "Island Empress", "Greybeard", "Don Swan", "Diamond", "Jeremy",
 						"Fajita", "Orbitus", "Smoke Admiral", "Awakened Ice Admiral", "Magma Admiral", "Vice Admiral", "Warden",
 						"Chief Warden", "Swan", "Saber Expert", "The Gorilla King", "Bobby", "Cyborg", "Thunder God", "Fishman Lord",
-						"Wysper", "Mob Leader", "Kilo Admiral", "Captain Elephant", "Beautiful Pirate", "Cake Prince", "Dark Beard"}
+						"Wysper", "Mob Leader", "Kilo Admiral", "Captain Elephant", "Beautiful Pirate", "Dark Beard"}
+					local firstPass = true
 					local function refresh()
-						local ok1 = pcall(function()
-							vPlayers.Text = #Players:GetPlayers() .. " / " .. Players.MaxPlayers
-							vSea.Text = SEAS[game.PlaceId] or "Desconhecido"
+						pcall(function()
 							local ping = "—"
 							pcall(function() ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString() end)
-							vPing.Text = ping
-							vUptime.Text = clock(workspace.DistributedGameTime)
-							vJob.Text = string.sub(game.JobId, 1, 8) .. "..."
+							vServer.Text = table.concat({#Players:GetPlayers() .. " / " .. Players.MaxPlayers, seaName(), ping,
+								clock(workspace.DistributedGameTime), string.sub(game.JobId, 1, 8)}, "\n")
 						end)
 						pcall(function()
-							vSess.Text = clock(tick() - t0)
-							vAfl.Text = (Q and Q.enabled) and "Ligado" or "Desligado"
-							vBossOn.Text = (BossLogic and BossLogic.enabled) and "Ligado" or "Desligado"
+							vPlayer.Text = table.concat({fmt(dataValue("Level")), fmt(dataValue("Beli")), fmt(dataValue("Fragments")),
+								tostring(dataValue("Race") or "—"), fmt(bountyValue())}, "\n")
+						end)
+						pcall(function()
 							local names = {raid = "Raid Automática", material = "Farm por Material", travel = "Indo a um evento"}
-							vTask.Text = (E.enabled and names[E.mode]) or "Nenhuma"
+							vSess.Text = table.concat({clock(tick() - t0), (Q and Q.enabled) and "Ligado" or "Desligado",
+								(BossLogic and BossLogic.enabled) and "Ligado" or "Desligado", (E.enabled and names[E.mode]) or "Nenhuma"}, "\n")
 						end)
 						pcall(function()
-							vLevel.Text = fmt(dataValue("Level"))
-							vBeli.Text = fmt(dataValue("Beli"))
-							vFrag.Text = fmt(dataValue("Fragments"))
-							vRace.Text = tostring(dataValue("Race") or "—")
-							vBounty.Text = fmt(dataValue("Bounty") or dataValue("Honor"))
+							for i, ev in ipairs(API.list) do
+								local ok, active, pos = pcall(ev[2])
+								active = ok and active == true
+								local c = chips[i]
+								if active and not c.active and announce and not firstPass then
+									note("Evento: " .. ev[1], Color3.fromRGB(190, 160, 255))
+								end
+								c.active = active
+								c.dot.BackgroundColor3 = active and Color3.fromRGB(80, 220, 130) or Color3.fromRGB(80, 80, 100)
+								c.nm.TextColor3 = active and Color3.fromRGB(110, 255, 160) or GRAYT
+								c.go.Visible = active and pos ~= nil
+							end
+							firstPass = false
 						end)
 						pcall(function()
-							local folder = workspace:FindFirstChild("Enemies")
 							local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 							local found, seen = {}, {}
-							if folder then
-								for _, obj in ipairs(folder:GetChildren()) do
-									local hum = obj:IsA("Model") and obj:FindFirstChildOfClass("Humanoid")
-									if hum and hum.Health > 0 then
-										for _, b in ipairs(BOSSES) do
-											if (obj.Name == b or obj.Name:sub(1, #b + 2) == b .. " [") and not seen[obj] then
-												seen[obj] = true
-												local part = obj:FindFirstChild("HumanoidRootPart")
-												local d = (hrp and part) and math.floor((part.Position - hrp.Position).Magnitude) or nil
-												table.insert(found, {name = b, dist = d or 1e9})
-											end
+							local function consider(obj, mustAlive)
+								local nm = obj.Name
+								for _, b in ipairs(BOSSES) do
+									if nm == b or nm:sub(1, #b + 2) == b .. " [" then
+										local hum = obj:IsA("Model") and obj:FindFirstChildOfClass("Humanoid")
+										if mustAlive and not (hum and hum.Health > 0) then return end
+										if hum and hum.Health <= 0 then return end
+										if seen[b] then
+											-- prefere a versão com posição conhecida
+											if seen[b].dist < 1e9 then return end
 										end
+										local part = obj:FindFirstChild("HumanoidRootPart") or obj.PrimaryPart
+										local d = (hrp and part and part:IsDescendantOf(workspace)) and math.floor((part.Position - hrp.Position).Magnitude) or 1e9
+										local entry = {name = b, dist = d}
+										if seen[b] then seen[b].dist = d else seen[b] = entry; table.insert(found, entry) end
+										return
 									end
 								end
 							end
+							local folder = workspace:FindFirstChild("Enemies")
+							if folder then
+								for _, obj in ipairs(folder:GetChildren()) do consider(obj, true) end
+							end
+							-- bosses fora do alcance de streaming: o jogo costuma guardar o modelo no ReplicatedStorage enquanto ele está vivo
+							pcall(function()
+								for _, obj in ipairs(game:GetService("ReplicatedStorage"):GetChildren()) do
+									if obj:IsA("Model") then consider(obj, false) end
+								end
+							end)
 							table.sort(found, function(a, b) return a.dist < b.dist end)
 							if #found == 0 then
-								bossLbl.Text = "Nenhum boss vivo por perto."
+								bossLbl.Text = "Nenhum boss vivo agora."
 							else
 								local lines = {}
-								for i = 1, math.min(#found, 6) do
-									lines[i] = "• " .. found[i].name .. (found[i].dist < 1e9 and ("  —  " .. found[i].dist .. "m") or "")
+								for i = 1, math.min(#found, 5) do
+									lines[i] = "• " .. found[i].name .. (found[i].dist < 1e9 and ("  " .. found[i].dist .. "m") or "  (longe)")
 								end
+								if #found > 5 then lines[6] = "+" .. (#found - 5) .. " outros" end
 								bossLbl.Text = table.concat(lines, "\n")
+							end
+						end)
+						pcall(function()
+							local sky = Lighting:FindFirstChildOfClass("Sky")
+							local id = sky and tostring(sky.MoonTextureId):match("%d+") or nil
+							local ORDER = {"9709139597", "9709150401", "9709143733", "9709149052", "9709149431"}
+							local idx
+							for i, v in ipairs(ORDER) do if v == id then idx = i end end
+							local night = Lighting.ClockTime >= 18 or Lighting.ClockTime < 5
+							if idx == 5 then
+								moonLbl.Text = night and "🌕 É Lua Cheia\nagora!" or "🌕 Lua Cheia\nna próxima noite"
+								moonLbl.TextColor3 = Color3.fromRGB(110, 255, 160)
+							elseif idx then
+								local n = 5 - idx
+								moonLbl.Text = n .. (n == 1 and " noite" or " noites") .. "\npara a Lua Cheia"
+								moonLbl.TextColor3 = WHITET
+							else
+								moonLbl.Text = "Fase não reconhecida\n(id " .. tostring(id or "?") .. ")"
+								moonLbl.TextColor3 = GRAYT
 							end
 						end)
 					end
 					task.spawn(function()
-						while secServer.Parent do
+						while card.Parent do
 							refresh()
 							task.wait(2)
 						end
@@ -16837,6 +16972,14 @@ local colTop = 57
 local colH = PH - colTop - 9
 local columns = {}
 
+local function mirageSpawned()
+    local ok, r = pcall(function()
+        local map = workspace:FindFirstChild("Map")
+        return map ~= nil and map:FindFirstChild("MysticIsland") ~= nil
+    end)
+    return ok and r == true
+end
+
 local function makeColumn(adv, x, label, accent, interval)
     local col = Instance.new("Frame")
     col.Name = adv and "AdvancedStock" or "NormalStock"
@@ -16936,10 +17079,29 @@ local function makeColumn(adv, x, label, accent, interval)
     timerLabel.Parent = head
     table.insert(allTextLabels, timerLabel)
 
+    local warnLbl
+    if adv then
+        warnLbl = Instance.new("TextLabel")
+        warnLbl.Name = "MirageWarning"
+        warnLbl.Size = UDim2.new(1, -12, 0, 22)
+        warnLbl.Position = UDim2.new(0, 6, 0, 50)
+        warnLbl.BackgroundColor3 = Color3.fromRGB(60, 45, 20)
+        warnLbl.BackgroundTransparency = 0.35
+        warnLbl.BorderSizePixel = 0
+        warnLbl.Font = Enum.Font.GothamSemibold
+        warnLbl.TextSize = 8
+        warnLbl.TextWrapped = true
+        warnLbl.TextColor3 = Color3.fromRGB(255, 205, 120)
+        warnLbl.Text = "⚠ Só dá para comprar frutas da Ilha Mirage com ela spawnada no servidor"
+        warnLbl.ZIndex = 13
+        warnLbl.Parent = col
+        Instance.new("UICorner", warnLbl).CornerRadius = UDim.new(0, 5)
+    end
+
     local sc = Instance.new("ScrollingFrame")
     sc.Name = "FruitList"
-    sc.Size = UDim2.new(1, -10, 1, -57)
-    sc.Position = UDim2.new(0, 5, 0, 52)
+    sc.Size = adv and UDim2.new(1, -10, 1, -80) or UDim2.new(1, -10, 1, -57)
+    sc.Position = adv and UDim2.new(0, 5, 0, 76) or UDim2.new(0, 5, 0, 52)
     sc.BackgroundTransparency = 1
     sc.BorderSizePixel = 0
     sc.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -16957,6 +17119,7 @@ local function makeColumn(adv, x, label, accent, interval)
         lastStock = {},
         interval = interval,
         timer = timerLabel,
+        warn = warnLbl,
         lastCycle = nil,
         progFill = progFill
     }
@@ -17069,6 +17232,10 @@ local function createRow(sc, accent)
         if not fruitName then return end
         local function note(text, color)
             if AetherisNotify then pcall(AetherisNotify, text, color or Color3.fromRGB(150, 190, 255), 3) end
+        end
+        if adv and not mirageSpawned() then
+            note("Só dá para comprar da Mirage com a ilha spawnada no servidor", Color3.fromRGB(255, 205, 120))
+            return
         end
         if cost and getBeli() < cost then
             note("Beli insuficiente para " .. fruitName, Color3.fromRGB(255, 160, 120))
@@ -17255,6 +17422,17 @@ local function updateRefreshCountdown(now)
         col.lastCycle = cycle
         local remaining = col.interval - (now % col.interval)
         col.timer.Text = "Atualiza em " .. formatCountdown(remaining)
+        if col.warn then
+            if mirageSpawned() then
+                col.warn.Text = "✔ Ilha Mirage spawnada: dá para comprar"
+                col.warn.TextColor3 = Color3.fromRGB(130, 240, 160)
+                col.warn.BackgroundColor3 = Color3.fromRGB(20, 55, 32)
+            else
+                col.warn.Text = "⚠ Só dá para comprar frutas da Ilha Mirage com ela spawnada no servidor"
+                col.warn.TextColor3 = Color3.fromRGB(255, 205, 120)
+                col.warn.BackgroundColor3 = Color3.fromRGB(60, 45, 20)
+            end
+        end
         if col.progFill then
             TweenService:Create(col.progFill, TweenInfo.new(0.95, Enum.EasingStyle.Linear), {Size = UDim2.new(math.clamp(remaining / col.interval, 0, 1), 0, 1, 0)}):Play()
         end
