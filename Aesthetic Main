@@ -1,15 +1,15 @@
 -- ============================================================
--- AETHERIS HUB — Loader (jogos suportados)
--- Se você está em um jogo SUPORTADO, ele só carrega o hub daquele jogo (loadstring),
--- sem mostrar tela nenhuma. Se NÃO está em um jogo suportado, mostra a lista de
--- jogos suportados para você ir até um deles.
+-- AETHERIS HUB — Loader
+-- In a SUPPORTED game: just loads that game's hub (no UI).
+-- In any other game: shows the list of supported games so you can go to one.
 -- ============================================================
 
 local CONFIG = {
 	VERSION = "v1.0",
+	LOGO = "rbxassetid://92797653374824",
 }
 
--- Jogos suportados (para adicionar outro, copie um bloco)
+-- Supported games (to add another one, copy a block)
 local GAMES = {
 	{
 		name = "Blox Fruits",
@@ -18,12 +18,12 @@ local GAMES = {
 		placeIds = {[2753915549] = true, [4442272183] = true, [7449423635] = true},
 		homePlaceId = 2753915549,
 		url = "https://raw.githubusercontent.com/LeviZeraKKKK/Aetheris-Hub/refs/heads/main/BloxFrts",
-		features = {"Auto Farm", "Lock-On", "ESP", "Auto Boss", "Barco", "FPS Boost"},
+		features = {"Auto Farm", "Lock-On", "ESP", "Auto Boss", "Boat", "FPS Boost"},
 	},
 }
 
 -----------------------------------------------------------------
--- SERVIÇOS
+-- SERVICES
 -----------------------------------------------------------------
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
@@ -33,24 +33,20 @@ local TeleportService = game:GetService("TeleportService")
 local player = Players.LocalPlayer
 
 -----------------------------------------------------------------
--- JOGO SUPORTADO: carrega direto, sem tela
+-- SUPPORTED GAME: load straight away, no UI
 -----------------------------------------------------------------
 for _, g in ipairs(GAMES) do
 	if g.placeIds[game.PlaceId] == true or game.GameId == g.universeId then
 		local ok, err = pcall(function()
 			loadstring(game:HttpGet(g.url))()
 		end)
-		if not ok then warn("[Aetheris Loader] falha ao carregar " .. g.name .. ": " .. tostring(err)) end
+		if not ok then warn("[Aetheris Loader] failed to load " .. g.name .. ": " .. tostring(err)) end
 		return
 	end
 end
 
 -----------------------------------------------------------------
--- (a partir daqui: você NÃO está em um jogo suportado, então mostra a lista)
------------------------------------------------------------------
-
------------------------------------------------------------------
--- CORES
+-- (below: you are NOT in a supported game, so show the list)
 -----------------------------------------------------------------
 local PURPLE = Color3.fromRGB(138, 43, 226)
 local BLUE = Color3.fromRGB(56, 132, 255)
@@ -60,12 +56,8 @@ local CARD = Color3.fromRGB(17, 23, 36)
 local CARD2 = Color3.fromRGB(21, 28, 44)
 local LINE = Color3.fromRGB(34, 44, 64)
 local GRAY = Color3.fromRGB(130, 140, 165)
-local GREEN = Color3.fromRGB(80, 220, 130)
 local RED = Color3.fromRGB(240, 85, 85)
 
------------------------------------------------------------------
--- HELPERS
------------------------------------------------------------------
 local function new(class, props, parent)
 	local inst = Instance.new(class)
 	for k, v in pairs(props or {}) do inst[k] = v end
@@ -102,85 +94,91 @@ local function getGuiParent()
 	return player:WaitForChild("PlayerGui")
 end
 
-do -- remove loader antigo se executar de novo
+do -- remove an older loader if run again
 	local parentGui = getGuiParent()
 	local old = parentGui:FindFirstChild("AetherisLoader")
 	if old then old:Destroy() end
 end
 
 -----------------------------------------------------------------
--- TELA
+-- SCREEN
 -----------------------------------------------------------------
 local gui = new("ScreenGui", {
 	Name = "AetherisLoader", ResetOnSpawn = false, IgnoreGuiInset = true,
 	ZIndexBehavior = Enum.ZIndexBehavior.Sibling, DisplayOrder = 100,
-}, getGuiParent())
+})
+-- turn off Roblox auto-translation: the text stays exactly as written
+pcall(function() gui.AutoLocalize = false end)
+gui.DescendantAdded:Connect(function(d)
+	if d:IsA("GuiObject") then pcall(function() d.AutoLocalize = false end) end
+end)
+gui.Parent = getGuiParent()
 
-local PANEL_W = 380
-local CARD_H = 160
-local PANEL_H = math.clamp(52 + 28 + #GAMES * (CARD_H + 8) + 40, 280, 420)
+local PANEL_W = 300
+local CARD_H = 126
+local PANEL_H = math.clamp(44 + 26 + #GAMES * (CARD_H + 8) + 34, 220, 380)
 
 local panel = new("CanvasGroup", {
 	Name = "Panel", AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0),
 	Size = UDim2.new(0, PANEL_W, 0, PANEL_H), BackgroundColor3 = BG, BorderSizePixel = 0, GroupTransparency = 1,
 }, gui)
-corner(panel, 14)
+corner(panel, 12)
 local scale = new("UIScale", {Scale = 0.9}, panel)
 
-local border = stroke(panel, WHITE, 1.6, 0.15)
+local border = stroke(panel, WHITE, 1.4, 0.15)
 local borderGrad = gradient(border, 0)
 
 local function fitScale()
 	local vp = (workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize) or Vector2.new(1280, 720)
-	return math.clamp(math.min(vp.X / 430, vp.Y / (PANEL_H + 40)), 0.6, 1.1)
+	return math.clamp(math.min(vp.X / 340, vp.Y / (PANEL_H + 40)), 0.6, 1.1)
 end
 local baseScale = fitScale()
 
--- brilhos de fundo (roxo no canto de cima, azul embaixo)
 local function glow(x, y, color)
 	local g = new("Frame", {
-		AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(x, 0, y, 0), Size = UDim2.new(0, 230, 0, 230),
+		AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(x, 0, y, 0), Size = UDim2.new(0, 190, 0, 190),
 		BackgroundColor3 = color, BackgroundTransparency = 0.88, BorderSizePixel = 0, ZIndex = 0,
 	}, panel)
-	corner(g, 115)
+	corner(g, 95)
 	new("UIGradient", {
 		Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.2), NumberSequenceKeypoint.new(1, 1)}),
 		Rotation = 90,
 	}, g)
-	return g
 end
 glow(0.1, 0.0, PURPLE)
 glow(0.95, 1.0, BLUE)
 
 -----------------------------------------------------------------
--- CABEÇALHO
+-- HEADER
 -----------------------------------------------------------------
-local header = new("Frame", {Size = UDim2.new(1, 0, 0, 52), BackgroundTransparency = 1, Active = true}, panel)
+local header = new("Frame", {Size = UDim2.new(1, 0, 0, 44), BackgroundTransparency = 1, Active = true}, panel)
 
 local logo = new("Frame", {
-	Size = UDim2.new(0, 34, 0, 34), Position = UDim2.new(0, 14, 0, 9), BackgroundColor3 = Color3.fromRGB(20, 26, 42),
+	Size = UDim2.new(0, 28, 0, 28), Position = UDim2.new(0, 12, 0, 8), BackgroundColor3 = Color3.fromRGB(20, 26, 42),
 	BorderSizePixel = 0,
 }, header)
-corner(logo, 17)
-local logoRing = stroke(logo, WHITE, 2, 0)
+corner(logo, 14)
+local logoRing = stroke(logo, WHITE, 1.8, 0)
 local logoRingGrad = new("UIGradient", {
 	Color = ColorSequence.new(PURPLE, BLUE),
 	Transparency = NumberSequence.new({
 		NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.55, 0.9), NumberSequenceKeypoint.new(1, 0.9),
 	}),
 }, logoRing)
-local logoLetter = label(logo, "A", 16, UDim2.new(0, 0, 0, 0), UDim2.new(1, 0, 1, 0), WHITE, Enum.Font.GothamBold, Enum.TextXAlignment.Center)
-gradient(logoLetter, 45)
+new("ImageLabel", {
+	Size = UDim2.new(1, -8, 1, -8), Position = UDim2.new(0, 4, 0, 4), BackgroundTransparency = 1,
+	Image = CONFIG.LOGO, ScaleType = Enum.ScaleType.Fit,
+}, logo)
 
-local titleLbl = label(header, "Aetheris Hub", 15, UDim2.new(0, 58, 0, 8), UDim2.new(1, -120, 0, 20), WHITE, Enum.Font.GothamBold)
+local titleLbl = label(header, "Aetheris Hub", 13, UDim2.new(0, 48, 0, 7), UDim2.new(1, -96, 0, 16), WHITE, Enum.Font.GothamBold)
 new("UIGradient", {Color = ColorSequence.new(PURPLE:Lerp(WHITE, 0.35), BLUE:Lerp(WHITE, 0.2))}, titleLbl)
-label(header, "Você não está em um jogo suportado", 10, UDim2.new(0, 58, 0, 28), UDim2.new(1, -120, 0, 14), GRAY)
+label(header, "You're not in a supported game", 9, UDim2.new(0, 48, 0, 23), UDim2.new(1, -96, 0, 12), GRAY)
 
 local closeBtn = new("TextButton", {
-	Size = UDim2.new(0, 24, 0, 24), Position = UDim2.new(1, -36, 0, 14), BackgroundTransparency = 1,
-	Font = Enum.Font.GothamBold, Text = "×", TextColor3 = Color3.fromRGB(180, 182, 198), TextSize = 18, AutoButtonColor = false,
+	Size = UDim2.new(0, 22, 0, 22), Position = UDim2.new(1, -32, 0, 11), BackgroundTransparency = 1,
+	Font = Enum.Font.GothamBold, Text = "×", TextColor3 = Color3.fromRGB(180, 182, 198), TextSize = 16, AutoButtonColor = false,
 }, header)
-corner(closeBtn, 7)
+corner(closeBtn, 6)
 closeBtn.MouseEnter:Connect(function()
 	closeBtn.BackgroundTransparency = 0.8
 	closeBtn.BackgroundColor3 = RED
@@ -190,28 +188,27 @@ closeBtn.MouseLeave:Connect(function()
 	closeBtn.BackgroundTransparency = 1
 	closeBtn.TextColor3 = Color3.fromRGB(180, 182, 198)
 end)
-
-new("Frame", {Size = UDim2.new(1, -28, 0, 1), Position = UDim2.new(0, 14, 1, -1), BackgroundColor3 = LINE, BorderSizePixel = 0}, header)
+new("Frame", {Size = UDim2.new(1, -24, 0, 1), Position = UDim2.new(0, 12, 1, -1), BackgroundColor3 = LINE, BorderSizePixel = 0}, header)
 
 -----------------------------------------------------------------
--- LISTA DE JOGOS
+-- GAME LIST
 -----------------------------------------------------------------
-local sectionRow = new("Frame", {Size = UDim2.new(1, -28, 0, 20), Position = UDim2.new(0, 14, 0, 58), BackgroundTransparency = 1}, panel)
-label(sectionRow, "JOGOS SUPORTADOS", 9, UDim2.new(0, 0, 0, 0), UDim2.new(0.7, 0, 1, 0), GRAY, Enum.Font.GothamBold)
+local sectionRow = new("Frame", {Size = UDim2.new(1, -24, 0, 16), Position = UDim2.new(0, 12, 0, 50), BackgroundTransparency = 1}, panel)
+label(sectionRow, "SUPPORTED GAMES", 8, UDim2.new(0, 0, 0, 0), UDim2.new(0.7, 0, 1, 0), GRAY, Enum.Font.GothamBold)
 local countPill = new("Frame", {
-	Size = UDim2.new(0, 22, 0, 16), Position = UDim2.new(1, -22, 0.5, -8), BackgroundColor3 = CARD2, BorderSizePixel = 0,
+	Size = UDim2.new(0, 20, 0, 14), Position = UDim2.new(1, -20, 0.5, -7), BackgroundColor3 = CARD2, BorderSizePixel = 0,
 }, sectionRow)
-corner(countPill, 8)
+corner(countPill, 7)
 stroke(countPill, LINE, 1)
-label(countPill, tostring(#GAMES), 9, UDim2.new(0, 0, 0, 0), UDim2.new(1, 0, 1, 0), BLUE, Enum.Font.GothamBold, Enum.TextXAlignment.Center)
+label(countPill, tostring(#GAMES), 8, UDim2.new(0, 0, 0, 0), UDim2.new(1, 0, 1, 0), BLUE, Enum.Font.GothamBold, Enum.TextXAlignment.Center)
 
 local list = new("ScrollingFrame", {
-	Position = UDim2.new(0, 0, 0, 82), Size = UDim2.new(1, 0, 1, -82 - 34), BackgroundTransparency = 1, BorderSizePixel = 0,
+	Position = UDim2.new(0, 0, 0, 70), Size = UDim2.new(1, 0, 1, -70 - 28), BackgroundTransparency = 1, BorderSizePixel = 0,
 	ScrollBarThickness = 2, ScrollBarImageColor3 = Color3.fromRGB(70, 80, 105), CanvasSize = UDim2.new(0, 0, 0, 0),
 	AutomaticCanvasSize = Enum.AutomaticSize.Y,
 }, panel)
 new("UIListLayout", {Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder}, list)
-new("UIPadding", {PaddingLeft = UDim.new(0, 14), PaddingRight = UDim.new(0, 14), PaddingTop = UDim.new(0, 2), PaddingBottom = UDim.new(0, 4)}, list)
+new("UIPadding", {PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 12), PaddingTop = UDim.new(0, 2), PaddingBottom = UDim.new(0, 4)}, list)
 
 local closing = false
 local function closeLoader()
@@ -223,61 +220,71 @@ local function closeLoader()
 end
 closeBtn.MouseButton1Click:Connect(closeLoader)
 
+-- Teleports to the game and queues the hub to load by itself once you arrive
+local function goToGame(g)
+	local queue = queue_on_teleport or queueonteleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
+	if queue then
+		pcall(queue, 'loadstring(game:HttpGet("' .. g.url .. '"))()')
+	end
+	local ok, err = pcall(function() TeleportService:Teleport(g.homePlaceId, player) end)
+	if not ok then
+		ok, err = pcall(function() TeleportService:Teleport(g.homePlaceId) end)
+	end
+	return ok, err
+end
+
 local function buildCard(game_, order)
 	local card = new("Frame", {LayoutOrder = order, Size = UDim2.new(1, 0, 0, CARD_H), BackgroundColor3 = CARD, BorderSizePixel = 0}, list)
-	corner(card, 12)
+	corner(card, 10)
 	local cardStroke = stroke(card, LINE, 1, 0)
 
-	-- ícone do jogo
-	local iconBox = new("Frame", {Size = UDim2.new(0, 56, 0, 56), Position = UDim2.new(0, 12, 0, 12), BackgroundColor3 = CARD2, BorderSizePixel = 0}, card)
-	corner(iconBox, 12)
-	local iconStroke = stroke(iconBox, WHITE, 1.6, 0)
+	-- game icon
+	local iconBox = new("Frame", {Size = UDim2.new(0, 40, 0, 40), Position = UDim2.new(0, 10, 0, 10), BackgroundColor3 = CARD2, BorderSizePixel = 0}, card)
+	corner(iconBox, 9)
+	local iconStroke = stroke(iconBox, WHITE, 1.4, 0)
 	gradient(iconStroke, 45)
-	new("ImageLabel", {
+	local iconImg = new("ImageLabel", {
 		Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Crop,
 		Image = "rbxthumb://type=GameIcon&id=" .. tostring(game_.universeId) .. "&w=150&h=150",
 	}, iconBox)
-	corner(iconBox:FindFirstChildOfClass("ImageLabel"), 12)
+	corner(iconImg, 9)
 
-	label(card, game_.name, 15, UDim2.new(0, 78, 0, 14), UDim2.new(1, -170, 0, 20), WHITE, Enum.Font.GothamBold)
-	label(card, game_.subtitle, 10, UDim2.new(0, 78, 0, 36), UDim2.new(1, -170, 0, 14), GRAY)
+	label(card, game_.name, 12, UDim2.new(0, 58, 0, 11), UDim2.new(1, -140, 0, 16), WHITE, Enum.Font.GothamBold)
+	label(card, game_.subtitle, 9, UDim2.new(0, 58, 0, 29), UDim2.new(1, -140, 0, 12), GRAY)
 
-	-- estado
 	local pill = new("Frame", {
-		Size = UDim2.new(0, 92, 0, 18), Position = UDim2.new(1, -104, 0, 14), BackgroundColor3 = Color3.fromRGB(22, 30, 48), BorderSizePixel = 0,
+		Size = UDim2.new(0, 70, 0, 16), Position = UDim2.new(1, -80, 0, 12), BackgroundColor3 = Color3.fromRGB(22, 30, 48), BorderSizePixel = 0,
 	}, card)
-	corner(pill, 9)
-	local pillStroke = stroke(pill, LINE, 1)
-	local dot = new("Frame", {
-		Size = UDim2.new(0, 6, 0, 6), Position = UDim2.new(0, 8, 0.5, -3), BackgroundColor3 = BLUE, BorderSizePixel = 0,
-	}, pill)
+	corner(pill, 8)
+	stroke(pill, LINE, 1)
+	local dot = new("Frame", {Size = UDim2.new(0, 5, 0, 5), Position = UDim2.new(0, 7, 0.5, -2), BackgroundColor3 = BLUE, BorderSizePixel = 0}, pill)
 	corner(dot, 3)
-	label(pill, "Suportado", 9, UDim2.new(0, 20, 0, 0), UDim2.new(1, -24, 1, 0),
-		Color3.fromRGB(150, 190, 240), Enum.Font.GothamBold)
+	label(pill, "Supported", 8, UDim2.new(0, 17, 0, 0), UDim2.new(1, -20, 1, 0), Color3.fromRGB(150, 190, 240), Enum.Font.GothamBold)
 
-	-- chips de recursos
-	local chips = new("Frame", {Position = UDim2.new(0, 12, 0, 76), Size = UDim2.new(1, -24, 0, 34), BackgroundTransparency = 1}, card)
+	-- feature chips
+	local chips = new("Frame", {Position = UDim2.new(0, 10, 0, 58), Size = UDim2.new(1, -20, 0, 30), BackgroundTransparency = 1}, card)
 	new("UIListLayout", {
 		FillDirection = Enum.FillDirection.Horizontal, Wraps = true, Padding = UDim.new(0, 4),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, chips)
 	for i, feat in ipairs(game_.features) do
 		local chip = new("Frame", {
-			LayoutOrder = i, Size = UDim2.new(0, 0, 0, 16), AutomaticSize = Enum.AutomaticSize.X,
+			LayoutOrder = i, Size = UDim2.new(0, 0, 0, 14), AutomaticSize = Enum.AutomaticSize.X,
 			BackgroundColor3 = Color3.fromRGB(24, 32, 50), BorderSizePixel = 0,
 		}, chips)
-		corner(chip, 8)
+		corner(chip, 7)
 		stroke(chip, LINE, 1)
-		new("UIPadding", {PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8)}, chip)
+		new("UIPadding", {PaddingLeft = UDim.new(0, 7), PaddingRight = UDim.new(0, 7)}, chip)
 		new("TextLabel", {
 			Size = UDim2.new(0, 0, 1, 0), AutomaticSize = Enum.AutomaticSize.X, BackgroundTransparency = 1,
-			Font = Enum.Font.GothamMedium, Text = feat, TextColor3 = Color3.fromRGB(190, 200, 222), TextSize = 9,
+			Font = Enum.Font.GothamMedium, Text = feat, TextColor3 = Color3.fromRGB(190, 200, 222), TextSize = 8,
+			TextWrapped = false,
 		}, chip)
 	end
 
-	-- botão de carregar (fundo em degradê + texto separado para o degradê não pintar o texto)
-	local btn = new("Frame", {Position = UDim2.new(0, 12, 0, 116), Size = UDim2.new(1, -24, 0, 34), BackgroundTransparency = 1, ClipsDescendants = true}, card)
-	corner(btn, 9)
+	-- button (gradient on its own layer so it doesn't tint the text)
+	local btn = new("Frame", {Position = UDim2.new(0, 10, 0, 92), Size = UDim2.new(1, -20, 0, 26), BackgroundTransparency = 1, ClipsDescendants = true}, card)
+	corner(btn, 8)
 	local fill = new("Frame", {Size = UDim2.new(1, 0, 1, 0), BackgroundColor3 = WHITE, BorderSizePixel = 0}, btn)
 	local fillGrad = gradient(fill, 0)
 	local btnScale = new("UIScale", {}, btn)
@@ -285,25 +292,31 @@ local function buildCard(game_, order)
 		Size = UDim2.new(0, 0, 0, 3), Position = UDim2.new(0, 0, 1, -3), BackgroundColor3 = WHITE, BackgroundTransparency = 0.35,
 		BorderSizePixel = 0, ZIndex = 3,
 	}, btn)
-	local btnLabel = label(btn, "Ir para o jogo", 12, UDim2.new(0, 0, 0, 0), UDim2.new(1, 0, 1, -2),
-		WHITE, Enum.Font.GothamBold, Enum.TextXAlignment.Center)
+	local btnLabel = label(btn, "Go to game", 11, UDim2.new(0, 0, 0, 0), UDim2.new(1, 0, 1, -2), WHITE, Enum.Font.GothamBold, Enum.TextXAlignment.Center)
 	btnLabel.ZIndex = 4
 	local hit = new("TextButton", {Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, Text = "", ZIndex = 5, AutoButtonColor = false}, btn)
 
 	local busy = false
-	local function setLabel(text, color)
-		btnLabel.Text = text
-		btnLabel.TextColor3 = color or WHITE
-	end
-	local function resetLater(delay)
-		task.delay(delay, function()
+	local function setLabel(text) btnLabel.Text = text end
+	local function fail(text)
+		progress.Size = UDim2.new(0, 0, 0, 3)
+		fillGrad.Color = ColorSequence.new(RED, Color3.fromRGB(176, 52, 110))
+		setLabel(text)
+		task.delay(2.2, function()
 			if not btn.Parent then return end
-			progress.Size = UDim2.new(0, 0, 0, 3)
-			setLabel("Ir para o jogo")
 			fillGrad.Color = ColorSequence.new(PURPLE, BLUE)
+			setLabel("Go to game")
 			busy = false
 		end)
 	end
+
+	-- if Roblox refuses the teleport, show why
+	local failedConn = TeleportService.TeleportInitFailed:Connect(function(_, result, message)
+		if not busy or not btn.Parent then return end
+		warn("[Aetheris Loader] teleport failed: " .. tostring(result) .. " - " .. tostring(message))
+		fail("Teleport failed")
+	end)
+	btn.Destroying:Connect(function() failedConn:Disconnect() end)
 
 	hit.MouseEnter:Connect(function()
 		TweenService:Create(btnScale, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1.03}):Play()
@@ -312,23 +325,18 @@ local function buildCard(game_, order)
 		TweenService:Create(btnScale, TweenInfo.new(0.15), {Scale = 1}):Play()
 	end)
 
-	hit.MouseButton1Click:Connect(function()
+	hit.Activated:Connect(function()
 		if busy then return end
 		busy = true
-
-		-- vai até o jogo suportado (ao entrar, rode o loader de novo e o hub carrega sozinho)
-		setLabel("Teleportando...")
-		TweenService:Create(progress, TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0.8, 0, 0, 3)}):Play()
-		local ok = pcall(function() TeleportService:Teleport(game_.homePlaceId, player) end)
+		setLabel("Teleporting...")
+		TweenService:Create(progress, TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0.85, 0, 0, 3)}):Play()
+		local ok, err = goToGame(game_)
 		if not ok then
-			progress.Size = UDim2.new(0, 0, 0, 3)
-			fillGrad.Color = ColorSequence.new(RED, Color3.fromRGB(176, 52, 110))
-			setLabel("Falhou ao teleportar", WHITE)
-			resetLater(2)
+			warn("[Aetheris Loader] teleport error: " .. tostring(err))
+			fail("Teleport failed")
 		end
 	end)
 
-	-- hover do cartão
 	card.MouseEnter:Connect(function()
 		TweenService:Create(cardStroke, TweenInfo.new(0.2), {Color = BLUE}):Play()
 		TweenService:Create(card, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(19, 26, 41)}):Play()
@@ -337,22 +345,20 @@ local function buildCard(game_, order)
 		TweenService:Create(cardStroke, TweenInfo.new(0.2), {Color = LINE}):Play()
 		TweenService:Create(card, TweenInfo.new(0.2), {BackgroundColor3 = CARD}):Play()
 	end)
-
-	return card
 end
 
 for i, g in ipairs(GAMES) do buildCard(g, i) end
 
 -----------------------------------------------------------------
--- RODAPÉ
+-- FOOTER
 -----------------------------------------------------------------
-local footer = new("Frame", {Size = UDim2.new(1, 0, 0, 34), Position = UDim2.new(0, 0, 1, -34), BackgroundTransparency = 1}, panel)
-new("Frame", {Size = UDim2.new(1, -28, 0, 1), Position = UDim2.new(0, 14, 0, 0), BackgroundColor3 = LINE, BorderSizePixel = 0}, footer)
-label(footer, "Mais jogos em breve…", 10, UDim2.new(0, 16, 0, 0), UDim2.new(0.6, 0, 1, 0), GRAY)
-label(footer, CONFIG.VERSION, 10, UDim2.new(1, -66, 0, 0), UDim2.new(0, 50, 1, 0), BLUE, Enum.Font.GothamBold, Enum.TextXAlignment.Right)
+local footer = new("Frame", {Size = UDim2.new(1, 0, 0, 28), Position = UDim2.new(0, 0, 1, -28), BackgroundTransparency = 1}, panel)
+new("Frame", {Size = UDim2.new(1, -24, 0, 1), Position = UDim2.new(0, 12, 0, 0), BackgroundColor3 = LINE, BorderSizePixel = 0}, footer)
+label(footer, "More games coming soon…", 9, UDim2.new(0, 14, 0, 0), UDim2.new(0.6, 0, 1, 0), GRAY)
+label(footer, CONFIG.VERSION, 9, UDim2.new(1, -64, 0, 0), UDim2.new(0, 50, 1, 0), BLUE, Enum.Font.GothamBold, Enum.TextXAlignment.Right)
 
 -----------------------------------------------------------------
--- ARRASTAR + ANIMAÇÕES
+-- DRAG + ANIMATIONS
 -----------------------------------------------------------------
 do
 	local dragging, dragStart, startPos
@@ -375,7 +381,6 @@ do
 	end)
 end
 
--- gira o degradê da borda e o aro do logo
 local spin
 spin = RunService.RenderStepped:Connect(function(dt)
 	if not panel.Parent then
@@ -386,7 +391,6 @@ spin = RunService.RenderStepped:Connect(function(dt)
 	logoRingGrad.Rotation = (logoRingGrad.Rotation + dt * 280) % 360
 end)
 
--- entrada: aparece e cresce
 TweenService:Create(panel, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {GroupTransparency = 0}):Play()
 TweenService:Create(scale, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = baseScale}):Play()
 
