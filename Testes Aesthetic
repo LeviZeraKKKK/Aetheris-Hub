@@ -2786,7 +2786,7 @@ function showMainPanel()
 
 		local layout = Instance.new("UIListLayout")
 		layout.SortOrder = Enum.SortOrder.LayoutOrder
-		layout.Padding = UDim.new(0, 6)
+		layout.Padding = UDim.new(0, 4)
 		layout.Parent = page
 
 		layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
@@ -2814,7 +2814,7 @@ function showMainPanel()
 				col.Parent = holder
 				local cl = Instance.new("UIListLayout")
 				cl.SortOrder = Enum.SortOrder.LayoutOrder
-				cl.Padding = UDim.new(0, 6)
+				cl.Padding = UDim.new(0, 4)
 				cl.Parent = col
 				return col, cl
 			end
@@ -4255,7 +4255,7 @@ function showMainPanel()
 
 		local sLayout = Instance.new("UIListLayout")
 		sLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		sLayout.Padding = UDim.new(0, 4)
+		sLayout.Padding = UDim.new(0, 3)
 		sLayout.Parent = sContainer
 
 		-- Seção recolhível: a setinha no canto do cabeçalho esconde/mostra as funções dela.
@@ -5163,7 +5163,7 @@ function showMainPanel()
 
 	local function addToggle(parent, name, callback, defaultState, configName)
 		local toggleFrame = Instance.new("Frame")
-		toggleFrame.Size = UDim2.new(1, 0, 0, 26)
+		toggleFrame.Size = UDim2.new(1, 0, 0, 22)
 		toggleFrame.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
 		toggleFrame.BackgroundTransparency = 0.3
 		toggleFrame.Parent = parent
@@ -5189,14 +5189,14 @@ function showMainPanel()
 		label.Font = currentGlobalFont
 		label.Text = name
 		label.TextColor3 = currentTextColor
-		label.TextSize = 11
+		label.TextSize = 10
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.Parent = toggleFrame
 		table.insert(allTextLabels, label)
 
 		local toggleBtn = Instance.new("TextButton")
-		toggleBtn.Size = UDim2.new(0, 28, 0, 16)
-		toggleBtn.Position = UDim2.new(1, -34, 0.5, -8)
+		toggleBtn.Size = UDim2.new(0, 26, 0, 14)
+		toggleBtn.Position = UDim2.new(1, -32, 0.5, -7)
 		toggleBtn.BackgroundColor3 = defaultState and currentThemeColor or Color3.fromRGB(50, 50, 70)
 		toggleBtn.Text = ""
 		toggleBtn.Parent = toggleFrame
@@ -5206,8 +5206,8 @@ function showMainPanel()
 		tCorner.Parent = toggleBtn
 
 		local circle = Instance.new("Frame")
-		circle.Size = UDim2.new(0, 12, 0, 12)
-		circle.Position = defaultState and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
+		circle.Size = UDim2.new(0, 10, 0, 10)
+		circle.Position = defaultState and UDim2.new(1, -12, 0.5, -5) or UDim2.new(0, 2, 0.5, -5)
 		circle.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 		circle.Parent = toggleBtn
 
@@ -5220,7 +5220,7 @@ function showMainPanel()
 
 		local function setToggleState(state)
 			toggleStateRef.isToggled = state == true
-			local targetPos = toggleStateRef.isToggled and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6)
+			local targetPos = toggleStateRef.isToggled and UDim2.new(1, -12, 0.5, -5) or UDim2.new(0, 2, 0.5, -5)
 			local targetColor = toggleStateRef.isToggled and currentThemeColor or Color3.fromRGB(50, 50, 70)
 			local targetLedColor = toggleStateRef.isToggled and accentBlue or Color3.fromRGB(80, 80, 100)
 			TweenService:Create(circle, TweenInfo.new(0.18), {Position = targetPos}):Play()
@@ -5250,7 +5250,7 @@ function showMainPanel()
 		end
 
 		local sliderFrame = Instance.new("Frame")
-		sliderFrame.Size = UDim2.new(1, 0, 0, 38)
+		sliderFrame.Size = UDim2.new(1, 0, 0, 32)
 		sliderFrame.BackgroundColor3 = Color3.fromRGB(19, 20, 30)
 		sliderFrame.BackgroundTransparency = 0.3
 		sliderFrame.Parent = parent
@@ -5260,20 +5260,20 @@ function showMainPanel()
 		corner.Parent = sliderFrame
 
 		local label = Instance.new("TextLabel")
-		label.Size = UDim2.new(1, -16, 0, 16)
-		label.Position = UDim2.new(0, 8, 0, 3)
+		label.Size = UDim2.new(1, -16, 0, 14)
+		label.Position = UDim2.new(0, 8, 0, 2)
 		label.BackgroundTransparency = 1
 		label.Font = currentGlobalFont
 		label.Text = name .. ": " .. formatSliderValue(default)
 		label.TextColor3 = currentTextColor
-		label.TextSize = 11
+		label.TextSize = 10
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.Parent = sliderFrame
 		table.insert(allTextLabels, label)
 
 		local bar = Instance.new("Frame")
 		bar.Size = UDim2.new(1, -16, 0, 4)
-		bar.Position = UDim2.new(0, 8, 0, 24)
+		bar.Position = UDim2.new(0, 8, 0, 21)
 		bar.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
 		bar.BorderSizePixel = 0
 		bar.Parent = sliderFrame
@@ -12852,7 +12852,6 @@ function showMainPanel()
 					friends = true, allies = true,
 					target = nil, tpart = nil, pos = nil, sx = 0, sy = 0, name = "", dist = 0,
 					hooked = false, conn = nil, last = 0,
-					ref = "Center", showFov = true, ring = nil, lastClick = nil,
 					skillsOnly = true, windowUntil = 0, exemptUntil = 0, touch = false, inputConn = nil, inputEnd = nil,
 				}
 				-- A mira só vale logo depois de uma skill/ataque (Z X C V F, clique ou toque); movimento como Soru/Dash/TP
@@ -12892,7 +12891,6 @@ function showMainPanel()
 						S.windowUntil = tick() + 0.7
 					elseif t == Enum.UserInputType.Touch then
 						S.touch = true
-						S.lastClick = Vector2.new(input.Position.X, input.Position.Y) + GuiSvc:GetGuiInset()
 						if isMoveButton(Vector2.new(input.Position.X, input.Position.Y)) then
 							S.exemptUntil = tick() + 1.2
 						end
@@ -12945,47 +12943,12 @@ function showMainPanel()
 					return ok
 				end
 
-				-- Referência da mira: centro da tela ou o último click/cursor/toque
 				local function aimPoint()
 					local cam = workspace.CurrentCamera
-					local center = cam and cam.ViewportSize / 2 or Vector2.new(400, 300)
-					if S.ref == "Center" then return center end
-					if S.touch or UIS:GetLastInputType() == Enum.UserInputType.Touch then
-						return S.lastClick or center
+					if UIS:GetLastInputType() == Enum.UserInputType.Touch or UIS.MouseBehavior == Enum.MouseBehavior.LockCenter then
+						return cam and cam.ViewportSize / 2 or Vector2.new(400, 300)
 					end
-					if UIS.MouseBehavior == Enum.MouseBehavior.LockCenter then return center end
 					return UIS:GetMouseLocation()
-				end
-				-- círculo do FOV desenhado em volta da referência
-				local function updateRing()
-					if not S.on or not S.showFov or S.fov <= 0 then
-						if S.ring then S.ring.Visible = false end
-						return
-					end
-					if not S.ring then
-						local ring = Instance.new("Frame")
-						ring.Name = "SilentFovRing"
-						ring.AnchorPoint = Vector2.new(0.5, 0.5)
-						ring.BackgroundTransparency = 1
-						ring.BorderSizePixel = 0
-						ring.ZIndex = 50
-						ring.Active = false
-						local corner = Instance.new("UICorner")
-						corner.CornerRadius = UDim.new(1, 0)
-						corner.Parent = ring
-						local stroke = Instance.new("UIStroke")
-						stroke.Thickness = 1.5
-						stroke.Transparency = 0.25
-						stroke.Parent = ring
-						ring.Parent = screenGui
-						S.ring = ring
-					end
-					local p = aimPoint()
-					local inset = screenGui.IgnoreGuiInset and Vector2.zero or GuiSvc:GetGuiInset()
-					S.ring.Size = UDim2.new(0, S.fov * 2, 0, S.fov * 2)
-					S.ring.Position = UDim2.new(0, p.X - inset.X, 0, p.Y - inset.Y)
-					S.ring.UIStroke.Color = S.pos and Color3.fromRGB(110, 255, 160) or Color3.fromRGB(150, 140, 255)
-					S.ring.Visible = true
 				end
 
 				local function isAllowed(plr)
@@ -13062,7 +13025,6 @@ function showMainPanel()
 					if S.inputEnd then S.inputEnd:Disconnect(); S.inputEnd = nil end
 					S.target, S.tpart, S.pos = nil, nil, nil
 					if not state then
-						if S.ring then S.ring.Visible = false end
 						st.Text = "💤 Desligado"
 						st.TextColor3 = Color3.fromRGB(150, 150, 180)
 						return
@@ -13078,7 +13040,6 @@ function showMainPanel()
 					S.inputEnd = UIS.InputEnded:Connect(function(input) pcall(onInputEnded, input) end)
 					S.conn = RunService.RenderStepped:Connect(function()
 						pcall(update)
-						pcall(updateRing)
 						if tick() - lastStatus > 0.3 then
 							lastStatus = tick()
 							if S.pos then
@@ -13093,14 +13054,11 @@ function showMainPanel()
 				end, false)
 				simpleDD(sec, "Alvos: ", {{"Both", "Players e NPCs"}, {"Players", "Só players"}, {"NPC", "Só NPCs"}}, "Both", 3,
 					function(v) S.targets = v end, "Silent: alvos", function() return S.targets end)
-				simpleDD(sec, "Mirar no que está: ", {{"Center", "No centro da tela"}, {"Click", "Perto do meu click"}}, "Center", 2,
-					function(v) S.ref = v end, "Silent: referência", function() return S.ref end)
-				simpleDD(sec, "Prioridade: ", {{"Mouse", "Mais perto da referência"}, {"Near", "Mais perto de mim"}, {"Health", "Menor vida"}}, "Mouse", 3,
+				simpleDD(sec, "Prioridade: ", {{"Mouse", "Mais perto da mira"}, {"Near", "Mais perto de mim"}, {"Health", "Menor vida"}}, "Mouse", 3,
 					function(v) S.priority = v end, "Silent: prioridade", function() return S.priority end)
 				simpleDD(sec, "Parte: ", {{"Root", "Tronco"}, {"Head", "Cabeça"}}, "Root", 2,
 					function(v) S.part = v end, "Silent: parte", function() return S.part end)
-				addSlider(sec, "Aim FOV (0 = tela toda)", 0, 1000, 300, function(v) S.fov = v end, 0, " px")
-				addToggle(sec, "Mostrar círculo do Aim FOV", function(state) S.showFov = state end, true)
+				addSlider(sec, "FOV (0 = tela toda)", 0, 1000, 300, function(v) S.fov = v end, 0, " px")
 				addSlider(sec, "Alcance", 50, 3000, 600, function(v) S.range = v end, 0, " studs")
 				addToggle(sec, "Só mirar em skills e ataques (não afeta Soru/Dash)", function(state) S.skillsOnly = state end, true)
 				addToggle(sec, "Ignorar amigos do Roblox", function(state) S.friends = state end, true)
