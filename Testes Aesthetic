@@ -134,7 +134,7 @@ do
 		{"Fonte: ", "Font: "}, {"Minimizar: ", "Minimize: "}, {"Botão flutuante", "Floating button"},
 		{"Barra superior", "Top bar"}, {"Idioma", "Language"},
 		{"Atalhos (PC)", "Shortcuts (PC)"}, {"Esconder Painel por Tecla (PC)", "Hide Panel by Key (PC)"}, {"Tecla", "Key"},
-		{"Salvar", "Save"}, {"Usar configuração", "Use config"}, {"Excluir configuração", "Delete config"},
+		{"Salvar", "Save"}, {"Auto execução", "Auto execute"}, {"Usar configuração", "Use config"}, {"Excluir configuração", "Delete config"},
 		{"Excluir", "Delete"}, {"Cancelar", "Cancel"}, {"Selecione uma configuração", "Select a config"},
 		{"Nome da configuração...", "Config name..."}, {"Nenhuma configuração salva ainda.", "No saved configs yet."},
 		{"Presets salvos no arquivo local do executor.", "Presets saved to the executor's local file."},
@@ -12630,35 +12630,12 @@ function showMainPanel()
 			-- Enquanto ligado, o jogo continua vendo "toque" como último tipo de entrada.
 			local UIS_ = game:GetService("UserInputService")
 			E.mobileSafe = UIS_.TouchEnabled and not UIS_.KeyboardEnabled
-			E.mobileHooked = false
-			local function mobileHook()
-				if E.mobileHooked then return end
-				E.mobileHooked = true
-				if not hookmetamethod then return end
-				pcall(function()
-					local oldIdx
-					oldIdx = hookmetamethod(game, "__index", newcclosure(function(self, k)
-						if E.mobileSafe and self == UIS_ and not (checkcaller and checkcaller()) then
-							if k == "LastInputType" then return Enum.UserInputType.Touch end
-							if k == "KeyboardEnabled" then return false end
-						end
-						return oldIdx(self, k)
-					end))
-					local oldNc
-					oldNc = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
-						if E.mobileSafe and self == UIS_ and not (checkcaller and checkcaller()) and getnamecallmethod() == "GetLastInputType" then
-							return Enum.UserInputType.Touch
-						end
-						return oldNc(self, ...)
-					end))
-				end)
-			end
+			-- (sem hooks: eles deixavam o jogo lento; só os avisos de troca de entrada são pausados durante o aperto)
 			-- Faz o aperto de tecla sem acionar a troca de interface (desliga os avisos de mudança de entrada só durante o aperto)
 			local function guardedKey(code, hold)
 				if not VIM then return false end
 				local conns = {}
 				if E.mobileSafe then
-					mobileHook()
 					pcall(function()
 						if getconnections then
 							for _, sig in ipairs({UIS_.LastInputTypeChanged}) do
@@ -12673,7 +12650,7 @@ function showMainPanel()
 				task.wait(hold or 0.06)
 				pcall(function() VIM:SendKeyEvent(false, code, false, game) end)
 				if #conns > 0 then
-					task.delay(0.25, function()
+					task.delay(0.5, function()
 						for _, c in ipairs(conns) do pcall(function() c:Enable() end) end
 					end)
 				end
@@ -13164,19 +13141,19 @@ function showMainPanel()
 				-- A compra só funciona perto do NPC: o script acha o NPC no mapa, vai até ele, compra e (opcional) volta.
 				B.back = true
 				local NPC_WORDS = {
-					BuyBlackLeg = {"dark step", "dark leg", "black leg"},
+					BuyBlackLeg = {"dark step teacher", "dark step", "black leg"},
 					BuyElectro = {"mad scientist", "electro"},
-					BuyFishmanKarate = {"water kung", "fishman karate"},
+					BuyFishmanKarate = {"water kung-fu teacher", "water kung", "fishman karate"},
 					BuyDragonClaw = {"sabi", "dragon claw"},
 					BuySuperhuman = {"martial arts master", "superhuman"},
 					BuyDeathStep = {"phoeyu", "death step"},
-					BuySharkmanKarate = {"daigrock", "sharkman"},
+					BuySharkmanKarate = {"sharkman teacher", "daigrock", "sharkman"},
 					BuyElectricClaw = {"previous hero", "electric claw"},
 					BuyDragonTalon = {"uzoth", "dragon talon"},
 					BuyGodhuman = {"ancient monk", "godhuman"},
 					BuySanguineArt = {"shafi", "sanguine"},
 					Geppo = {"ability teacher"}, Buso = {"ability teacher"}, Soru = {"ability teacher"},
-					Ken = {"ken", "observation", "enhancement"},
+					Ken = {"instinct teacher", "instinct", "ken"},
 				}
 				-- Ilha de cada NPC (nome da localização em Workspace._WorldOrigin.Locations)
 				local NPC_LOC = {
@@ -16578,6 +16555,82 @@ function showMainPanel()
 			manager.persistAuto()
 		end, manager.auto.enabled)
 		caption(saveSection, "Ao abrir o hub, aplica sozinho a última configuração salva ou usada.")
+		-- Auto execução: reexecuta o hub depois de trocar de servidor / reentrar (queue_on_teleport) e deixa um arquivo de autoexec
+		do
+			local AX = {file = "AetherisHub_AutoExec.json", enabled = false, src = ""}
+			if manager.fileIO then
+				pcall(function()
+					local d = HttpService:JSONDecode(readfile(AX.file))
+					if type(d) == "table" then
+						AX.enabled = d.enabled == true
+						AX.src = type(d.src) == "string" and d.src or ""
+					end
+				end)
+			end
+			local function axSave()
+				if not manager.fileIO then return end
+				pcall(function() writefile(AX.file, HttpService:JSONEncode({enabled = AX.enabled, src = AX.src})) end)
+			end
+			local function axNote(t, c)
+				if AetherisNotify then pcall(AetherisNotify, t, c or Color3.fromRGB(150, 190, 255), 3) end
+			end
+			local function axCode()
+				local s = AX.src:gsub("^%s+", ""):gsub("%s+$", "")
+				if s == "" then return nil end
+				local qt = string.char(34)
+				s = s:gsub(qt, "")
+				if s:lower():match("^https?://") then
+					return "loadstring(game:HttpGet(" .. qt .. s .. qt .. "))()"
+				end
+				return "loadstring(readfile(" .. qt .. s .. qt .. "))()"
+			end
+			local function axArm()
+				local code = axCode()
+				if not AX.enabled or not code then return false end
+				local q = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
+				local ok = false
+				if q then ok = pcall(q, code) end
+				-- arquivo de autoexec (funciona em executores que leem a pasta "autoexec" do workspace)
+				pcall(function()
+					if writefile then
+						if makefolder and isfolder and not isfolder("autoexec") then makefolder("autoexec") end
+						writefile("autoexec/AetherisHub.lua", code)
+					end
+				end)
+				return ok
+			end
+			addToggle(saveSection, "Auto execução", function(state)
+				AX.enabled = state
+				axSave()
+				if not state then return end
+				if not axCode() then
+					axNote("Auto execução: cole o link ou o nome do arquivo do script abaixo.", Color3.fromRGB(255, 200, 120))
+					return
+				end
+				if axArm() then
+					axNote("Auto execução ligada: o hub abre sozinho no próximo servidor.", Color3.fromRGB(150, 255, 170))
+				else
+					axNote("Seu executor não tem queue_on_teleport. Só o arquivo autoexec foi salvo.", Color3.fromRGB(255, 200, 120))
+				end
+			end, AX.enabled)
+			local axRow = new("Frame", {Size = UDim2.new(1, 0, 0, 28), BackgroundColor3 = CARD, BackgroundTransparency = 0.35, BorderSizePixel = 0}, saveSection)
+			round(axRow, 8)
+			new("UIStroke", {Color = LINE, Transparency = 0.55, Thickness = 1}, axRow)
+			local axBox = new("TextBox", {
+				Size = UDim2.new(1, -16, 1, 0), Position = UDim2.new(0, 8, 0, 0), BackgroundTransparency = 1,
+				ClearTextOnFocus = false, Font = currentGlobalFont, PlaceholderText = "Link (raw) ou nome do arquivo do hub...", Text = AX.src,
+				TextColor3 = currentTextColor, PlaceholderColor3 = Color3.fromRGB(120, 120, 140), TextSize = 10,
+				TextXAlignment = Enum.TextXAlignment.Left, ClipsDescendants = true
+			}, axRow)
+			table.insert(allTextLabels, axBox)
+			axBox.FocusLost:Connect(function()
+				AX.src = axBox.Text
+				axSave()
+				if AX.enabled then axArm() end
+			end)
+			caption(saveSection, "Cole o link do script (ou o nome do arquivo salvo no workspace). O hub reabre sozinho ao trocar de servidor.")
+			if AX.enabled then task.defer(axArm) end
+		end
 
 		-- Section 2: minhas configurações
 		local profileSection = saveSection -- salvar e usar na mesma seção "Save"
