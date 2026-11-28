@@ -13004,8 +13004,50 @@ function showMainPanel()
 					end
 					return pos, size
 				end
+				-- Voo igual ao do Auto Farm Level: BodyVelocity (força 1e7, P 15000) com velocidade = direção * min(velocidade, distância*5)
+				-- e noclip pelo Stepped. Para (velocidade zero) quando chega a menos de 2 studs.
+				local function moveTo(hrp, target, speed)
+					if not CK.bv or CK.bv.Parent ~= hrp then
+						if CK.bv then CK.bv:Destroy() end
+						CK.bv = Instance.new("BodyVelocity")
+						CK.bv.Name = "AetherisCakeFly"
+						CK.bv.MaxForce = Vector3.new(1e7, 1e7, 1e7)
+						CK.bv.P = 15000
+						CK.bv.Velocity = Vector3.zero
+						CK.bv.Parent = hrp
+					end
+					if not CK.noclipConn then
+						CK.noclipConn = game:GetService("RunService").Stepped:Connect(function()
+							if not CK.on then return end
+							local c = player.Character
+							if not c then return end
+							for _, part in ipairs(c:GetDescendants()) do
+								if part:IsA("BasePart") then part.CanCollide = false end
+							end
+						end)
+					end
+					local offset = target - hrp.Position
+					local dist = offset.Magnitude
+					if dist > 2 then
+						CK.bv.Velocity = offset.Unit * math.min(speed, dist * 5)
+					else
+						CK.bv.Velocity = Vector3.zero
+						pcall(function() hrp.AssemblyLinearVelocity = Vector3.zero end)
+					end
+					return dist
+				end
+				local function stopMove()
+					if CK.noclipConn then CK.noclipConn:Disconnect() CK.noclipConn = nil end
+					if CK.bv then
+						local h = CK.bv.Parent
+						pcall(function() CK.bv:Destroy() end)
+						CK.bv = nil
+						if h and h:IsA("BasePart") then pcall(function() h.AssemblyLinearVelocity = Vector3.zero end) end
+					end
+				end
+				local function noclipChar(char) end
 				local function release()
-					if CK.bv then pcall(function() CK.bv:Destroy() end) CK.bv = nil end
+					stopMove()
 				end
 				local function flyTo(hrp, pos)
 					if not CK.bv or CK.bv.Parent ~= hrp then
@@ -13161,29 +13203,20 @@ function showMainPanel()
 						end
 						-- voa até o portal (Workspace.Map.CakeLoaf.BigMirror) e simplesmente passa por ele
 						local function goMirror(hrp, char)
-							local mpos, msize = mirrorPos()
+							local mpos = mirrorPos()
 							if not mpos then
 								ckStatus("Espelho (CakeLoaf.BigMirror) não encontrado")
 								return false
 							end
-							if not init() then
-								ckStatus("Portal: remotes do jogo não encontrados")
-								return false
-							end
-							release()
-							enterE()
-							noclipOn()
-							local d = (mpos - hrp.Position).Magnitude
-							if d < 4 or (CK.atPortal and d < 10) then
-								-- chegou: fica PARADO na posição do portal (sem voltar a mexer)
+							if CK.farmOn then leaveFarm() end
+							local d = moveTo(hrp, mpos, CK.fly)
+							if d < 3 then
 								CK.atPortal = true
-								fly(hrp, Vector3.zero)
 								ckStatus("Parado no portal: esperando o Cake Prince")
 								return true
 							end
 							CK.atPortal = false
 							ckStatus("Voando até o portal (" .. math.floor(d) .. "m)")
-							flyTo(hrp, mpos)
 							return false
 						end
 						while CK.on and CK.token == my and screenGui.Parent do
@@ -13201,9 +13234,9 @@ function showMainPanel()
 									if CK.farmOn then leaveFarm() end
 									local part = rootOf(boss)
 									if part then
-										ckStatus("Cake Prince vivo: atacando")
+										local dd = moveTo(hrp, part.Position + Vector3.new(0, CK.height, 0), CK.fly)
+										ckStatus("Cake Prince vivo: acima dele (" .. math.floor(dd) .. "m)")
 										equip()
-										flyTo(hrp, part.Position + Vector3.new(0, CK.height, 0))
 										attack(boss, part, false)
 									end
 								elseif CK.sawBoss then
