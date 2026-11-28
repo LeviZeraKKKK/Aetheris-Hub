@@ -31,12 +31,33 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TeleportService = game:GetService("TeleportService")
 local player = Players.LocalPlayer
+local HttpService = game:GetService("HttpService")
+
+-- saved data: last game played + favorite games
+local SAVE_FILE = "AetherisLoader.json"
+local saved = {last = nil, favorites = {}}
+pcall(function()
+	if readfile and isfile and isfile(SAVE_FILE) then
+		local data = HttpService:JSONDecode(readfile(SAVE_FILE))
+		if type(data) == "table" then
+			saved.last = data.last
+			if type(data.favorites) == "table" then saved.favorites = data.favorites end
+		end
+	end
+end)
+local function persist()
+	pcall(function()
+		if writefile then writefile(SAVE_FILE, HttpService:JSONEncode(saved)) end
+	end)
+end
 
 -----------------------------------------------------------------
 -- SUPPORTED GAME: load straight away, no UI
 -----------------------------------------------------------------
 for _, g in ipairs(GAMES) do
 	if g.placeIds[game.PlaceId] == true or game.GameId == g.universeId then
+		saved.last = g.name -- remember the last supported game you played
+		persist()
 		local ok, err = pcall(function()
 			loadstring(game:HttpGet(g.url))()
 		end)
@@ -57,6 +78,7 @@ local CARD2 = Color3.fromRGB(21, 28, 44)
 local LINE = Color3.fromRGB(34, 44, 64)
 local GRAY = Color3.fromRGB(130, 140, 165)
 local RED = Color3.fromRGB(240, 85, 85)
+local GREEN = Color3.fromRGB(80, 220, 130)
 
 local function new(class, props, parent)
 	local inst = Instance.new(class)
@@ -116,7 +138,7 @@ gui.Parent = getGuiParent()
 
 local PANEL_W = 270
 local CARD_H = 104
-local PANEL_H = math.clamp(44 + 26 + #GAMES * (CARD_H + 8) + 34, 200, 380)
+local PANEL_H = math.clamp(44 + 34 + 26 + #GAMES * (CARD_H + 8) + 34, 240, 420)
 
 local panel = new("CanvasGroup", {
 	Name = "Panel", AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0),
@@ -191,9 +213,28 @@ end)
 new("Frame", {Size = UDim2.new(1, -24, 0, 1), Position = UDim2.new(0, 12, 1, -1), BackgroundColor3 = LINE, BorderSizePixel = 0}, header)
 
 -----------------------------------------------------------------
+-- USER (avatar + name)
+-----------------------------------------------------------------
+local userRow = new("Frame", {Position = UDim2.new(0, 0, 0, 44), Size = UDim2.new(1, 0, 0, 34), BackgroundTransparency = 1}, panel)
+local avatarBox = new("Frame", {Size = UDim2.new(0, 24, 0, 24), Position = UDim2.new(0, 12, 0, 5), BackgroundColor3 = CARD2, BorderSizePixel = 0}, userRow)
+corner(avatarBox, 12)
+gradient(stroke(avatarBox, WHITE, 1.4, 0), 45)
+local avatarImg = new("ImageLabel", {Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Crop, Image = ""}, avatarBox)
+corner(avatarImg, 12)
+task.spawn(function()
+	local ok, img = pcall(function()
+		return Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+	end)
+	if ok and avatarImg.Parent then avatarImg.Image = img end
+end)
+local shownName = (player.DisplayName ~= nil and player.DisplayName ~= "") and player.DisplayName or player.Name
+label(userRow, "Welcome, " .. shownName, 10, UDim2.new(0, 44, 0, 4), UDim2.new(1, -56, 0, 14), WHITE, Enum.Font.GothamBold)
+label(userRow, "@" .. player.Name, 8, UDim2.new(0, 44, 0, 18), UDim2.new(1, -56, 0, 11), GRAY)
+
+-----------------------------------------------------------------
 -- GAME LIST
 -----------------------------------------------------------------
-local sectionRow = new("Frame", {Size = UDim2.new(1, -24, 0, 16), Position = UDim2.new(0, 12, 0, 50), BackgroundTransparency = 1}, panel)
+local sectionRow = new("Frame", {Size = UDim2.new(1, -24, 0, 16), Position = UDim2.new(0, 12, 0, 82), BackgroundTransparency = 1}, panel)
 label(sectionRow, "SUPPORTED GAMES", 8, UDim2.new(0, 0, 0, 0), UDim2.new(0.7, 0, 1, 0), GRAY, Enum.Font.GothamBold)
 local countPill = new("Frame", {
 	Size = UDim2.new(0, 20, 0, 14), Position = UDim2.new(1, -20, 0.5, -7), BackgroundColor3 = CARD2, BorderSizePixel = 0,
@@ -203,7 +244,7 @@ stroke(countPill, LINE, 1)
 label(countPill, tostring(#GAMES), 8, UDim2.new(0, 0, 0, 0), UDim2.new(1, 0, 1, 0), BLUE, Enum.Font.GothamBold, Enum.TextXAlignment.Center)
 
 local list = new("ScrollingFrame", {
-	Position = UDim2.new(0, 0, 0, 70), Size = UDim2.new(1, 0, 1, -70 - 28), BackgroundTransparency = 1, BorderSizePixel = 0,
+	Position = UDim2.new(0, 0, 0, 102), Size = UDim2.new(1, 0, 1, -102 - 28), BackgroundTransparency = 1, BorderSizePixel = 0,
 	ScrollBarThickness = 2, ScrollBarImageColor3 = Color3.fromRGB(70, 80, 105), CanvasSize = UDim2.new(0, 0, 0, 0),
 	AutomaticCanvasSize = Enum.AutomaticSize.Y,
 }, panel)
@@ -220,21 +261,102 @@ local function closeLoader()
 end
 closeBtn.MouseButton1Click:Connect(closeLoader)
 
--- Teleports to the game and queues the hub to load by itself once you arrive
-local function goToGame(g)
+-- ===== teleport (tries several ways, in order) =====
+local GuiService = game:GetService("GuiService")
+local teleportFailedFlag = false
+
+local function httpGet(url)
+	local req = (syn and syn.request) or request or http_request or (http and http.request)
+	if req then
+		local ok, res = pcall(req, {Url = url, Method = "GET"})
+		if ok and res and res.Body then return res.Body end
+	end
+	local ok, body = pcall(function() return game:HttpGet(url) end)
+	if ok then return body end
+	return nil
+end
+
+-- finds a public server of the game that is not full
+local function pickServer(placeId)
+	local body = httpGet("https://games.roblox.com/v1/games/" .. tostring(placeId) .. "/servers/Public?sortOrder=Asc&limit=100")
+	if not body then return nil end
+	local ok, data = pcall(function() return game:GetService("HttpService"):JSONDecode(body) end)
+	if not ok or type(data) ~= "table" or type(data.data) ~= "table" then return nil end
+	local options = {}
+	for _, sv in ipairs(data.data) do
+		if (sv.playing or 0) < (sv.maxPlayers or 0) then table.insert(options, sv.id) end
+	end
+	if #options == 0 then return nil end
+	return options[math.random(1, #options)]
+end
+
+-- waits up to N seconds; stops early if Roblox reports a failed teleport
+local function waitUnlessFailed(seconds)
+	local t = 0
+	while t < seconds do
+		if teleportFailedFlag or not gui.Parent then return end
+		task.wait(0.25)
+		t = t + 0.25
+	end
+end
+
+-- returns true if the teleport got going (the game is about to close this script)
+local function goToGame(g, status)
 	local queue = queue_on_teleport or queueonteleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
 	if queue then
 		pcall(queue, 'loadstring(game:HttpGet("' .. g.url .. '"))()')
 	end
+
+	-- 1) normal teleport
+	teleportFailedFlag = false
+	status("Teleporting...")
 	local ok, err = pcall(function() TeleportService:Teleport(g.homePlaceId, player) end)
 	if not ok then
-		ok, err = pcall(function() TeleportService:Teleport(g.homePlaceId) end)
+		warn("[Aetheris Loader] Teleport(placeId, player) error: " .. tostring(err))
+		pcall(function() TeleportService:Teleport(g.homePlaceId) end)
 	end
-	return ok, err
+	waitUnlessFailed(6)
+	if not gui.Parent then return true end
+
+	-- 2) join a specific public server
+	status("Trying another way...")
+	teleportFailedFlag = false
+	local serverId = pickServer(g.homePlaceId)
+	if serverId then
+		local ok2, err2 = pcall(function() TeleportService:TeleportToPlaceInstance(g.homePlaceId, serverId, player) end)
+		if not ok2 then warn("[Aetheris Loader] TeleportToPlaceInstance error: " .. tostring(err2)) end
+		waitUnlessFailed(6)
+		if not gui.Parent then return true end
+	else
+		warn("[Aetheris Loader] could not list servers (no http function?)")
+	end
+
+	-- 3) last resort: open the game link / copy it
+	local webLink = "https://www.roblox.com/games/" .. tostring(g.homePlaceId)
+	local copied = false
+	if setclipboard then copied = pcall(setclipboard, webLink) end
+	pcall(function() GuiService:OpenBrowserWindow("roblox://placeId=" .. tostring(g.homePlaceId)) end)
+	status(copied and "Link copied - open it" or "Teleport failed")
+	return false
+end
+
+local cardRefs = {}
+-- favorites first, then the last game played, then the rest in the original order
+local function refreshOrder()
+	for i, g in ipairs(GAMES) do
+		local card = cardRefs[g.name]
+		if card then
+			local o = i * 10
+			if saved.favorites[g.name] then o = o - 1000 end
+			if saved.last == g.name then o = o - 500 end
+			card.LayoutOrder = o
+		end
+	end
 end
 
 local function buildCard(game_, order)
 	local card = new("Frame", {LayoutOrder = order, Size = UDim2.new(1, 0, 0, CARD_H), BackgroundColor3 = CARD, BorderSizePixel = 0}, list)
+	cardRefs[game_.name] = card
 	corner(card, 10)
 	local cardStroke = stroke(card, LINE, 1, 0)
 
@@ -249,17 +371,85 @@ local function buildCard(game_, order)
 	}, iconBox)
 	corner(iconImg, 7)
 
-	label(card, game_.name, 11, UDim2.new(0, 46, 0, 8), UDim2.new(1, -120, 0, 14), WHITE, Enum.Font.GothamBold)
-	label(card, game_.subtitle, 8, UDim2.new(0, 46, 0, 23), UDim2.new(1, -120, 0, 11), GRAY)
+	-- name + "LAST PLAYED" tag
+	local nameRow = new("Frame", {Position = UDim2.new(0, 46, 0, 8), Size = UDim2.new(1, -78, 0, 14), BackgroundTransparency = 1}, card)
+	new("UIListLayout", {
+		FillDirection = Enum.FillDirection.Horizontal, VerticalAlignment = Enum.VerticalAlignment.Center,
+		Padding = UDim.new(0, 5), SortOrder = Enum.SortOrder.LayoutOrder,
+	}, nameRow)
+	new("TextLabel", {
+		LayoutOrder = 1, Size = UDim2.new(0, 0, 1, 0), AutomaticSize = Enum.AutomaticSize.X, BackgroundTransparency = 1,
+		Font = Enum.Font.GothamBold, Text = game_.name, TextColor3 = WHITE, TextSize = 11,
+	}, nameRow)
+	local lastTag = new("Frame", {
+		LayoutOrder = 2, Size = UDim2.new(0, 0, 0, 11), AutomaticSize = Enum.AutomaticSize.X,
+		BackgroundColor3 = Color3.fromRGB(30, 24, 52), BorderSizePixel = 0, Visible = (saved.last == game_.name),
+	}, nameRow)
+	corner(lastTag, 5)
+	stroke(lastTag, PURPLE, 1, 0.4)
+	new("UIPadding", {PaddingLeft = UDim.new(0, 5), PaddingRight = UDim.new(0, 5)}, lastTag)
+	new("TextLabel", {
+		Size = UDim2.new(0, 0, 1, 0), AutomaticSize = Enum.AutomaticSize.X, BackgroundTransparency = 1,
+		Font = Enum.Font.GothamBold, Text = "LAST PLAYED", TextColor3 = Color3.fromRGB(200, 170, 255), TextSize = 6,
+	}, lastTag)
 
+	label(card, game_.subtitle, 8, UDim2.new(0, 46, 0, 24), UDim2.new(1, -120, 0, 11), GRAY)
+
+	-- hub status (checks if the hub link is online)
 	local pill = new("Frame", {
-		Size = UDim2.new(0, 58, 0, 14), Position = UDim2.new(1, -66, 0, 9), BackgroundColor3 = Color3.fromRGB(22, 30, 48), BorderSizePixel = 0,
+		Size = UDim2.new(0, 58, 0, 14), Position = UDim2.new(1, -66, 0, 22), BackgroundColor3 = Color3.fromRGB(22, 30, 48), BorderSizePixel = 0,
 	}, card)
 	corner(pill, 7)
 	stroke(pill, LINE, 1)
-	local dot = new("Frame", {Size = UDim2.new(0, 4, 0, 4), Position = UDim2.new(0, 6, 0.5, -2), BackgroundColor3 = BLUE, BorderSizePixel = 0}, pill)
-	corner(dot, 3)
-	label(pill, "Supported", 7, UDim2.new(0, 14, 0, 0), UDim2.new(1, -16, 1, 0), Color3.fromRGB(150, 190, 240), Enum.Font.GothamBold)
+	local dot = new("Frame", {Size = UDim2.new(0, 4, 0, 4), Position = UDim2.new(0, 6, 0.5, -2), BackgroundColor3 = GRAY, BorderSizePixel = 0}, pill)
+	corner(dot, 2)
+	local pillText = label(pill, "Checking…", 7, UDim2.new(0, 14, 0, 0), UDim2.new(1, -16, 1, 0), GRAY, Enum.Font.GothamBold)
+	task.spawn(function()
+		local body = httpGet(game_.url)
+		local online = body ~= nil and #body > 50 and not body:match("^%s*404")
+		if not pill.Parent then return end
+		dot.BackgroundColor3 = online and GREEN or RED
+		pillText.Text = online and "Online" or "Offline"
+		pillText.TextColor3 = online and GREEN or RED
+	end)
+
+	-- favorite star
+	local STAR_ON, STAR_OFF = Color3.fromRGB(255, 205, 60), Color3.fromRGB(95, 105, 130)
+	local starBtn = new("TextButton", {
+		Size = UDim2.new(0, 16, 0, 16), Position = UDim2.new(1, -24, 0, 6), BackgroundTransparency = 1, AutoButtonColor = false,
+		Font = Enum.Font.GothamBold, Text = "★", TextSize = 12, TextColor3 = saved.favorites[game_.name] and STAR_ON or STAR_OFF,
+	}, card)
+	local hoveringStar = false
+	local function paintStar()
+		TweenService:Create(starBtn, TweenInfo.new(0.15), {
+			TextColor3 = (saved.favorites[game_.name] or hoveringStar) and STAR_ON or STAR_OFF,
+		}):Play()
+	end
+	starBtn.MouseEnter:Connect(function()
+		hoveringStar = true
+		paintStar()
+		TweenService:Create(starBtn, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {TextSize = 15}):Play()
+	end)
+	starBtn.MouseLeave:Connect(function()
+		hoveringStar = false
+		paintStar()
+		TweenService:Create(starBtn, TweenInfo.new(0.15), {TextSize = 12}):Play()
+	end)
+	starBtn.Activated:Connect(function()
+		saved.favorites[game_.name] = (not saved.favorites[game_.name]) or nil
+		persist()
+		paintStar()
+		refreshOrder()
+		if saved.favorites[game_.name] then
+			task.spawn(function()
+				TweenService:Create(starBtn, TweenInfo.new(0.16), {TextSize = 19, Rotation = 180}):Play()
+				task.wait(0.16)
+				TweenService:Create(starBtn, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {TextSize = 12, Rotation = 360}):Play()
+				task.wait(0.22)
+				starBtn.Rotation = 0
+			end)
+		end
+	end)
 
 	-- feature chips
 	local chips = new("Frame", {Position = UDim2.new(0, 8, 0, 44), Size = UDim2.new(1, -16, 0, 27), BackgroundTransparency = 1}, card)
@@ -298,23 +488,10 @@ local function buildCard(game_, order)
 
 	local busy = false
 	local function setLabel(text) btnLabel.Text = text end
-	local function fail(text)
-		progress.Size = UDim2.new(0, 0, 0, 2)
-		fillGrad.Color = ColorSequence.new(RED, Color3.fromRGB(176, 52, 110))
-		setLabel(text)
-		task.delay(2.2, function()
-			if not btn.Parent then return end
-			fillGrad.Color = ColorSequence.new(PURPLE, BLUE)
-			setLabel("Go to game")
-			busy = false
-		end)
-	end
-
-	-- if Roblox refuses the teleport, show why
+	-- if Roblox refuses a teleport, remember it so the next method starts right away
 	local failedConn = TeleportService.TeleportInitFailed:Connect(function(_, result, message)
-		if not busy or not btn.Parent then return end
-		warn("[Aetheris Loader] teleport failed: " .. tostring(result) .. " - " .. tostring(message))
-		fail("Teleport failed")
+		teleportFailedFlag = true
+		warn("[Aetheris Loader] teleport refused: " .. tostring(result) .. " - " .. tostring(message))
 	end)
 	btn.Destroying:Connect(function() failedConn:Disconnect() end)
 
@@ -328,13 +505,24 @@ local function buildCard(game_, order)
 	hit.Activated:Connect(function()
 		if busy then return end
 		busy = true
-		setLabel("Teleporting...")
-		TweenService:Create(progress, TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0.85, 0, 0, 2)}):Play()
-		local ok, err = goToGame(game_)
-		if not ok then
-			warn("[Aetheris Loader] teleport error: " .. tostring(err))
-			fail("Teleport failed")
-		end
+		saved.last = game_.name -- remember the last game you went to
+		persist()
+		lastTag.Visible = true
+		refreshOrder()
+		TweenService:Create(progress, TweenInfo.new(8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0.9, 0, 0, 2)}):Play()
+		task.spawn(function()
+			local ok = goToGame(game_, setLabel)
+			if not ok and btn.Parent then
+				progress.Size = UDim2.new(0, 0, 0, 2)
+				fillGrad.Color = ColorSequence.new(RED, Color3.fromRGB(176, 52, 110))
+				task.delay(3, function()
+					if not btn.Parent then return end
+					fillGrad.Color = ColorSequence.new(PURPLE, BLUE)
+					setLabel("Go to game")
+					busy = false
+				end)
+			end
+		end)
 	end)
 
 	card.MouseEnter:Connect(function()
@@ -348,6 +536,7 @@ local function buildCard(game_, order)
 end
 
 for i, g in ipairs(GAMES) do buildCard(g, i) end
+refreshOrder()
 
 -----------------------------------------------------------------
 -- FOOTER
