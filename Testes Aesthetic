@@ -23,6 +23,13 @@ AetherisBtnStyle = function(b, small)
 		b.AutoButtonColor = false
 		b.Font = Enum.Font.GothamMedium
 		b.TextColor3 = Color3.fromRGB(204, 208, 224)
+		if not b:FindFirstChildOfClass("UITextSizeConstraint") and #b.Text > 6 then
+			b.TextScaled = true
+			local fit = Instance.new("UITextSizeConstraint")
+			fit.MaxTextSize = 10
+			fit.MinTextSize = 7
+			fit.Parent = b
+		end
 		local c = b:FindFirstChildOfClass("UICorner") or Instance.new("UICorner")
 		c.CornerRadius = UDim.new(0, 6)
 		c.Parent = b
@@ -793,7 +800,7 @@ local function updateGlobalTheme(newColor)
 	
 	for _, data in pairs(themeToggles) do
 		if data.isToggled and data.circle and data.button and data.led then
-			TweenService:Create(data.circle, TweenInfo.new(0.18), {Position = UDim2.new(1, -14, 0.5, -6)}):Play()
+			TweenService:Create(data.circle, TweenInfo.new(0.18), {Position = data.onPos or UDim2.new(1, -14, 0.5, -6), Size = data.baseSize or UDim2.new(0, 12, 0, 12)}):Play()
 			TweenService:Create(data.button, TweenInfo.new(0.18), {BackgroundColor3 = newColor}):Play()
 			TweenService:Create(data.led, TweenInfo.new(0.18), {BackgroundColor3 = accentBlue}):Play()
 		end
@@ -5112,6 +5119,12 @@ function showMainPanel()
 		label.TextSize = 11
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.Parent = toggleFrame
+		label.TextScaled = true -- nomes longos encolhem em vez de passar por cima do botão
+		label.TextWrapped = false
+		local lblFit = Instance.new("UITextSizeConstraint")
+		lblFit.MaxTextSize = 11
+		lblFit.MinTextSize = 7
+		lblFit.Parent = label
 		table.insert(allTextLabels, label)
 
 		local toggleBtn = Instance.new("TextButton")
@@ -5232,6 +5245,12 @@ function showMainPanel()
 		label.TextSize = 10
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.Parent = toggleFrame
+		label.TextScaled = true -- nomes longos encolhem em vez de passar por cima do botão
+		label.TextWrapped = false
+		local lblFit = Instance.new("UITextSizeConstraint")
+		lblFit.MaxTextSize = 10
+		lblFit.MinTextSize = 7
+		lblFit.Parent = label
 		table.insert(allTextLabels, label)
 
 		local toggleBtn = Instance.new("TextButton")
@@ -5255,9 +5274,10 @@ function showMainPanel()
 		cCorner.CornerRadius = UDim.new(1, 0)
 		cCorner.Parent = circle
 
-		local toggleStateRef = {isToggled = (defaultState == true), circle = circle, button = toggleBtn, led = ledIndicator}
+		local toggleStateRef = {isToggled = (defaultState == true), circle = circle, button = toggleBtn, led = ledIndicator, onPos = UDim2.new(1, -12, 0.5, -5), baseSize = UDim2.new(0, 10, 0, 10)}
 		table.insert(themeToggles, toggleStateRef)
 
+		local squashTok = 0
 		local function setToggleState(state)
 			toggleStateRef.isToggled = state == true
 			local targetPos = toggleStateRef.isToggled and UDim2.new(1, -12, 0.5, -5) or UDim2.new(0, 2, 0.5, -5)
@@ -5266,8 +5286,18 @@ function showMainPanel()
 			TweenService:Create(circle, TweenInfo.new(0.18), {Position = targetPos}):Play()
 			TweenService:Create(toggleBtn, TweenInfo.new(0.18), {BackgroundColor3 = targetColor}):Play()
 			TweenService:Create(ledIndicator, TweenInfo.new(0.18), {BackgroundColor3 = targetLedColor}):Play()
+			squashTok = squashTok + 1
+			local myTok = squashTok
 			TweenService:Create(circle, TweenInfo.new(0.08), {Size = UDim2.new(0, 14, 0, 10)}):Play()
-			task.delay(0.08, function() TweenService:Create(circle, TweenInfo.new(0.14), {Size = UDim2.new(0, 10, 0, 10)}):Play() end)
+			task.delay(0.08, function()
+				if myTok == squashTok then
+					TweenService:Create(circle, TweenInfo.new(0.14), {Size = UDim2.new(0, 10, 0, 10)}):Play()
+				end
+			end)
+			-- garantia: no fim, a bolinha sempre volta ao tamanho normal
+			task.delay(0.4, function()
+				if myTok == squashTok and circle.Parent then circle.Size = UDim2.new(0, 10, 0, 10) end
+			end)
 			callback(toggleStateRef.isToggled)
 		end
 		toggleBtn.MouseButton1Click:Connect(function() setToggleState(not toggleStateRef.isToggled) end)
@@ -5307,6 +5337,12 @@ function showMainPanel()
 		label.Text = name .. ": " .. formatSliderValue(default)
 		label.TextColor3 = currentTextColor
 		label.TextSize = 10
+		label.TextScaled = true
+		label.TextWrapped = false
+		local sliderFit = Instance.new("UITextSizeConstraint")
+		sliderFit.MaxTextSize = 10
+		sliderFit.MinTextSize = 7
+		sliderFit.Parent = label
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.Parent = sliderFrame
 		table.insert(allTextLabels, label)
@@ -13097,6 +13133,17 @@ function showMainPanel()
 								if d:IsA("BasePart") then d.CanCollide = false end
 							end
 						end
+						-- usa a mesma base de voo/noclip do Farm por Material e do "Viajar para Ilhas"
+						local function enterE()
+							if not CK.farmOn then
+								CK.farmOn = true
+								CK.savedMat = {material = E.material, goal = E.goal, weapon = E.cfg.material.weapon, speed = E.cfg.material.speed, height = E.cfg.material.height, enabled = E.enabled}
+							end
+							E.enabled = true
+							E.material = {item = "Cake Prince", names = MOBS}
+							E.goal = 0
+							E.cfg.material.weapon, E.cfg.material.speed, E.cfg.material.height = CK.weapon, CK.fly, CK.height
+						end
 						-- voa até o portal (Workspace.Map.CakeLoaf.BigMirror) e simplesmente passa por ele
 						local function goMirror(hrp, char)
 							local mirror = mirrorPart()
@@ -13104,14 +13151,22 @@ function showMainPanel()
 								ckStatus("Espelho (CakeLoaf.BigMirror) não encontrado")
 								return false
 							end
-							pcall(noclip, char)
-							local d = flyTo(hrp, mirror.Position)
+							if not init() then
+								ckStatus("Portal: remotes do jogo não encontrados")
+								return false
+							end
+							release()
+							enterE()
+							noclipOn()
+							local d = (mirror.Position - hrp.Position).Magnitude
 							if d < 8 then
 								CK.inside = true
 								insideSince = tick()
-								release()
+								leaveFarm()
 								return true
 							end
+							ckStatus("Voando até o portal (" .. math.floor(d) .. "m)")
+							flyTo(hrp, mirror.Position)
 							return false
 						end
 						while CK.on and CK.token == my and screenGui.Parent do
@@ -13123,7 +13178,6 @@ function showMainPanel()
 							end
 							if hrp and BossLogic.init() then
 								local boss = liveCake()
-								if (boss or CK.spawned) and CK.farmOn then leaveFarm() end
 								if boss then
 									CK.spawned, CK.sawBoss = true, true
 									local part = rootOf(boss)
@@ -13131,6 +13185,7 @@ function showMainPanel()
 										ckStatus("Indo ao portal")
 										goMirror(hrp, char)
 									elseif part then
+										if CK.farmOn then leaveFarm() end
 										ckStatus("Cake Prince vivo: atacando")
 										equip()
 										flyTo(hrp, part.Position + Vector3.new(0, CK.height, 0))
@@ -13145,6 +13200,7 @@ function showMainPanel()
 										goMirror(hrp, char)
 									else
 										ckStatus("Dentro do portal: procurando o boss")
+										if CK.farmOn then leaveFarm() end
 										release()
 										if tick() - insideSince > 60 then CK.spawned, CK.inside = false, false end
 									end
@@ -13152,14 +13208,7 @@ function showMainPanel()
 									CK.inside = false
 									-- Farm: usa a lógica do Farm por Material (sem ligar o toggle dele)
 									if init() then
-										if not CK.farmOn then
-											CK.farmOn = true
-											CK.savedMat = {material = E.material, goal = E.goal, weapon = E.cfg.material.weapon, speed = E.cfg.material.speed, height = E.cfg.material.height, enabled = E.enabled}
-										end
-										E.enabled = true
-										E.material = {item = "Cake Prince", names = MOBS}
-										E.goal = 0
-										E.cfg.material.weapon, E.cfg.material.speed, E.cfg.material.height = CK.weapon, CK.fly, CK.height
+										enterE()
 										release()
 										ckFarm("⚔️ Farm: lógica do Farm por Material")
 										pcall(stepMaterial, hrp)
