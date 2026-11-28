@@ -175,7 +175,7 @@ do
 		{"Diálogo", "Dialogue"}, {"Direto", "Direct"}, {"Nada encontrado.", "Nothing found."},
 		{"Nenhuma opção encontrada.", "No options found."}, {"opções", "options"}, {"opção", "option"},
 		{"Selecione", "Select"}, {"alvos", "targets"}, {"alvo", "target"}, {"jogadores", "players"},
-		{"Geral", "General"}, {"Script feito por Noahzin", "Script made by Noahzin"}, {"EXECUTORES SUPORTADOS", "SUPPORTED EXECUTORS"}, {"Subir quando a vida estiver baixa", "Rise when health is low"}, {"Vida mínima para subir", "Health % to rise"}, {"Altura de segurança", "Safe height"}, {"Carregar save automaticamente", "Auto load save"}, {"Ao abrir o hub, aplica sozinho a última configuração salva ou usada.", "On launch, automatically applies the last saved or used config."}, {"Boss: ", "Boss: "}, {"Todos", "All"}, {"Recuperando no alto...", "Recovering up high..."}, {"Vida baixa", "Low health"}, {"Auto Elite", "Auto Elite"}, {"Auto Sea Beast", "Auto Sea Beast"}, {"Sea Beast: usar skills", "Sea Beast: use skills"}, {"Sea Beast: altura", "Sea Beast: height"}, {"Pegar quest do boss", "Take boss quest"}, {"Altura sobre o boss", "Height above boss"}, {"Aguardando boss...", "Waiting for boss..."}, {"Sons de clique", "Click Sounds"}, {"Som de clique", "Click Sound"}, {"Volume do som", "Sound Volume"}, {"Som: ", "Sound: "}, {"Clássico", "Classic"}, {"Suave", "Soft"}, {"Tecla", "Key"}, {"Página", "Page"}, {"Botão", "Button"}, {"Interruptor", "Switch"}, {"Clique rápido", "Fast Click"}, {"Estalo", "Snap"}, {"Bolha", "Bubble"}, {"Grave", "Bass"}, {"Nenhum", "None"}, {"Tema pronto", "Preset Theme"}, {"Oceano", "Ocean"}, {"Gelo", "Ice"}, {"funções alteradas", "functions changed"}, {"Fechar o Aetheris Hub?", "Close Aetheris Hub?"}, {"O painel será fechado por completo. Para abrir de novo, execute o script outra vez.", "The panel will be closed completely. To open it again, run the script again."}, {"Fechar", "Close"}, {"Tem certeza de que deseja excluir", "Are you sure you want to delete"}, {"Essa ação não pode ser desfeita.", "This action cannot be undone."}, {"direto", "direct"}, {"incompatível", "incompatible"}, {"Módulo", "Module"}, {"diálogo", "dialog"}, {"INIMIGOS (NPC)", "ENEMIES (NPC)"}, {"BAÚ", "CHEST"}, {"PLAYERS", "PLAYERS"}, {"BERRIES", "BERRIES"}, {"ESP Inimigos (NPC)", "ESP Enemies (NPC)"}, {"Inimigos", "Enemies"}, {"inimigos", "enemies"},
+		{"Geral", "General"}, {"Script feito por Noahzin", "Script made by Noahzin"}, {"EXECUTORES SUPORTADOS", "SUPPORTED EXECUTORS"}, {"Subir quando a vida estiver baixa", "Rise when health is low"}, {"Vida mínima para subir", "Health % to rise"}, {"Altura de segurança", "Safe height"}, {"Carregar save automaticamente", "Auto load save"}, {"Ao abrir o hub, aplica sozinho a última configuração salva ou usada.", "On launch, automatically applies the last saved or used config."}, {"Boss: ", "Boss: "}, {"Todos", "All"}, {"Recuperando no alto...", "Recovering up high..."}, {"Vida baixa", "Low health"}, {"Auto Elite", "Auto Elite"}, {"Auto Rip Indra", "Auto Rip Indra"}, {"Indra: buscar God's Chalice (Elite + Baú)", "Indra: get God's Chalice (Elite + Chests)"}, {"Indra: velocidade de voo", "Indra: fly speed"}, {"Indra: altura sobre o alvo", "Indra: height over target"}, {"Auto Cake Prince", "Auto Cake Prince"}, {"Cake: velocidade de voo", "Cake: fly speed"}, {"Cake: altura sobre o alvo", "Cake: height over target"}, {"Elite e Sea Beast", "Elite and Sea Beast"}, {"Elite: velocidade de voo", "Elite: fly speed"}, {"Elite: altura sobre o alvo", "Elite: height over target"}, {"Auto Sea Beast", "Auto Sea Beast"}, {"Auto Piranha", "Auto Piranha"}, {"Auto Piranha: usar skills", "Auto Piranha: use skills"}, {"Auto Piranha: altura", "Auto Piranha: height"}, {"Auto Terrorshark", "Auto Terrorshark"}, {"Auto Terrorshark: usar skills", "Auto Terrorshark: use skills"}, {"Auto Terrorshark: altura", "Auto Terrorshark: height"}, {"Sea Beast: usar skills", "Sea Beast: use skills"}, {"Sea Beast: altura", "Sea Beast: height"}, {"Pegar quest do boss", "Take boss quest"}, {"Altura sobre o boss", "Height above boss"}, {"Aguardando boss...", "Waiting for boss..."}, {"Sons de clique", "Click Sounds"}, {"Som de clique", "Click Sound"}, {"Volume do som", "Sound Volume"}, {"Som: ", "Sound: "}, {"Clássico", "Classic"}, {"Suave", "Soft"}, {"Tecla", "Key"}, {"Página", "Page"}, {"Botão", "Button"}, {"Interruptor", "Switch"}, {"Clique rápido", "Fast Click"}, {"Estalo", "Snap"}, {"Bolha", "Bubble"}, {"Grave", "Bass"}, {"Nenhum", "None"}, {"Tema pronto", "Preset Theme"}, {"Oceano", "Ocean"}, {"Gelo", "Ice"}, {"funções alteradas", "functions changed"}, {"Fechar o Aetheris Hub?", "Close Aetheris Hub?"}, {"O painel será fechado por completo. Para abrir de novo, execute o script outra vez.", "The panel will be closed completely. To open it again, run the script again."}, {"Fechar", "Close"}, {"Tem certeza de que deseja excluir", "Are you sure you want to delete"}, {"Essa ação não pode ser desfeita.", "This action cannot be undone."}, {"direto", "direct"}, {"incompatível", "incompatible"}, {"Módulo", "Module"}, {"diálogo", "dialog"}, {"INIMIGOS (NPC)", "ENEMIES (NPC)"}, {"BAÚ", "CHEST"}, {"PLAYERS", "PLAYERS"}, {"BERRIES", "BERRIES"}, {"ESP Inimigos (NPC)", "ESP Enemies (NPC)"}, {"Inimigos", "Enemies"}, {"inimigos", "enemies"},
 		{"inimigo", "enemy"}, {"Cor", "Color"}, {"Sem quest", "No quest"}, {"Tecla para ocultar", "Key to hide"},
 		{"Atalho de ocultar ativado", "Hide shortcut enabled"}, {"Aliados", "Allies"}, {"Jogadores", "Players"}, {"Jogador", "Player"},
 		{"tipo:", "type:"}, {"Automatização", "Automation"}, {"Personagem indisponível ou morto", "Character unavailable or dead"},
@@ -11575,12 +11575,44 @@ function showMainPanel()
 
 			addToggle(secBoss, "Pegar quest do boss", function(state) BossLogic.wantQuest = state end, false)
 
-			-- ===== Auto Elite =====
-			-- Pede a quest do Elite Hunter (CommF_ "EliteHunter") e, quando um Elite (Diablo, Deandre ou Urban) aparece,
-			-- liga o Auto Kill Boss nele. Quando acaba, desliga e pede a próxima.
+			-- ===== Elite e Sea Beast (aba Auto): ao ligar um, aparecem as opções dele =====
 			do
+				local sec = createSection(pages["Auto"], "Elite e Sea Beast", sectionIcons.FarmAutomation)
+				local function rowsOf(build)
+					local seen = {}
+					for _, c in ipairs(sec:GetChildren()) do seen[c] = true end
+					build()
+					local rows = {}
+					for _, c in ipairs(sec:GetChildren()) do
+						if not seen[c] and c:IsA("GuiObject") then table.insert(rows, c) end
+					end
+					return rows
+				end
+				local function setVis(rows, v) for _, x in ipairs(rows) do x.Visible = v end end
+				local function weaponDD(onPick)
+					return AetherisDropdown(sec, {
+						prefix = "Arma: ",
+						label = weaponLabels.Melee,
+						value = "Melee",
+						icon = weaponIcons.Melee,
+						maxRows = 3,
+						boxWidth = 130,
+						getOptions = function()
+							local opts = {}
+							for _, v in ipairs({"Melee", "Fruit", "Sword"}) do
+								table.insert(opts, {label = weaponLabels[v], value = v, icon = weaponIcons[v]})
+							end
+							return opts
+						end,
+						onSelect = onPick,
+					})
+				end
+
+				-- ----- Auto Elite -----
+				-- Pede a quest do Elite Hunter (CommF_ "EliteHunter") e, quando um Elite (Diablo, Deandre ou Urban) aparece,
+				-- liga o Auto Kill Boss nele com as opções abaixo. Quando acaba, desliga e pede a próxima.
 				local ELITES = {"Diablo", "Deandre", "Urban"}
-				local EL = {on = false, token = 0, turnedOn = false, prevTarget = nil, lastAsk = 0}
+				local EL = {on = false, token = 0, turnedOn = false, prevTarget = nil, lastAsk = 0, weapon = "Melee", fly = 270, height = 20, saved = nil}
 				local function liveElite()
 					local en = workspace:FindFirstChild("Enemies")
 					if not en then return nil end
@@ -11594,7 +11626,6 @@ function showMainPanel()
 					end
 					return nil
 				end
-				-- faz o Auto Kill Boss enxergar o Elite vivo como um boss da lista
 				if not BossLogic.__eliteHook then
 					BossLogic.__eliteHook = true
 					local origScan = BossLogic.scanSpawns
@@ -11612,45 +11643,44 @@ function showMainPanel()
 						return out
 					end
 				end
-				addToggle(secBoss, "Auto Elite", function(state)
+				local function eliteEngage(m)
+					EL.prevTarget = EL.prevTarget or BossLogic.target
+					EL.saved = EL.saved or {weapon = BossLogic.weapon, fly = BossLogic.flySpeed, height = BossLogic.height}
+					BossLogic.weapon, BossLogic.flySpeed, BossLogic.height = EL.weapon, EL.fly, EL.height
+					BossLogic.target = m.Name
+					if AetherisToggleByName and AetherisToggleByName["Auto Kill Boss"] then
+						pcall(AetherisToggleByName["Auto Kill Boss"], true)
+						EL.turnedOn = true
+					end
+				end
+				local function eliteRelease()
+					if EL.turnedOn and AetherisToggleByName and AetherisToggleByName["Auto Kill Boss"] then
+						pcall(AetherisToggleByName["Auto Kill Boss"], false)
+					end
+					if EL.prevTarget then BossLogic.target = EL.prevTarget end
+					if EL.saved then BossLogic.weapon, BossLogic.flySpeed, BossLogic.height = EL.saved.weapon, EL.saved.fly, EL.saved.height end
+					EL.turnedOn, EL.prevTarget, EL.saved = false, nil, nil
+				end
+				local eliteRows
+				addToggle(sec, "Auto Elite", function(state)
 					EL.on = state
+					if eliteRows then setVis(eliteRows, state) end
 					EL.token = EL.token + 1
 					local my = EL.token
-					if not state then
-						if EL.turnedOn and AetherisToggleByName and AetherisToggleByName["Auto Kill Boss"] then
-							pcall(AetherisToggleByName["Auto Kill Boss"], false)
-						end
-						if EL.prevTarget then BossLogic.target = EL.prevTarget end
-						EL.turnedOn, EL.prevTarget = false, nil
-						return
-					end
+					if not state then eliteRelease() return end
 					task.spawn(function()
 						local goneSince
 						while EL.on and EL.token == my and screenGui.Parent do
 							local m = liveElite()
 							if m then
 								goneSince = nil
-								if not BossLogic.enabled then
-									EL.prevTarget = EL.prevTarget or BossLogic.target
-									BossLogic.target = m.Name
-									if AetherisToggleByName and AetherisToggleByName["Auto Kill Boss"] then
-										pcall(AetherisToggleByName["Auto Kill Boss"], true)
-										EL.turnedOn = true
-									end
-								end
+								if not BossLogic.enabled then eliteEngage(m) end
 							else
 								goneSince = goneSince or tick()
-								if EL.turnedOn and tick() - goneSince > 4 then
-									if AetherisToggleByName and AetherisToggleByName["Auto Kill Boss"] then
-										pcall(AetherisToggleByName["Auto Kill Boss"], false)
-									end
-									if EL.prevTarget then BossLogic.target = EL.prevTarget end
-									EL.turnedOn, EL.prevTarget = false, nil
-								end
+								if EL.turnedOn and tick() - goneSince > 4 then eliteRelease() end
 								if not EL.turnedOn and tick() - EL.lastAsk > 10 then
 									EL.lastAsk = tick()
-									local rs = game:GetService("ReplicatedStorage")
-									local remotes = rs:FindFirstChild("Remotes")
+									local remotes = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes")
 									local comm = remotes and remotes:FindFirstChild("CommF_")
 									if comm then pcall(function() comm:InvokeServer("EliteHunter") end) end
 								end
@@ -11659,12 +11689,16 @@ function showMainPanel()
 						end
 					end)
 				end, false)
-			end
+				eliteRows = rowsOf(function()
+					weaponDD(function(v) EL.weapon = v end)
+					addSlider(sec, "Elite: velocidade de voo", 10, 300, 270, function(v) EL.fly = v end, 0)
+					addSlider(sec, "Elite: altura sobre o alvo", 6, 30, 20, function(v) EL.height = v end, 0, " studs")
+				end)
+				setVis(eliteRows, false)
 
-			-- ===== Auto Sea Beast =====
-			-- Quando aparece um Sea Beast (Workspace.SeaBeasts), voa até ficar acima dele e ataca com a arma do Auto Kill Boss.
-			do
-				local SB = {on = false, token = 0, height = 45, skills = true, lastSkill = 0, combo = 1, bv = nil}
+				-- ----- Auto Sea Beast -----
+				-- Quando aparece um Sea Beast (Workspace.SeaBeasts), voa até ficar acima dele e ataca.
+				local SB = {on = false, token = 0, height = 45, skills = true, lastSkill = 0, combo = 1, bv = nil, weapon = "Melee", lastEquip = 0}
 				local function liveBeast()
 					local f = workspace:FindFirstChild("SeaBeasts")
 					if not f then return nil end
@@ -11675,14 +11709,31 @@ function showMainPanel()
 					end
 					return nil
 				end
-				local function release()
+				local function sbRelease()
 					if SB.bv then pcall(function() SB.bv:Destroy() end) SB.bv = nil end
 				end
-				addToggle(secBoss, "Auto Sea Beast", function(state)
+				local function sbEquip()
+					if tick() - SB.lastEquip < 1 then return end
+					local char = player.Character
+					local hum = char and char:FindFirstChildOfClass("Humanoid")
+					if not hum then return end
+					local eq = char:FindFirstChildOfClass("Tool")
+					if eq and BossLogic.toolType(eq) == SB.weapon then return end
+					SB.lastEquip = tick()
+					local bp = player:FindFirstChild("Backpack")
+					if bp then
+						for _, t in ipairs(bp:GetChildren()) do
+							if t:IsA("Tool") and BossLogic.toolType(t) == SB.weapon then pcall(function() hum:EquipTool(t) end) return end
+						end
+					end
+				end
+				local beastRows
+				addToggle(sec, "Auto Sea Beast", function(state)
 					SB.on = state
+					if beastRows then setVis(beastRows, state) end
 					SB.token = SB.token + 1
 					local my = SB.token
-					if not state then release() return end
+					if not state then sbRelease() return end
 					task.spawn(function()
 						local VIM = game:GetService("VirtualInputManager")
 						while SB.on and SB.token == my and screenGui.Parent do
@@ -11690,47 +11741,139 @@ function showMainPanel()
 							local char = player.Character
 							local hrp = char and char:FindFirstChild("HumanoidRootPart")
 							if m and part and hrp and BossLogic.init() then
-								-- fica parado acima do monstro
 								if not SB.bv or SB.bv.Parent ~= hrp then
-									release()
+									sbRelease()
 									SB.bv = Instance.new("BodyVelocity")
 									SB.bv.MaxForce = Vector3.new(1e8, 1e8, 1e8)
 									SB.bv.Velocity = Vector3.zero
 									SB.bv.Parent = hrp
 								end
-								local goal = part.Position + Vector3.new(0, SB.height, 0)
-								local d = goal - hrp.Position
-								if d.Magnitude > 6 then
-									SB.bv.Velocity = d.Unit * math.min(d.Magnitude * 3, 300)
-								else
-									SB.bv.Velocity = Vector3.zero
-								end
-								-- arma
-								pcall(BossLogic.ensureWeapon)
-								-- ataque
+								local d = (part.Position + Vector3.new(0, SB.height, 0)) - hrp.Position
+								SB.bv.Velocity = d.Magnitude > 6 and d.Unit * math.min(d.Magnitude * 3, 300) or Vector3.zero
+								pcall(sbEquip)
 								SB.combo = (SB.combo % 4) + 1
 								if BossLogic.attackEvent then pcall(function() BossLogic.attackEvent:FireServer(0.3, SB.combo) end) end
 								if BossLogic.hitEvent then pcall(function() BossLogic.hitEvent:FireServer(part, {}) end) end
-								-- skills (Z, X, C, V) em rodízio
-								if SB.skills and tick() - SB.lastSkill > 1.3 then
+								if SB.skills and SB.weapon ~= "Sword" and tick() - SB.lastSkill > 1.3 then
 									SB.lastSkill = tick()
-									local keys = {Enum.KeyCode.Z, Enum.KeyCode.X, Enum.KeyCode.C, Enum.KeyCode.V}
-									for _, k in ipairs(keys) do
+									for _, k in ipairs({Enum.KeyCode.Z, Enum.KeyCode.X, Enum.KeyCode.C, Enum.KeyCode.V}) do
 										pcall(function() VIM:SendKeyEvent(true, k, false, game) end)
 										task.wait(0.08)
 										pcall(function() VIM:SendKeyEvent(false, k, false, game) end)
 									end
 								end
 							else
-								release()
+								sbRelease()
 							end
 							task.wait(0.12)
 						end
-						release()
+						sbRelease()
 					end)
 				end, false)
-				addToggle(secBoss, "Sea Beast: usar skills", function(state) SB.skills = state end, true)
-				addSlider(secBoss, "Sea Beast: altura", 15, 120, 45, function(v) SB.height = v end, 0, " studs")
+				beastRows = rowsOf(function()
+					weaponDD(function(v) SB.weapon = v end)
+					addToggle(sec, "Sea Beast: usar skills", function(state) SB.skills = state end, true)
+					addSlider(sec, "Sea Beast: altura", 15, 120, 45, function(v) SB.height = v end, 0, " studs")
+				end)
+				setVis(beastRows, false)
+
+				-- ----- Auto Terrorshark e Auto Piranha -----
+				-- Procura o monstro mais perto (Workspace.Enemies e Workspace.SeaBeasts), fica acima dele e ataca.
+				local function makeHunter(title, words, defHeight)
+					local H = {on = false, token = 0, height = defHeight, skills = true, weapon = "Melee", lastEquip = 0, lastSkill = 0, combo = 1, bv = nil}
+					local function nearest(hrp)
+						local best, bestPart, bestD
+						for _, fname in ipairs({"Enemies", "SeaBeasts"}) do
+							local f = workspace:FindFirstChild(fname)
+							if f then
+								for _, m in ipairs(f:GetChildren()) do
+									local ln = string.lower(m.Name)
+									local match = false
+									for _, w in ipairs(words) do if string.find(ln, w, 1, true) then match = true break end end
+									if match then
+										local h = m:FindFirstChildOfClass("Humanoid")
+										local part = m:FindFirstChild("HumanoidRootPart") or m.PrimaryPart or m:FindFirstChildWhichIsA("BasePart", true)
+										if part and (not h or h.Health > 0) then
+											local d = (part.Position - hrp.Position).Magnitude
+											if not bestD or d < bestD then best, bestPart, bestD = m, part, d end
+										end
+									end
+								end
+							end
+						end
+						return best, bestPart
+					end
+					local function release()
+						if H.bv then pcall(function() H.bv:Destroy() end) H.bv = nil end
+					end
+					local function equip()
+						if tick() - H.lastEquip < 1 then return end
+						local char = player.Character
+						local hum = char and char:FindFirstChildOfClass("Humanoid")
+						if not hum then return end
+						local eq = char:FindFirstChildOfClass("Tool")
+						if eq and BossLogic.toolType(eq) == H.weapon then return end
+						H.lastEquip = tick()
+						local bp = player:FindFirstChild("Backpack")
+						if bp then
+							for _, t in ipairs(bp:GetChildren()) do
+								if t:IsA("Tool") and BossLogic.toolType(t) == H.weapon then pcall(function() hum:EquipTool(t) end) return end
+							end
+						end
+					end
+					local rows
+					addToggle(sec, title, function(state)
+						H.on = state
+						if rows then setVis(rows, state) end
+						H.token = H.token + 1
+						local my = H.token
+						if not state then release() return end
+						task.spawn(function()
+							local VIM = game:GetService("VirtualInputManager")
+							while H.on and H.token == my and screenGui.Parent do
+								local char = player.Character
+								local hrp = char and char:FindFirstChild("HumanoidRootPart")
+								local m, part
+								if hrp then m, part = nearest(hrp) end
+								if m and part and BossLogic.init() then
+									if not H.bv or H.bv.Parent ~= hrp then
+										release()
+										H.bv = Instance.new("BodyVelocity")
+										H.bv.MaxForce = Vector3.new(1e8, 1e8, 1e8)
+										H.bv.Velocity = Vector3.zero
+										H.bv.Parent = hrp
+									end
+									local d = (part.Position + Vector3.new(0, H.height, 0)) - hrp.Position
+									H.bv.Velocity = d.Magnitude > 6 and d.Unit * math.min(d.Magnitude * 3, 300) or Vector3.zero
+									pcall(equip)
+									H.combo = (H.combo % 4) + 1
+									if BossLogic.attackEvent then pcall(function() BossLogic.attackEvent:FireServer(0.3, H.combo) end) end
+									if BossLogic.hitEvent then pcall(function() BossLogic.hitEvent:FireServer(part, {}) end) end
+									if H.skills and H.weapon ~= "Sword" and tick() - H.lastSkill > 1.3 then
+										H.lastSkill = tick()
+										for _, k in ipairs({Enum.KeyCode.Z, Enum.KeyCode.X, Enum.KeyCode.C, Enum.KeyCode.V}) do
+											pcall(function() VIM:SendKeyEvent(true, k, false, game) end)
+											task.wait(0.08)
+											pcall(function() VIM:SendKeyEvent(false, k, false, game) end)
+										end
+									end
+								else
+									release()
+								end
+								task.wait(0.12)
+							end
+							release()
+						end)
+					end, false)
+					rows = rowsOf(function()
+						weaponDD(function(v) H.weapon = v end)
+						addToggle(sec, title .. ": usar skills", function(state) H.skills = state end, true)
+						addSlider(sec, title .. ": altura", 10, 120, defHeight, function(v) H.height = v end, 0, " studs")
+					end)
+					setVis(rows, false)
+				end
+				makeHunter("Auto Terrorshark", {"terrorshark"}, 45)
+				makeHunter("Auto Piranha", {"piranha"}, 25)
 			end
 
 			local bossWeaponDD, bossWarn
@@ -12574,16 +12717,46 @@ function showMainPanel()
 			do
 				local sec = createSection(page, "Auto Mastery", sectionIcons.FarmAutomation)
 				bindStatus("mastery", tiny(sec, "💤 Desligado"))
+				-- Silent Aim integrado: liga junto quando a arma é Fruta/Arma de fogo e desliga quando o Auto Mastery desliga
+				-- (só desliga se foi o Auto Mastery que ligou; se você já usava o Silent Aim, ele fica como estava).
+				local silentTok = 0
+				local silentByMastery = false
+				local function silentSet(v)
+					if AetherisToggleByName and AetherisToggleByName["Silent Aim Universal"] then
+						pcall(AetherisToggleByName["Silent Aim Universal"], v)
+					end
+				end
+				local function silentWanted()
+					if not (E.masterySkills and E.masterySilent) then return false end
+					if E.masteryUseQueue then return (E.masteryQueue.Fruit or E.masteryQueue.Gun) and true or false end
+					local w = E.cfg.mastery.weapon
+					return w == "Fruit" or w == "Gun"
+				end
 				addToggle(sec, "Auto Mastery", function(state)
+					silentTok = silentTok + 1
+					local my = silentTok
 					if state then
 						E.qIdx, E.qStart, E.qDone = 1, 0, {}
-						local w = E.cfg.mastery.weapon
-						if E.masterySkills and E.masterySilent and (w == "Fruit" or w == "Gun" or E.masteryUseQueue) and AetherisToggleByName and AetherisToggleByName["Silent Aim Universal"] then
-							pcall(AetherisToggleByName["Silent Aim Universal"], true)
-						end
 						start("mastery")
+						task.spawn(function()
+							while silentTok == my and screenGui.Parent do
+								local want = silentWanted()
+								if want and not silentByMastery and not AetherisSilentOn then
+									silentSet(true)
+									silentByMastery = true
+								elseif not want and silentByMastery then
+									silentSet(false)
+									silentByMastery = false
+								end
+								task.wait(0.5)
+							end
+						end)
 					else
 						stopMode("mastery")
+						if silentByMastery then
+							silentSet(false)
+							silentByMastery = false
+						end
 					end
 				end, false)
 				setters.mastery = toggleSetter(sec, "Auto Mastery")
@@ -12693,6 +12866,337 @@ function showMainPanel()
 						task.wait(0.4)
 					end
 				end)
+			end
+			-- ===== Auto Cake Prince (aba Auto) =====
+			-- Fase 1: farma os inimigos da Cake Land (usa o Farm por Material) e pede ao jogo o spawn (CommF_ "CakePrinceSpawner").
+			-- Fase 2: quando o Cake Prince aparece, liga o Auto Kill Boss nele. Depois volta pra fase 1.
+			do
+				local sec = createSection(pages["Auto"], "Auto Cake Prince", sectionIcons.FarmAutomation)
+				local MOBS = {"Cookie Crafter", "Cake Guard", "Baking Staff", "Head Baker"}
+				local CK = {on = false, token = 0, mode = nil, weapon = "Melee", fly = 270, height = 20, lastAsk = 0, matOn = false, bossOn = false, saved = nil, savedMat = nil, savedBoss = nil, wrap = false}
+				local function liveCake()
+					local en = workspace:FindFirstChild("Enemies")
+					if not en then return nil end
+					for _, m in ipairs(en:GetChildren()) do
+						if m.Name == "Cake Prince" then
+							local h = m:FindFirstChildOfClass("Humanoid")
+							if h and h.Health > 0 then return m end
+						end
+					end
+					return nil
+				end
+				if not BossLogic.__cakeHook then
+					BossLogic.__cakeHook = true
+					local prev = BossLogic.scanSpawns
+					BossLogic.scanSpawns = function(...)
+						local base = prev(...)
+						if not CK.on then return base end
+						local out = {}
+						for _, e in ipairs(base) do table.insert(out, e) end
+						local m = liveCake()
+						if m then
+							local ok, pos = pcall(function() return m:GetPivot().Position end)
+							if ok then table.insert(out, {name = m.Name, pos = pos}) end
+						end
+						return out
+					end
+				end
+				local function tog(name, v)
+					if AetherisToggleByName and AetherisToggleByName[name] then pcall(AetherisToggleByName[name], v) end
+				end
+				local function stopFarm()
+					if CK.matOn then
+						tog("Farm por Material", false)
+						CK.matOn = false
+					end
+					if CK.savedMat then
+						E.material, E.goal = CK.savedMat.material, CK.savedMat.goal
+						E.cfg.material.weapon, E.cfg.material.speed, E.cfg.material.height = CK.savedMat.weapon, CK.savedMat.speed, CK.savedMat.height
+						CK.savedMat = nil
+					end
+				end
+				local function stopBoss()
+					if CK.bossOn then
+						tog("Auto Kill Boss", false)
+						CK.bossOn = false
+					end
+					if CK.savedBoss then
+						BossLogic.target, BossLogic.weapon, BossLogic.flySpeed, BossLogic.height = CK.savedBoss.target, CK.savedBoss.weapon, CK.savedBoss.fly, CK.savedBoss.height
+						CK.savedBoss = nil
+					end
+				end
+				local function startFarm()
+					CK.savedMat = CK.savedMat or {material = E.material, goal = E.goal, weapon = E.cfg.material.weapon, speed = E.cfg.material.speed, height = E.cfg.material.height}
+					E.material = {item = "Cake Prince", names = MOBS}
+					E.goal = 0
+					E.cfg.material.weapon, E.cfg.material.speed, E.cfg.material.height = CK.weapon, CK.fly, CK.height
+					tog("Farm por Material", true)
+					CK.matOn = true
+				end
+				local function startBoss(m)
+					CK.savedBoss = CK.savedBoss or {target = BossLogic.target, weapon = BossLogic.weapon, fly = BossLogic.flySpeed, height = BossLogic.height}
+					BossLogic.weapon, BossLogic.flySpeed, BossLogic.height = CK.weapon, CK.fly, CK.height
+					BossLogic.target = m.Name
+					tog("Auto Kill Boss", true)
+					CK.bossOn = true
+				end
+				local ckRows
+				local function rowsOf(build)
+					local seen = {}
+					for _, c in ipairs(sec:GetChildren()) do seen[c] = true end
+					build()
+					local rows = {}
+					for _, c in ipairs(sec:GetChildren()) do
+						if not seen[c] and c:IsA("GuiObject") then table.insert(rows, c) end
+					end
+					return rows
+				end
+				addToggle(sec, "Auto Cake Prince", function(state)
+					CK.on = state
+					if ckRows then for _, x in ipairs(ckRows) do x.Visible = state end end
+					CK.token = CK.token + 1
+					local my = CK.token
+					if not state then
+						stopBoss()
+						stopFarm()
+						CK.mode = nil
+						return
+					end
+					task.spawn(function()
+						local gone
+						while CK.on and CK.token == my and screenGui.Parent do
+							local m = liveCake()
+							if m then
+								gone = nil
+								if CK.mode ~= "boss" then
+									stopFarm()
+									startBoss(m)
+									CK.mode = "boss"
+								end
+							else
+								if CK.mode == "boss" then
+									gone = gone or tick()
+									if tick() - gone > 4 then
+										stopBoss()
+										CK.mode = nil
+									end
+								end
+								if CK.mode ~= "boss" then
+									if CK.mode ~= "farm" then
+										startFarm()
+										CK.mode = "farm"
+									end
+									if tick() - CK.lastAsk > 8 then
+										CK.lastAsk = tick()
+										local remotes = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes")
+										local comm = remotes and remotes:FindFirstChild("CommF_")
+										if comm then
+											pcall(function() comm:InvokeServer("CakePrinceSpawner", true) end)
+											pcall(function() comm:InvokeServer("CakePrinceSpawner") end)
+										end
+									end
+								end
+							end
+							task.wait(1)
+						end
+					end)
+				end, false)
+				ckRows = rowsOf(function()
+					AetherisDropdown(sec, {
+						prefix = "Arma: ",
+						label = WEAPON_LABELS.Melee,
+						value = "Melee",
+						maxRows = 3,
+						boxWidth = 130,
+						getOptions = function()
+							local opts = {}
+							for _, v in ipairs({"Melee", "Fruit", "Sword"}) do
+								table.insert(opts, {label = WEAPON_LABELS[v], value = v})
+							end
+							return opts
+						end,
+						onSelect = function(v) CK.weapon = v end,
+					})
+					addSlider(sec, "Cake: velocidade de voo", 10, 300, 270, function(v) CK.fly = v end, 0)
+					addSlider(sec, "Cake: altura sobre o alvo", 6, 30, 20, function(v) CK.height = v end, 0, " studs")
+				end)
+				for _, x in ipairs(ckRows) do x.Visible = false end
+			end
+			-- ===== Auto Rip Indra (aba Auto) =====
+			-- Se você tiver o God's Chalice e o Fist of Darkness, vai até o altar (procura por nome) e tenta invocar o Rip Indra.
+			-- Quando ele aparece, liga o Auto Kill Boss nele com as opções abaixo. Os itens eu NÃO consigo conseguir sozinho.
+			do
+				local sec = createSection(pages["Auto"], "Auto Rip Indra", sectionIcons.FarmAutomation)
+				local RI = {on = false, token = 0, mode = nil, weapon = "Melee", fly = 270, height = 20, bossOn = false, savedBoss = nil, told = {}, lastTry = 0, getChalice = true, helpers = {}}
+				local function liveIndra()
+					local en = workspace:FindFirstChild("Enemies")
+					if not en then return nil end
+					for _, m in ipairs(en:GetChildren()) do
+						if string.find(string.lower(m.Name), "indra", 1, true) then
+							local h = m:FindFirstChildOfClass("Humanoid")
+							if h and h.Health > 0 then return m end
+						end
+					end
+					return nil
+				end
+				if not BossLogic.__indraHook then
+					BossLogic.__indraHook = true
+					local prev = BossLogic.scanSpawns
+					BossLogic.scanSpawns = function(...)
+						local base = prev(...)
+						if not RI.on then return base end
+						local out = {}
+						for _, e in ipairs(base) do table.insert(out, e) end
+						local m = liveIndra()
+						if m then
+							local ok, pos = pcall(function() return m:GetPivot().Position end)
+							if ok then table.insert(out, {name = m.Name, pos = pos}) end
+						end
+						return out
+					end
+				end
+				local function hasItem(word)
+					for _, holder in ipairs({player.Character, player:FindFirstChild("Backpack")}) do
+						if holder then
+							for _, t in ipairs(holder:GetChildren()) do
+								if t:IsA("Tool") and string.find(string.lower(t.Name), word, 1, true) then return t end
+							end
+						end
+					end
+					return nil
+				end
+				local function riNote(key, text)
+					if RI.told[key] then return end
+					RI.told[key] = true
+					note(text, Color3.fromRGB(255, 200, 120))
+				end
+				local function tryAltar()
+					local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+					if not hrp then return end
+					local best
+					for _, d in ipairs(workspace:GetDescendants()) do
+						if d:IsA("ProximityPrompt") or d:IsA("ClickDetector") then
+							local n = string.lower((d.Parent and d.Parent.Name or "") .. " " .. (d.Parent and d.Parent.Parent and d.Parent.Parent.Name or ""))
+							if string.find(n, "altar", 1, true) or string.find(n, "summon", 1, true) or string.find(n, "chalice", 1, true) or string.find(n, "darkness", 1, true) then best = d break end
+						end
+					end
+					if not best then
+						riNote("altar", "Rip Indra: altar não encontrado (vá até o Castle on the Sea).")
+						return
+					end
+					local part = best.Parent
+					while part and not part:IsA("BasePart") do part = part.Parent end
+					if part then pcall(function() hrp.CFrame = part.CFrame * CFrame.new(0, 3, 4) end) end
+					task.wait(0.5)
+					if best:IsA("ProximityPrompt") then
+						pcall(function() best.HoldDuration = 0 end)
+						if fireproximityprompt then pcall(fireproximityprompt, best) end
+					elseif fireclickdetector then
+						pcall(fireclickdetector, best)
+					end
+				end
+				-- God's Chalice vem de Elite Hunter ou de baús: liga o Auto Elite e o Auto Collect Chest até ter o item
+				local HELP = {"Auto Elite", "Auto Collect Chest"}
+				local function helpersOn()
+					for _, n in ipairs(HELP) do
+						if not RI.helpers[n] and AetherisToggleByName and AetherisToggleByName[n] then
+							pcall(AetherisToggleByName[n], true)
+							RI.helpers[n] = true
+						end
+					end
+				end
+				local function helpersOff()
+					for n in pairs(RI.helpers) do
+						if AetherisToggleByName and AetherisToggleByName[n] then pcall(AetherisToggleByName[n], false) end
+					end
+					RI.helpers = {}
+				end
+				local function stopBoss()
+					if RI.bossOn and AetherisToggleByName and AetherisToggleByName["Auto Kill Boss"] then
+						pcall(AetherisToggleByName["Auto Kill Boss"], false)
+					end
+					RI.bossOn = false
+					if RI.savedBoss then
+						BossLogic.target, BossLogic.weapon, BossLogic.flySpeed, BossLogic.height = RI.savedBoss.target, RI.savedBoss.weapon, RI.savedBoss.fly, RI.savedBoss.height
+						RI.savedBoss = nil
+					end
+				end
+				local riRows
+				local function rowsOf(build)
+					local seen = {}
+					for _, c in ipairs(sec:GetChildren()) do seen[c] = true end
+					build()
+					local rows = {}
+					for _, c in ipairs(sec:GetChildren()) do
+						if not seen[c] and c:IsA("GuiObject") then table.insert(rows, c) end
+					end
+					return rows
+				end
+				addToggle(sec, "Auto Rip Indra", function(state)
+					RI.on = state
+					if riRows then for _, x in ipairs(riRows) do x.Visible = state end end
+					RI.token = RI.token + 1
+					local my = RI.token
+					if not state then stopBoss() helpersOff() RI.mode = nil RI.told = {} return end
+					task.spawn(function()
+						local gone
+						while RI.on and RI.token == my and screenGui.Parent do
+							local m = liveIndra()
+							if m then
+								gone = nil
+								if RI.mode ~= "boss" then
+									RI.savedBoss = RI.savedBoss or {target = BossLogic.target, weapon = BossLogic.weapon, fly = BossLogic.flySpeed, height = BossLogic.height}
+									BossLogic.weapon, BossLogic.flySpeed, BossLogic.height = RI.weapon, RI.fly, RI.height
+									BossLogic.target = m.Name
+									if AetherisToggleByName and AetherisToggleByName["Auto Kill Boss"] then
+										pcall(AetherisToggleByName["Auto Kill Boss"], true)
+										RI.bossOn = true
+									end
+									RI.mode = "boss"
+								end
+							else
+								if RI.mode == "boss" then
+									gone = gone or tick()
+									if tick() - gone > 4 then stopBoss() RI.mode = nil end
+								end
+								if RI.mode ~= "boss" and tick() - RI.lastTry > 8 then
+									RI.lastTry = tick()
+									local chalice = hasItem("chalice")
+									local fist = hasItem("fist of darkness") or hasItem("darkness")
+									if chalice then helpersOff() elseif RI.getChalice then helpersOn() end
+									if chalice and fist then
+										tryAltar()
+									else
+										local falta = {}
+										if not chalice then table.insert(falta, "God's Chalice") end
+										if not fist then table.insert(falta, "Fist of Darkness") end
+										riNote("itens", "Rip Indra: faltam " .. table.concat(falta, " e ") .. " na mochila." .. ((not chalice and RI.getChalice) and " Buscando o Chalice (Elite + Baú)." or ""))
+									end
+								end
+							end
+							task.wait(1)
+						end
+					end)
+				end, false)
+				riRows = rowsOf(function()
+					AetherisDropdown(sec, {
+						prefix = "Arma: ",
+						label = WEAPON_LABELS.Melee,
+						value = "Melee",
+						maxRows = 3,
+						boxWidth = 130,
+						getOptions = function()
+							local opts = {}
+							for _, v in ipairs({"Melee", "Fruit", "Sword"}) do table.insert(opts, {label = WEAPON_LABELS[v], value = v}) end
+							return opts
+						end,
+						onSelect = function(v) RI.weapon = v end,
+					})
+					addToggle(sec, "Indra: buscar God's Chalice (Elite + Baú)", function(v) RI.getChalice = v; if not v then helpersOff() end end, true)
+					addSlider(sec, "Indra: velocidade de voo", 10, 300, 270, function(v) RI.fly = v end, 0)
+					addSlider(sec, "Indra: altura sobre o alvo", 6, 30, 20, function(v) RI.height = v end, 0, " studs")
+				end)
+				for _, x in ipairs(riRows) do x.Visible = false end
 			end
 			-- ----- Raid Automática -----
 			do
@@ -14291,6 +14795,7 @@ function showMainPanel()
 
 				local lastStatus = 0
 				addToggle(sec, "Silent Aim Universal", function(state)
+					AetherisSilentOn = state
 					S.on = state
 					if S.conn then S.conn:Disconnect(); S.conn = nil end
 					if S.inputConn then S.inputConn:Disconnect(); S.inputConn = nil end
