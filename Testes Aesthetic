@@ -13007,6 +13007,9 @@ function showMainPanel()
 					end
 				end
 				local ckRows
+				local function ckFarm(text)
+					if CK.farmLbl then pcall(function() CK.farmLbl.Text = text end) end
+				end
 				local function rowsOf(build)
 					local seen = {}
 					for _, c in ipairs(sec:GetChildren()) do seen[c] = true end
@@ -13023,7 +13026,22 @@ function showMainPanel()
 					CK.token = CK.token + 1
 					local my = CK.token
 					CK.spawned, CK.told = false, false
-					if not state then release() return end
+					if not state then
+						release()
+						if CK.farmOn then
+							CK.farmOn = false
+							pcall(stopFly)
+							pcall(noclipOff)
+							local sv = CK.savedMat
+							if sv then
+								E.material, E.goal = sv.material, sv.goal
+								E.cfg.material.weapon, E.cfg.material.speed, E.cfg.material.height = sv.weapon, sv.speed, sv.height
+								E.enabled = sv.enabled
+								CK.savedMat = nil
+							end
+						end
+						return
+					end
 					ckStatus("Faltam: consultando...")
 					-- consulta o progresso e pede o spawn quando já dá
 					task.spawn(function()
@@ -13062,6 +13080,18 @@ function showMainPanel()
 					-- movimento e ataque
 					task.spawn(function()
 						local lastChar, insideSince = nil, 0
+						local function leaveFarm()
+							CK.farmOn = false
+							pcall(stopFly)
+							pcall(noclipOff)
+							local sv = CK.savedMat
+							if sv then
+								E.material, E.goal = sv.material, sv.goal
+								E.cfg.material.weapon, E.cfg.material.speed, E.cfg.material.height = sv.weapon, sv.speed, sv.height
+								E.enabled = sv.enabled
+								CK.savedMat = nil
+							end
+						end
 						local function noclip(char)
 							for _, d in ipairs(char:GetDescendants()) do
 								if d:IsA("BasePart") then d.CanCollide = false end
@@ -13093,6 +13123,7 @@ function showMainPanel()
 							end
 							if hrp and BossLogic.init() then
 								local boss = liveCake()
+								if (boss or CK.spawned) and CK.farmOn then leaveFarm() end
 								if boss then
 									CK.spawned, CK.sawBoss = true, true
 									local part = rootOf(boss)
@@ -13119,17 +13150,32 @@ function showMainPanel()
 									end
 								else
 									CK.inside = false
-									local m, part = nearestMob(hrp)
-									if m and part then
-										equip()
-										flyTo(hrp, part.Position + Vector3.new(0, CK.height, 0))
-										attack(m, part, true)
+									-- Farm: usa a lógica do Farm por Material (sem ligar o toggle dele)
+									if init() then
+										if not CK.farmOn then
+											CK.farmOn = true
+											CK.savedMat = {material = E.material, goal = E.goal, weapon = E.cfg.material.weapon, speed = E.cfg.material.speed, height = E.cfg.material.height, enabled = E.enabled}
+										end
+										E.enabled = true
+										E.material = {item = "Cake Prince", names = MOBS}
+										E.goal = 0
+										E.cfg.material.weapon, E.cfg.material.speed, E.cfg.material.height = CK.weapon, CK.fly, CK.height
+										release()
+										ckFarm("⚔️ Farm: lógica do Farm por Material")
+										pcall(stepMaterial, hrp)
+										if CK.skills and CK.weapon ~= "Sword" and E.skillFn and tick() - CK.lastSkill > 1.3 then
+											local m = nearestMob(hrp)
+											if m then
+												CK.lastSkill = tick()
+												task.spawn(E.skillFn)
+											end
+										end
 									else
-										local sp = nearestSpawn(hrp)
-										if sp then flyTo(hrp, sp + Vector3.new(0, CK.height, 0)) else release() end
+										ckFarm("❌ Farm: remotes do jogo não encontrados")
 									end
 								end
 							else
+								if hrp then ckFarm("❌ Módulos de ataque não encontrados (veja o F9)") end
 								release()
 							end
 							task.wait(0.05)
@@ -13139,6 +13185,7 @@ function showMainPanel()
 				end, false)
 				ckRows = rowsOf(function()
 					CK.status = tiny(sec, "Faltam: consultando...")
+					CK.farmLbl = tiny(sec, "Farm: iniciando...")
 					AetherisDropdown(sec, {
 						prefix = "Arma: ",
 						label = WEAPON_LABELS.Melee,
