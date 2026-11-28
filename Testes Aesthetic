@@ -175,7 +175,7 @@ do
 		{"Diálogo", "Dialogue"}, {"Direto", "Direct"}, {"Nada encontrado.", "Nothing found."},
 		{"Nenhuma opção encontrada.", "No options found."}, {"opções", "options"}, {"opção", "option"},
 		{"Selecione", "Select"}, {"alvos", "targets"}, {"alvo", "target"}, {"jogadores", "players"},
-		{"Geral", "General"}, {"Script feito por Noahzin", "Script made by Noahzin"}, {"EXECUTORES SUPORTADOS", "SUPPORTED EXECUTORS"}, {"Subir quando a vida estiver baixa", "Rise when health is low"}, {"Vida mínima para subir", "Health % to rise"}, {"Altura de segurança", "Safe height"}, {"Carregar save automaticamente", "Auto load save"}, {"Ao abrir o hub, aplica sozinho a última configuração salva ou usada.", "On launch, automatically applies the last saved or used config."}, {"Boss: ", "Boss: "}, {"Todos", "All"}, {"Recuperando no alto...", "Recovering up high..."}, {"Vida baixa", "Low health"}, {"Auto Elite", "Auto Elite"}, {"Auto Rip Indra", "Auto Rip Indra"}, {"Indra: buscar God's Chalice (Elite + Baú)", "Indra: get God's Chalice (Elite + Chests)"}, {"Indra: velocidade de voo", "Indra: fly speed"}, {"Indra: altura sobre o alvo", "Indra: height over target"}, {"Auto Cake Prince", "Auto Cake Prince"}, {"Cake: velocidade de voo", "Cake: fly speed"}, {"Cake: altura sobre o alvo", "Cake: height over target"}, {"Elite e Sea Beast", "Elite and Sea Beast"}, {"Elite: velocidade de voo", "Elite: fly speed"}, {"Elite: altura sobre o alvo", "Elite: height over target"}, {"Auto Sea Beast", "Auto Sea Beast"}, {"Auto Piranha", "Auto Piranha"}, {"Auto Piranha: usar skills", "Auto Piranha: use skills"}, {"Auto Piranha: altura", "Auto Piranha: height"}, {"Auto Terrorshark", "Auto Terrorshark"}, {"Auto Terrorshark: usar skills", "Auto Terrorshark: use skills"}, {"Auto Terrorshark: altura", "Auto Terrorshark: height"}, {"Sea Beast: usar skills", "Sea Beast: use skills"}, {"Sea Beast: altura", "Sea Beast: height"}, {"Pegar quest do boss", "Take boss quest"}, {"Altura sobre o boss", "Height above boss"}, {"Aguardando boss...", "Waiting for boss..."}, {"Sons de clique", "Click Sounds"}, {"Som de clique", "Click Sound"}, {"Volume do som", "Sound Volume"}, {"Som: ", "Sound: "}, {"Clássico", "Classic"}, {"Suave", "Soft"}, {"Tecla", "Key"}, {"Página", "Page"}, {"Botão", "Button"}, {"Interruptor", "Switch"}, {"Clique rápido", "Fast Click"}, {"Estalo", "Snap"}, {"Bolha", "Bubble"}, {"Grave", "Bass"}, {"Nenhum", "None"}, {"Tema pronto", "Preset Theme"}, {"Oceano", "Ocean"}, {"Gelo", "Ice"}, {"funções alteradas", "functions changed"}, {"Fechar o Aetheris Hub?", "Close Aetheris Hub?"}, {"O painel será fechado por completo. Para abrir de novo, execute o script outra vez.", "The panel will be closed completely. To open it again, run the script again."}, {"Fechar", "Close"}, {"Tem certeza de que deseja excluir", "Are you sure you want to delete"}, {"Essa ação não pode ser desfeita.", "This action cannot be undone."}, {"direto", "direct"}, {"incompatível", "incompatible"}, {"Módulo", "Module"}, {"diálogo", "dialog"}, {"INIMIGOS (NPC)", "ENEMIES (NPC)"}, {"BAÚ", "CHEST"}, {"PLAYERS", "PLAYERS"}, {"BERRIES", "BERRIES"}, {"ESP Inimigos (NPC)", "ESP Enemies (NPC)"}, {"Inimigos", "Enemies"}, {"inimigos", "enemies"},
+		{"Geral", "General"}, {"Script feito por Noahzin", "Script made by Noahzin"}, {"EXECUTORES SUPORTADOS", "SUPPORTED EXECUTORS"}, {"Subir quando a vida estiver baixa", "Rise when health is low"}, {"Vida mínima para subir", "Health % to rise"}, {"Altura de segurança", "Safe height"}, {"Carregar save automaticamente", "Auto load save"}, {"Ao abrir o hub, aplica sozinho a última configuração salva ou usada.", "On launch, automatically applies the last saved or used config."}, {"Boss: ", "Boss: "}, {"Todos", "All"}, {"Recuperando no alto...", "Recovering up high..."}, {"Vida baixa", "Low health"}, {"Auto Elite", "Auto Elite"}, {"Auto Rip Indra", "Auto Rip Indra"}, {"Indra: buscar God's Chalice (Elite + Baú)", "Indra: get God's Chalice (Elite + Chests)"}, {"Indra: velocidade de voo", "Indra: fly speed"}, {"Indra: altura sobre o alvo", "Indra: height over target"}, {"Auto Cake Prince", "Auto Cake Prince"}, {"Cake: velocidade de voo", "Cake: fly speed"}, {"Cake: altura sobre o alvo", "Cake: height over target"}, {"Elite, Mar e Bosses", "Elite, Sea and Bosses"}, {"Elite: velocidade de voo", "Elite: fly speed"}, {"Elite: altura sobre o alvo", "Elite: height over target"}, {"Auto Sea Beast", "Auto Sea Beast"}, {"Auto Piranha", "Auto Piranha"}, {"Auto Piranha: usar skills", "Auto Piranha: use skills"}, {"Auto Piranha: altura", "Auto Piranha: height"}, {"Auto Terrorshark", "Auto Terrorshark"}, {"Auto Terrorshark: usar skills", "Auto Terrorshark: use skills"}, {"Auto Terrorshark: altura", "Auto Terrorshark: height"}, {"Sea Beast: usar skills", "Sea Beast: use skills"}, {"Sea Beast: altura", "Sea Beast: height"}, {"Pegar quest do boss", "Take boss quest"}, {"Altura sobre o boss", "Height above boss"}, {"Aguardando boss...", "Waiting for boss..."}, {"Sons de clique", "Click Sounds"}, {"Som de clique", "Click Sound"}, {"Volume do som", "Sound Volume"}, {"Som: ", "Sound: "}, {"Clássico", "Classic"}, {"Suave", "Soft"}, {"Tecla", "Key"}, {"Página", "Page"}, {"Botão", "Button"}, {"Interruptor", "Switch"}, {"Clique rápido", "Fast Click"}, {"Estalo", "Snap"}, {"Bolha", "Bubble"}, {"Grave", "Bass"}, {"Nenhum", "None"}, {"Tema pronto", "Preset Theme"}, {"Oceano", "Ocean"}, {"Gelo", "Ice"}, {"funções alteradas", "functions changed"}, {"Fechar o Aetheris Hub?", "Close Aetheris Hub?"}, {"O painel será fechado por completo. Para abrir de novo, execute o script outra vez.", "The panel will be closed completely. To open it again, run the script again."}, {"Fechar", "Close"}, {"Tem certeza de que deseja excluir", "Are you sure you want to delete"}, {"Essa ação não pode ser desfeita.", "This action cannot be undone."}, {"direto", "direct"}, {"incompatível", "incompatible"}, {"Módulo", "Module"}, {"diálogo", "dialog"}, {"INIMIGOS (NPC)", "ENEMIES (NPC)"}, {"BAÚ", "CHEST"}, {"PLAYERS", "PLAYERS"}, {"BERRIES", "BERRIES"}, {"ESP Inimigos (NPC)", "ESP Enemies (NPC)"}, {"Inimigos", "Enemies"}, {"inimigos", "enemies"},
 		{"inimigo", "enemy"}, {"Cor", "Color"}, {"Sem quest", "No quest"}, {"Tecla para ocultar", "Key to hide"},
 		{"Atalho de ocultar ativado", "Hide shortcut enabled"}, {"Aliados", "Allies"}, {"Jogadores", "Players"}, {"Jogador", "Player"},
 		{"tipo:", "type:"}, {"Automatização", "Automation"}, {"Personagem indisponível ou morto", "Character unavailable or dead"},
@@ -11577,7 +11577,8 @@ function showMainPanel()
 
 			-- ===== Elite e Sea Beast (aba Auto): ao ligar um, aparecem as opções dele =====
 			do
-				local sec = createSection(pages["Auto"], "Elite e Sea Beast", sectionIcons.FarmAutomation)
+				local sec = createSection(pages["Auto"], "Elite, Mar e Bosses", sectionIcons.FarmAutomation)
+				AetherisEliteSec = sec
 				local function rowsOf(build)
 					local seen = {}
 					for _, c in ipairs(sec:GetChildren()) do seen[c] = true end
@@ -12871,7 +12872,7 @@ function showMainPanel()
 			-- Fase 1: farma os inimigos da Cake Land (usa o Farm por Material) e pede ao jogo o spawn (CommF_ "CakePrinceSpawner").
 			-- Fase 2: quando o Cake Prince aparece, liga o Auto Kill Boss nele. Depois volta pra fase 1.
 			do
-				local sec = createSection(pages["Auto"], "Auto Cake Prince", sectionIcons.FarmAutomation)
+				local sec = AetherisEliteSec or createSection(pages["Auto"], "Auto Cake Prince", sectionIcons.FarmAutomation)
 				local MOBS = {"Cookie Crafter", "Cake Guard", "Baking Staff", "Head Baker"}
 				local CK = {on = false, token = 0, mode = nil, weapon = "Melee", fly = 270, height = 20, lastAsk = 0, matOn = false, bossOn = false, saved = nil, savedMat = nil, savedBoss = nil, wrap = false}
 				local function liveCake()
@@ -12951,23 +12952,63 @@ function showMainPanel()
 					end
 					return rows
 				end
+				local function ckStatus(text)
+					if CK.status then pcall(function() CK.status.Text = text end) end
+				end
+				-- Portal: depois que o Cake Prince pode spawnar, um portal novo aparece. Vai até ele para entrar.
+				local function portalPart(inst)
+					local p = inst
+					while p and not p:IsA("BasePart") do p = p.Parent end
+					return p
+				end
+				local function goPortal(inst)
+					local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+					local part = portalPart(inst)
+					if not (hrp and part) then return end
+					pcall(function() hrp.CFrame = part.CFrame * CFrame.new(0, 0, 0) end)
+					task.wait(0.3)
+					local prompt = inst:FindFirstChildWhichIsA("ProximityPrompt", true) or (inst:IsA("ProximityPrompt") and inst)
+					if prompt and fireproximityprompt then pcall(function() prompt.HoldDuration = 0 fireproximityprompt(prompt) end) end
+					local cd = inst:FindFirstChildWhichIsA("ClickDetector", true)
+					if cd and fireclickdetector then pcall(fireclickdetector, cd) end
+					if firetouchinterest then
+						pcall(function() firetouchinterest(hrp, part, 0) task.wait(0.05) firetouchinterest(hrp, part, 1) end)
+					end
+				end
 				addToggle(sec, "Auto Cake Prince", function(state)
 					CK.on = state
 					if ckRows then for _, x in ipairs(ckRows) do x.Visible = state end end
 					CK.token = CK.token + 1
 					local my = CK.token
+					if CK.conn then CK.conn:Disconnect() CK.conn = nil end
 					if not state then
 						stopBoss()
 						stopFarm()
 						CK.mode = nil
+						CK.portal = nil
 						return
 					end
+					CK.portal = nil
+					CK.told = false
+					-- guarda os portais que já existem; o que aparecer depois é o do Cake Prince
+					local base = {}
+					for _, d in ipairs(workspace:GetDescendants()) do
+						if string.find(string.lower(d.Name), "portal", 1, true) then base[d] = true end
+					end
+					CK.conn = workspace.DescendantAdded:Connect(function(d)
+						if CK.on and not base[d] and string.find(string.lower(d.Name), "portal", 1, true) and (d:IsA("Model") or d:IsA("BasePart")) then
+							CK.portal = d
+						end
+					end)
 					task.spawn(function()
 						local gone
+						local portalAt
 						while CK.on and CK.token == my and screenGui.Parent do
 							local m = liveCake()
 							if m then
 								gone = nil
+								CK.portal = nil
+								ckStatus("Cake Prince vivo: atacando")
 								if CK.mode ~= "boss" then
 									stopFarm()
 									startBoss(m)
@@ -12982,17 +13023,51 @@ function showMainPanel()
 									end
 								end
 								if CK.mode ~= "boss" then
-									if CK.mode ~= "farm" then
-										startFarm()
-										CK.mode = "farm"
-									end
-									if tick() - CK.lastAsk > 8 then
-										CK.lastAsk = tick()
-										local remotes = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes")
-										local comm = remotes and remotes:FindFirstChild("CommF_")
-										if comm then
-											pcall(function() comm:InvokeServer("CakePrinceSpawner", true) end)
-											pcall(function() comm:InvokeServer("CakePrinceSpawner") end)
+									local portal = CK.portal
+									if portal and portal.Parent then
+										-- Fase portal: para o farm e vai até o portal
+										if CK.mode ~= "portal" then
+											stopFarm()
+											CK.mode = "portal"
+											portalAt = tick()
+											note("Cake Prince: portal apareceu, indo até ele.", Color3.fromRGB(150, 220, 255))
+											ckStatus("Portal apareceu: indo até ele")
+										end
+										goPortal(portal)
+										if tick() - portalAt > 40 then CK.portal = nil end
+									else
+										if CK.mode ~= "farm" then
+											startFarm()
+											CK.mode = "farm"
+										end
+										if tick() - CK.lastAsk > 8 then
+											CK.lastAsk = tick()
+											local remotes = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes")
+											local comm = remotes and remotes:FindFirstChild("CommF_")
+											if comm then
+												-- 1) consulta o progresso e mostra a resposta do jogo (a primeira vez)
+												local ok, res = pcall(function() return comm:InvokeServer("CakePrinceSpawner", true) end)
+												if ok and not CK.told then
+													CK.told = true
+													note("Cake Prince: resposta do jogo → " .. tostring(res), Color3.fromRGB(150, 220, 255))
+												end
+												-- 2) só tenta spawnar quando o jogo indicar que já dá (sem número de inimigos faltando)
+												local txt = tostring(res or "")
+												local remaining = tonumber(string.match(txt, "(%d+)"))
+												if not ok then
+													ckStatus("Faltam: erro ao consultar")
+												elseif remaining and remaining > 0 then
+													ckStatus("Faltam " .. remaining .. " inimigos para spawnar")
+												elseif remaining == 0 or res == true then
+													ckStatus("Pronto para spawnar!")
+												else
+													ckStatus("Jogo: " .. string.sub(txt, 1, 40))
+												end
+												local canSpawn = ok and (res == true or (remaining == nil and txt ~= "" and txt ~= "nil" and txt ~= "false") or remaining == 0)
+												if canSpawn then
+													pcall(function() comm:InvokeServer("CakePrinceSpawner") end)
+												end
+											end
 										end
 									end
 								end
@@ -13002,6 +13077,7 @@ function showMainPanel()
 					end)
 				end, false)
 				ckRows = rowsOf(function()
+					CK.status = tiny(sec, "Faltam: consultando...")
 					AetherisDropdown(sec, {
 						prefix = "Arma: ",
 						label = WEAPON_LABELS.Melee,
@@ -13026,7 +13102,7 @@ function showMainPanel()
 			-- Se você tiver o God's Chalice e o Fist of Darkness, vai até o altar (procura por nome) e tenta invocar o Rip Indra.
 			-- Quando ele aparece, liga o Auto Kill Boss nele com as opções abaixo. Os itens eu NÃO consigo conseguir sozinho.
 			do
-				local sec = createSection(pages["Auto"], "Auto Rip Indra", sectionIcons.FarmAutomation)
+				local sec = AetherisEliteSec or createSection(pages["Auto"], "Auto Rip Indra", sectionIcons.FarmAutomation)
 				local RI = {on = false, token = 0, mode = nil, weapon = "Melee", fly = 270, height = 20, bossOn = false, savedBoss = nil, told = {}, lastTry = 0, getChalice = true, helpers = {}}
 				local function liveIndra()
 					local en = workspace:FindFirstChild("Enemies")
