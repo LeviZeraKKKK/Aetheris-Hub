@@ -12981,13 +12981,28 @@ function showMainPanel()
 					end
 					return best
 				end
-				local function mirrorPart()
+				-- centro do portal (Workspace.Map.CakeLoaf.BigMirror): usa a caixa que envolve o modelo inteiro
+				local function mirrorPos()
 					local map = workspace:FindFirstChild("Map")
 					local loaf = map and map:FindFirstChild("CakeLoaf")
 					local mirror = loaf and loaf:FindFirstChild("BigMirror")
 					if not mirror then return nil end
-					if mirror:IsA("BasePart") then return mirror end
-					return mirror.PrimaryPart or mirror:FindFirstChildWhichIsA("BasePart", true)
+					local pos, size
+					if mirror:IsA("BasePart") then
+						pos, size = mirror.Position, mirror.Size
+					elseif mirror:IsA("Model") then
+						local ok, cf, sz = pcall(function() return mirror:GetBoundingBox() end)
+						if ok then pos, size = cf.Position, sz end
+					end
+					if not pos then
+						local ok, pv = pcall(function() return mirror:GetPivot().Position end)
+						if ok then pos = pv end
+					end
+					if not CK.printedMirror then
+						CK.printedMirror = true
+						print("[Aetheris Cake] BigMirror:", mirror.ClassName, pos, size)
+					end
+					return pos, size
 				end
 				local function release()
 					if CK.bv then pcall(function() CK.bv:Destroy() end) CK.bv = nil end
@@ -13146,8 +13161,8 @@ function showMainPanel()
 						end
 						-- voa até o portal (Workspace.Map.CakeLoaf.BigMirror) e simplesmente passa por ele
 						local function goMirror(hrp, char)
-							local mirror = mirrorPart()
-							if not mirror then
+							local mpos, msize = mirrorPos()
+							if not mpos then
 								ckStatus("Espelho (CakeLoaf.BigMirror) não encontrado")
 								return false
 							end
@@ -13158,15 +13173,21 @@ function showMainPanel()
 							release()
 							enterE()
 							noclipOn()
-							local d = (mirror.Position - hrp.Position).Magnitude
-							if d < 8 then
+							local d = (mpos - hrp.Position).Magnitude
+							local reach = 8
+							if msize then reach = math.clamp(math.max(msize.X, msize.Y, msize.Z) / 4, 8, 25) end
+							if d < reach then
 								CK.inside = true
 								insideSince = tick()
 								leaveFarm()
 								return true
 							end
 							ckStatus("Voando até o portal (" .. math.floor(d) .. "m)")
-							flyTo(hrp, mirror.Position)
+							-- voa exatamente até o centro do portal (sem somar a altura do farm)
+							local cfgH = E.cfg.material.height
+							E.cfg.material.height = 0
+							flyTo(hrp, mpos)
+							E.cfg.material.height = cfgH
 							return false
 						end
 						while CK.on and CK.token == my and screenGui.Parent do
