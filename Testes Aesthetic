@@ -11735,7 +11735,7 @@ function showMainPanel()
 
 				-- ----- Auto Sea Beast -----
 				-- Quando aparece um Sea Beast (Workspace.SeaBeasts), voa até ficar acima dele e ataca.
-				local SB = {on = false, token = 0, height = 45, skills = true, lastSkill = 0, combo = 1, bv = nil, weapon = "Melee", lastEquip = 0}
+				local SB = {on = false, token = 0, height = 45, skills = false, lastSkill = 0, combo = 1, bv = nil, weapon = "Melee", lastEquip = 0}
 				local function liveBeast()
 					local f = workspace:FindFirstChild("SeaBeasts")
 					if not f then return nil end
@@ -11809,7 +11809,7 @@ function showMainPanel()
 				end, false)
 				beastRows = rowsOf(function()
 					weaponDD(function(v) SB.weapon = v end)
-					addToggle(sec, "Sea Beast: usar skills", function(state) SB.skills = state end, true)
+					addToggle(sec, "Sea Beast: usar skills", function(state) SB.skills = state end, false)
 					addSlider(sec, "Sea Beast: altura", 15, 120, 45, function(v) SB.height = v end, 0, " studs")
 				end)
 				setVis(beastRows, false)
@@ -11817,7 +11817,7 @@ function showMainPanel()
 				-- ----- Auto Terrorshark e Auto Piranha -----
 				-- Procura o monstro mais perto (Workspace.Enemies e Workspace.SeaBeasts), fica acima dele e ataca.
 				local function makeHunter(title, words, defHeight)
-					local H = {on = false, token = 0, height = defHeight, skills = true, weapon = "Melee", lastEquip = 0, lastSkill = 0, combo = 1, bv = nil}
+					local H = {on = false, token = 0, height = defHeight, skills = false, weapon = "Melee", lastEquip = 0, lastSkill = 0, combo = 1, bv = nil}
 					local function nearest(hrp)
 						local best, bestPart, bestD
 						for _, fname in ipairs({"Enemies", "SeaBeasts"}) do
@@ -11904,7 +11904,7 @@ function showMainPanel()
 					end, false)
 					rows = rowsOf(function()
 						weaponDD(function(v) H.weapon = v end)
-						addToggle(sec, title .. ": usar skills", function(state) H.skills = state end, true)
+						addToggle(sec, title .. ": usar skills", function(state) H.skills = state end, false)
 						addSlider(sec, title .. ": altura", 10, 120, defHeight, function(v) H.height = v end, 0, " studs")
 					end)
 					setVis(rows, false)
@@ -12912,7 +12912,7 @@ function showMainPanel()
 			do
 				local sec = AetherisEliteSec or createSection(pages["Auto"], "Auto Cake Prince", sectionIcons.FarmAutomation)
 				local MOBS = {"Cookie Crafter", "Cake Guard", "Baking Staff", "Head Baker"}
-				local CK = {on = false, token = 0, weapon = "Melee", fly = 270, height = 20, skills = true, lastAsk = 0, spawned = false, spawnedAt = 0, inside = false,
+				local CK = {on = false, token = 0, weapon = "Melee", fly = 270, height = 20, skills = false, lastAsk = 0, spawned = false, spawnedAt = 0, inside = false,
 					bv = nil, lastHit = 0, combo = 1, lastEquip = 0, lastSkill = 0, told = false, status = nil}
 				local function ckStatus(text)
 					if CK.status then pcall(function() CK.status.Text = text end) end
@@ -13174,20 +13174,16 @@ function showMainPanel()
 							enterE()
 							noclipOn()
 							local d = (mpos - hrp.Position).Magnitude
-							local reach = 8
-							if msize then reach = math.clamp(math.max(msize.X, msize.Y, msize.Z) / 4, 8, 25) end
-							if d < reach then
-								CK.inside = true
-								insideSince = tick()
-								leaveFarm()
+							if d < 4 or (CK.atPortal and d < 10) then
+								-- chegou: fica PARADO na posição do portal (sem voltar a mexer)
+								CK.atPortal = true
+								fly(hrp, Vector3.zero)
+								ckStatus("Parado no portal: esperando o Cake Prince")
 								return true
 							end
+							CK.atPortal = false
 							ckStatus("Voando até o portal (" .. math.floor(d) .. "m)")
-							-- voa exatamente até o centro do portal (sem somar a altura do farm)
-							local cfgH = E.cfg.material.height
-							E.cfg.material.height = 0
 							flyTo(hrp, mpos)
-							E.cfg.material.height = cfgH
 							return false
 						end
 						while CK.on and CK.token == my and screenGui.Parent do
@@ -13195,18 +13191,16 @@ function showMainPanel()
 							local hrp = char and char:FindFirstChild("HumanoidRootPart")
 							if char ~= lastChar then
 								lastChar = char
-								CK.inside = false -- morreu/renasceu: precisa passar no portal de novo
+								CK.atPortal = false
 							end
 							if hrp and BossLogic.init() then
+								-- sempre olhando o Enemies: se o Cake Prince apareceu, vai direto nele
 								local boss = liveCake()
 								if boss then
 									CK.spawned, CK.sawBoss = true, true
+									if CK.farmOn then leaveFarm() end
 									local part = rootOf(boss)
-									if not CK.inside then
-										ckStatus("Indo ao portal")
-										goMirror(hrp, char)
-									elseif part then
-										if CK.farmOn then leaveFarm() end
+									if part then
 										ckStatus("Cake Prince vivo: atacando")
 										equip()
 										flyTo(hrp, part.Position + Vector3.new(0, CK.height, 0))
@@ -13214,19 +13208,14 @@ function showMainPanel()
 									end
 								elseif CK.sawBoss then
 									-- o boss morreu: volta ao farm
-									CK.sawBoss, CK.spawned, CK.inside = false, false, false
+									CK.sawBoss, CK.spawned, CK.atPortal = false, false, false
+									release()
 								elseif CK.spawned then
-									if not CK.inside then
-										ckStatus("Spawnou: voando até o portal")
-										goMirror(hrp, char)
-									else
-										ckStatus("Dentro do portal: procurando o boss")
-										if CK.farmOn then leaveFarm() end
-										release()
-										if tick() - insideSince > 60 then CK.spawned, CK.inside = false, false end
-									end
+									-- spawnou mas ainda não apareceu no Enemies: vai ao portal e fica parado lá
+									goMirror(hrp, char)
+									if tick() - CK.spawnedAt > 180 then CK.spawned, CK.atPortal = false, false end
 								else
-									CK.inside = false
+									CK.atPortal = false
 									-- Farm: usa a lógica do Farm por Material (sem ligar o toggle dele)
 									if init() then
 										enterE()
@@ -13271,7 +13260,7 @@ function showMainPanel()
 						end,
 						onSelect = function(v) CK.weapon = v end,
 					})
-					addToggle(sec, "Cake: usar skills", function(v) CK.skills = v end, true)
+					addToggle(sec, "Cake: usar skills", function(v) CK.skills = v end, false)
 					addSlider(sec, "Cake: velocidade de voo", 10, 300, 270, function(v) CK.fly = v end, 0)
 					addSlider(sec, "Cake: altura sobre o alvo", 6, 30, 20, function(v) CK.height = v end, 0, " studs")
 				end)
